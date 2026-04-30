@@ -635,14 +635,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
               )}
 
               {/* ── Shop (always visible) ── */}
-              <DesktopNavDropdown
-                label="Shop" href="/shop"
-                isActive={isActive("/shop")}
-                items={SHOP_CHILDREN}
-                openDropdown={openDropdown}
-                openMenu={openMenu} cancelClose={cancelClose} scheduleClose={scheduleClose}
-                onClose={() => setOpenDropdown(null)}
-              />
+              <DesktopNavLink href="/shop" label="Shop" isActive={isActive("/shop")} />
 
               {/* ── Our Story / Contact (always visible) ── */}
               <DesktopNavLink href="/about"   label="Our Story" isActive={isActive("/about")} />
@@ -754,7 +747,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                         <MobileNavItem label={c.label} href={c.href} close={() => setMobileOpen(false)} />
                       </motion.div>
                     ))}
-                <MobileNavItem label="Shop" href="/shop" close={() => setMobileOpen(false)} children={SHOP_CHILDREN} />
+                <MobileNavItem label="Shop" href="/shop" close={() => setMobileOpen(false)} />
                 <MobileNavItem label="Our Story" href="/about"   close={() => setMobileOpen(false)} />
                 <MobileNavItem label="Contact"   href="/contact" close={() => setMobileOpen(false)} />
               </nav>
