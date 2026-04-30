@@ -115,6 +115,8 @@ export default function HeroSlider({ slides }: Props) {
                         lineHeight: "var(--leading-display)",
                         letterSpacing: "var(--tracking-display)",
                         color: sl.imageUrl ? "#FFFFFF" : "var(--color-text-primary)",
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
                       }}
                     >
                       {sl.heading}

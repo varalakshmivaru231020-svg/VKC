@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, ArrowRight, RotateCcw, User } from "lucide-react";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { signIn } from "next-auth/react";
@@ -8,7 +8,7 @@ import { useUIStore } from "@/lib/store/ui";
 
 function OtpBoxes({ value, onChange, idPrefix }: { value: string; onChange: (v: string) => void; idPrefix: string }) {
   return (
-    <div className="flex gap-2 justify-center">
+    <div className="flex gap-1.5 sm:gap-2 justify-center">
       {Array.from({ length: 6 }).map((_, i) => (
         <input
           key={i}
@@ -33,7 +33,7 @@ function OtpBoxes({ value, onChange, idPrefix }: { value: string; onChange: (v: 
               onChange(arr.join(""));
             }
           }}
-          className="w-10 h-12 text-center text-lg font-bold rounded-lg border-2 focus:outline-none transition-all"
+          className="w-9 h-11 sm:w-10 sm:h-12 text-center text-base sm:text-lg font-bold rounded-lg border-2 focus:outline-none transition-all"
           style={{
             borderColor: value[i] ? "var(--color-primary)" : "var(--color-parchment)",
             background: "white",
@@ -50,15 +50,25 @@ function OtpBoxes({ value, onChange, idPrefix }: { value: string; onChange: (v: 
 export function LoginModal() {
   const { loginModalOpen, loginModalCallback, closeLoginModal } = useUIStore();
 
-  const [phone, setPhone]       = useState("");
-  const [dialCode, setDialCode] = useState("+91");
-  const [otp, setOtp]           = useState("");
-  const [name, setName]         = useState("");
-  const [isNew, setIsNew]       = useState(false);
-  const [step, setStep]         = useState<"phone" | "otp">("phone");
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
+  const [phone, setPhone]         = useState("");
+  const [dialCode, setDialCode]   = useState("+91");
+  const [otp, setOtp]             = useState("");
+  const [name, setName]           = useState("");
+  const [isNew, setIsNew]         = useState(false);
+  const [step, setStep]           = useState<"phone" | "otp">("phone");
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
   const [countdown, setCountdown] = useState(0);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (loginModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [loginModalOpen]);
 
   if (!loginModalOpen) return null;
 
@@ -125,28 +135,34 @@ export function LoginModal() {
     : `OTP sent to ${dialCode} ${phone}`;
 
   return (
+    /* Bottom sheet on mobile, centered dialog on sm+ */
     <div
-      className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
       onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-sm rounded-xl shadow-2xl overflow-hidden"
-        style={{ background: "var(--color-ivory)" }}
+        className="relative w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl shadow-2xl overflow-y-auto"
+        style={{ background: "var(--color-ivory)", maxHeight: "92vh" }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle — mobile only */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full" style={{ background: "var(--color-parchment)" }} />
+        </div>
+
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-full hover:bg-cream transition-colors"
+          className="absolute top-3 right-4 h-8 w-8 flex items-center justify-center rounded-full hover:bg-cream transition-colors"
           style={{ color: "var(--color-text-muted)" }}
         >
           <X className="h-4 w-4" />
         </button>
 
-        <div className="px-8 pt-8 pb-6 border-b text-center" style={{ borderColor: "var(--color-parchment)" }}>
+        <div className="px-5 sm:px-8 pt-5 sm:pt-8 pb-5 sm:pb-6 border-b text-center" style={{ borderColor: "var(--color-parchment)" }}>
           <p className="text-xs font-body font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
             Vijaylakshmi Sarees
           </p>
-          <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.6rem", color: "var(--color-text-primary)" }}>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.45rem", color: "var(--color-text-primary)" }}>
             {stepTitle}
           </h2>
           <p className="text-sm font-body mt-1" style={{ color: "var(--color-text-muted)" }}>
@@ -154,7 +170,7 @@ export function LoginModal() {
           </p>
         </div>
 
-        <div className="p-7 space-y-5">
+        <div className="p-5 sm:p-7 space-y-5">
           {error && (
             <div className="px-4 py-3 rounded-lg text-sm font-body"
               style={{ background: "var(--color-error-bg)", color: "var(--color-error)", border: "1px solid var(--color-error)" }}>
@@ -207,11 +223,7 @@ export function LoginModal() {
                       placeholder="Enter your full name"
                       autoFocus
                       className="w-full h-11 pl-9 pr-4 rounded-lg border text-sm font-body focus:outline-none transition-all"
-                      style={{
-                        borderColor: "var(--color-parchment)",
-                        background: "white",
-                        color: "var(--color-text-primary)",
-                      }}
+                      style={{ borderColor: "var(--color-parchment)", background: "white", color: "var(--color-text-primary)" }}
                       onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-primary)"; e.currentTarget.style.boxShadow = "0 0 0 3px var(--color-primary-50)"; }}
                       onBlur={(e) => { e.currentTarget.style.borderColor = "var(--color-parchment)"; e.currentTarget.style.boxShadow = "none"; }}
                     />
@@ -229,7 +241,7 @@ export function LoginModal() {
               <button
                 onClick={verifyOtp}
                 disabled={loading || otp.length < 6}
-                className="w-full h-12 flex items-center justify-center gap-2 rounded-lg text-sm font-semibold font-body transition-all disabled:opacity-50"
+                className="w-full h-12 flex items-center justify-center gap-2 rounded-lg text-sm font-semibold font-body transition-all disabled:opacity-50 whitespace-nowrap"
                 style={{ background: "var(--color-primary)", color: "white" }}
               >
                 {loading
@@ -251,6 +263,9 @@ export function LoginModal() {
               </div>
             </>
           )}
+
+          {/* Safe area spacer for mobile home indicator */}
+          <div className="sm:hidden h-2" />
         </div>
       </div>
     </div>

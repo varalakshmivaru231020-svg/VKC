@@ -38,7 +38,7 @@
   --font-accent:  'Cormorant Garamond', Georgia, serif;
 
   /* Font Sizes */
-  --text-display:  clamp(4.5rem, 9vw, 8rem);
+  --text-display:  clamp(2.6rem, 9vw, 8rem);
   --text-h1:       clamp(2.75rem, 5.5vw, 4.5rem);
   --text-h2:       clamp(2.25rem, 4vw, 3.375rem);
   --text-h3:       2.375rem;
@@ -89,6 +89,11 @@
     font-weight: var(--weight-body);
     color: var(--color-text-primary);
     background-color: var(--color-ivory);
+    overflow-x: hidden;
+  }
+
+  /* Prevent any element from causing horizontal scroll */
+  .marketing-layout {
     overflow-x: hidden;
   }
 

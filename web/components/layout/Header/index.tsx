@@ -727,7 +727,9 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
             <motion.div key="drawer" variants={drawerV} initial="hidden" animate="visible" exit="exit"
               className="fixed inset-y-0 right-0 z-[70] w-80 flex flex-col shadow-2xl"
               style={{ background: "var(--color-ivory)" }}>
-              <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--color-parchment)" }}>
+
+              {/* Drawer header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b shrink-0" style={{ borderColor: "var(--color-parchment)" }}>
                 <span className="text-xl" style={{ fontFamily: "var(--font-heading)", color: "var(--color-primary)", fontWeight: "var(--weight-heading)" }}>Menu</span>
                 <button onClick={() => setMobileOpen(false)}
                   className="h-9 w-9 flex items-center justify-center rounded-full transition-colors hover:bg-primary-50"
@@ -735,7 +737,47 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+
+              {/* Account + Wishlist — always at top */}
+              <div className="px-3 pt-3 pb-2 border-b shrink-0 space-y-1" style={{ borderColor: "var(--color-parchment)" }}>
+                {isLoggedIn ? (
+                  <>
+                    <Link href="/account" onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all"
+                      style={{ color: "var(--color-text-primary)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-primary)"; e.currentTarget.style.background = "transparent"; }}>
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                        style={{ background: "var(--color-primary)", color: "white" }}>
+                        {userInitial ?? <User className="h-4 w-4" />}
+                      </div>
+                      My Account
+                    </Link>
+                    <Link href="/account/wishlist" onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all"
+                      style={{ color: "var(--color-text-primary)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-primary)"; e.currentTarget.style.background = "transparent"; }}>
+                      <Heart className="h-4 w-4 shrink-0" />
+                      Wishlist
+                      {mounted && wishlistCount > 0 && (
+                        <span className="ml-auto h-5 min-w-[20px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold text-white"
+                          style={{ background: "var(--color-primary)" }}>{wishlistCount}</span>
+                      )}
+                    </Link>
+                  </>
+                ) : (
+                  <button onClick={() => { setMobileOpen(false); openLoginModal(); }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all w-full text-left"
+                    style={{ background: "var(--color-primary-50)", color: "var(--color-primary)", borderRadius: "8px" }}>
+                    <User className="h-4 w-4 shrink-0" />
+                    Sign In / Create Account
+                  </button>
+                )}
+              </div>
+
+              {/* Nav items — scrollable */}
+              <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
                 <MobileNavItem label="New Arrivals" href="/new-arrivals" close={() => setMobileOpen(false)} />
                 {useDynamic
                   ? navCategories.map((cat, i) => (
@@ -755,8 +797,10 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                 <MobileNavItem label="Our Story" href="/about"   close={() => setMobileOpen(false)} />
                 <MobileNavItem label="Contact"   href="/contact" close={() => setMobileOpen(false)} />
               </nav>
-              <div className="px-5 py-4 border-t" style={{ borderColor: "var(--color-parchment)" }}>
-                <div className="flex items-center gap-3 mb-3">
+
+              {/* Footer — social links only */}
+              <div className="px-5 py-4 border-t shrink-0" style={{ borderColor: "var(--color-parchment)" }}>
+                <div className="flex items-center gap-3">
                   {socialLinks.map(({ Icon, href, label }) => (
                     <a key={label} href={href} aria-label={label}
                       className="h-8 w-8 flex items-center justify-center rounded-lg"
@@ -764,36 +808,6 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                       <Icon className="h-4 w-4" />
                     </a>
                   ))}
-                </div>
-                <div className="space-y-1">
-                  {isLoggedIn ? (
-                    <Link href="/account" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all"
-                      style={{ color: "var(--color-text-secondary)" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-secondary)"; e.currentTarget.style.background = "transparent"; }}>
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
-                        style={{ background: "var(--color-primary)", color: "white" }}>
-                        {userInitial ?? <User className="h-3 w-3" />}
-                      </div>
-                      My Account
-                    </Link>
-                  ) : (
-                    <button onClick={() => { setMobileOpen(false); openLoginModal(); }}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all w-full text-left"
-                      style={{ color: "var(--color-text-secondary)" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-secondary)"; e.currentTarget.style.background = "transparent"; }}>
-                      <User className="h-4 w-4" /> Sign In
-                    </button>
-                  )}
-                  <button onClick={() => { setMobileOpen(false); openCart(); }}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all w-full text-left"
-                    style={{ color: "var(--color-text-secondary)" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-secondary)"; e.currentTarget.style.background = "transparent"; }}>
-                    <ShoppingBag className="h-4 w-4" /> Cart {mounted && cartCount > 0 && `(${cartCount})`}
-                  </button>
                 </div>
               </div>
             </motion.div>

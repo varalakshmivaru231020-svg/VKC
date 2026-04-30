@@ -66,49 +66,60 @@ export function QuickViewModal() {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — bottom sheet on mobile, centered on sm+ */}
       <div
-        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
         onClick={closeQuickView}
       >
         {/* Modal */}
         <div
-          className="relative w-full max-w-[900px] max-h-[90vh] overflow-hidden rounded-xl shadow-2xl flex flex-col sm:flex-row"
-          style={{ background: "var(--color-ivory)" }}
+          className="relative w-full sm:max-w-[900px] rounded-t-2xl sm:rounded-xl shadow-2xl flex flex-col sm:flex-row overflow-hidden"
+          style={{ background: "var(--color-ivory)", maxHeight: "90vh" }}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Drag handle — mobile only */}
+          <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
+            <div className="w-10 h-1 rounded-full" style={{ background: "var(--color-parchment)" }} />
+          </div>
+
           {/* Close */}
           <button
             onClick={closeQuickView}
             className="absolute top-3 right-3 z-10 h-9 w-9 flex items-center justify-center rounded-full transition-colors"
-            style={{ background: "rgba(255,255,255,0.9)", color: "var(--color-text-muted)" }}
+            style={{ background: "rgba(255,255,255,0.92)", color: "var(--color-text-muted)" }}
           >
-            <X className="h-4.5 w-4.5" />
+            <X className="h-4 w-4" />
           </button>
 
-          {/* Image Panel */}
-          <div className="relative sm:w-[45%] shrink-0 overflow-hidden" style={{ minHeight: "320px", background: v.colorHex + "18" }}>
-            {primaryImage ? (
-              <SmartImage
-                src={primaryImage.url}
-                alt={primaryImage.altText ?? p.name}
-                fill
-                objectFit="cover"
-              />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                <div className="w-24 h-24 rounded-full opacity-40" style={{ background: v.colorHex }} />
-                <span className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>{v.colorName}</span>
-              </div>
-            )}
+          {/* Image Panel — compact height on mobile, tall on sm+ */}
+          <div
+            className="relative shrink-0 overflow-hidden sm:w-[45%] h-[45vw] sm:h-auto"
+            style={{ minHeight: undefined, background: v.colorHex + "18" }}
+          >
+            <div className="absolute inset-0 sm:min-h-[380px]">
+              {primaryImage ? (
+                <SmartImage
+                  src={primaryImage.url}
+                  alt={primaryImage.altText ?? p.name}
+                  fill
+                  objectFit="cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <div className="w-16 h-16 rounded-full opacity-40" style={{ background: v.colorHex }} />
+                  <span className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>{v.colorName}</span>
+                </div>
+              )}
+            </div>
+
             {/* Color thumbnails */}
             {p.variants.length > 1 && (
-              <div className="absolute bottom-3 left-3 flex gap-2">
+              <div className="absolute bottom-2 left-2 flex gap-1.5 z-10">
                 {p.variants.map((variant) => (
                   <button
                     key={variant.id}
                     onClick={() => { setSelectedVariant(variant); setQty(1); setAdded(false); }}
-                    className="w-8 h-8 rounded-full border-2 transition-all"
+                    className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all"
                     style={{
                       background: variant.colorHex,
                       borderColor: selectedVariant.id === variant.id ? "white" : "transparent",
@@ -121,8 +132,8 @@ export function QuickViewModal() {
             )}
           </div>
 
-          {/* Info Panel */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-4">
+          {/* Info Panel — scrollable */}
+          <div className="flex-1 overflow-y-auto p-5 sm:p-8 flex flex-col gap-3 sm:gap-4 min-h-0">
             {/* Category + New badge */}
             <div className="flex items-center gap-2 flex-wrap">
               {p.category && (
@@ -138,12 +149,12 @@ export function QuickViewModal() {
             </div>
 
             {/* Name */}
-            <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.25rem, 2vw, 1.75rem)", fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)", lineHeight: 1.25 }}>
+            <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.15rem, 2vw, 1.75rem)", fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)", lineHeight: 1.25 }}>
               {p.name}
             </h2>
 
             {/* Rating placeholder */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               {[1,2,3,4,5].map((s) => (
                 <Star key={s} className="h-3.5 w-3.5 fill-current" style={{ color: s <= 4 ? "var(--color-gold)" : "var(--color-parchment)" }} />
               ))}
@@ -151,13 +162,13 @@ export function QuickViewModal() {
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3 flex-wrap">
-              <span style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", fontSize: "1.75rem", color: "var(--color-primary)" }}>
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", fontSize: "1.6rem", color: "var(--color-primary)" }}>
                 {formatINR(v.salePrice)}
               </span>
               {hasDiscount && (
                 <>
-                  <span className="text-base font-body line-through" style={{ color: "var(--color-text-muted)" }}>
+                  <span className="text-sm font-body line-through" style={{ color: "var(--color-text-muted)" }}>
                     {formatINR(v.originalPrice)}
                   </span>
                   <span className="px-2 py-0.5 text-xs font-body font-bold rounded-xs text-white" style={{ background: "var(--color-success)" }}>
@@ -214,12 +225,12 @@ export function QuickViewModal() {
             )}
 
             {/* Details chips */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {[
                 p.fabric,
                 p.weaveType,
                 p.regionOfOrigin,
-                `${p.sareeLengthCm / 100}m Length`,
+                p.sareeLengthCm ? `${p.sareeLengthCm / 100}m` : null,
               ].filter(Boolean).map((detail) => (
                 <span key={detail} className="px-2.5 py-1 text-xs font-body rounded-full border"
                   style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-secondary)", background: "var(--color-cream)" }}>
@@ -229,18 +240,18 @@ export function QuickViewModal() {
             </div>
 
             {/* Qty + Add to cart */}
-            <div className="flex items-center gap-3 pt-1">
-              <div className="flex items-center border rounded-sm overflow-hidden" style={{ borderColor: "var(--color-parchment)" }}>
+            <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center border rounded-sm overflow-hidden shrink-0" style={{ borderColor: "var(--color-parchment)" }}>
                 <button onClick={() => setQty(Math.max(1, qty - 1))}
-                  className="h-11 w-11 flex items-center justify-center transition-colors hover:bg-cream">
+                  className="h-11 w-10 flex items-center justify-center transition-colors hover:bg-cream">
                   <Minus className="h-4 w-4" style={{ color: "var(--color-text-muted)" }} />
                 </button>
-                <span className="h-11 w-12 flex items-center justify-center text-sm font-body font-semibold border-x"
+                <span className="h-11 w-10 flex items-center justify-center text-sm font-body font-semibold border-x"
                   style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-primary)" }}>
                   {qty}
                 </span>
                 <button onClick={() => setQty(Math.min(v.stockQty, qty + 1))}
-                  className="h-11 w-11 flex items-center justify-center transition-colors hover:bg-cream"
+                  className="h-11 w-10 flex items-center justify-center transition-colors hover:bg-cream"
                   disabled={qty >= v.stockQty}>
                   <Plus className="h-4 w-4" style={{ color: "var(--color-text-muted)" }} />
                 </button>
@@ -249,18 +260,18 @@ export function QuickViewModal() {
               <button
                 onClick={handleAddToCart}
                 disabled={outOfStock}
-                className="flex-1 h-11 flex items-center justify-center gap-2 rounded-sm text-sm font-body font-semibold transition-all"
+                className="flex-1 h-11 flex items-center justify-center gap-1.5 rounded-sm text-sm font-body font-semibold transition-all whitespace-nowrap"
                 style={{
                   background: added ? "var(--color-success)" : outOfStock ? "var(--color-parchment)" : "var(--color-primary)",
                   color: outOfStock ? "var(--color-text-muted)" : "white",
                 }}
               >
-                {added ? <><Check className="h-4 w-4" /> Added!</> : outOfStock ? "Out of Stock" : <><ShoppingBag className="h-4 w-4" /> Add to Cart</>}
+                {added ? <><Check className="h-4 w-4 shrink-0" /> Added!</> : outOfStock ? "Out of Stock" : <><ShoppingBag className="h-4 w-4 shrink-0" /> Add to Cart</>}
               </button>
 
               <button
                 onClick={() => toggle(v.id)}
-                className="h-11 w-11 flex items-center justify-center rounded-sm border transition-colors"
+                className="h-11 w-11 flex items-center justify-center rounded-sm border transition-colors shrink-0"
                 style={{
                   borderColor: wishlisted ? "var(--color-primary)" : "var(--color-parchment)",
                   background: wishlisted ? "var(--color-primary-50)" : "transparent",
@@ -268,11 +279,11 @@ export function QuickViewModal() {
                 }}
                 aria-label="Wishlist"
               >
-                <Heart className={wishlisted ? "h-4.5 w-4.5 fill-current" : "h-4.5 w-4.5"} />
+                <Heart className={wishlisted ? "h-4 w-4 fill-current" : "h-4 w-4"} />
               </button>
             </div>
 
-            {/* Stock */}
+            {/* Stock warning */}
             {!outOfStock && v.stockQty <= 5 && (
               <p className="text-xs font-body font-semibold" style={{ color: "var(--color-warning)" }}>
                 Only {v.stockQty} left in stock
@@ -283,11 +294,14 @@ export function QuickViewModal() {
             <Link
               href={`/shop/${p.slug}`}
               onClick={closeQuickView}
-              className="flex items-center gap-1.5 text-sm font-body font-medium transition-colors hover:gap-2.5"
+              className="flex items-center gap-1.5 text-sm font-body font-medium transition-colors hover:gap-2.5 mt-auto"
               style={{ color: "var(--color-primary)" }}
             >
-              View Full Details <ArrowRight className="h-4 w-4" />
+              View Full Details <ArrowRight className="h-4 w-4 shrink-0" />
             </Link>
+
+            {/* Safe area spacer for mobile */}
+            <div className="sm:hidden h-2" />
           </div>
         </div>
       </div>

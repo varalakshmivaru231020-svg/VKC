@@ -576,7 +576,7 @@ export default function CheckoutPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 lg:items-start">
-          <div className="w-full flex-1 min-w-0">
+          <div className="w-full flex-1 min-w-0 order-2 lg:order-1">
 
             {/* ── STEP 0: Delivery ──────────────────────────────────────────── */}
             {step === 0 && (
@@ -815,7 +815,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Order summary sidebar */}
-          <div className="w-full lg:w-80 shrink-0">
+          <div className="w-full lg:w-80 shrink-0 order-1 lg:order-2">
             <div className="rounded-xl border overflow-hidden sticky top-4" style={{ background: "white", borderColor: "var(--color-parchment)" }}>
               <div className="px-5 py-4 border-b" style={{ borderColor: "var(--color-parchment)", background: "var(--color-cream)" }}>
                 <p className="text-sm font-semibold font-body" style={{ color: "var(--color-text-primary)" }}>
