@@ -485,19 +485,25 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                 <button onClick={() => setSearchOpen(true)} className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Search">
                   <Search className="h-5 w-5" />
                 </button>
-                <Link href="/account/wishlist" className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
-                  <Heart className="h-5 w-5" />
-                  <AnimatePresence>
-                    {mounted && wishlistCount > 0 && (
-                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                        className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center rounded-full text-white text-[9px] font-bold"
-                        style={{ background: "var(--color-primary)" }}>
-                        {wishlistCount > 9 ? "9+" : wishlistCount}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </Link>
+                {isLoggedIn ? (
+                  <Link href="/account/wishlist" className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
+                    <Heart className="h-5 w-5" />
+                    <AnimatePresence>
+                      {mounted && wishlistCount > 0 && (
+                        <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                          className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center rounded-full text-white text-[9px] font-bold"
+                          style={{ background: "var(--color-primary)" }}>
+                          {wishlistCount > 9 ? "9+" : wishlistCount}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Link>
+                ) : (
+                  <button onClick={() => openLoginModal()} className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
+                    <Heart className="h-5 w-5" />
+                  </button>
+                )}
                 <button onClick={openCart} className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Cart">
                   <ShoppingBag className="h-5 w-5" />
                   <AnimatePresence>
