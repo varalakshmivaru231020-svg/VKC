@@ -159,24 +159,24 @@ export default function CartPage() {
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between mt-3">
-                      <div>
+                    <div className="flex items-center justify-between gap-2 mt-3 flex-wrap">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
                         <span style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-price-sm)", fontStyle: "italic", color: "var(--color-primary)" }}>
                           {formatINR(item.salePrice)}
                         </span>
                         {hasDiscount && (
-                          <span className="ml-2 text-xs line-through font-body" style={{ color: "var(--color-text-muted)" }}>
+                          <span className="text-xs line-through font-body" style={{ color: "var(--color-text-muted)" }}>
                             {formatINR(item.originalPrice)}
                           </span>
                         )}
                         {hasDiscount && (
-                          <span className="ml-1.5 text-[10px] font-body font-semibold rounded-xs px-1.5 py-0.5"
+                          <span className="text-[10px] font-body font-semibold rounded-xs px-1.5 py-0.5"
                             style={{ background: "var(--color-success-bg)", color: "var(--color-success)" }}>
                             {pct}% off
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center border rounded-xs overflow-hidden"
+                      <div className="flex items-center border rounded-xs overflow-hidden shrink-0"
                         style={{ borderColor: "var(--color-parchment)" }}>
                         <button onClick={() => updateQty(item.variantId, item.quantity - 1)}
                           className="h-8 w-8 flex items-center justify-center transition-colors hover:bg-cream">
@@ -193,16 +193,16 @@ export default function CartPage() {
                         </button>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between mt-1.5">
+                    <div className="flex items-center justify-between gap-2 mt-1.5 flex-wrap">
                       <p className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>
                         Item total: <span style={{ color: "var(--color-text-primary)", fontWeight: 600 }}>{formatINR(item.salePrice * item.quantity)}</span>
                       </p>
                       <button
                         onClick={() => moveToWishlist(item.variantId)}
-                        className="flex items-center gap-1 text-xs font-body font-medium transition-colors hover:opacity-80"
+                        className="flex items-center gap-1 text-xs font-body font-medium transition-colors hover:opacity-80 whitespace-nowrap shrink-0"
                         style={{ color: "var(--color-primary)" }}
                       >
-                        <Heart className="h-3.5 w-3.5" />
+                        <Heart className="h-3.5 w-3.5 shrink-0" />
                         Move to Wishlist
                       </button>
                     </div>
@@ -384,9 +384,9 @@ export default function CartPage() {
                 Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
 
-              <div className="flex items-center justify-center gap-4 mt-4">
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-4">
                 {["UPI", "Cards", "NetBanking", "EMI", "COD"].map((m) => (
-                  <span key={m} className="text-[10px] font-body font-medium" style={{ color: "var(--color-text-muted)" }}>{m}</span>
+                  <span key={m} className="text-[10px] font-body font-medium whitespace-nowrap" style={{ color: "var(--color-text-muted)" }}>{m}</span>
                 ))}
               </div>
             </div>

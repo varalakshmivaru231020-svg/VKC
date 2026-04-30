@@ -77,7 +77,7 @@ function Field({ label, value, onChange, placeholder, error, type = "text", disa
 
 function OtpBoxes({ value, onChange, idPrefix }: { value: string; onChange: (v: string) => void; idPrefix: string }) {
   return (
-    <div className="flex gap-2 justify-center">
+    <div className="flex gap-1.5 sm:gap-2 justify-center">
       {Array.from({ length: 6 }).map((_, i) => (
         <input
           key={i} id={`${idPrefix}-${i}`} type="text" inputMode="numeric" maxLength={1}
@@ -94,7 +94,7 @@ function OtpBoxes({ value, onChange, idPrefix }: { value: string; onChange: (v: 
               const arr = value.split(""); arr[i - 1] = ""; onChange(arr.join(""));
             }
           }}
-          className="w-11 h-14 text-center text-xl font-bold rounded-lg border-2 focus:outline-none transition-all"
+          className="w-9 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-lg border-2 focus:outline-none transition-all"
           style={{ borderColor: value[i] ? "var(--color-primary)" : "var(--color-parchment)", background: "white", color: "var(--color-text-primary)" }}
           onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-primary)"; e.currentTarget.style.boxShadow = "0 0 0 3px var(--color-primary-50)"; }}
           onBlur={(e) => { e.currentTarget.style.borderColor = value[i] ? "var(--color-primary)" : "var(--color-parchment)"; e.currentTarget.style.boxShadow = "none"; }}
@@ -568,7 +568,7 @@ export default function CheckoutPage() {
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className="w-16 sm:w-28 h-0.5 mx-3 mb-5 transition-all"
+                <div className="w-10 sm:w-28 h-0.5 mx-2 sm:mx-3 mb-5 transition-all"
                   style={{ background: i < step ? "var(--color-success)" : "var(--color-parchment)" }} />
               )}
             </div>

@@ -79,6 +79,7 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
@@ -88,6 +89,7 @@
     font-weight: var(--weight-body);
     color: var(--color-text-primary);
     background-color: var(--color-ivory);
+    overflow-x: hidden;
   }
 
   /* Scoped to marketing pages — admin overrides via inline styles */

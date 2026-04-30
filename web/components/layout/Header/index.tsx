@@ -648,11 +648,11 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
           </div>
         </div>
 
-        {/* ── Hidden measurement div (absolutely positioned, invisible) ── */}
+        {/* ── Hidden measurement div (fixed off-screen so it never adds to scroll width) ── */}
         <div
           ref={measureRef}
           aria-hidden="true"
-          style={{ position: "absolute", visibility: "hidden", display: "flex", top: 0, left: 0, pointerEvents: "none", zIndex: -1 }}
+          style={{ position: "fixed", visibility: "hidden", display: "flex", top: 0, left: "-9999px", pointerEvents: "none", zIndex: -1 }}
         >
           <div data-m="new-arrivals" className={NAV_LINK_CLS}>New Arrivals</div>
           <div data-m="more"         className={NAV_LINK_CLS}>More <ChevronDown className="h-3.5 w-3.5" /></div>

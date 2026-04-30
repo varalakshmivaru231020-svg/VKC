@@ -234,10 +234,10 @@ export function CartSidebar() {
               {/* Buttons */}
               <button
                 onClick={handleCheckout}
-                className="flex items-center justify-center gap-2 w-full h-12 rounded-sm text-sm font-body font-semibold transition-colors"
+                className="flex items-center justify-center gap-2 w-full h-12 rounded-sm text-sm font-body font-semibold transition-colors whitespace-nowrap"
                 style={{ background: "var(--color-primary)", color: "white" }}
               >
-                Proceed to Checkout <ArrowRight className="h-4 w-4" />
+                Proceed to Checkout <ArrowRight className="h-4 w-4 shrink-0" />
               </button>
               <Link
                 href="/cart"

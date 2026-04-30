@@ -404,22 +404,22 @@ export default function ProductDetailClient({ product, careInstructions, deliver
           {available > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="flex items-center border rounded-sm overflow-hidden"
+                <div className="flex items-center border rounded-sm overflow-hidden shrink-0"
                   style={{ borderColor: "var(--color-parchment)" }}>
                   <button
                     onClick={() => setQty(Math.max(1, qty - 1))}
-                    className="h-11 w-11 flex items-center justify-center text-lg font-body transition-colors hover:bg-cream"
+                    className="h-11 w-10 sm:w-11 flex items-center justify-center text-lg font-body transition-colors hover:bg-cream"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     −
                   </button>
-                  <span className="h-11 w-12 flex items-center justify-center text-sm font-body font-medium border-x"
+                  <span className="h-11 w-10 sm:w-12 flex items-center justify-center text-sm font-body font-medium border-x"
                     style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-primary)" }}>
                     {qty}
                   </span>
                   <button
                     onClick={() => setQty(Math.min(available, qty + 1))}
-                    className="h-11 w-11 flex items-center justify-center text-lg font-body transition-colors hover:bg-cream"
+                    className="h-11 w-10 sm:w-11 flex items-center justify-center text-lg font-body transition-colors hover:bg-cream"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     +
@@ -427,17 +427,17 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                 </div>
 
                 <Button
-                  className={cn("flex-1 h-11 transition-all", addedToCart && "bg-success hover:bg-success")}
+                  className={cn("flex-1 h-11 min-w-0 transition-all whitespace-nowrap", addedToCart && "bg-success hover:bg-success")}
                   onClick={handleAddToCart}
                 >
-                  <ShoppingBag className="h-4 w-4 mr-2" />
-                  {addedToCart ? "Added to Cart!" : "Add to Cart"}
+                  <ShoppingBag className="h-4 w-4 mr-1.5 shrink-0" />
+                  {addedToCart ? "Added!" : "Add to Cart"}
                 </Button>
 
                 <button
                   onClick={() => toggle(selectedVariant.id)}
                   className={cn(
-                    "h-11 w-11 flex items-center justify-center rounded-sm border transition-colors",
+                    "hidden sm:flex h-11 w-11 items-center justify-center rounded-sm border transition-colors shrink-0",
                     isWishlisted(selectedVariant.id)
                       ? "bg-primary border-primary"
                       : "border-parchment hover:border-primary"
