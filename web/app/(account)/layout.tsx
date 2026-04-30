@@ -15,11 +15,11 @@ function parseFooterLinks(v: string | undefined): { label: string; href: string 
 }
 
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
-  const [settings, session, topCategories, siteSettings] = await Promise.all([
+  const [settings, session, allCategories, siteSettings] = await Promise.all([
     getThemeSettings(),
     auth(),
     db.category.findMany({
-      where: { parentId: null, isActive: true },
+      where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       include: {
         children: {
@@ -40,6 +40,15 @@ export default async function AccountLayout({ children }: { children: React.Reac
       return m;
     }).catch(() => ({} as Record<string, string>)),
   ]);
+
+  // Same header_nav logic as marketing layout
+  const navOrder: string[] = (() => {
+    try { return siteSettings["header_nav"] ? JSON.parse(siteSettings["header_nav"]) : []; }
+    catch { return []; }
+  })();
+  const topCategories = navOrder.length > 0
+    ? (navOrder.map(id => allCategories.find(c => c.id === id)).filter(Boolean) as typeof allCategories)
+    : allCategories.filter(c => !c.parentId);
 
   const user = session?.user;
 

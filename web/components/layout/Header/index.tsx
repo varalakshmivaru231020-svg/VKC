@@ -414,6 +414,8 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
     };
 
     calculate();
+    // Re-run after fonts load so measurements use actual rendered widths
+    document.fonts?.ready.then(calculate);
     const ro = new ResizeObserver(calculate);
     if (navRef.current) ro.observe(navRef.current);
     return () => ro.disconnect();
