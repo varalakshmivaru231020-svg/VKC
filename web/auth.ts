@@ -49,10 +49,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     // ── Customer: mobile OTP ─────────────────────────────────────────────────
     Credentials({
       id: "phone-otp",
-      credentials: { phone: {}, otp: {} },
+      credentials: { phone: {}, otp: {}, name: {} },
       async authorize(credentials) {
         const rawPhone = credentials?.phone as string | undefined;
         const otp      = credentials?.otp   as string | undefined;
+        const fullName = (credentials?.name as string | undefined)?.trim() || "";
         if (!rawPhone || !otp) return null;
 
         const phone = normalisePhone(rawPhone);
@@ -72,6 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         let user = await db.user.findUnique({ where: { phone } });
         if (!user) {
+          const nameParts = fullName.split(/\s+/).filter(Boolean);
           user = await db.$transaction(async (tx) => {
             const last = await tx.user.findFirst({
               where: { customerNumber: { not: null } },
@@ -85,6 +87,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 isActive:       true,
                 phoneVerified:  true,
                 customerNumber: (last?.customerNumber ?? 0) + 1,
+                firstName:      nameParts[0] ?? null,
+                lastName:       nameParts.slice(1).join(" ") || null,
               },
             });
           });

@@ -29,20 +29,21 @@ export async function POST(req: Request) {
       data: { used: true },
     });
 
-    const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+    const code = "123456"; // Fixed OTP for testing
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
     await db.otpCode.create({ data: { phone: normalised, code, expiresAt } });
 
-    // TODO: integrate SMS gateway (MSG91 / Twilio) here
-    // For development, OTP is returned in response
-    const isDev = process.env.NODE_ENV !== "production";
-
     console.log(`[OTP] ${normalised} → ${code}`);
+
+    const existingUser = await db.user.findUnique({
+      where: { phone: normalised },
+      select: { id: true, firstName: true },
+    });
 
     return NextResponse.json({
       success: true,
-      ...(isDev ? { otp: code } : {}),
+      isNew: !existingUser,
     });
   } catch (err) {
     console.error("[OTP send]", err);

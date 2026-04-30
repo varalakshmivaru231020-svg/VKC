@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, ArrowRight, RotateCcw } from "lucide-react";
+import { X, ArrowRight, RotateCcw, User } from "lucide-react";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { signIn } from "next-auth/react";
 import { useUIStore } from "@/lib/store/ui";
@@ -53,17 +53,18 @@ export function LoginModal() {
   const [phone, setPhone]       = useState("");
   const [dialCode, setDialCode] = useState("+91");
   const [otp, setOtp]           = useState("");
+  const [name, setName]         = useState("");
+  const [isNew, setIsNew]       = useState(false);
   const [step, setStep]         = useState<"phone" | "otp">("phone");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
-  const [devOtp, setDevOtp]     = useState("");
   const [countdown, setCountdown] = useState(0);
 
   if (!loginModalOpen) return null;
 
   const reset = () => {
-    setPhone(""); setDialCode("+91"); setOtp(""); setStep("phone");
-    setError(""); setDevOtp(""); setCountdown(0);
+    setPhone(""); setDialCode("+91"); setOtp(""); setName("");
+    setIsNew(false); setStep("phone"); setError(""); setCountdown(0);
   };
 
   const handleClose = () => { reset(); closeLoginModal(); };
@@ -83,9 +84,9 @@ export function LoginModal() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Failed to send OTP"); return; }
+      setIsNew(!!data.isNew);
       setStep("otp");
       startCountdown();
-      if (data.otp) setDevOtp(data.otp);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -97,7 +98,12 @@ export function LoginModal() {
     if (otp.length < 6) { setError("Enter the 6-digit OTP"); return; }
     setError(""); setLoading(true);
     try {
-      const result = await signIn("phone-otp", { phone: dialCode + phone, otp, redirect: false });
+      const result = await signIn("phone-otp", {
+        phone: dialCode + phone,
+        otp,
+        name: name.trim(),
+        redirect: false,
+      });
       if (result?.error) {
         setError("Invalid or expired OTP. Please try again.");
         setOtp("");
@@ -112,6 +118,11 @@ export function LoginModal() {
       setLoading(false);
     }
   };
+
+  const stepTitle = step === "phone" ? "Sign in to continue" : isNew ? "Create Account" : "Verify Mobile";
+  const stepSub   = step === "phone"
+    ? "Save your cart and track orders easily"
+    : `OTP sent to ${dialCode} ${phone}`;
 
   return (
     <div
@@ -136,12 +147,10 @@ export function LoginModal() {
             Vijaylakshmi Sarees
           </p>
           <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.6rem", color: "var(--color-text-primary)" }}>
-            {step === "phone" ? "Sign in to continue" : "Verify Mobile"}
+            {stepTitle}
           </h2>
           <p className="text-sm font-body mt-1" style={{ color: "var(--color-text-muted)" }}>
-            {step === "phone"
-              ? "Save your cart and track orders easily"
-              : `OTP sent to ${dialCode} ${phone}`}
+            {stepSub}
           </p>
         </div>
 
@@ -150,13 +159,6 @@ export function LoginModal() {
             <div className="px-4 py-3 rounded-lg text-sm font-body"
               style={{ background: "var(--color-error-bg)", color: "var(--color-error)", border: "1px solid var(--color-error)" }}>
               {error}
-            </div>
-          )}
-
-          {devOtp && step === "otp" && (
-            <div className="px-3 py-2 rounded-lg text-xs font-body text-center"
-              style={{ background: "#FEF9C3", color: "#92400E", border: "1px solid #FDE68A" }}>
-              Dev mode — OTP: <strong>{devOtp}</strong>
             </div>
           )}
 
@@ -190,7 +192,39 @@ export function LoginModal() {
             </>
           ) : (
             <>
-              <OtpBoxes value={otp} onChange={setOtp} idPrefix="modal-otp" />
+              {/* Name field — only for new users */}
+              {isNew && (
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium font-body" style={{ color: "var(--color-text-primary)" }}>
+                    Your Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--color-text-muted)" }} />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your full name"
+                      autoFocus
+                      className="w-full h-11 pl-9 pr-4 rounded-lg border text-sm font-body focus:outline-none transition-all"
+                      style={{
+                        borderColor: "var(--color-parchment)",
+                        background: "white",
+                        color: "var(--color-text-primary)",
+                      }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-primary)"; e.currentTarget.style.boxShadow = "0 0 0 3px var(--color-primary-50)"; }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = "var(--color-parchment)"; e.currentTarget.style.boxShadow = "none"; }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium font-body text-center" style={{ color: "var(--color-text-primary)" }}>
+                  Enter 6-digit OTP
+                </label>
+                <OtpBoxes value={otp} onChange={setOtp} idPrefix="modal-otp" />
+              </div>
 
               <button
                 onClick={verifyOtp}
@@ -200,12 +234,12 @@ export function LoginModal() {
               >
                 {loading
                   ? <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  : "Verify & Sign In"}
+                  : isNew ? "Create Account & Sign In" : "Verify & Sign In"}
               </button>
 
               <div className="flex items-center justify-between text-sm font-body">
                 <button
-                  onClick={() => { setStep("phone"); setOtp(""); setError(""); setDevOtp(""); }}
+                  onClick={() => { setStep("phone"); setOtp(""); setError(""); }}
                   className="flex items-center gap-1 hover:underline"
                   style={{ color: "var(--color-text-muted)" }}
                 >
@@ -217,7 +251,6 @@ export function LoginModal() {
               </div>
             </>
           )}
-
         </div>
       </div>
     </div>
