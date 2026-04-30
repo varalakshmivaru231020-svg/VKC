@@ -1,49 +1,53 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { db } from "@/lib/db";
 import { getProducts } from "@/lib/db/products";
 import { getThemeSettings } from "@/lib/theme/server";
 import { ProductGrid } from "@/components/product/ProductGrid";
-import ShopFilters from "./ShopFilters";
+import ShopFilters, { attrKey } from "./ShopFilters";
 import ShopHeader from "./ShopHeader";
 import type { ProductData } from "@/lib/types/product";
 
 export const metadata: Metadata = { title: "Shop All Sarees" };
 export const dynamic = "force-dynamic";
 
-const FABRICS = ["Silk", "Cotton", "Georgette", "Chiffon", "Crepe", "Tussar", "Organza"];
-const OCCASIONS = ["Wedding", "Festival", "Party", "Daily", "Office"];
-const REGIONS = ["Tamil Nadu", "Uttar Pradesh", "Gujarat", "Madhya Pradesh", "Karnataka", "Odisha", "West Bengal"];
 const SORT_OPTIONS = [
-  { label: "Newest First",   value: "newest" },
+  { label: "Newest First",      value: "newest" },
   { label: "Price: Low → High", value: "price-asc" },
   { label: "Price: High → Low", value: "price-desc" },
 ];
 
 interface Props {
-  searchParams: {
-    sort?: string;
-    fabric?: string;
-    occasion?: string;
-    region?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    inStock?: string;
-    q?: string;
-    page?: string;
-  };
+  searchParams: Record<string, string | undefined>;
 }
 
 export default async function ShopPage({ searchParams }: Props) {
-  const settings = await getThemeSettings();
+  const [settings, attributes] = await Promise.all([
+    getThemeSettings(),
+    db.attribute.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, options: true, inputType: true },
+    }).catch(() => []),
+  ]);
+
+  // Build attribute filters from URL params
+  const attributeFilters: { attributeId: string; value: string }[] = [];
+  for (const attr of attributes) {
+    const key = attrKey(attr.name);
+    const val = searchParams[key];
+    if (val) attributeFilters.push({ attributeId: attr.id, value: val });
+  }
+
   const page = parseInt(searchParams.page ?? "1");
 
-  let result: { products: ProductData[]; total: number; page: number; limit: number } = { products: [], total: 0, page: 1, limit: 24 };
+  let result: { products: ProductData[]; total: number; page: number; limit: number } = {
+    products: [], total: 0, page: 1, limit: 24,
+  };
   try {
     result = await getProducts({
       sort: (searchParams.sort as any) ?? "newest",
-      fabric: searchParams.fabric,
-      occasion: searchParams.occasion,
-      regionOfOrigin: searchParams.region,
+      attributeFilters: attributeFilters.length ? attributeFilters : undefined,
       minPrice: searchParams.minPrice ? parseInt(searchParams.minPrice) : undefined,
       maxPrice: searchParams.maxPrice ? parseInt(searchParams.maxPrice) : undefined,
       inStock: searchParams.inStock === "true",
@@ -54,11 +58,16 @@ export default async function ShopPage({ searchParams }: Props) {
   } catch {}
 
   const totalPages = Math.ceil(result.total / result.limit);
-  const activeFilters = [
-    searchParams.fabric, searchParams.occasion, searchParams.region,
-    searchParams.inStock === "true" ? "In Stock" : null,
-    searchParams.q ? `"${searchParams.q}"` : null,
-  ].filter(Boolean) as string[];
+
+  // Active filter labels for display
+  const activeFilters: string[] = [];
+  for (const attr of attributes) {
+    const key = attrKey(attr.name);
+    const val = searchParams[key];
+    if (val) activeFilters.push(val);
+  }
+  if (searchParams.inStock === "true") activeFilters.push("In Stock");
+  if (searchParams.q) activeFilters.push(`"${searchParams.q}"`);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
@@ -78,12 +87,7 @@ export default async function ShopPage({ searchParams }: Props) {
           {/* Sidebar filters */}
           <aside className="hidden lg:block w-64 shrink-0">
             <div className="sidebar-sticky pr-1">
-            <ShopFilters
-              fabrics={FABRICS}
-              occasions={OCCASIONS}
-              regions={REGIONS}
-              current={searchParams}
-            />
+              <ShopFilters attributes={attributes} current={searchParams} />
             </div>
           </aside>
 
@@ -94,9 +98,7 @@ export default async function ShopPage({ searchParams }: Props) {
               sortOptions={SORT_OPTIONS}
               currentSort={searchParams.sort ?? "newest"}
               activeFilters={activeFilters}
-              fabrics={FABRICS}
-              occasions={OCCASIONS}
-              regions={REGIONS}
+              attributes={attributes}
               current={searchParams}
             />
             <div className="mt-6">
@@ -109,7 +111,7 @@ export default async function ShopPage({ searchParams }: Props) {
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                   <a
                     key={p}
-                    href={`?${new URLSearchParams({ ...searchParams, page: String(p) })}`}
+                    href={`?${new URLSearchParams({ ...searchParams, page: String(p) } as Record<string, string>)}`}
                     className="h-9 w-9 flex items-center justify-center rounded-sm text-sm font-body font-medium transition-colors border"
                     style={
                       p === page

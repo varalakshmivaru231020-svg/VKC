@@ -5,10 +5,15 @@ import { useCallback, useState } from "react";
 import { X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export interface FilterAttribute {
+  id: string;
+  name: string;
+  options: string[];
+  inputType: string;
+}
+
 interface Props {
-  fabrics: string[];
-  occasions: string[];
-  regions: string[];
+  attributes: FilterAttribute[];
   current: Record<string, string | undefined>;
 }
 
@@ -19,7 +24,11 @@ const PRICE_PRESETS = [
   { label: "Above ₹30K", min: "30000", max: "" },
 ];
 
-export default function ShopFilters({ fabrics, occasions, regions, current }: Props) {
+export function attrKey(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+}
+
+export default function ShopFilters({ attributes, current }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -40,7 +49,9 @@ export default function ShopFilters({ fabrics, occasions, regions, current }: Pr
     setCollapsed((s) => ({ ...s, [key]: !s[key] }));
   };
 
-  const hasFilters = Object.values(current).some(Boolean);
+  const hasFilters = Object.entries(current).some(([k, v]) =>
+    v && !["sort", "page", "q"].includes(k)
+  );
 
   const Section = ({ id, title, children }: { id: string; title: string; children: React.ReactNode }) => {
     const open = !collapsed[id];
@@ -55,17 +66,10 @@ export default function ShopFilters({ fabrics, occasions, regions, current }: Pr
           </p>
           <ChevronDown
             className="h-3.5 w-3.5 transition-transform duration-200"
-            style={{
-              color: "var(--color-text-muted)",
-              transform: open ? "rotate(0deg)" : "rotate(-90deg)",
-            }}
+            style={{ color: "var(--color-text-muted)", transform: open ? "rotate(0deg)" : "rotate(-90deg)" }}
           />
         </button>
-        {open && (
-          <div className="animate-slide-down overflow-hidden">
-            {children}
-          </div>
-        )}
+        {open && <div className="animate-slide-down overflow-hidden">{children}</div>}
       </div>
     );
   };
@@ -87,8 +91,7 @@ export default function ShopFilters({ fabrics, occasions, regions, current }: Pr
 
   return (
     <div className="space-y-6 pb-8">
-
-      {/* Header row */}
+      {/* Header */}
       <div className="flex items-center justify-between pb-1">
         <p className="text-sm font-semibold font-body" style={{ color: "var(--color-text-primary)" }}>Filters</p>
         {hasFilters && (
@@ -104,7 +107,7 @@ export default function ShopFilters({ fabrics, occasions, regions, current }: Pr
 
       <div className="gold-divider" />
 
-      {/* Price */}
+      {/* Price Range — always shown */}
       <Section id="price" title="Price Range">
         <div className="space-y-3 mb-4">
           <div className="flex items-center gap-2">
@@ -150,75 +153,40 @@ export default function ShopFilters({ fabrics, occasions, regions, current }: Pr
         </div>
       </Section>
 
-      <div className="gold-divider" />
-
-      {/* Occasion */}
-      <Section id="occasion" title="Occasion">
-        <div className="flex flex-wrap gap-2 mb-4">
-          {occasions.map((o) => (
-            <CheckChip key={o} label={o} active={current.occasion === o} onClick={() => toggle("occasion", o)} />
-          ))}
-        </div>
-      </Section>
-
-      <div className="gold-divider" />
-
-      {/* Fabric */}
-      <Section id="fabric" title="Fabric">
-        <div className="flex flex-wrap gap-2 mb-4">
-          {fabrics.map((f) => (
-            <CheckChip key={f} label={f} active={current.fabric === f} onClick={() => toggle("fabric", f)} />
-          ))}
-        </div>
-      </Section>
-
-      <div className="gold-divider" />
-
-      {/* Region */}
-      <Section id="region" title="Region">
-        <div className="space-y-2.5 mb-4">
-          {regions.map((r) => {
-            const active = current.region === r;
-            return (
-              <label key={r} className="flex items-center gap-2.5 cursor-pointer group">
-                <div
-                  onClick={() => toggle("region", r)}
-                  className={cn(
-                    "w-4 h-4 rounded-sm border flex items-center justify-center transition-all shrink-0",
-                    active ? "border-primary bg-primary" : "border-parchment group-hover:border-primary/50"
-                  )}
-                >
-                  {active && (
-                    <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="1,5 4,8 11,1" />
-                    </svg>
-                  )}
-                </div>
-                <span
-                  className="text-sm font-body transition-colors"
-                  style={{ color: active ? "var(--color-primary)" : "var(--color-text-secondary)" }}
-                >
-                  {r}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      </Section>
+      {/* Dynamic attribute filters */}
+      {attributes.map((attr) => {
+        if (!attr.options.length) return null;
+        const key = attrKey(attr.name);
+        return (
+          <div key={attr.id}>
+            <div className="gold-divider" />
+            <Section id={attr.id} title={attr.name}>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {attr.options.map((opt) => (
+                  <CheckChip
+                    key={opt}
+                    label={opt}
+                    active={current[key] === opt}
+                    onClick={() => toggle(key, opt)}
+                  />
+                ))}
+              </div>
+            </Section>
+          </div>
+        );
+      })}
 
       <div className="gold-divider" />
 
-      {/* More Filters */}
+      {/* In Stock toggle — always shown */}
       <Section id="more" title="More Filters">
         <div className="space-y-3 mb-4">
-          {[
-            { key: "inStock", label: "In Stock Only" },
-          ].map(({ key, label }) => {
-            const active = current[key] === "true";
+          {(() => {
+            const active = current.inStock === "true";
             return (
-              <label key={key} className="flex items-center gap-3 cursor-pointer group">
+              <label className="flex items-center gap-3 cursor-pointer group">
                 <button
-                  onClick={() => update(key, active ? null : "true")}
+                  onClick={() => update("inStock", active ? null : "true")}
                   className={cn(
                     "relative w-10 h-5 rounded-full transition-colors duration-200 shrink-0",
                     active ? "bg-primary" : "bg-parchment"
@@ -233,10 +201,10 @@ export default function ShopFilters({ fabrics, occasions, regions, current }: Pr
                     )}
                   />
                 </button>
-                <span className="text-sm font-body" style={{ color: "var(--color-text-secondary)" }}>{label}</span>
+                <span className="text-sm font-body" style={{ color: "var(--color-text-secondary)" }}>In Stock Only</span>
               </label>
             );
-          })}
+          })()}
         </div>
       </Section>
     </div>

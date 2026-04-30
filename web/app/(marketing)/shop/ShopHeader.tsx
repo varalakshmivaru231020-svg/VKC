@@ -3,22 +3,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X, ChevronDown, Check } from "lucide-react";
-import ShopFilters from "./ShopFilters";
+import ShopFilters, { type FilterAttribute } from "./ShopFilters";
 
 interface Props {
   total: number;
   sortOptions: { label: string; value: string }[];
   currentSort: string;
   activeFilters: string[];
-  fabrics: string[];
-  occasions: string[];
-  regions: string[];
+  attributes: FilterAttribute[];
   current: Record<string, string | undefined>;
 }
 
 export default function ShopHeader({
   total, sortOptions, currentSort, activeFilters,
-  fabrics, occasions, regions, current,
+  attributes, current,
 }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -163,7 +161,7 @@ export default function ShopHeader({
               </button>
             </div>
             <div className="px-5 pt-4">
-              <ShopFilters fabrics={fabrics} occasions={occasions} regions={regions} current={current} />
+              <ShopFilters attributes={attributes} current={current} />
             </div>
           </div>
         </>

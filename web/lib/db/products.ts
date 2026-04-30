@@ -16,10 +16,7 @@ function mapProduct(p: any): ProductData {
 
 export interface ProductFilters {
   categorySlug?: string;
-  occasion?: string;
-  fabric?: string;
-  weaveType?: string;
-  regionOfOrigin?: string;
+  attributeFilters?: { attributeId: string; value: string }[];
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
@@ -32,7 +29,7 @@ export interface ProductFilters {
 
 export async function getProducts(filters: ProductFilters = {}) {
   const {
-    categorySlug, occasion, fabric, weaveType, regionOfOrigin,
+    categorySlug, attributeFilters,
     minPrice, maxPrice, inStock, isFeatured, search,
     sort = "newest", page = 1, limit = 24,
   } = filters;
@@ -42,20 +39,13 @@ export async function getProducts(filters: ProductFilters = {}) {
   if (categorySlug) {
     where.category = { slug: categorySlug };
   }
-  if (occasion) {
-    where.occasions = { has: occasion };
-  }
-  if (fabric) {
-    where.fabric = { contains: fabric, mode: "insensitive" };
-  }
-  if (weaveType) {
-    where.weaveType = { contains: weaveType, mode: "insensitive" };
-  }
-  if (regionOfOrigin) {
-    where.regionOfOrigin = { contains: regionOfOrigin, mode: "insensitive" };
-  }
   if (isFeatured !== undefined) {
     where.isFeatured = isFeatured;
+  }
+  if (attributeFilters && attributeFilters.length > 0) {
+    where.AND = attributeFilters.map(({ attributeId, value }) => ({
+      productAttributes: { some: { attributeId, values: { has: value } } },
+    }));
   }
   if (search) {
     where.OR = [
