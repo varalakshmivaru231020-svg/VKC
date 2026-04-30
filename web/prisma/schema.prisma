@@ -1,0 +1,536 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── DESIGN SYSTEM ────────────────────────────────────────────────────────────
+
+model SiteSetting {
+  key       String   @id
+  value     String   @db.Text
+  label     String
+  group     String   // colors | typography | spacing | general
+  type      String   // color | font-family | font-size | font-weight | text | number | select | boolean
+  options   Json?    // for select type: [{ label, value }]
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// ─── CATEGORIES ────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String     @db.VarChar(100)
+  slug        String     @unique @db.VarChar(100)
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  description String?    @db.Text
+  imageUrl    String?    @db.VarChar(500)
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  products    Product[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("categories")
+}
+
+// ─── PRODUCTS ─────────────────────────────────────────────────────────────────
+
+model Product {
+  id              String           @id @default(cuid())
+  name            String           @db.VarChar(300)
+  slug            String           @unique @db.VarChar(300)
+  description     String?          @db.Text
+  shortDesc       String?          @db.VarChar(500)
+  categoryId      String?
+  category        Category?        @relation(fields: [categoryId], references: [id])
+  fabric          String?          @db.VarChar(100)
+  weaveType       String?          @db.VarChar(100)
+  occasions       String[]
+  regionOfOrigin  String?          @db.VarChar(100)
+  blousePiece     Boolean          @default(false)
+  blouseLengthCm  Int?
+  sareeLengthCm   Int              @default(560)
+  careInstructions String?         @db.Text
+  weightGm        Int?
+  isActive        Boolean          @default(true)
+  isFeatured      Boolean          @default(false)
+  videoUrl        String?          @db.VarChar(500)
+  metaTitle       String?          @db.VarChar(200)
+  metaDescription String?          @db.VarChar(400)
+  tags              String[]
+  variants          ProductVariant[]
+  productAttributes ProductAttribute[]
+  reviews           Review[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([categoryId, isActive, createdAt(sort: Desc)])
+  @@map("products")
+}
+
+model Attribute {
+  id           String             @id @default(cuid())
+  name         String             @db.VarChar(100)
+  imageUrl     String?            @db.VarChar(500)
+  inputType    String             @default("SINGLE")
+  options      String[]
+  optionImages String[]
+  sortOrder    Int                @default(0)
+  isActive     Boolean            @default(true)
+  products     ProductAttribute[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@map("attributes")
+}
+
+model ProductAttribute {
+  id          String    @id @default(cuid())
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeId String
+  attribute   Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  values      String[]
+
+  @@unique([productId, attributeId])
+  @@index([productId])
+  @@map("product_attributes")
+}
+
+model ProductVariant {
+  id            String         @id @default(cuid())
+  productId     String
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  colorName     String         @db.VarChar(100)
+  colorHex      String         @db.VarChar(7)
+  colorHex2     String?        @db.VarChar(7)
+  sareeCode     String?        @unique @db.VarChar(50)
+  barcode       String?        @unique @db.VarChar(100)
+  costPrice     Decimal        @db.Decimal(10, 2)
+  salePrice     Decimal        @db.Decimal(10, 2)
+  originalPrice Decimal        @db.Decimal(10, 2)
+  stockQty      Int            @default(0)
+  reservedQty   Int            @default(0)
+  isActive      Boolean        @default(true)
+  sortOrder     Int            @default(0)
+  images        ProductImage[]
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+  orderItems    OrderItem[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([productId, isActive])
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id        String          @id @default(cuid())
+  productId String
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  url       String          @db.VarChar(500)
+  altText   String?         @db.VarChar(200)
+  sortOrder Int             @default(0)
+  isPrimary Boolean         @default(false)
+  width     Int?
+  height    Int?
+  blurHash  String?         @db.VarChar(100)
+
+  @@index([productId, variantId])
+  @@map("product_images")
+}
+
+// ─── USERS ────────────────────────────────────────────────────────────────────
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String   @db.VarChar(20)
+  code      String   @db.VarChar(6)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@map("otp_codes")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  customerNumber Int?      @unique
+  email          String?   @unique @db.VarChar(255)
+  phone          String?   @unique @db.VarChar(20)
+  passwordHash   String?   @db.VarChar(255)
+  firstName      String?   @db.VarChar(100)
+  lastName       String?   @db.VarChar(100)
+  avatarUrl      String?   @db.VarChar(500)
+  role           UserRole  @default(CUSTOMER)
+  emailVerified  Boolean   @default(false)
+  phoneVerified  Boolean   @default(false)
+  isActive       Boolean   @default(true)
+  isBlocked      Boolean   @default(false)
+  blockedReason  String?   @db.VarChar(500)
+  addresses      Address[]
+  orders         Order[]
+  cart           Cart?
+  wishlist       WishlistItem[]
+  reviews        Review[]
+  wallet         Wallet?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("users")
+}
+
+enum UserRole {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+model Address {
+  id           String  @id @default(cuid())
+  userId       String
+  user         User    @relation(fields: [userId], references: [id])
+  label        String? @db.VarChar(50)
+  fullName     String  @db.VarChar(200)
+  phone        String  @db.VarChar(20)
+  addressLine1 String  @db.VarChar(300)
+  addressLine2 String? @db.VarChar(300)
+  city         String  @db.VarChar(100)
+  state        String  @db.VarChar(100)
+  pincode      String  @db.VarChar(10)
+  country      String  @default("India") @db.VarChar(50)
+  isDefault    Boolean @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ─── ORDERS ───────────────────────────────────────────────────────────────────
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique @db.VarChar(20)
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id])
+  guestEmail      String?       @db.VarChar(255)
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   String?       @db.VarChar(50)
+  paymentId       String?       @db.VarChar(100)
+  subtotal        Decimal       @db.Decimal(10, 2)
+  discountAmount  Decimal       @default(0) @db.Decimal(10, 2)
+  shippingAmount  Decimal       @default(0) @db.Decimal(10, 2)
+  taxAmount       Decimal       @default(0) @db.Decimal(10, 2)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  couponCode      String?       @db.VarChar(50)
+  shippingAddress Json
+  billingAddress  Json
+  notes              String?       @db.Text
+  trackingNumber     String?       @db.VarChar(100)
+  trackingUrl        String?       @db.VarChar(500)
+  courierPartner     String?       @db.VarChar(100)
+  cancelReason       String?       @db.VarChar(500)
+  cancelRefundMethod String?       @db.VarChar(20)   // SOURCE | WALLET
+  returnReason       String?       @db.VarChar(500)
+  returnType         String?       @db.VarChar(20)   // RETURN | EXCHANGE
+  returnRefundMethod String?       @db.VarChar(20)   // SOURCE | WALLET
+  returnRequestedAt  DateTime?
+  returnProcessedAt  DateTime?
+  walletAmountUsed   Decimal       @default(0) @db.Decimal(10, 2)
+  items              OrderItem[]
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([userId, status, createdAt(sort: Desc)])
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String         @id @default(cuid())
+  orderId      String
+  order        Order          @relation(fields: [orderId], references: [id])
+  productId    String
+  variantId    String
+  variant      ProductVariant @relation(fields: [variantId], references: [id])
+  productName  String         @db.VarChar(300)
+  variantColor String         @db.VarChar(100)
+  sareeCode    String?        @db.VarChar(50)
+  quantity     Int
+  unitPrice    Decimal        @db.Decimal(10, 2)
+  totalPrice   Decimal        @db.Decimal(10, 2)
+  imageUrl     String?        @db.VarChar(500)
+  reviews      Review[]
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+  RETURN_REQUESTED
+  RETURN_APPROVED
+  EXCHANGE_REQUESTED
+  EXCHANGE_APPROVED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+// ─── CART ─────────────────────────────────────────────────────────────────────
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?    @unique
+  user      User?      @relation(fields: [userId], references: [id])
+  sessionId String?    @unique @db.VarChar(100)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String         @id @default(cuid())
+  cartId    String
+  cart      Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  quantity  Int            @default(1)
+  addedAt   DateTime       @default(now())
+
+  @@unique([cartId, variantId])
+  @@map("cart_items")
+}
+
+// ─── WISHLIST ─────────────────────────────────────────────────────────────────
+
+model WishlistItem {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id])
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  addedAt   DateTime       @default(now())
+
+  @@unique([userId, variantId])
+  @@map("wishlist_items")
+}
+
+// ─── COUPONS ──────────────────────────────────────────────────────────────────
+
+model Coupon {
+  id             String      @id @default(cuid())
+  code           String      @unique @db.VarChar(50)
+  type           CouponType
+  value          Decimal     @db.Decimal(10, 2)
+  minOrderAmount Decimal?    @db.Decimal(10, 2)
+  maxDiscount    Decimal?    @db.Decimal(10, 2)
+  usageLimit     Int?
+  usedCount      Int         @default(0)
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+
+  @@map("coupons")
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+  FREE_SHIPPING
+}
+
+// ─── REVIEWS ──────────────────────────────────────────────────────────────────
+
+model Review {
+  id          String     @id @default(cuid())
+  productId   String
+  product     Product    @relation(fields: [productId], references: [id])
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  orderItemId String?
+  orderItem   OrderItem? @relation(fields: [orderItemId], references: [id])
+  rating      Int
+  title       String?    @db.VarChar(200)
+  body        String?    @db.Text
+  images      String[]
+  isApproved  Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+
+  @@index([productId, isApproved])
+  @@map("reviews")
+}
+
+// ─── WALLET ───────────────────────────────────────────────────────────────────
+
+model Wallet {
+  id           String              @id @default(cuid())
+  userId       String              @unique
+  user         User                @relation(fields: [userId], references: [id])
+  balance      Decimal             @default(0) @db.Decimal(10, 2)
+  transactions WalletTransaction[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id        String         @id @default(cuid())
+  walletId  String
+  wallet    Wallet         @relation(fields: [walletId], references: [id])
+  type      WalletTxType
+  amount    Decimal        @db.Decimal(10, 2)
+  balance   Decimal        @db.Decimal(10, 2)
+  reason    String?        @db.VarChar(500)
+  orderId   String?
+  adminId   String?
+  createdAt DateTime       @default(now())
+
+  @@index([walletId, createdAt(sort: Desc)])
+  @@map("wallet_transactions")
+}
+
+enum WalletTxType {
+  CREDIT
+  DEBIT
+}
+
+// ─── BLOGS ────────────────────────────────────────────────────────────────────
+
+model Blog {
+  id          String    @id @default(cuid())
+  title       String    @db.VarChar(300)
+  slug        String    @unique @db.VarChar(300)
+  excerpt     String?   @db.VarChar(600)
+  content     String    @db.Text
+  imageUrl    String?   @db.VarChar(500)
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  tags        String[]
+  metaTitle   String?   @db.VarChar(200)
+  metaDesc    String?   @db.VarChar(400)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("blogs")
+}
+
+// ─── CMS PAGES ────────────────────────────────────────────────────────────────
+
+model Page {
+  id        String   @id @default(cuid())
+  title     String   @db.VarChar(200)
+  slug      String   @unique @db.VarChar(200)
+  content   String   @db.Text
+  isActive  Boolean  @default(true)
+  metaTitle String?  @db.VarChar(200)
+  metaDesc  String?  @db.VarChar(400)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pages")
+}
+
+// ─── POPUP ────────────────────────────────────────────────────────────────────
+
+model Popup {
+  id        String    @id @default(cuid())
+  imageUrl  String    @db.VarChar(500)
+  linkUrl   String?   @db.VarChar(500)
+  isActive  Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("popups")
+}
+
+// ─── SHIPPING ZONES ───────────────────────────────────────────────────────────
+
+model ShippingZone {
+  id             String   @id @default(cuid())
+  name           String   @db.VarChar(100)
+  countries      String[]
+  rateType       String   @default("FLAT") @db.VarChar(20)
+  rate           Decimal  @default(0) @db.Decimal(10, 2)
+  minOrderFree   Decimal? @db.Decimal(10, 2)
+  customDutyNote String?  @db.Text
+  estimatedDays  String?  @db.VarChar(100)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("shipping_zones")
+}
+
+// ─── BANNERS / CMS ────────────────────────────────────────────────────────────
+
+model Banner {
+  id            String    @id @default(cuid())
+  title         String    @db.VarChar(200)
+  subtitle      String?   @db.VarChar(400)
+  imageUrl      String    @db.VarChar(500)
+  mobileImageUrl String?  @db.VarChar(500)
+  linkUrl       String?   @db.VarChar(500)
+  position      String    @db.VarChar(50)
+  sortOrder     Int       @default(0)
+  isActive      Boolean   @default(true)
+  startsAt      DateTime?
+  endsAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("banners")
+}
+
+model HeroSlide {
+  id           String   @id @default(cuid())
+  tag          String   @db.VarChar(100)
+  heading      String   @db.VarChar(300)
+  subtext      String   @db.VarChar(600)
+  ctaLabel     String   @db.VarChar(100)
+  ctaHref      String   @db.VarChar(300)
+  ctaSecLabel  String?  @db.VarChar(100)
+  ctaSecHref   String?  @db.VarChar(300)
+  bgColor      String   @db.VarChar(50)  @default("#F2EBE0")
+  imageBg      String   @db.VarChar(500) @default("")
+  imageUrl     String?  @db.VarChar(500)
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("hero_slides")
+}

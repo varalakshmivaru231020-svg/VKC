@@ -1,0 +1,304 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design Token Defaults ──────────────────────────────────────────────────
+   These are overridden by the <style> tag injected in layout.tsx
+   from admin-managed settings stored in the database.
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Colors */
+  --color-primary:        #8B1A2E;
+  --color-primary-dark:   #5E1020;
+  --color-primary-light:  #B5293F;
+  --color-primary-50:     #FDF0F2;
+  --color-gold:           #C4922A;
+  --color-gold-light:     #E8C97A;
+  --color-gold-dark:      #8B6318;
+  --color-ivory:          #FBF8F3;
+  --color-cream:          #F2EBE0;
+  --color-parchment:      #E8DDD0;
+  --color-sand:           #C9BAA8;
+  --color-text-primary:   #1C1410;
+  --color-text-secondary: #4A3F38;
+  --color-text-muted:     #8A7B72;
+  --color-text-disabled:  #BEB3AC;
+  --color-text-inverse:   #FBF8F3;
+  --color-success:        #2E6B47;
+  --color-success-bg:     #EDF7F2;
+  --color-error:          #C42B2B;
+  --color-error-bg:       #FEF0F0;
+  --color-warning:        #C47A2B;
+  --color-warning-bg:     #FEF5E7;
+  --color-border:         #E8DDD0;
+
+  /* Typography */
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-accent:  'Cormorant Garamond', Georgia, serif;
+
+  /* Font Sizes */
+  --text-display:  clamp(4.5rem, 9vw, 8rem);
+  --text-h1:       clamp(2.75rem, 5.5vw, 4.5rem);
+  --text-h2:       clamp(2.25rem, 4vw, 3.375rem);
+  --text-h3:       2.375rem;
+  --text-h4:       1.75rem;
+  --text-h5:       1.4rem;
+  --text-body-xl:  1.375rem;
+  --text-body:     1.125rem;
+  --text-sm:       1rem;
+  --text-xs:       0.875rem;
+  --text-price:    2rem;
+  --text-price-sm: 1.5rem;
+
+  /* Font Weights */
+  --weight-heading:    500;
+  --weight-subheading: 600;
+  --weight-body:       400;
+  --weight-label:      600;
+
+  /* Line Heights */
+  --leading-display: 1.1;
+  --leading-heading: 1.2;
+  --leading-body:    1.65;
+
+  /* Letter Spacing */
+  --tracking-display: -0.02em;
+  --tracking-heading: -0.01em;
+  --tracking-label:   0.08em;
+}
+
+/* ── Base Resets ─────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-body;
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+    font-weight: var(--weight-body);
+    color: var(--color-text-primary);
+    background-color: var(--color-ivory);
+  }
+
+  /* Scoped to marketing pages — admin overrides via inline styles */
+  .marketing-layout h1,
+  .marketing-layout h2,
+  .marketing-layout h3,
+  .marketing-layout h4,
+  .marketing-layout h5,
+  .marketing-layout h6 {
+    font-family: var(--font-heading);
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
+    letter-spacing: var(--tracking-heading);
+    color: var(--color-text-primary);
+  }
+
+  .marketing-layout h1 { font-size: var(--text-h1); }
+  .marketing-layout h2 { font-size: var(--text-h2); }
+  .marketing-layout h3 { font-size: var(--text-h3); }
+  .marketing-layout h4 { font-size: var(--text-h4); font-family: var(--font-body); font-weight: var(--weight-subheading); }
+  .marketing-layout h5 { font-size: var(--text-h5); font-family: var(--font-body); font-weight: var(--weight-subheading); }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img, video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  input, textarea, select, button {
+    font-family: var(--font-body);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-50);
+    color: var(--color-primary-dark);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-cream); }
+  ::-webkit-scrollbar-thumb { background: var(--color-sand); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+}
+
+/* ── Utility Classes ─────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-display {
+    font-family: var(--font-heading);
+    font-size: var(--text-display);
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .text-heading {
+    font-family: var(--font-heading);
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
+    letter-spacing: var(--tracking-heading);
+  }
+
+  .text-price {
+    font-family: var(--font-heading);
+    font-size: var(--text-price);
+    font-weight: 500;
+    font-style: italic;
+    color: var(--color-primary);
+  }
+
+  .text-price-sm {
+    font-family: var(--font-heading);
+    font-size: var(--text-price-sm);
+    font-weight: 500;
+    font-style: italic;
+    color: var(--color-primary);
+  }
+
+  .text-label {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+
+  .gold-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+  }
+
+  .gold-line-top {
+    border-top: 1px solid var(--color-gold-light);
+  }
+
+  .section-padding {
+    @apply py-16 md:py-20 lg:py-24;
+  }
+
+  .container-narrow {
+    @apply max-w-3xl mx-auto px-4;
+  }
+
+  .image-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(28,20,16,0.6) 0%, transparent 60%);
+  }
+
+  .saree-card-ratio {
+    aspect-ratio: 3 / 4;
+  }
+
+  /* Shimmer skeleton */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-cream) 0%,
+      var(--color-ivory) 50%,
+      var(--color-cream) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+}
+
+/* ── Component Classes ───────────────────────────────────────────────────── */
+@layer components {
+
+  /* Footer navigation links */
+  .footer-link {
+    display: inline-block;
+    font-family: var(--font-body);
+    color: var(--color-text-muted);
+    transition: color 0.15s ease, padding-left 0.15s ease;
+  }
+  .footer-link:hover {
+    color: var(--color-primary);
+    padding-left: 4px;
+  }
+
+  /* Footer social icon circles */
+  .social-icon:hover {
+    background: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: white !important;
+  }
+
+  /* Footer contact items */
+  .footer-contact-item:hover span {
+    color: var(--color-primary);
+  }
+  .footer-contact-item:hover svg {
+    color: var(--color-primary-dark) !important;
+  }
+
+  /* Filter chip active state */
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-family: var(--font-body);
+    font-weight: 500;
+    border: 1px solid var(--color-parchment);
+    color: var(--color-text-secondary);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    cursor: pointer;
+  }
+  .filter-chip:hover {
+    border-color: var(--color-sand);
+  }
+  .filter-chip.active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-50);
+  }
+
+  /* Sticky sidebar scroll area */
+  .sidebar-sticky {
+    position: sticky;
+    top: 120px;
+    max-height: calc(100vh - 128px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-sand) transparent;
+  }
+  .sidebar-sticky::-webkit-scrollbar { width: 4px; }
+  .sidebar-sticky::-webkit-scrollbar-thumb { background: var(--color-sand); border-radius: 2px; }
+
+  /* Rich text description on product detail page */
+  .prose-saree p { margin-bottom: 0.75rem; line-height: 1.75; }
+  .prose-saree p:last-child { margin-bottom: 0; }
+  .prose-saree ul, .prose-saree ol { margin: 0.5rem 0 0.75rem 1.25rem; }
+  .prose-saree li { margin-bottom: 0.35rem; line-height: 1.65; }
+  .prose-saree strong, .prose-saree b { font-weight: 600; color: var(--color-text-primary); }
+  .prose-saree em { font-style: italic; }
+  .prose-saree h3 { font-family: var(--font-heading); font-size: 1rem; font-weight: 600; color: var(--color-text-primary); margin: 1rem 0 0.35rem; }
+  .prose-saree h4 { font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary); margin: 0.75rem 0 0.25rem; }
+}
+

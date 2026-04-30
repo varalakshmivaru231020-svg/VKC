@@ -1,0 +1,51 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+
+function generateOTP(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function normalisePhone(raw: string): string {
+  const clean = raw.trim();
+  if (clean.startsWith("+")) return "+" + clean.replace(/\D/g, "");
+  const digits = clean.replace(/\D/g, "");
+  if (digits.length === 10) return "+91" + digits;
+  if (digits.startsWith("91") && digits.length === 12) return "+" + digits;
+  return "+" + digits;
+}
+
+export async function POST(req: Request) {
+  try {
+    const { phone } = await req.json();
+    if (!phone || String(phone).replace(/\D/g, "").length < 10) {
+      return NextResponse.json({ error: "Valid mobile number required" }, { status: 400 });
+    }
+
+    const normalised = normalisePhone(String(phone));
+
+    // Invalidate any existing unused OTPs for this number
+    await db.otpCode.updateMany({
+      where: { phone: normalised, used: false },
+      data: { used: true },
+    });
+
+    const code = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+
+    await db.otpCode.create({ data: { phone: normalised, code, expiresAt } });
+
+    // TODO: integrate SMS gateway (MSG91 / Twilio) here
+    // For development, OTP is returned in response
+    const isDev = process.env.NODE_ENV !== "production";
+
+    console.log(`[OTP] ${normalised} → ${code}`);
+
+    return NextResponse.json({
+      success: true,
+      ...(isDev ? { otp: code } : {}),
+    });
+  } catch (err) {
+    console.error("[OTP send]", err);
+    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 });
+  }
+}
