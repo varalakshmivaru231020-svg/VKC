@@ -446,11 +446,17 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
         <div className="border-b" style={{ borderColor: "var(--color-parchment)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-3 items-center h-[68px]">
-              {/* Left — social */}
+              {/* Left — menu (mobile) / social (desktop) */}
               <div className="flex items-center gap-1">
+                {/* Hamburger — mobile only, left side */}
+                <button className={cn(iconBtnCls, "lg:hidden")} style={iconBtnStyle} {...iconHover}
+                  onClick={() => setMobileOpen(true)} aria-label="Open menu">
+                  <Menu className="h-5 w-5" />
+                </button>
+                {/* Social links — desktop only */}
                 {socialLinks.map(({ Icon, href, label }) => (
                   <a key={label} href={href} aria-label={label}
-                    className="h-9 w-9 flex items-center justify-center rounded-lg transition-all duration-150"
+                    className="hidden lg:flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150"
                     style={{ color: "var(--color-text-muted)" }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-muted)"; e.currentTarget.style.background = "transparent"; }}>
@@ -485,8 +491,9 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                 <button onClick={() => setSearchOpen(true)} className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Search">
                   <Search className="h-5 w-5" />
                 </button>
+                {/* Wishlist — hidden on mobile */}
                 {isLoggedIn ? (
-                  <Link href="/account/wishlist" className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
+                  <Link href="/account/wishlist" className={cn(iconBtnCls, "hidden sm:flex")} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
                     <Heart className="h-5 w-5" />
                     <AnimatePresence>
                       {mounted && wishlistCount > 0 && (
@@ -500,7 +507,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                     </AnimatePresence>
                   </Link>
                 ) : (
-                  <button onClick={() => openLoginModal()} className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
+                  <button onClick={() => openLoginModal()} className={cn(iconBtnCls, "hidden sm:flex")} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
                     <Heart className="h-5 w-5" />
                   </button>
                 )}
@@ -517,6 +524,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                     )}
                   </AnimatePresence>
                 </button>
+                {/* Account — hidden on mobile */}
                 {isLoggedIn ? (
                   <Link href="/account" className={cn(iconBtnCls, "hidden sm:flex")} style={iconBtnStyle} {...iconHover} aria-label="My Account">
                     <div
@@ -531,10 +539,6 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                     <User className="h-5 w-5" />
                   </button>
                 )}
-                <button className={cn(iconBtnCls, "lg:hidden ml-1")} style={iconBtnStyle} {...iconHover}
-                  onClick={() => setMobileOpen(true)} aria-label="Open menu">
-                  <Menu className="h-5 w-5" />
-                </button>
               </div>
             </div>
           </div>
@@ -675,7 +679,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
             <motion.div key="search-panel"
               initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed top-4 left-1/2 -translate-x-1/2 z-[70] w-full max-w-2xl px-4">
+              className="fixed top-4 inset-x-0 mx-auto z-[70] w-full max-w-2xl px-4">
               <div className="rounded-2xl shadow-2xl overflow-hidden"
                 style={{ background: "var(--color-ivory)", border: "1px solid var(--color-parchment)" }}
                 onClick={(e) => e.stopPropagation()}>
