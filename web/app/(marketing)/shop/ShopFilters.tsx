@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { attrKey } from "./attrKey";
 
 export interface FilterAttribute {
   id: string;
@@ -23,10 +24,6 @@ const PRICE_PRESETS = [
   { label: "₹15K–₹30K",  min: "15000", max: "30000" },
   { label: "Above ₹30K", min: "30000", max: "" },
 ];
-
-export function attrKey(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
-}
 
 export default function ShopFilters({ attributes, current }: Props) {
   const router = useRouter();

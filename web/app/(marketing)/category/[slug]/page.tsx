@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getProducts } from "@/lib/db/products";
 import { ProductGrid } from "@/components/product/ProductGrid";
-import ShopFilters, { attrKey } from "../../shop/ShopFilters";
+import ShopFilters from "../../shop/ShopFilters";
 import ShopHeader from "../../shop/ShopHeader";
+import { attrKey } from "../../shop/attrKey";
 import type { ProductData } from "@/lib/types/product";
 
 export const dynamic = "force-dynamic";

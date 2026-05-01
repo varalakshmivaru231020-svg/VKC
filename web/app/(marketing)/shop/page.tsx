@@ -4,8 +4,9 @@ import { db } from "@/lib/db";
 import { getProducts } from "@/lib/db/products";
 import { getThemeSettings } from "@/lib/theme/server";
 import { ProductGrid } from "@/components/product/ProductGrid";
-import ShopFilters, { attrKey } from "./ShopFilters";
+import ShopFilters from "./ShopFilters";
 import ShopHeader from "./ShopHeader";
+import { attrKey } from "./attrKey";
 import type { ProductData } from "@/lib/types/product";
 
 export const metadata: Metadata = { title: "Shop All Sarees" };
