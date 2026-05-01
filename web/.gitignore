@@ -37,3 +37,9 @@ npm-debug.log*
 
 # Vercel
 .vercel
+
+# User-uploaded media (admin uploads — must persist on server, never commit)
+public/uploads/products/*
+public/uploads/videos/*
+!public/uploads/products/.gitkeep
+!public/uploads/videos/.gitkeep

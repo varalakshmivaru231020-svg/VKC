@@ -501,24 +501,41 @@ export default function CheckoutPage() {
   // ── Order success ───────────────────────────────────────────────────────────
   if (ordered) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center py-20 px-4" style={{ background: "var(--color-ivory)" }}>
-        <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: "var(--color-success)" }}>
-          <Check className="h-10 w-10 text-white" />
+      <div className="min-h-[80vh] flex flex-col items-center justify-center text-center py-10 sm:py-16 px-4" style={{ background: "var(--color-ivory)" }}>
+        {/* Animated success icon */}
+        <div className="relative mb-5 sm:mb-7">
+          {/* Outer pulse rings */}
+          <span className="absolute inset-0 rounded-full animate-ping-slow" style={{ background: "var(--color-success)", opacity: 0.18 }} />
+          <span className="absolute -inset-2 rounded-full animate-ping-slow-2" style={{ background: "var(--color-success)", opacity: 0.10 }} />
+          {/* Main badge */}
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center animate-bounce-in shadow-lg"
+            style={{ background: "var(--color-success)", boxShadow: "0 10px 30px -8px rgba(46,107,71,0.45)" }}>
+            <Check className="h-10 w-10 sm:h-12 sm:w-12 text-white animate-check-pop" strokeWidth={3} />
+          </div>
         </div>
-        <h2 className="mb-2" style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h1)", color: "var(--color-text-primary)" }}>
-          Order Placed!
+
+        <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] mb-1.5 animate-fade-up" style={{ color: "var(--color-success)", animationDelay: "0.15s" }}>
+          Confirmed
+        </p>
+        <h2 className="mb-2 animate-fade-up" style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.6rem, 5vw, 2.5rem)", color: "var(--color-text-primary)", animationDelay: "0.2s" }}>
+          Thank You for Your Order!
         </h2>
         {placedOrderNumber && (
-          <p className="text-sm font-body mb-1" style={{ color: "var(--color-text-muted)" }}>
-            Order <span className="font-semibold" style={{ color: "var(--color-text-primary)" }}>#{placedOrderNumber}</span> confirmed.
-          </p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-3 animate-fade-up"
+            style={{ background: "white", border: "1px solid var(--color-parchment)", animationDelay: "0.3s" }}>
+            <span className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>Order ID:</span>
+            <span className="text-sm font-mono font-semibold" style={{ color: "var(--color-primary)" }}>#{placedOrderNumber}</span>
+          </div>
         )}
-        <p className="text-sm font-body mb-8" style={{ color: "var(--color-text-muted)" }}>Estimated delivery: 4–7 business days.</p>
-        <div className="flex gap-3 flex-wrap justify-center">
-          <Button onClick={() => { router.refresh(); router.push("/account/orders"); }}>
+        <p className="text-sm font-body mb-7 max-w-md animate-fade-up" style={{ color: "var(--color-text-muted)", animationDelay: "0.35s" }}>
+          We've received your order and will email you once it ships. Estimated delivery: <span className="font-semibold" style={{ color: "var(--color-text-secondary)" }}>4–7 business days</span>.
+        </p>
+
+        <div className="flex gap-3 flex-wrap justify-center w-full max-w-md animate-fade-up" style={{ animationDelay: "0.45s" }}>
+          <Button onClick={() => { router.refresh(); router.push("/account/orders"); }} className="flex-1 min-w-[140px]">
             View My Orders
           </Button>
-          <Button variant="outline" asChild><Link href="/shop">Continue Shopping</Link></Button>
+          <Button variant="outline" asChild className="flex-1 min-w-[140px]"><Link href="/shop">Continue Shopping</Link></Button>
         </div>
       </div>
     );

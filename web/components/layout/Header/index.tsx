@@ -5,10 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Search, Heart, ShoppingBag, User, Menu, X,
-  ChevronDown, ChevronRight, Instagram, Facebook, Youtube,
+  ChevronDown, ChevronRight, Instagram, Facebook, Youtube, LogOut,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import { useUIStore } from "@/lib/store/ui";
@@ -683,20 +683,38 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
               <div className="rounded-2xl shadow-2xl overflow-hidden"
                 style={{ background: "var(--color-ivory)", border: "1px solid var(--color-parchment)" }}
                 onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: "var(--color-parchment)" }}>
+                <form
+                  className="flex items-center gap-2 px-4 py-3 border-b"
+                  style={{ borderColor: "var(--color-parchment)" }}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const input = (e.currentTarget.querySelector("input[name='q']") as HTMLInputElement);
+                    const v = input?.value.trim();
+                    if (v) window.location.href = `/shop?q=${encodeURIComponent(v)}`;
+                  }}
+                >
                   <Search className="h-5 w-5 shrink-0" style={{ color: "var(--color-text-muted)" }} />
-                  <input autoFocus type="text" placeholder="Search sarees, fabrics, occasions…"
-                    className="flex-1 text-base font-body bg-transparent outline-none"
+                  <input
+                    autoFocus
+                    name="q"
+                    type="text"
+                    placeholder="Search sarees, fabrics, occasions…"
+                    className="flex-1 min-w-0 text-base font-body bg-transparent outline-none"
                     style={{ color: "var(--color-text-primary)" }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") { setSearchOpen(false); return; }
-                      if (e.key === "Enter" && (e.target as HTMLInputElement).value)
-                        window.location.href = `/shop?q=${encodeURIComponent((e.target as HTMLInputElement).value)}`;
-                    }} />
-                  <button onClick={() => setSearchOpen(false)} className="transition-opacity hover:opacity-60">
+                    onKeyDown={(e) => { if (e.key === "Escape") setSearchOpen(false); }}
+                  />
+                  <button
+                    type="submit"
+                    className="shrink-0 h-9 px-4 rounded-lg text-xs font-body font-semibold transition-colors"
+                    style={{ background: "var(--color-primary)", color: "white" }}
+                  >
+                    Search
+                  </button>
+                  <button type="button" onClick={() => setSearchOpen(false)}
+                    className="shrink-0 h-9 w-9 flex items-center justify-center rounded-lg transition-opacity hover:opacity-60">
                     <X className="h-4 w-4" style={{ color: "var(--color-text-muted)" }} />
                   </button>
-                </div>
+                </form>
                 <div className="p-5">
                   <p className="text-xs font-body font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--color-text-muted)" }}>Popular Searches</p>
                   <div className="flex flex-wrap gap-2">
@@ -798,8 +816,18 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                 <MobileNavItem label="Contact"   href="/contact" close={() => setMobileOpen(false)} />
               </nav>
 
-              {/* Footer — social links only */}
-              <div className="px-5 py-4 border-t shrink-0" style={{ borderColor: "var(--color-parchment)" }}>
+              {/* Footer — sign out (if logged in) + social links */}
+              <div className="px-5 py-4 border-t shrink-0 space-y-3" style={{ borderColor: "var(--color-parchment)" }}>
+                {isLoggedIn && (
+                  <button
+                    onClick={() => { setMobileOpen(false); signOut({ callbackUrl: "/" }); }}
+                    className="w-full flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-body font-semibold border transition-colors"
+                    style={{ borderColor: "var(--color-error)", color: "var(--color-error)", background: "var(--color-error-bg)" }}
+                  >
+                    <LogOut className="h-4 w-4 shrink-0" />
+                    Sign Out
+                  </button>
+                )}
                 <div className="flex items-center gap-3">
                   {socialLinks.map(({ Icon, href, label }) => (
                     <a key={label} href={href} aria-label={label}

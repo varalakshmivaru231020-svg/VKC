@@ -16,6 +16,7 @@ const DEFAULT_SHOP_LINKS: FooterLink[] = [
 const DEFAULT_HELP_LINKS: FooterLink[] = [
   { label: "About Us",          href: "/about" },
   { label: "Contact Us",        href: "/contact" },
+  { label: "Blog",              href: "/blog" },
   { label: "Shipping Policy",   href: "/shipping" },
   { label: "Return & Exchange", href: "/returns" },
   { label: "Size Guide",        href: "/size-guide" },

@@ -29,14 +29,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
-  const [category, attributes] = await Promise.all([
-    db.category.findUnique({ where: { slug: params.slug } }).catch(() => null),
-    db.attribute.findMany({
-      where: { isActive: true },
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, options: true, inputType: true },
-    }).catch(() => []),
-  ]);
+  let category: Awaited<ReturnType<typeof db.category.findUnique>> = null;
+  let attributes: { id: string; name: string; options: string[]; inputType: string }[] = [];
+
+  try {
+    [category, attributes] = await Promise.all([
+      db.category.findUnique({ where: { slug: params.slug } }),
+      db.attribute.findMany({
+        where: { isActive: true },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: { id: true, name: true, options: true, inputType: true },
+      }),
+    ]);
+  } catch (e) {
+    console.error("[CategoryPage] DB error loading category/attributes:", e);
+  }
 
   if (!category) notFound();
 
@@ -48,7 +55,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     if (val) attributeFilters.push({ attributeId: attr.id, value: val });
   }
 
-  const page = parseInt(searchParams.page ?? "1");
+  const pageParam = parseInt(searchParams.page ?? "1");
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
   let result: { products: ProductData[]; total: number; page: number; limit: number } = {
     products: [], total: 0, page: 1, limit: 24,
   };
@@ -63,7 +71,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       page,
       limit: 24,
     });
-  } catch {}
+  } catch (e) {
+    console.error("[CategoryPage] getProducts error for slug:", params.slug, e);
+  }
 
   const totalPages = Math.ceil(result.total / result.limit);
 
