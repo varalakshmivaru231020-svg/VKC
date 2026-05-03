@@ -217,7 +217,7 @@ class _CategoryStrip extends ConsumerWidget {
                 return Padding(
                   padding: const EdgeInsets.only(right: 14),
                   child: GestureDetector(
-                    onTap: () => context.go("${RoutePaths.shop}?category=${c.slug}"),
+                    onTap: () => context.push(RoutePaths.category(c.slug)),
                     child: Column(
                       children: [
                         Container(

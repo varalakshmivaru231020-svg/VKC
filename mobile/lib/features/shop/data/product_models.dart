@@ -213,16 +213,27 @@ class HeroSlide {
 
 class Banner {
   final String id;
-  final String? title, subtitle, imageUrl, ctaLabel, ctaHref;
+  final String? title, subtitle, imageUrl, mobileImageUrl, linkUrl;
+  final String? position;
   final int sortOrder;
-  const Banner({required this.id, required this.sortOrder, this.title, this.subtitle, this.imageUrl, this.ctaLabel, this.ctaHref});
+  const Banner({
+    required this.id, required this.sortOrder,
+    this.title, this.subtitle, this.imageUrl, this.mobileImageUrl,
+    this.linkUrl, this.position,
+  });
+
+  /// Prefers the mobile-specific image, falling back to the desktop one.
+  /// Mobile/app should always read this getter.
+  String? get appImageUrl => (mobileImageUrl != null && mobileImageUrl!.isNotEmpty) ? mobileImageUrl : imageUrl;
+
   factory Banner.fromJson(Map<String, dynamic> j) => Banner(
         id: j["id"] as String,
         sortOrder: (j["sortOrder"] as num?)?.toInt() ?? 0,
         title:    j["title"]    as String?,
         subtitle: j["subtitle"] as String?,
-        imageUrl: j["imageUrl"] as String?,
-        ctaLabel: j["ctaLabel"] as String?,
-        ctaHref:  j["ctaHref"]  as String?,
+        imageUrl:       j["imageUrl"]       as String?,
+        mobileImageUrl: j["mobileImageUrl"] as String?,
+        linkUrl:        j["linkUrl"]        as String?,
+        position:       j["position"]       as String?,
       );
 }

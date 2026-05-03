@@ -17,6 +17,7 @@ class RoutePaths {
 
   // Detail screens
   static String productDetail(String slug) => "/shop/$slug";
+  static String category(String slug)      => "/category/$slug";
   static const search        = "/search";
   static const checkout      = "/checkout";
   static const orderSuccess  = "/order-success";

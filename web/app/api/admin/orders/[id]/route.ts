@@ -61,15 +61,30 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   // ── APPROVE RETURN ────────────────────────────────────────────────────────
+  // Approving a return = the goods have been received back at the warehouse,
+  // so the variant stock is replenished. Refund (wallet credit or source) is
+  // handled by the separate `process_refund` action below.
   if (action === "approve_return") {
-    const order = await db.order.findUnique({ where: { id: params.id } });
+    const order = await db.order.findUnique({
+      where: { id: params.id },
+      include: { items: true },
+    });
     if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (order.status !== "RETURN_REQUESTED") {
       return NextResponse.json({ error: "No return request pending" }, { status: 400 });
     }
-    const updated = await db.order.update({
-      where: { id: params.id },
-      data: { status: "RETURN_APPROVED" },
+    const updated = await db.$transaction(async (tx) => {
+      // Restock each variant
+      for (const item of order.items) {
+        await tx.productVariant.update({
+          where: { id: item.variantId },
+          data:  { stockQty: { increment: item.quantity } },
+        }).catch(() => {});
+      }
+      return tx.order.update({
+        where: { id: params.id },
+        data: { status: "RETURN_APPROVED" },
+      });
     });
     return NextResponse.json({ order: updated });
   }
@@ -135,6 +150,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (trackingNumber !== undefined) data.trackingNumber = trackingNumber || null;
   if (trackingUrl !== undefined) data.trackingUrl = trackingUrl || null;
   if (courierPartner !== undefined) data.courierPartner = courierPartner || null;
+
+  // If the admin is moving an order to CANCELLED that was previously not
+  // cancelled, release the reserved variant stock back to inventory (same
+  // behaviour as the customer-facing cancel endpoint).
+  if (status === "CANCELLED") {
+    const existing = await db.order.findUnique({
+      where: { id: params.id },
+      select: { status: true, items: { select: { variantId: true, quantity: true } } },
+    });
+    if (existing && existing.status !== "CANCELLED") {
+      await db.$transaction(async (tx) => {
+        for (const item of existing.items) {
+          await tx.productVariant.update({
+            where: { id: item.variantId },
+            data:  { stockQty: { increment: item.quantity } },
+          }).catch(() => {});
+        }
+        await tx.order.update({ where: { id: params.id }, data });
+      });
+      const updated = await db.order.findUnique({ where: { id: params.id } });
+      return NextResponse.json({ order: updated });
+    }
+  }
 
   const order = await db.order.update({ where: { id: params.id }, data });
   return NextResponse.json({ order });

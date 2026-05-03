@@ -10,6 +10,14 @@ class Env {
     defaultValue: "https://vijaylakshmi.bestprime.live",
   );
 
+  /// Where uploaded images live. Defaults to production so images keep
+  /// working even when API points at a local dev server (which doesn't host
+  /// the uploaded files).
+  static const String imageBaseUrl = String.fromEnvironment(
+    "IMAGE_BASE_URL",
+    defaultValue: "https://vijaylakshmi.bestprime.live",
+  );
+
   static const String apiVersionPrefix = "/api/v1";
 
   /// Set to "true" to dump request/response payloads to console.

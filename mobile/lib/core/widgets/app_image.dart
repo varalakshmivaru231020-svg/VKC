@@ -2,6 +2,21 @@ import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:shimmer/shimmer.dart";
 
+import "../config/env.dart";
+
+/// Resolves a possibly-relative image URL against [Env.imageBaseUrl]. Absolute
+/// URLs (http/https) and data URIs pass through unchanged.
+String? resolveImageUrl(String? raw) {
+  if (raw == null || raw.isEmpty) return null;
+  if (raw.startsWith("http://")  ||
+      raw.startsWith("https://") ||
+      raw.startsWith("data:")) {
+    return raw;
+  }
+  final base = Env.imageBaseUrl.replaceFirst(RegExp(r"/+\$"), "");
+  return raw.startsWith("/") ? "$base$raw" : "$base/$raw";
+}
+
 /// Wrapper around CachedNetworkImage with brand placeholders.
 class AppImage extends StatelessWidget {
   const AppImage({
@@ -26,10 +41,11 @@ class AppImage extends StatelessWidget {
     final radius = borderRadius ?? BorderRadius.circular(6);
     final fallbackBg = placeholderColor ?? Theme.of(context).dividerColor.withOpacity(0.4);
 
-    final image = (url == null || url!.isEmpty)
+    final resolved = resolveImageUrl(url);
+    final image = (resolved == null)
         ? Container(width: width, height: height, color: fallbackBg, child: const Center(child: Icon(Icons.image_outlined, size: 24, color: Colors.white70)))
         : CachedNetworkImage(
-            imageUrl: url!,
+            imageUrl: resolved,
             fit: fit,
             width: width,
             height: height,

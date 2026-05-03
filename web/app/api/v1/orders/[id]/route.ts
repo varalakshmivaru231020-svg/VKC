@@ -24,5 +24,22 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   for (const p of products) { slugByRef[p.id] = p.slug; slugByRef[p.slug] = p.slug; }
 
   const items = order.items.map((i) => ({ ...i, productSlug: slugByRef[i.productId] ?? null }));
-  return NextResponse.json({ order: { ...order, items } });
+
+  // Compute return eligibility based on the admin-configured policy window.
+  const policyRow = await db.siteSetting.findUnique({ where: { key: "return_period_days" } });
+  const returnPolicyDays = Math.max(0, parseInt(policyRow?.value ?? "7"));
+  const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : null;
+  const withinWindow = deliveredAt
+    ? (Date.now() - deliveredAt.getTime()) <= returnPolicyDays * 24 * 60 * 60 * 1000
+    : false;
+
+  return NextResponse.json({
+    order: { ...order, items },
+    policy: {
+      returnPolicyDays,
+      canReturn:  order.status === "DELIVERED" && withinWindow,
+      canCancel:  ["PENDING", "CONFIRMED", "PROCESSING"].includes(order.status),
+      returnDeadlineAt: deliveredAt ? new Date(deliveredAt.getTime() + returnPolicyDays * 24 * 60 * 60 * 1000).toISOString() : null,
+    },
+  });
 }

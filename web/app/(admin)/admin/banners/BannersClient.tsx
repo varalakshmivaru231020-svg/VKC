@@ -41,16 +41,19 @@ export default function BannersClient({ banners: initial }: Props) {
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [uploading, setUploading]   = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview]              = useState<string | null>(null);
+  const [previewMobile, setPreviewMobile]  = useState<string | null>(null);
+  const [uploading, setUploading]          = useState<"desktop" | "mobile" | null>(null);
+  const [uploadError, setUploadError]      = useState<string | null>(null);
+  const fileRef       = useRef<HTMLInputElement>(null);
+  const fileRefMobile = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof typeof form) => (v: any) => setForm((f) => ({ ...f, [k]: v }));
 
   const openAdd = () => {
     setForm(emptyForm());
     setPreview(null);
+    setPreviewMobile(null);
     setEditTarget(null);
     setModal("add");
   };
@@ -62,25 +65,32 @@ export default function BannersClient({ banners: initial }: Props) {
       position: b.position, sortOrder: String(b.sortOrder), isActive: b.isActive,
     });
     setPreview(b.imageUrl);
+    setPreviewMobile(b.mobileImageUrl ?? null);
     setEditTarget(b);
     setModal("edit");
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = (variant: "desktop" | "mobile") => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadError(null);
-    setPreview(URL.createObjectURL(file));
-    setUploading(true);
+    const localUrl = URL.createObjectURL(file);
+    if (variant === "desktop") setPreview(localUrl); else setPreviewMobile(localUrl);
+    setUploading(variant);
     const result = await uploadImageFile(file);
-    setUploading(false);
+    setUploading(null);
     if (!result.ok) {
       setUploadError(`${result.error} — ${result.details}`);
-      setPreview(null);
+      if (variant === "desktop") setPreview(null); else setPreviewMobile(null);
       return;
     }
-    setForm((f) => ({ ...f, imageUrl: result.url }));
-    setPreview(result.url);
+    if (variant === "desktop") {
+      setForm((f) => ({ ...f, imageUrl: result.url }));
+      setPreview(result.url);
+    } else {
+      setForm((f) => ({ ...f, mobileImageUrl: result.url }));
+      setPreviewMobile(result.url);
+    }
   };
 
   const handleSave = async () => {
@@ -255,31 +265,62 @@ export default function BannersClient({ banners: initial }: Props) {
                   style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} {...focusStyle} />
               </div>
 
-              {/* Image */}
+              {/* Desktop image */}
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Banner Image *</label>
+                <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Desktop Image *</label>
+                <p className="text-[11px] font-body" style={{ color: "#6B7280" }}>Wide aspect (e.g. 1600×600). Used on desktop and tablet.</p>
                 {preview && (
                   <div className="w-full h-32 rounded-lg overflow-hidden border" style={{ borderColor: "#E5E7EB" }}>
                     <img src={preview} alt="" className="w-full h-full object-cover" />
                   </div>
                 )}
                 <div className="flex items-center gap-3">
-                  <button onClick={() => { setUploadError(null); fileRef.current?.click(); }} disabled={uploading}
+                  <button onClick={() => { setUploadError(null); fileRef.current?.click(); }} disabled={uploading != null}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium font-body transition-colors hover:bg-gray-50"
                     style={{ borderColor: "#E5E7EB", color: "#374151" }}>
-                    {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                    {uploading ? "Converting & uploading…" : "Upload Image"}
+                    {uploading === "desktop" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                    {uploading === "desktop" ? "Uploading…" : "Upload Desktop Image"}
                   </button>
-                  <p className="text-[10px] font-body" style={{ color: "#9CA3AF" }}>Any image format · Auto-converted to WebP</p>
+                  <p className="text-[10px] font-body" style={{ color: "#9CA3AF" }}>Auto-converted to WebP</p>
                 </div>
-                {uploadError && (
-                  <div className="flex items-start gap-2 p-2.5 rounded-lg text-xs font-body" style={{ background: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}>
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    <span>{uploadError}</span>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload("desktop")} />
+              </div>
+
+              {/* Mobile image (also used by app) */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Mobile / App Image</label>
+                <p className="text-[11px] font-body" style={{ color: "#6B7280" }}>Square or portrait (e.g. 1080×1080). Falls back to desktop image if not set.</p>
+                {previewMobile && (
+                  <div className="w-40 h-40 rounded-lg overflow-hidden border" style={{ borderColor: "#E5E7EB" }}>
+                    <img src={previewMobile} alt="" className="w-full h-full object-cover" />
                   </div>
                 )}
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+                <div className="flex items-center gap-3">
+                  <button onClick={() => { setUploadError(null); fileRefMobile.current?.click(); }} disabled={uploading != null}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium font-body transition-colors hover:bg-gray-50"
+                    style={{ borderColor: "#E5E7EB", color: "#374151" }}>
+                    {uploading === "mobile" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                    {uploading === "mobile" ? "Uploading…" : "Upload Mobile Image"}
+                  </button>
+                  {previewMobile && (
+                    <button
+                      onClick={() => { setForm((f) => ({ ...f, mobileImageUrl: "" })); setPreviewMobile(null); }}
+                      className="text-xs font-body underline"
+                      style={{ color: "#DC2626" }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input ref={fileRefMobile} type="file" accept="image/*" className="hidden" onChange={handleUpload("mobile")} />
               </div>
+
+              {uploadError && (
+                <div className="flex items-start gap-2 p-2.5 rounded-lg text-xs font-body" style={{ background: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}>
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
 
               {/* Position */}
               <div className="space-y-1.5">

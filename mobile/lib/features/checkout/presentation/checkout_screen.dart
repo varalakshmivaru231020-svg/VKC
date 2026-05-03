@@ -14,6 +14,8 @@ import "../../addresses/presentation/addresses_screen.dart" show showAddressForm
 import "../../cart/data/cart_controller.dart";
 import "../../splash/data/app_config_repository.dart";
 import "../data/checkout_repository.dart";
+import "../data/coupon_repository.dart";
+import "coupon_sheet.dart";
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -26,6 +28,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   String? _selectedAddressId;
   String _payment = "cod";
   bool _placing = false;
+  bool _international = false;
+  CouponValidation? _coupon;
   String? _error;
 
   late final Razorpay _razorpay;
@@ -47,11 +51,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   num _shippingFor(num subtotal, int qty) {
+    if (_international) return 0; // billed separately, not collected at checkout
+    if (_coupon?.freeShipping == true) return 0;
     final s = ref.read(appConfigProvider).asData?.value.shipping;
     if (s == null) return 0;
     if (subtotal >= s.freeShippingThreshold) return 0;
     return s.firstSareeRate + (qty - 1).clamp(0, 999) * s.additionalSareeRate;
   }
+
+  num get _discount => _coupon?.discount ?? 0;
 
   Future<void> _placeOrder(Address address) async {
     setState(() { _placing = true; _error = null; });
@@ -66,6 +74,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         items: items,
         paymentMethod: _payment,
         shippingAmount: shipping,
+        discountAmount: _discount,
+        couponCode: _coupon?.code,
       );
 
       if (_payment == "razorpay" && result.razorpay != null) {
@@ -145,7 +155,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final qty       = ref.watch(cartCountProvider);
     final subtotal  = ref.watch(cartSubtotalProvider);
     final shipping  = _shippingFor(subtotal, qty);
-    final total     = subtotal + shipping;
+    final discount  = _discount;
+    final total     = (subtotal - discount + shipping).clamp(0, double.infinity);
 
     final cfg = ref.watch(appConfigProvider).asData?.value;
     final razorpayEnabled = cfg?.payment.razorpay.enabled == true && (cfg?.payment.razorpay.keyId.isNotEmpty ?? false);
@@ -192,6 +203,25 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
 
               const SizedBox(height: 20),
+              _SectionLabel(text: "Apply coupon"),
+              _CouponBox(
+                applied: _coupon,
+                onPick: () async {
+                  final result = await showCouponPicker(context, subtotal: subtotal);
+                  if (result != null) setState(() => _coupon = result);
+                },
+                onRemove: () => setState(() => _coupon = null),
+              ),
+
+              const SizedBox(height: 20),
+              _SectionLabel(text: "Shipping"),
+              _ShippingBox(
+                international: _international,
+                internationalNote: cfg?.shipping.internationalNote ?? "",
+                onChanged: (v) => setState(() => _international = v),
+              ),
+
+              const SizedBox(height: 20),
               _SectionLabel(text: "Payment method"),
               if (codEnabled)
                 _PaymentTile(
@@ -218,7 +248,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 child: Column(
                   children: [
                     _row(theme, colors, "Subtotal ($qty item${qty == 1 ? '' : 's'})", formatINR(subtotal)),
-                    _row(theme, colors, "Shipping", shipping == 0 ? "Free" : formatINR(shipping)),
+                    if (_coupon != null)
+                      _row(theme, colors, "Coupon (${_coupon!.code})", "−${formatINR(discount)}", success: true),
+                    if (_international)
+                      _row(theme, colors, "Shipping (international)", "Charges applicable", muted: true)
+                    else
+                      _row(theme, colors, "Shipping", shipping == 0 ? "Free" : formatINR(shipping)),
                     Divider(color: colors.parchment, height: 20),
                     _row(theme, colors, "Total payable", formatINR(total), strong: true),
                   ],
@@ -253,15 +288,130 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  Widget _row(ThemeData theme, AppColorsExtension colors, String label, String value, {bool strong = false}) {
+  Widget _row(ThemeData theme, AppColorsExtension colors, String label, String value,
+      {bool strong = false, bool success = false, bool muted = false}) {
+    final labelColor = strong ? null : colors.textMuted;
+    final TextStyle? valueStyle;
+    if (strong) {
+      valueStyle = theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600);
+    } else if (success) {
+      valueStyle = theme.textTheme.bodyMedium?.copyWith(color: colors.success, fontWeight: FontWeight.w600);
+    } else if (muted) {
+      valueStyle = theme.textTheme.bodyMedium?.copyWith(color: colors.textMuted);
+    } else {
+      valueStyle = theme.textTheme.bodyMedium;
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: strong ? null : colors.textMuted))),
-          Text(value, style: strong
-              ? theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600)
-              : theme.textTheme.bodyMedium),
+          Expanded(child: Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: success ? colors.success : labelColor))),
+          Text(value, style: valueStyle),
+        ],
+      ),
+    );
+  }
+}
+
+class _CouponBox extends StatelessWidget {
+  const _CouponBox({required this.applied, required this.onPick, required this.onRemove});
+  final CouponValidation? applied;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+    final colors = context.appColors;
+
+    if (applied != null) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: colors.success.withOpacity(0.08),
+          border: Border.all(color: colors.success),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.check_circle, color: colors.success),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("${applied!.code} applied",
+                      style: theme.textTheme.titleSmall?.copyWith(color: colors.success, fontWeight: FontWeight.w600)),
+                  Text(applied!.description,
+                      style: theme.textTheme.bodySmall?.copyWith(color: colors.textMuted)),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: onRemove,
+              style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+              child: const Text("Remove"),
+            ),
+          ],
+        ),
+      );
+    }
+    return InkWell(
+      onTap: onPick,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: colors.parchment, style: BorderStyle.solid),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.local_offer_outlined, color: theme.colorScheme.primary, size: 20),
+            const SizedBox(width: 10),
+            Expanded(child: Text("Apply coupon or browse offers")),
+            Icon(Icons.chevron_right, color: colors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ShippingBox extends StatelessWidget {
+  const _ShippingBox({required this.international, required this.internationalNote, required this.onChanged});
+  final bool international;
+  final String internationalNote;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+    final colors = context.appColors;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: colors.parchment),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile.adaptive(
+            value: international,
+            onChanged: onChanged,
+            secondary: Icon(Icons.public_rounded, color: theme.colorScheme.primary),
+            title: const Text("Ship internationally"),
+            subtitle: const Text("Outside India"),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          ),
+          if (international && internationalNote.isNotEmpty) ...[
+            Container(width: double.infinity, height: 1, color: colors.parchment),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(internationalNote, style: theme.textTheme.bodySmall),
+            ),
+          ],
         ],
       ),
     );

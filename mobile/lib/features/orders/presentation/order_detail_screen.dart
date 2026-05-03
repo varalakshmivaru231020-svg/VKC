@@ -13,6 +13,7 @@ import "../../../core/widgets/app_image.dart";
 import "../../../core/widgets/state_widgets.dart";
 import "../data/order_models.dart";
 import "../data/order_repository.dart";
+import "order_action_sheet.dart";
 
 class OrderDetailScreen extends ConsumerWidget {
   const OrderDetailScreen({super.key, required this.orderId});
@@ -29,55 +30,26 @@ class OrderDetailScreen extends ConsumerWidget {
           failure: e is Failure ? e : UnknownFailure(e.toString()),
           onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
         ),
-        data: (order) => _Body(order: order),
+        data: (data) => _Body(order: data.order, policy: data.policy),
       ),
     );
   }
 }
 
 class _Body extends ConsumerWidget {
-  const _Body({required this.order});
+  const _Body({required this.order, required this.policy});
   final Order order;
+  final OrderPolicy policy;
 
-  Future<void> _cancel(BuildContext context, WidgetRef ref) async {
-    final reason = await _promptForReason(context, "Why are you cancelling?");
-    if (reason == null || reason.isEmpty) return;
-    try {
-      await ref.read(orderRepositoryProvider).cancel(order.id, reason: reason);
-      ref.invalidate(orderDetailProvider(order.id));
-      ref.invalidate(ordersListProvider);
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Order cancelled")));
-    } on Failure catch (e) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+  Future<void> _runAction(BuildContext context, OrderAction action) async {
+    final message = await showOrderActionSheet(context, orderId: order.id, action: action);
+    if (message != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ));
     }
-  }
-
-  Future<void> _returnOrExchange(BuildContext context, WidgetRef ref, String type) async {
-    final reason = await _promptForReason(context, type == "RETURN" ? "Reason for return" : "Reason for exchange");
-    if (reason == null || reason.isEmpty) return;
-    try {
-      await ref.read(orderRepositoryProvider).returnOrExchange(order.id, type: type, reason: reason);
-      ref.invalidate(orderDetailProvider(order.id));
-      ref.invalidate(ordersListProvider);
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("$type request submitted")));
-    } on Failure catch (e) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
-    }
-  }
-
-  Future<String?> _promptForReason(BuildContext context, String title) async {
-    final ctrl = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: TextField(controller: ctrl, maxLines: 3, decoration: const InputDecoration(hintText: "Tell us briefly")),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-          ElevatedButton(onPressed: () => Navigator.pop(context, ctrl.text.trim()), child: const Text("Submit")),
-        ],
-      ),
-    );
   }
 
   @override
@@ -105,6 +77,17 @@ class _Body extends ConsumerWidget {
                 onPressed: () => launchUrl(Uri.parse(order.trackingUrl!), mode: LaunchMode.externalApplication),
                 child: const Text("Track shipment"),
               ),
+          ],
+          if (policy.canReturn && policy.returnDeadlineAt != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: colors.primary50, borderRadius: BorderRadius.circular(4)),
+              child: Text(
+                "Returns accepted until ${DateFormat("d MMM yyyy").format(policy.returnDeadlineAt!)}",
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w500),
+              ),
+            ),
           ],
         ])),
         const SizedBox(height: 12),
@@ -171,8 +154,6 @@ class _Body extends ConsumerWidget {
         )),
 
         const SizedBox(height: 24),
-        // Invoice — opens the web invoice page in the browser. The web app
-        // already serves a printable invoice view at /account/orders/{id}/invoice.
         OutlinedButton.icon(
           icon: const Icon(Icons.receipt_long_outlined),
           label: const Text("View / download invoice"),
@@ -183,19 +164,46 @@ class _Body extends ConsumerWidget {
           style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
         ),
         const SizedBox(height: 8),
-        if (order.canCancel)
+
+        if (policy.canCancel)
           OutlinedButton.icon(
             icon: const Icon(Icons.close),
             label: const Text("Cancel order"),
-            onPressed: () => _cancel(context, ref),
-            style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error, side: BorderSide(color: theme.colorScheme.error)),
+            onPressed: () => _runAction(context, OrderAction.cancel),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              foregroundColor: theme.colorScheme.error,
+              side: BorderSide(color: theme.colorScheme.error),
+            ),
           ),
-        if (order.canReturn) ...[
-          OutlinedButton.icon(icon: const Icon(Icons.assignment_return_outlined), label: const Text("Return"),
-            onPressed: () => _returnOrExchange(context, ref, "RETURN")),
+
+        if (policy.canReturn) ...[
+          OutlinedButton.icon(
+            icon: const Icon(Icons.assignment_return_outlined),
+            label: const Text("Return"),
+            onPressed: () => _runAction(context, OrderAction.returnItem),
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+          ),
           const SizedBox(height: 8),
-          OutlinedButton.icon(icon: const Icon(Icons.swap_horiz_rounded), label: const Text("Exchange"),
-            onPressed: () => _returnOrExchange(context, ref, "EXCHANGE")),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.swap_horiz_rounded),
+            label: const Text("Exchange"),
+            onPressed: () => _runAction(context, OrderAction.exchange),
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+          ),
+        ],
+
+        // After-the-window message for delivered orders that can no longer be returned
+        if (order.status == "DELIVERED" && !policy.canReturn) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: colors.cream, borderRadius: BorderRadius.circular(8)),
+            child: Text(
+              "Return window of ${policy.returnPolicyDays} days has passed.",
+              style: theme.textTheme.bodySmall?.copyWith(color: colors.textMuted),
+            ),
+          ),
         ],
       ],
     );

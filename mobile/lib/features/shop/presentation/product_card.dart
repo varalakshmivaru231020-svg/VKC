@@ -6,6 +6,7 @@ import "../../../core/theme/theme_extension.dart";
 import "../../../core/utils/formatters.dart";
 import "../../../core/widgets/app_image.dart";
 import "../data/product_models.dart";
+import "quick_view_sheet.dart";
 
 class ProductCard extends StatelessWidget {
   const ProductCard({super.key, required this.product});
@@ -21,15 +22,36 @@ class ProductCard extends StatelessWidget {
 
     return InkWell(
       onTap: () => context.push(RoutePaths.productDetail(product.slug)),
+      onLongPress: () => showQuickViewSheet(context, product),
       borderRadius: BorderRadius.circular(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AspectRatio(
-            aspectRatio: 3 / 4,
-            child: image != null && image.isNotEmpty
-                ? AppImage(url: image, borderRadius: BorderRadius.circular(8))
-                : _SwatchPlaceholder(color: swatch, label: v.colorName),
+          Stack(
+            children: [
+              AspectRatio(
+                aspectRatio: 3 / 4,
+                child: image != null && image.isNotEmpty
+                    ? AppImage(url: image, borderRadius: BorderRadius.circular(8))
+                    : _SwatchPlaceholder(color: swatch, label: v.colorName),
+              ),
+              Positioned(
+                right: 6, bottom: 6,
+                child: Material(
+                  color: Colors.white.withOpacity(0.92),
+                  shape: const CircleBorder(),
+                  elevation: 1,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => showQuickViewSheet(context, product),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.remove_red_eye_outlined, size: 18),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(

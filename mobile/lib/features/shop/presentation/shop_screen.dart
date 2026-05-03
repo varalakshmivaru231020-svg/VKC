@@ -19,7 +19,9 @@ const _sortOptions = [
 ];
 
 class ShopScreen extends ConsumerStatefulWidget {
-  const ShopScreen({super.key});
+  const ShopScreen({super.key, this.categorySlug, this.title});
+  final String? categorySlug;
+  final String? title;
 
   @override
   ConsumerState<ShopScreen> createState() => _ShopScreenState();
@@ -32,6 +34,21 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   void initState() {
     super.initState();
     _pagingController.addPageRequestListener(_fetchPage);
+
+    // Apply incoming category filter (from category-strip taps on home).
+    if (widget.categorySlug != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(shopFiltersProvider.notifier).setCategory(widget.categorySlug);
+      });
+    }
+
+    // Defensively kick off the first page fetch in case the auto-listener
+    // doesn't fire (e.g. on tab return after the controller was created).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _pagingController.itemList == null && _pagingController.error == null) {
+        _fetchPage(1);
+      }
+    });
   }
 
   Future<void> _fetchPage(int page) async {
@@ -109,7 +126,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Shop"),
+        title: Text(widget.title ?? "Shop"),
       ),
       bottomNavigationBar: _ShopBottomBar(onSort: _openSort, onFilter: _openFilters),
       body: RefreshIndicator(

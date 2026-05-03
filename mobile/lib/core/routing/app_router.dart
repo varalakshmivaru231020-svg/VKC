@@ -135,6 +135,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => OrderSuccessScreen(orderNumber: (state.extra as String?) ?? ""),
       ),
       GoRoute(path: RoutePaths.search,       builder: (_, __) => const SearchScreen()),
+      GoRoute(
+        path: "/category/:slug",
+        builder: (_, state) => ShopScreen(
+          categorySlug: state.pathParameters["slug"]!,
+          title: state.pathParameters["slug"]!.replaceAll("-", " ").split(" ").map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1)).join(" "),
+        ),
+      ),
       GoRoute(path: RoutePaths.trackOrder,   builder: (_, __) => const PlaceholderScreen(title: "Track order",  note: "Phase 5")),
       GoRoute(path: RoutePaths.blogs,        builder: (_, __) => const PlaceholderScreen(title: "Blogs",        note: "Phase 5")),
     ],
