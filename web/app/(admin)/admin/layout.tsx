@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -198,14 +198,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ background: "var(--color-error)" }} />
             </button>
 
-            {/* Avatar */}
-            <div
-              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold font-body shrink-0 cursor-default"
-              style={{ background: "var(--color-primary)", color: "white" }}
-              title={userName}
-            >
-              {initials}
-            </div>
+            {/* Avatar dropdown */}
+            <UserMenu userName={userName} initials={initials} email={session?.user?.email ?? ""} />
           </div>
         </header>
 
@@ -216,3 +210,72 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
+function UserMenu({ userName, initials, email }: { userName: string; initials: string; email: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold font-body shrink-0 transition-transform hover:scale-105"
+        style={{ background: "var(--color-primary)", color: "white" }}
+        title={userName}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        {initials}
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg border z-50 overflow-hidden"
+          style={{ background: "white", borderColor: "#E5E7EB" }}
+        >
+          <div className="px-4 py-3 border-b" style={{ borderColor: "#E5E7EB", background: "#F9FAFB" }}>
+            <p className="text-sm font-semibold font-body truncate" style={{ color: "#111827" }}>{userName}</p>
+            {email && <p className="text-xs font-body truncate" style={{ color: "#6B7280" }}>{email}</p>}
+          </div>
+          <Link
+            href="/admin/settings"
+            onClick={() => setOpen(false)}
+            role="menuitem"
+            className="flex items-center gap-3 px-4 py-2.5 text-sm font-body hover:bg-gray-50 transition-colors"
+            style={{ color: "#374151" }}
+          >
+            <Settings className="h-4 w-4" /> Settings
+          </Link>
+          <Link
+            href="/"
+            target="_blank"
+            onClick={() => setOpen(false)}
+            role="menuitem"
+            className="flex items-center gap-3 px-4 py-2.5 text-sm font-body hover:bg-gray-50 transition-colors"
+            style={{ color: "#374151" }}
+          >
+            <Store className="h-4 w-4" /> View store
+          </Link>
+          <button
+            onClick={() => { setOpen(false); signOut({ callbackUrl: "/admin/login" }); }}
+            role="menuitem"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-body transition-colors hover:bg-red-50 border-t"
+            style={{ color: "#DC2626", borderColor: "#E5E7EB" }}
+          >
+            <LogOut className="h-4 w-4" /> Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
