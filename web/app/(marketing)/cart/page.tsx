@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Trash2, Minus, Plus, ShoppingBag, ArrowRight,
-  Globe, Truck, AlertCircle, Heart,
+  Globe, Truck, Heart, Info,
 } from "lucide-react";
 import { CouponPicker } from "@/components/cart/CouponPicker";
 import { useSession } from "next-auth/react";
@@ -45,6 +45,7 @@ export default function CartPage() {
   // International shipping — no charges; passes ?intl=1 to checkout
   const [isInternational, setIsInternational] = useState(false);
   const [showIntlNote, setShowIntlNote] = useState(false);
+  const [showSummaryIntlNote, setShowSummaryIntlNote] = useState(false);
 
   // Shipping config (includes international note)
   const [shippingConfig, setShippingConfig] = useState<ShippingConfig>({
@@ -115,10 +116,10 @@ export default function CartPage() {
               const hasDiscount = item.originalPrice > item.salePrice;
               const pct = discountPercent(item.originalPrice, item.salePrice);
               return (
-                <div key={item.variantId} className="flex gap-4 p-4 rounded-md"
+                <div key={item.variantId} className="flex gap-5 p-6 rounded-md"
                   style={{ background: "white", border: "1px solid var(--color-parchment)" }}>
                   <Link href={`/shop/${item.productId}`} className="shrink-0">
-                    <div className="relative w-24 h-32 rounded-sm overflow-hidden"
+                    <div className="relative w-32 h-44 rounded-sm overflow-hidden"
                       style={{ background: item.colorHex + "30", border: "1px solid var(--color-parchment)" }}>
                       {item.imageUrl
                         ? <SmartImage src={item.imageUrl} alt={item.productName} fill objectFit="cover" />
@@ -307,20 +308,6 @@ export default function CartPage() {
                 </div>
               )}
 
-              {/* Domestic info */}
-              {!isInternational && (
-                <div className="rounded-lg p-3 text-sm font-body" style={{ background: "var(--color-ivory)", border: "1px solid var(--color-parchment)" }}>
-                  <div className="flex justify-between">
-                    <span style={{ color: "var(--color-text-muted)" }}>{shippingConfig.deliveryTitle}</span>
-                    <span style={{ color: domesticShippingCost === 0 ? "var(--color-success)" : "var(--color-text-primary)", fontWeight: domesticShippingCost === 0 ? 600 : 400 }}>
-                      {domesticShippingCost === 0 ? "Free" : formatINR(domesticShippingCost)}
-                    </span>
-                  </div>
-                  {shippingConfig.deliveryNotes && (
-                    <p className="text-[11px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>{shippingConfig.deliveryNotes}</p>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Summary */}
@@ -353,12 +340,46 @@ export default function CartPage() {
                       {isInternational ? "International" : "Domestic"}
                     </span>
                   </span>
-                  <span style={{
-                    color: isInternational ? "var(--color-text-muted)" : domesticShippingCost === 0 ? "var(--color-success)" : "var(--color-text-primary)",
-                    fontWeight: !isInternational && domesticShippingCost === 0 ? 600 : 400,
-                  }}>
-                    {isInternational ? "—" : domesticShippingCost === 0 ? "Free" : formatINR(domesticShippingCost)}
-                  </span>
+                  {isInternational ? (
+                    <span className="relative inline-block">
+                      {shippingConfig.internationalShippingNote && (
+                        <button
+                          type="button"
+                          onClick={() => setShowSummaryIntlNote(v => !v)}
+                          onMouseEnter={() => setShowSummaryIntlNote(true)}
+                          onMouseLeave={() => setShowSummaryIntlNote(false)}
+                          aria-label="International shipping details"
+                          className="absolute -top-3 -right-1 cursor-help"
+                          style={{ color: "#1D4ED8" }}
+                        >
+                          <Info className="h-3 w-3" />
+                        </button>
+                      )}
+                      <span
+                        className="block whitespace-nowrap text-xs font-medium underline decoration-dotted underline-offset-2"
+                        style={{ color: "#1D4ED8" }}
+                      >
+                        Charges Applicable
+                      </span>
+                      {showSummaryIntlNote && shippingConfig.internationalShippingNote && (
+                        <div
+                          className="absolute right-0 top-full mt-2 w-72 z-20 p-3 rounded-md shadow-lg"
+                          style={{ background: "white", border: "1px solid var(--color-parchment)" }}
+                        >
+                          <p className="text-xs font-body whitespace-pre-line leading-relaxed text-left" style={{ color: "var(--color-text-secondary)" }}>
+                            {shippingConfig.internationalShippingNote}
+                          </p>
+                        </div>
+                      )}
+                    </span>
+                  ) : (
+                    <span style={{
+                      color: domesticShippingCost === 0 ? "var(--color-success)" : "var(--color-text-primary)",
+                      fontWeight: domesticShippingCost === 0 ? 600 : 400,
+                    }}>
+                      {domesticShippingCost === 0 ? "Free" : formatINR(domesticShippingCost)}
+                    </span>
+                  )}
                 </div>
 
                 {!isInternational && domesticShippingCost > 0 && afterDiscount < shippingConfig.freeShippingThreshold && (

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Check, ChevronRight, MapPin, CreditCard, ClipboardList,
-  Truck, ShieldCheck, ArrowRight, Plus, X, Wallet,
+  Truck, ShieldCheck, ArrowRight, Plus, X, Wallet, Info, Pencil,
 } from "lucide-react";
 import { useSession, signIn } from "next-auth/react";
 import { useCartStore, useCheckoutMetaStore } from "@/lib/store/cart";
@@ -229,17 +229,17 @@ function AddressFormFields({ address, onChange, errors, isInternational }: {
     : ["India"];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Field label="Full Name *" value={address.fullName} onChange={onChange("fullName")} error={errors.fullName} placeholder="Priya Sharma" />
       <Field label="Mobile Number *" value={address.phone} onChange={(v) => onChange("phone")(v.replace(/\D/g, "").slice(0, 10))} error={errors.phone} placeholder="10-digit number" type="tel" />
-      <div className="sm:col-span-2">
+      <div className="md:col-span-2 min-w-0">
         <Field label="Address Line 1 *" value={address.addressLine1} onChange={onChange("addressLine1")} error={errors.addressLine1} placeholder="House / Flat / Block No., Street" />
       </div>
-      <div className="sm:col-span-2">
+      <div className="md:col-span-2 min-w-0">
         <Field label="Address Line 2" value={address.addressLine2} onChange={onChange("addressLine2")} placeholder="Locality / Landmark (optional)" />
       </div>
       <Field label="City *" value={address.city} onChange={onChange("city")} error={errors.city} placeholder="Mumbai" />
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 min-w-0">
         <label className="block text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>State *</label>
         <input
           type="text"
@@ -258,7 +258,7 @@ function AddressFormFields({ address, onChange, errors, isInternational }: {
         {errors.state && <p className="text-xs font-medium" style={{ color: "var(--color-error)" }}>{errors.state}</p>}
       </div>
       <Field label="Pincode *" value={address.pincode} onChange={(v) => onChange("pincode")(v.replace(/\D/g, "").slice(0, 6))} error={errors.pincode} placeholder="400001" />
-      <div className="sm:col-span-2">
+      <div className="md:col-span-2 min-w-0">
         <SearchableSelect
           label="Country"
           value={address.country}
@@ -274,10 +274,10 @@ function AddressFormFields({ address, onChange, errors, isInternational }: {
 
 // ─── Saved address card ───────────────────────────────────────────────────────
 
-function AddressCard({ addr, selected, onSelect }: { addr: SavedAddress; selected: boolean; onSelect: () => void }) {
+function AddressCard({ addr, selected, onSelect, onEdit }: { addr: SavedAddress; selected: boolean; onSelect: () => void; onEdit: () => void }) {
   return (
     <label
-      className="flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all"
+      className="flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all relative"
       style={{ borderColor: selected ? "var(--color-primary)" : "var(--color-parchment)", background: selected ? "var(--color-primary-50)" : "white" }}
     >
       <input type="radio" className="mt-0.5 accent-primary" checked={selected} onChange={onSelect} />
@@ -294,6 +294,15 @@ function AddressCard({ addr, selected, onSelect }: { addr: SavedAddress; selecte
         </p>
         <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>{addr.phone}</p>
       </div>
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(); }}
+        className="shrink-0 inline-flex items-center gap-1 text-xs font-body font-medium transition-colors hover:opacity-80"
+        style={{ color: "var(--color-primary)" }}
+        aria-label="Edit address"
+      >
+        <Pencil className="h-3.5 w-3.5" /> Edit
+      </button>
     </label>
   );
 }
@@ -320,12 +329,15 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | "new" | null>(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [savingAddress, setSavingAddress]         = useState(false);
+  const [editingAddressId, setEditingAddressId]   = useState<string | null>(null);
 
   // Shipping config (per-saree model)
   const [shippingConfig, setShippingConfig] = useState({
     freeShippingThreshold: 2999, firstSareeRate: 100, additionalSareeRate: 50,
     deliveryTitle: "Standard Delivery", deliveryNotes: "4–7 business days",
+    internationalShippingNote: "",
   });
+  const [showSummaryIntlNote, setShowSummaryIntlNote] = useState(false);
   useEffect(() => {
     fetch("/api/shipping-config").then(r => r.json()).then(d => setShippingConfig(d)).catch(() => {});
   }, []);
@@ -424,20 +436,32 @@ export default function CheckoutPage() {
 
   const handleContinueDelivery = async () => {
     if (session) {
-      // Logged-in: optionally save a new address then proceed
+      // Logged-in: optionally save a new address (or update existing one) then proceed
       if (showNewAddressForm || selectedAddressId === "new") {
         if (!validate(address)) return;
         setSavingAddress(true);
         try {
-          const res  = await fetch("/api/user/addresses", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...address, isDefault: savedAddresses.length === 0 }),
-          });
+          const isEdit = !!editingAddressId;
+          const res  = await fetch(
+            isEdit ? `/api/user/addresses/${editingAddressId}` : "/api/user/addresses",
+            {
+              method: isEdit ? "PATCH" : "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(
+                isEdit ? address : { ...address, isDefault: savedAddresses.length === 0 },
+              ),
+            },
+          );
           const data = await res.json();
           if (res.ok) {
-            setSavedAddresses((prev) => [...prev, data.address]);
+            setSavedAddresses((prev) =>
+              isEdit
+                ? prev.map((a) => (a.id === data.address.id ? data.address : a))
+                : [...prev, data.address],
+            );
             setSelectedAddressId(data.address.id);
             setShowNewAddressForm(false);
+            setEditingAddressId(null);
             setAddress(emptyAddress);
           }
         } catch {}
@@ -633,12 +657,42 @@ export default function CheckoutPage() {
                               <AddressCard
                                 key={a.id} addr={a}
                                 selected={selectedAddressId === a.id && !showNewAddressForm}
-                                onSelect={() => { setSelectedAddressId(a.id); setShowNewAddressForm(false); }}
+                                onSelect={() => { setSelectedAddressId(a.id); setShowNewAddressForm(false); setEditingAddressId(null); }}
+                                onEdit={() => {
+                                  setEditingAddressId(a.id);
+                                  setSelectedAddressId("new");
+                                  setShowNewAddressForm(true);
+                                  setAddress({
+                                    fullName: a.fullName,
+                                    phone: a.phone,
+                                    addressLine1: a.addressLine1,
+                                    addressLine2: a.addressLine2 || "",
+                                    city: a.city,
+                                    state: a.state,
+                                    pincode: a.pincode,
+                                    country: a.country || "India",
+                                  });
+                                  setErrors({});
+                                }}
                               />
                             ))}
 
                             <button
-                              onClick={() => { setShowNewAddressForm(!showNewAddressForm); setSelectedAddressId("new"); }}
+                              onClick={() => {
+                                if (showNewAddressForm) {
+                                  setShowNewAddressForm(false);
+                                  setEditingAddressId(null);
+                                  setAddress(emptyAddress);
+                                  setErrors({});
+                                  if (compatibleAddresses[0]) setSelectedAddressId(compatibleAddresses[0].id);
+                                } else {
+                                  setShowNewAddressForm(true);
+                                  setSelectedAddressId("new");
+                                  setEditingAddressId(null);
+                                  setAddress(emptyAddress);
+                                  setErrors({});
+                                }
+                              }}
                               className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-dashed text-sm font-body font-medium transition-colors hover:bg-cream"
                               style={{
                                 borderColor: showNewAddressForm ? "var(--color-primary)" : "var(--color-parchment)",
@@ -649,7 +703,12 @@ export default function CheckoutPage() {
                             </button>
 
                             {showNewAddressForm && (
-                              <div className="pt-2">
+                              <div className="pt-2 space-y-3">
+                                {editingAddressId && (
+                                  <p className="text-xs font-body font-medium" style={{ color: "var(--color-primary)" }}>
+                                    Editing saved address — changes will update it.
+                                  </p>
+                                )}
                                 <AddressFormFields address={address} onChange={addr} errors={errors} isInternational={effectiveIntl} />
                               </div>
                             )}
@@ -715,7 +774,7 @@ export default function CheckoutPage() {
                       { value: "upi",        label: "UPI",                 desc: "GPay, PhonePe, Paytm, BHIM" },
                       { value: "card",       label: "Credit / Debit Card", desc: "Visa, Mastercard, RuPay, Amex" },
                       { value: "netbanking", label: "Net Banking",         desc: "All major banks supported" },
-                      { value: "cod",        label: "Cash on Delivery",    desc: "₹50 handling fee · Available below ₹10,000" },
+                      { value: "cod",        label: "Cash on Delivery",    desc: "" },
                     ] as const).map(({ value, label, desc }) => (
                       <label key={value}
                         className="flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all"
@@ -723,7 +782,9 @@ export default function CheckoutPage() {
                         <input type="radio" className="accent-primary" checked={payment === value} onChange={() => setPayment(value)} />
                         <div>
                           <p className="text-sm font-medium font-body" style={{ color: "var(--color-text-primary)" }}>{label}</p>
-                          <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>{desc}</p>
+                          {desc && (
+                            <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>{desc}</p>
+                          )}
                         </div>
                       </label>
                     ))}
@@ -919,15 +980,44 @@ export default function CheckoutPage() {
                           {effectiveIntl ? "International" : "Domestic"}
                         </span>
                       </span>
-                      <span style={{ color: shippingCost === 0 ? "var(--color-success)" : "var(--color-text-primary)", fontWeight: shippingCost === 0 ? 600 : 400 }}>
-                        {shippingCost === 0 ? "Free" : formatINR(shippingCost)}
-                      </span>
+                      {effectiveIntl ? (
+                        <span className="relative inline-block">
+                          {shippingConfig.internationalShippingNote && (
+                            <button
+                              type="button"
+                              onClick={() => setShowSummaryIntlNote(v => !v)}
+                              onMouseEnter={() => setShowSummaryIntlNote(true)}
+                              onMouseLeave={() => setShowSummaryIntlNote(false)}
+                              aria-label="International shipping details"
+                              className="absolute -top-3 -right-1 cursor-help"
+                              style={{ color: "#1D4ED8" }}
+                            >
+                              <Info className="h-3 w-3" />
+                            </button>
+                          )}
+                          <span
+                            className="block whitespace-nowrap text-xs font-medium underline decoration-dotted underline-offset-2"
+                            style={{ color: "#1D4ED8" }}
+                          >
+                            Charges Applicable
+                          </span>
+                          {showSummaryIntlNote && shippingConfig.internationalShippingNote && (
+                            <div
+                              className="absolute right-0 top-full mt-2 w-72 z-20 p-3 rounded-md shadow-lg"
+                              style={{ background: "white", border: "1px solid var(--color-parchment)" }}
+                            >
+                              <p className="text-xs font-body whitespace-pre-line leading-relaxed text-left" style={{ color: "var(--color-text-secondary)" }}>
+                                {shippingConfig.internationalShippingNote}
+                              </p>
+                            </div>
+                          )}
+                        </span>
+                      ) : (
+                        <span style={{ color: shippingCost === 0 ? "var(--color-success)" : "var(--color-text-primary)", fontWeight: shippingCost === 0 ? 600 : 400 }}>
+                          {shippingCost === 0 ? "Free" : formatINR(shippingCost)}
+                        </span>
+                      )}
                     </div>
-                    {effectiveIntl && (
-                      <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
-                        Charges will be communicated separately
-                      </p>
-                    )}
                     {!effectiveIntl && shippingCost > 0 && (
                       <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
                         {totalQty} saree{totalQty > 1 ? "s" : ""} · ₹{shippingConfig.firstSareeRate} + {Math.max(0, totalQty - 1)}×₹{shippingConfig.additionalSareeRate}

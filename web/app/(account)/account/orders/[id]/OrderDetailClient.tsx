@@ -18,6 +18,7 @@ interface OrderItem {
   unitPrice: string | number;
   totalPrice: string | number;
   imageUrl: string | null;
+  productSlug: string | null;
 }
 
 interface Order {
@@ -338,20 +339,38 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
               Items Ordered ({order.items.length})
             </h2>
             <div className="divide-y" style={{ borderColor: "var(--color-parchment)" }}>
-              {order.items.map((item) => (
+              {order.items.map((item) => {
+                const ImageWrapper: any = item.productSlug ? Link : "div";
+                const imageWrapperProps = item.productSlug
+                  ? { href: `/shop/${item.productSlug}` }
+                  : {};
+                return (
                 <div key={item.id} className="flex gap-4 p-5">
-                  <div className="relative shrink-0 w-16 h-20 rounded-sm overflow-hidden border"
-                    style={{ borderColor: "var(--color-parchment)", background: "var(--color-cream)" }}>
+                  <ImageWrapper
+                    {...imageWrapperProps}
+                    className="relative shrink-0 w-16 h-20 rounded-sm overflow-hidden border block"
+                    style={{ borderColor: "var(--color-parchment)", background: "var(--color-cream)" }}
+                  >
                     {item.imageUrl
                       ? <SmartImage src={item.imageUrl} alt={item.productName} fill objectFit="cover" />
                       : <div className="w-full h-full flex items-center justify-center">
                           <Package className="h-5 w-5" style={{ color: "var(--color-text-disabled)" }} />
                         </div>}
-                  </div>
+                  </ImageWrapper>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-body font-semibold" style={{ color: "var(--color-text-primary)" }}>
-                      {item.productName}
-                    </p>
+                    {item.productSlug ? (
+                      <Link
+                        href={`/shop/${item.productSlug}`}
+                        className="text-sm font-body font-semibold hover:underline transition-colors"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        {item.productName}
+                      </Link>
+                    ) : (
+                      <p className="text-sm font-body font-semibold" style={{ color: "var(--color-text-primary)" }}>
+                        {item.productName}
+                      </p>
+                    )}
                     <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>
                       {item.variantColor}{item.sareeCode ? ` · ${item.sareeCode}` : ""}
                     </p>
@@ -366,7 +385,8 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

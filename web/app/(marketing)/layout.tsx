@@ -6,6 +6,7 @@ import { CartSidebar } from "@/components/cart/CartSidebar";
 import { QuickViewModal } from "@/components/product/QuickViewModal";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { LoginTrigger } from "@/components/auth/LoginTrigger";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { getThemeSettings } from "@/lib/theme/server";
 import { db } from "@/lib/db";
 
@@ -78,6 +79,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <QuickViewModal />
       <LoginModal />
       <Suspense><LoginTrigger /></Suspense>
+      <MobileBottomNav />
     </div>
   );
 }

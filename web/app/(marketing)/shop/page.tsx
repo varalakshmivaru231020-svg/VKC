@@ -83,7 +83,7 @@ export default async function ShopPage({ searchParams }: Props) {
         </p>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex gap-8">
           {/* Sidebar filters */}
           <aside className="hidden lg:block w-64 shrink-0">
@@ -102,7 +102,7 @@ export default async function ShopPage({ searchParams }: Props) {
               attributes={attributes}
               current={searchParams}
             />
-            <div className="mt-6">
+            <div className="mt-0 sm:mt-6">
               <ProductGrid products={result.products} />
             </div>
 

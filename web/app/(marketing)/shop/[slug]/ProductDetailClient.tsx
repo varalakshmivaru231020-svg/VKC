@@ -516,6 +516,39 @@ export default function ProductDetailClient({ product, careInstructions, deliver
           </div>
         </div>
       </div>
+
+      {/* Spacer so content above isn't hidden behind the sticky mobile action bar */}
+      {available > 0 && <div className="lg:hidden h-20" aria-hidden />}
+
+      {/* ── Mobile sticky action bar: ♥ | Add to Bag | Buy Now (sits above bottom nav) ── */}
+      {available > 0 && (
+        <div
+          className="lg:hidden fixed bottom-16 inset-x-0 z-30 flex items-center gap-2 px-3 py-3 border-t shadow-[0_-2px_12px_rgba(0,0,0,0.06)]"
+          style={{ background: "white", borderColor: "var(--color-parchment)" }}
+        >
+          <button
+            onClick={() => toggle(selectedVariant.id)}
+            aria-label="Wishlist"
+            className={cn(
+              "h-12 w-12 shrink-0 flex items-center justify-center rounded-md border transition-colors",
+              isWishlisted(selectedVariant.id) ? "bg-primary border-primary" : "border-parchment"
+            )}
+          >
+            <Heart className={cn("h-5 w-5", isWishlisted(selectedVariant.id) ? "fill-white text-white" : "text-text-secondary")} />
+          </button>
+          <Button
+            variant="secondary"
+            className={cn("flex-1 h-12 min-w-0 whitespace-nowrap", addedToCart && "bg-success hover:bg-success text-white")}
+            onClick={handleAddToCart}
+          >
+            <ShoppingBag className="h-4 w-4 mr-1.5 shrink-0" />
+            {addedToCart ? "Added!" : "Add to Bag"}
+          </Button>
+          <Button className="flex-1 h-12 min-w-0 whitespace-nowrap" asChild>
+            <a href="/checkout">Buy Now</a>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

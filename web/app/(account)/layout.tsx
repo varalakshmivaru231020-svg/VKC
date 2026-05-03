@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { SidebarNav, MobileTabBar } from "@/components/account/SidebarNav";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { LoginModal } from "@/components/auth/LoginModal";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
 export const dynamic = "force-dynamic";
 
@@ -67,8 +68,8 @@ export default async function AccountLayout({ children }: { children: React.Reac
       />
 
       {/* Full-screen two-column layout */}
-      <div style={{ background: "var(--color-ivory)", minHeight: "calc(100vh - 112px)" }}>
-      <div className="max-w-[1400px] mx-auto flex" style={{ minHeight: "calc(100vh - 112px)" }}>
+      <div style={{ background: "var(--color-ivory)", minHeight: "calc(100vh - 132px)" }}>
+      <div className="max-w-[1400px] mx-auto flex" style={{ minHeight: "calc(100vh - 132px)" }}>
 
         {/* ── Sidebar (desktop) ── */}
         <aside
@@ -76,8 +77,8 @@ export default async function AccountLayout({ children }: { children: React.Reac
           style={{
             background: "white",
             borderColor: "var(--color-parchment)",
-            top: "112px",
-            height: "calc(100vh - 112px)",
+            top: "132px",
+            height: "calc(100vh - 132px)",
             overflowY: "auto",
           }}
         >
@@ -157,6 +158,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
       {/* Shared overlays — needed for cart/login in header */}
       <CartSidebar />
       <LoginModal />
+      <MobileBottomNav />
     </>
   );
 }

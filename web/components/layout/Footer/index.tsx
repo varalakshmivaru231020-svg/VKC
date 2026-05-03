@@ -106,7 +106,7 @@ export function Footer({
                     src={logoUrl}
                     alt={siteName}
                     className="object-contain"
-                    style={{ maxHeight: 64, maxWidth: 200 }}
+                    style={{ maxHeight: 96, maxWidth: 280 }}
                   />
                 </Link>
               ) : (

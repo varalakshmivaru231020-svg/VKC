@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, MapPin, Trash2, Star } from "lucide-react";
+import { Plus, MapPin, Trash2, Star, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchableSelect, COUNTRY_NAMES } from "@/components/ui/SearchableSelect";
@@ -32,6 +32,7 @@ export default function AddressesPage() {
   const [saving, setSaving]       = useState(false);
   const [form, setForm]           = useState(emptyForm);
   const [errors, setErrors]       = useState<Partial<typeof emptyForm>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/user/addresses")
@@ -62,26 +63,54 @@ export default function AddressesPage() {
     if (!validate()) return;
     setSaving(true);
     try {
-      const res  = await fetch("/api/user/addresses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, isDefault: addresses.length === 0 || form.isDefault }),
-      });
+      const isEdit = !!editingId;
+      const res  = await fetch(
+        isEdit ? `/api/user/addresses/${editingId}` : "/api/user/addresses",
+        {
+          method: isEdit ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...form, isDefault: !isEdit && addresses.length === 0 ? true : form.isDefault }),
+        },
+      );
       const data = await res.json();
       if (res.ok) {
-        // If new address is default, clear default from others
         setAddresses((prev) => {
+          if (isEdit) {
+            return prev.map((a) => {
+              if (a.id === data.address.id) return data.address;
+              return data.address.isDefault ? { ...a, isDefault: false } : a;
+            });
+          }
           const updated = data.address.isDefault
             ? prev.map((a) => ({ ...a, isDefault: false }))
             : prev;
           return [...updated, data.address];
         });
         setShowForm(false);
+        setEditingId(null);
         setForm(emptyForm);
         setErrors({});
       }
     } catch {}
     setSaving(false);
+  };
+
+  const handleEdit = (a: Address) => {
+    setEditingId(a.id);
+    setForm({
+      label: a.label || "Home",
+      fullName: a.fullName,
+      phone: a.phone,
+      addressLine1: a.addressLine1,
+      addressLine2: a.addressLine2 || "",
+      city: a.city,
+      state: a.state,
+      pincode: a.pincode,
+      country: a.country || "India",
+      isDefault: a.isDefault,
+    });
+    setErrors({});
+    setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -108,11 +137,11 @@ export default function AddressesPage() {
 
   return (
     <div className="px-6 sm:px-8 lg:px-10 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold font-body" style={{ color: "var(--color-text-primary)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-semibold font-body min-w-0" style={{ color: "var(--color-text-primary)" }}>
           Saved Addresses
         </h1>
-        <Button size="sm" onClick={() => { setShowForm(true); setForm(emptyForm); setErrors({}); }}>
+        <Button size="sm" className="shrink-0 whitespace-nowrap" onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm); setErrors({}); }}>
           <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Address
         </Button>
       </div>
@@ -167,6 +196,11 @@ export default function AddressesPage() {
                     <Star className="h-3.5 w-3.5" /> Set Default
                   </button>
                 )}
+                <button onClick={() => handleEdit(addr)}
+                  className="flex items-center gap-1.5 text-xs font-body font-medium transition-colors"
+                  style={{ color: "var(--color-text-secondary)" }}>
+                  <Pencil className="h-3.5 w-3.5" /> Edit
+                </button>
                 <button onClick={() => handleDelete(addr.id)}
                   className="flex items-center gap-1.5 text-xs font-body font-medium transition-colors ml-auto"
                   style={{ color: "var(--color-error)" }}>
@@ -188,7 +222,7 @@ export default function AddressesPage() {
       {/* Add form */}
       {showForm && (
         <div className="p-6 rounded-md border" style={{ background: "white", borderColor: "var(--color-primary)" }}>
-          <h2 className="text-base font-body font-semibold mb-5" style={{ color: "var(--color-text-primary)" }}>New Address</h2>
+          <h2 className="text-base font-body font-semibold mb-5" style={{ color: "var(--color-text-primary)" }}>{editingId ? "Edit Address" : "New Address"}</h2>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="flex gap-2 flex-wrap">
               {["Home", "Office", "Other"].map((l) => (
@@ -204,32 +238,32 @@ export default function AddressesPage() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5 min-w-0">
                 <Input label="Full Name *" value={form.fullName}
                   onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))} />
                 {errors.fullName && <p className="text-xs font-body" style={{ color: "var(--color-error)" }}>{errors.fullName}</p>}
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <Input label="Mobile Number *" value={form.phone}
                   onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))} />
                 {errors.phone && <p className="text-xs font-body" style={{ color: "var(--color-error)" }}>{errors.phone}</p>}
               </div>
-              <div className="col-span-2 space-y-1.5">
+              <div className="md:col-span-2 space-y-1.5 min-w-0">
                 <Input label="Address Line 1 *" value={form.addressLine1}
                   onChange={(e) => setForm((p) => ({ ...p, addressLine1: e.target.value }))} />
                 {errors.addressLine1 && <p className="text-xs font-body" style={{ color: "var(--color-error)" }}>{errors.addressLine1}</p>}
               </div>
-              <div className="col-span-2">
+              <div className="md:col-span-2 min-w-0">
                 <Input label="Address Line 2" value={form.addressLine2}
                   onChange={(e) => setForm((p) => ({ ...p, addressLine2: e.target.value }))} />
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <Input label="City *" value={form.city}
                   onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))} />
                 {errors.city && <p className="text-xs font-body" style={{ color: "var(--color-error)" }}>{errors.city}</p>}
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <label className="block text-sm font-medium font-body" style={{ color: "var(--color-text-primary)" }}>State *</label>
                 <input
                   type="text"
@@ -247,12 +281,12 @@ export default function AddressesPage() {
                 </datalist>
                 {errors.state && <p className="text-xs font-body" style={{ color: "var(--color-error)" }}>{errors.state}</p>}
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <Input label="Pincode *" value={form.pincode}
                   onChange={(e) => setForm((p) => ({ ...p, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))} />
                 {errors.pincode && <p className="text-xs font-body" style={{ color: "var(--color-error)" }}>{errors.pincode}</p>}
               </div>
-              <div className="sm:col-span-2">
+              <div className="md:col-span-2 min-w-0">
                 <SearchableSelect
                   label="Country"
                   value={form.country}
@@ -264,8 +298,8 @@ export default function AddressesPage() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit" loading={saving}>Save Address</Button>
-              <Button type="button" variant="secondary" onClick={() => { setShowForm(false); setErrors({}); }}>Cancel</Button>
+              <Button type="submit" loading={saving}>{editingId ? "Update Address" : "Save Address"}</Button>
+              <Button type="button" variant="secondary" onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm); setErrors({}); }}>Cancel</Button>
             </div>
           </form>
         </div>

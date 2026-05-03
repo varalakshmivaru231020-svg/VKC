@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingBag, Search, ChevronRight } from "lucide-react";
+import { ShoppingBag, Search, ChevronRight, Layers, Clock, CheckCircle2, Package, Truck, PackageCheck, XCircle, RotateCcw, RefreshCw } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatINR } from "@/lib/utils/format";
 
@@ -40,7 +40,7 @@ export default async function AdminOrdersPage({
     ];
   }
 
-  const [total, orders] = await Promise.all([
+  const [total, orders, statusCountsRaw, allOrdersCount] = await Promise.all([
     db.order.count({ where }),
     db.order.findMany({
       where,
@@ -52,9 +52,29 @@ export default async function AdminOrdersPage({
       skip: (page - 1) * limit,
       take: limit,
     }),
+    db.order.groupBy({ by: ["status"], _count: { _all: true } }),
+    db.order.count(),
   ]);
 
   const totalPages = Math.ceil(total / limit);
+
+  const countByStatus: Record<string, number> = {};
+  for (const row of statusCountsRaw) countByStatus[row.status] = row._count._all;
+
+  const STATUS_CARDS: { id: string; label: string; statuses: string[]; Icon: any; bg: string; color: string }[] = [
+    { id: "all",                label: "All Orders", statuses: [],                                                      Icon: Layers,        bg: "var(--color-cream)",         color: "var(--color-text-primary)" },
+    { id: "pending",            label: "Pending",    statuses: ["PENDING"],                                             Icon: Clock,         bg: "var(--color-warning-bg)",    color: "var(--color-warning)" },
+    { id: "confirmed",          label: "Confirmed",  statuses: ["CONFIRMED"],                                           Icon: CheckCircle2,  bg: "var(--color-primary-50)",    color: "var(--color-primary)" },
+    { id: "processing",         label: "Processing", statuses: ["PROCESSING"],                                          Icon: Package,       bg: "var(--color-primary-50)",    color: "var(--color-primary)" },
+    { id: "shipped",            label: "Shipped",    statuses: ["SHIPPED"],                                             Icon: Truck,         bg: "#EEF2FF",                    color: "#4338CA" },
+    { id: "delivered",          label: "Delivered",  statuses: ["DELIVERED"],                                           Icon: PackageCheck,  bg: "var(--color-success-bg)",    color: "var(--color-success)" },
+    { id: "cancelled",          label: "Cancelled",  statuses: ["CANCELLED"],                                           Icon: XCircle,       bg: "var(--color-error-bg)",      color: "var(--color-error)" },
+    { id: "return_requested",   label: "Return",     statuses: ["RETURN_REQUESTED", "RETURN_APPROVED"],                 Icon: RotateCcw,     bg: "#FEF3C7",                    color: "#D97706" },
+    { id: "exchange_requested", label: "Exchange",   statuses: ["EXCHANGE_REQUESTED", "EXCHANGE_APPROVED"],             Icon: RefreshCw,     bg: "#EEF2FF",                    color: "#4338CA" },
+  ];
+
+  const cardCount = (statuses: string[]) =>
+    statuses.length === 0 ? allOrdersCount : statuses.reduce((s, st) => s + (countByStatus[st] ?? 0), 0);
 
   return (
     <div className="space-y-6">
@@ -66,6 +86,38 @@ export default async function AdminOrdersPage({
             {total} total orders
           </p>
         </div>
+      </div>
+
+      {/* Status count cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
+        {STATUS_CARDS.map(({ id, label, statuses, Icon, bg, color }) => {
+          const active = statusFilter === id;
+          const count = cardCount(statuses);
+          return (
+            <Link
+              key={id}
+              href={`?${new URLSearchParams({ ...searchParams, status: id, page: "1" })}`}
+              className="rounded-md border p-3 transition-all hover:shadow-sm"
+              style={{
+                background: "white",
+                borderColor: active ? "var(--color-primary)" : "var(--color-parchment)",
+                borderWidth: active ? 2 : 1,
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="h-7 w-7 flex items-center justify-center rounded-md shrink-0" style={{ background: bg }}>
+                  <Icon className="h-3.5 w-3.5" style={{ color }} />
+                </span>
+                <p className="text-[11px] font-body font-semibold uppercase tracking-wide truncate" style={{ color: "var(--color-text-muted)" }}>
+                  {label}
+                </p>
+              </div>
+              <p className="text-xl font-body font-bold" style={{ color: active ? "var(--color-primary)" : "var(--color-text-primary)" }}>
+                {count}
+              </p>
+            </Link>
+          );
+        })}
       </div>
 
       {/* Filters */}

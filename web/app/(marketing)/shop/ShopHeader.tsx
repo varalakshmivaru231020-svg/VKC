@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SlidersHorizontal, X, ChevronDown, Check } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, Check, ArrowUpDown } from "lucide-react";
 import ShopFilters, { type FilterAttribute } from "./ShopFilters";
 
 interface Props {
@@ -20,8 +20,9 @@ export default function ShopHeader({
 }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  const [mobileSortOpen, setMobileSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
 
   const currentLabel = sortOptions.find((o) => o.value === currentSort)?.label ?? "Sort";
@@ -32,6 +33,7 @@ export default function ShopHeader({
     params.delete("page");
     router.push(`?${params.toString()}`, { scroll: false });
     setSortOpen(false);
+    setMobileSortOpen(false);
   };
 
   useEffect(() => {
@@ -44,9 +46,19 @@ export default function ShopHeader({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Lock body scroll when any sheet is open
+  useEffect(() => {
+    const open = filtersOpen || mobileSortOpen;
+    if (open) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [filtersOpen, mobileSortOpen]);
+
   return (
     <>
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap">
         {/* Left: count + active filter pills */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <p className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>
@@ -64,26 +76,8 @@ export default function ShopHeader({
           ))}
         </div>
 
-        {/* Right: mobile filter button + sort */}
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setMobileFiltersOpen(true)}
-            className="lg:hidden inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-sm font-body font-medium border transition-colors hover:border-primary/50 hover:text-primary"
-            style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-secondary)", background: "white" }}
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Filters
-            {activeFilters.length > 0 && (
-              <span
-                className="ml-0.5 h-4 w-4 flex items-center justify-center rounded-full text-[10px] font-bold"
-                style={{ background: "var(--color-primary)", color: "white" }}
-              >
-                {activeFilters.length}
-              </span>
-            )}
-          </button>
-
-          {/* Custom sort dropdown */}
+        {/* Right: sort dropdown — visible from sm upward; mobile uses the bottom bar */}
+        <div className="hidden sm:flex items-center gap-2.5">
           <div className="relative" ref={sortRef}>
             <button
               onClick={() => setSortOpen((o) => !o)}
@@ -127,22 +121,120 @@ export default function ShopHeader({
         </div>
       </div>
 
-      {/* Mobile filter drawer */}
-      {mobileFiltersOpen && (
-        <>
+      {/* ── Mobile fixed bottom bar: SORT | FILTER (sits above bottom nav) ── */}
+      <div
+        className="lg:hidden fixed bottom-16 inset-x-0 z-30 grid grid-cols-2 border-t shadow-[0_-2px_12px_rgba(0,0,0,0.06)]"
+        style={{ background: "white", borderColor: "var(--color-parchment)" }}
+      >
+        <button
+          onClick={() => setMobileSortOpen(true)}
+          className="flex items-center justify-center gap-2 h-14 text-sm font-body font-semibold border-r transition-colors active:bg-cream"
+          style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-primary)" }}
+        >
+          <ArrowUpDown className="h-4 w-4" style={{ color: "var(--color-primary)" }} />
+          SORT
+        </button>
+        <button
+          onClick={() => setFiltersOpen(true)}
+          className="flex items-center justify-center gap-2 h-14 text-sm font-body font-semibold transition-colors active:bg-cream relative"
+          style={{ color: "var(--color-text-primary)" }}
+        >
+          <SlidersHorizontal className="h-4 w-4" style={{ color: "var(--color-primary)" }} />
+          FILTER
+          {activeFilters.length > 0 && (
+            <span
+              className="absolute top-3 right-6 h-4 min-w-4 px-1 flex items-center justify-center rounded-full text-[10px] font-bold"
+              style={{ background: "var(--color-primary)", color: "white" }}
+            >
+              {activeFilters.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Spacer so page content isn't hidden behind the bottom bar on mobile */}
+      <div className="lg:hidden h-14" aria-hidden />
+
+      {/* ── Mobile SORT bottom sheet ── */}
+      {mobileSortOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex items-end justify-center">
           <div
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-            onClick={() => setMobileFiltersOpen(false)}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setMobileSortOpen(false)}
           />
           <div
-            className="fixed inset-y-0 left-0 z-50 w-[min(320px,90vw)] overflow-y-auto shadow-xl animate-slide-in-left"
-            style={{ background: "var(--color-ivory)" }}
+            className="relative w-full max-w-2xl rounded-t-2xl overflow-hidden animate-slide-up"
+            style={{ background: "white", maxHeight: "80vh" }}
           >
+            <div className="flex items-center justify-between px-5 pt-4 pb-3">
+              <p className="text-sm font-body font-semibold uppercase tracking-wide" style={{ color: "var(--color-text-primary)" }}>
+                Sort By
+              </p>
+              <button
+                onClick={() => setMobileSortOpen(false)}
+                aria-label="Close"
+                className="h-8 w-8 flex items-center justify-center rounded-full transition-colors hover:bg-cream"
+              >
+                <X className="h-4 w-4" style={{ color: "var(--color-text-muted)" }} />
+              </button>
+            </div>
+            <div className="border-t" style={{ borderColor: "var(--color-parchment)" }}>
+              <div className="overflow-y-auto" style={{ maxHeight: "calc(80vh - 100px)" }}>
+                {sortOptions.map((o) => {
+                  const active = o.value === currentSort;
+                  return (
+                    <button
+                      key={o.value}
+                      onClick={() => updateSort(o.value)}
+                      className="w-full flex items-center justify-between px-5 py-4 text-left border-b transition-colors active:bg-cream"
+                      style={{
+                        borderColor: "var(--color-parchment)",
+                        background: active ? "var(--color-primary-50)" : "white",
+                      }}
+                    >
+                      <span
+                        className="text-sm font-body"
+                        style={{
+                          color: active ? "var(--color-primary)" : "var(--color-text-primary)",
+                          fontWeight: active ? 600 : 400,
+                        }}
+                      >
+                        {o.label}
+                      </span>
+                      {active && (
+                        <span
+                          className="h-6 w-6 flex items-center justify-center rounded-full"
+                          style={{ background: "var(--color-primary)" }}
+                        >
+                          <Check className="h-3.5 w-3.5" style={{ color: "white" }} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mobile FILTER bottom sheet ── */}
+      {filtersOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setFiltersOpen(false)}
+          />
+          <div
+            className="relative w-full max-w-3xl rounded-t-2xl overflow-hidden flex flex-col animate-slide-up"
+            style={{ background: "var(--color-ivory)", maxHeight: "92vh" }}
+          >
+            {/* Header with title, reset, and right-aligned close */}
             <div
-              className="sticky top-0 flex items-center justify-between px-5 py-4 border-b z-10"
-              style={{ background: "var(--color-ivory)", borderColor: "var(--color-parchment)" }}
+              className="flex items-center justify-between gap-3 px-5 py-4 border-b shrink-0"
+              style={{ background: "white", borderColor: "var(--color-parchment)" }}
             >
-              <p className="font-body font-semibold text-sm" style={{ color: "var(--color-text-primary)" }}>
+              <p className="text-sm font-body font-semibold uppercase tracking-wide" style={{ color: "var(--color-text-primary)" }}>
                 Filters
                 {activeFilters.length > 0 && (
                   <span
@@ -153,18 +245,51 @@ export default function ShopHeader({
                   </span>
                 )}
               </p>
-              <button
-                onClick={() => setMobileFiltersOpen(false)}
-                className="h-8 w-8 flex items-center justify-center rounded-full transition-colors hover:bg-parchment"
-              >
-                <X className="h-4 w-4" style={{ color: "var(--color-text-muted)" }} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => router.push("/shop")}
+                  className="inline-flex items-center gap-1 text-xs font-body font-medium transition-colors"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  Reset Filters
+                </button>
+                <button
+                  onClick={() => setFiltersOpen(false)}
+                  aria-label="Close"
+                  className="h-8 w-8 flex items-center justify-center rounded-full transition-colors hover:bg-cream"
+                >
+                  <X className="h-4 w-4" style={{ color: "var(--color-text-muted)" }} />
+                </button>
+              </div>
             </div>
-            <div className="px-5 pt-4">
+
+            {/* Scrollable filter body */}
+            <div className="flex-1 overflow-y-auto px-5 pt-4">
               <ShopFilters attributes={attributes} current={current} />
             </div>
+
+            {/* Sticky footer: CLOSE | APPLY FILTERS */}
+            <div
+              className="grid grid-cols-2 gap-3 px-4 py-3 border-t shrink-0"
+              style={{ background: "white", borderColor: "var(--color-parchment)" }}
+            >
+              <button
+                onClick={() => setFiltersOpen(false)}
+                className="h-12 rounded-md text-sm font-body font-semibold uppercase tracking-wide transition-colors active:bg-cream"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => setFiltersOpen(false)}
+                className="h-12 rounded-md text-sm font-body font-semibold uppercase tracking-wide transition-colors"
+                style={{ background: "var(--color-primary)", color: "white" }}
+              >
+                Apply Filters
+              </button>
+            </div>
           </div>
-        </>
+        </div>
       )}
     </>
   );

@@ -18,5 +18,20 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
   if (!order) notFound();
 
-  return <OrderDetailClient order={JSON.parse(JSON.stringify(order))} />;
+  // Some legacy orders store the slug in productId instead of the real CUID,
+  // so look up by either id OR slug and map both ways.
+  const productRefs = Array.from(new Set(order.items.map((i) => i.productId)));
+  const products = await db.product.findMany({
+    where: { OR: [{ id: { in: productRefs } }, { slug: { in: productRefs } }] },
+    select: { id: true, slug: true },
+  });
+  const slugByRef: Record<string, string> = {};
+  for (const p of products) {
+    slugByRef[p.id] = p.slug;
+    slugByRef[p.slug] = p.slug;
+  }
+  const itemsWithSlug = order.items.map((i) => ({ ...i, productSlug: slugByRef[i.productId] ?? null }));
+  const orderForClient = { ...order, items: itemsWithSlug };
+
+  return <OrderDetailClient order={JSON.parse(JSON.stringify(orderForClient))} />;
 }

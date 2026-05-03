@@ -51,6 +51,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       city:         body.city         ?? address.city,
       state:        body.state        ?? address.state,
       pincode:      body.pincode      ?? address.pincode,
+      country:      body.country      ?? address.country,
       isDefault:    body.isDefault    ?? address.isDefault,
     },
   });

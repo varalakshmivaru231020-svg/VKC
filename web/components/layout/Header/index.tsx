@@ -445,7 +445,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
         {/* ── Top bar ── */}
         <div className="border-b" style={{ borderColor: "var(--color-parchment)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-3 items-center h-[68px]">
+            <div className="grid grid-cols-3 items-center h-[88px]">
               {/* Left — menu (mobile) / social (desktop) */}
               <div className="flex items-center gap-1">
                 {/* Hamburger — mobile only, left side */}
@@ -473,7 +473,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                       src={logoUrl}
                       alt={siteName}
                       className="transition-opacity duration-200 group-hover:opacity-75 object-contain"
-                      style={{ maxHeight: 64, maxWidth: 240 }}
+                      style={{ maxHeight: 72, maxWidth: 280 }}
                     />
                   ) : (
                     <span className="tracking-wide transition-opacity duration-200 group-hover:opacity-75 leading-none"
