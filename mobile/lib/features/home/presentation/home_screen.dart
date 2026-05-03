@@ -285,7 +285,7 @@ class _FeaturedGrid extends ConsumerWidget {
               crossAxisCount: 2,
               mainAxisSpacing: 16,
               crossAxisSpacing: 12,
-              childAspectRatio: 0.55,
+              childAspectRatio: 0.5,
             ),
             itemBuilder: (_, i) => ProductCard(product: list[i]),
           ),

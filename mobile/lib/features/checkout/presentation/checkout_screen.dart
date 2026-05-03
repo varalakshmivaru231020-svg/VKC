@@ -10,6 +10,7 @@ import "../../../core/utils/formatters.dart";
 import "../../../core/widgets/state_widgets.dart";
 import "../../addresses/data/address_model.dart";
 import "../../addresses/data/address_repository.dart";
+import "../../addresses/presentation/addresses_screen.dart" show showAddressFormSheet;
 import "../../cart/data/cart_controller.dart";
 import "../../splash/data/app_config_repository.dart";
 import "../data/checkout_repository.dart";
@@ -182,7 +183,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               )),
               const SizedBox(height: 8),
               TextButton.icon(
-                onPressed: () { /* Phase 5: open address form */ },
+                onPressed: () async {
+                  await showAddressFormSheet(context);
+                  ref.invalidate(addressesProvider);
+                },
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text("Add new address"),
               ),

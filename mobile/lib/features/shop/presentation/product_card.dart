@@ -16,7 +16,8 @@ class ProductCard extends StatelessWidget {
     final theme  = Theme.of(context);
     final colors = context.appColors;
     final v = product.primaryVariant;
-    final image = v.images.isNotEmpty ? v.images.first.url : null;
+    final image  = v.images.isNotEmpty ? v.images.first.url : null;
+    final swatch = _parseHex(v.colorHex);
 
     return InkWell(
       onTap: () => context.push(RoutePaths.productDetail(product.slug)),
@@ -26,7 +27,9 @@ class ProductCard extends StatelessWidget {
         children: [
           AspectRatio(
             aspectRatio: 3 / 4,
-            child: AppImage(url: image, borderRadius: BorderRadius.circular(8)),
+            child: image != null && image.isNotEmpty
+                ? AppImage(url: image, borderRadius: BorderRadius.circular(8))
+                : _SwatchPlaceholder(color: swatch, label: v.colorName),
           ),
           const SizedBox(height: 8),
           Text(
@@ -45,9 +48,9 @@ class ProductCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 6, runSpacing: 2,
             children: [
               Text(
                 formatINR(v.salePrice),
@@ -58,7 +61,6 @@ class ProductCard extends StatelessWidget {
                 ),
               ),
               if (v.hasDiscount) ...[
-                const SizedBox(width: 6),
                 Text(
                   formatINR(v.originalPrice),
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -66,7 +68,6 @@ class ProductCard extends StatelessWidget {
                     decoration: TextDecoration.lineThrough,
                   ),
                 ),
-                const SizedBox(width: 6),
                 Text(
                   "${v.discountPercent}% off",
                   style: theme.textTheme.labelSmall?.copyWith(color: colors.success, fontWeight: FontWeight.w600),
@@ -78,4 +79,49 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SwatchPlaceholder extends StatelessWidget {
+  const _SwatchPlaceholder({required this.color, required this.label});
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withOpacity(0.18), color.withOpacity(0.36)],
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+            ),
+            if (label.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.black.withOpacity(0.55), fontSize: 11, fontWeight: FontWeight.w500)),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Color _parseHex(String? hex) {
+  if (hex == null || hex.isEmpty) return Colors.grey.shade400;
+  var h = hex.replaceAll("#", "").trim();
+  if (h.length == 6) h = "FF$h";
+  return Color(int.tryParse(h, radix: 16) ?? 0xFFCCCCCC);
 }

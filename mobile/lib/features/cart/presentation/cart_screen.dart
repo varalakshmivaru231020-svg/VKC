@@ -66,6 +66,7 @@ class _CartItemCard extends ConsumerWidget {
     final cart = ref.read(cartControllerProvider.notifier);
 
     return Container(
+      height: 130,
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: colors.parchment),
@@ -75,13 +76,23 @@ class _CartItemCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            width: 100, height: 130,
-            child: AppImage(
-              url: item.imageUrl,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8), bottomLeft: Radius.circular(8),
-              ),
-            ),
+            width: 100,
+            child: item.imageUrl != null && item.imageUrl!.isNotEmpty
+                ? AppImage(
+                    url: item.imageUrl,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8), bottomLeft: Radius.circular(8),
+                    ),
+                  )
+                : Container(
+                    decoration: BoxDecoration(
+                      color: colors.cream,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8), bottomLeft: Radius.circular(8),
+                      ),
+                    ),
+                    child: Icon(Icons.image_outlined, color: colors.textMuted),
+                  ),
           ),
           Expanded(
             child: Padding(

@@ -121,7 +121,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             crossAxisCount: 2,
             mainAxisSpacing: 16,
             crossAxisSpacing: 12,
-            childAspectRatio: 0.55,
+            childAspectRatio: 0.5,
           ),
           builderDelegate: PagedChildBuilderDelegate<Product>(
             itemBuilder: (_, item, __) => ProductCard(product: item),

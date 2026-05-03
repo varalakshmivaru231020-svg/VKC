@@ -69,12 +69,8 @@ class AppThemeBuilder {
         foregroundColor: textPrimary,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.getFont(
-          _safeFont(headingFont, "Cormorant Garamond"),
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
+        titleTextStyle: _safeGoogleFont(headingFont, "Cormorant Garamond",
+            fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -82,11 +78,8 @@ class AppThemeBuilder {
           backgroundColor: primary,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: GoogleFonts.getFont(
-            _safeFont(bodyFont, "Inter"),
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
+          textStyle: _safeGoogleFont(bodyFont, "Inter",
+              fontWeight: FontWeight.w600, fontSize: 15),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -134,14 +127,38 @@ class AppThemeBuilder {
     );
   }
 
+  // Google Fonts family names that the admin might commonly choose.
+  // Generics like "system-ui", "sans-serif" etc. are *not* Google Fonts so
+  // we filter them out and fall back to the default if nothing matches.
+  static const _genericCssFamilies = <String>{
+    "system-ui", "sans-serif", "serif", "monospace", "cursive", "fantasy",
+    "ui-sans-serif", "ui-serif", "ui-monospace", "ui-rounded",
+    "-apple-system", "blinkmacsystemfont", "roboto", "segoe ui", "helvetica",
+    "arial", "apple color emoji", "segoe ui emoji", "segoe ui symbol",
+  };
+
+  /// Resolves a font value (which may be a CSS stack like
+  /// `"Inter", system-ui, sans-serif`) into a single Google-Fonts family
+  /// name, falling back to [fallback] when nothing useful is found.
   static String _safeFont(String? requested, String fallback) {
     if (requested == null || requested.trim().isEmpty) return fallback;
-    return requested.trim();
+
+    // Split on commas → strip quotes/whitespace → drop generics → first match wins.
+    final candidates = requested
+        .split(",")
+        .map((s) => s.trim().replaceAll(RegExp(r'^[\"' + "'" + r']+|[\"' + "'" + r']+$'), '').trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    for (final c in candidates) {
+      if (_genericCssFamilies.contains(c.toLowerCase())) continue;
+      return c;
+    }
+    return fallback;
   }
 
   static TextTheme _displayTextTheme(Color color, String? font) {
-    final family = _safeFont(font, "Cormorant Garamond");
-    return GoogleFonts.getTextTheme(family, TextTheme(
+    final base = TextTheme(
       displayLarge:  TextStyle(color: color, fontWeight: FontWeight.w600),
       displayMedium: TextStyle(color: color, fontWeight: FontWeight.w600),
       displaySmall:  TextStyle(color: color, fontWeight: FontWeight.w600),
@@ -149,18 +166,55 @@ class AppThemeBuilder {
       headlineMedium:TextStyle(color: color, fontWeight: FontWeight.w600),
       headlineSmall: TextStyle(color: color, fontWeight: FontWeight.w600),
       titleLarge:    TextStyle(color: color, fontWeight: FontWeight.w600),
-    ));
+    );
+    return _applyGoogleFontOrFallback(_safeFont(font, "Cormorant Garamond"), "Cormorant Garamond", base);
   }
 
   static TextTheme _bodyTextTheme(Color color, String? font) {
-    final family = _safeFont(font, "Inter");
-    return GoogleFonts.getTextTheme(family, TextTheme(
+    final base = TextTheme(
       titleMedium: TextStyle(color: color, fontWeight: FontWeight.w500),
       titleSmall:  TextStyle(color: color, fontWeight: FontWeight.w500),
       bodyLarge:   TextStyle(color: color),
       bodyMedium:  TextStyle(color: color),
       bodySmall:   TextStyle(color: color),
       labelLarge:  TextStyle(color: color, fontWeight: FontWeight.w600),
-    ));
+    );
+    return _applyGoogleFontOrFallback(_safeFont(font, "Inter"), "Inter", base);
+  }
+
+  /// Try GoogleFonts.getFont(family) for a single TextStyle, with safe fallback.
+  static TextStyle _safeGoogleFont(
+    String? requested,
+    String fallback, {
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+  }) {
+    final family = _safeFont(requested, fallback);
+    try {
+      return GoogleFonts.getFont(family,
+          fontSize: fontSize, fontWeight: fontWeight, color: color);
+    } catch (_) {
+      try {
+        return GoogleFonts.getFont(fallback,
+            fontSize: fontSize, fontWeight: fontWeight, color: color);
+      } catch (_) {
+        return TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color);
+      }
+    }
+  }
+
+  /// Try GoogleFonts.getTextTheme(family) and fall back to a known-good family
+  /// if the requested one isn't in the Google Fonts catalogue.
+  static TextTheme _applyGoogleFontOrFallback(String family, String fallback, TextTheme base) {
+    try {
+      return GoogleFonts.getTextTheme(family, base);
+    } catch (_) {
+      try {
+        return GoogleFonts.getTextTheme(fallback, base);
+      } catch (_) {
+        return base; // ultimate fallback: platform default
+      }
+    }
   }
 }

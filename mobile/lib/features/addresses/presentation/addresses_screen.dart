@@ -72,16 +72,23 @@ class AddressesScreen extends ConsumerWidget {
   }
 
   void _openForm(BuildContext context, WidgetRef ref, Address? existing) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: _AddressForm(existing: existing),
-      ),
-    );
+    showAddressFormSheet(context, existing: existing);
   }
+}
+
+/// Shows the create / edit address bottom sheet. Returns when the user closes it.
+/// Used both from the standalone Addresses screen and from Checkout's
+/// "Add new address" link.
+Future<void> showAddressFormSheet(BuildContext context, {Address? existing}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+    builder: (sheetCtx) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
+      child: _AddressForm(existing: existing),
+    ),
+  );
 }
 
 class _AddressCard extends StatelessWidget {
@@ -254,11 +261,10 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
                   validator: (v) => (v == null || v.length != 6) ? "6-digit pincode required" : null,
                 )),
                 const SizedBox(width: 12),
-                Expanded(child: DropdownButtonFormField<String>(
-                  value: _country,
+                Expanded(child: TextFormField(
+                  initialValue: _country,
                   decoration: const InputDecoration(labelText: "Country"),
-                  items: const ["India"].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                  onChanged: (v) => setState(() => _country = v ?? "India"),
+                  onChanged: (v) => _country = v.trim().isEmpty ? "India" : v.trim(),
                 )),
               ]),
               const SizedBox(height: 8),

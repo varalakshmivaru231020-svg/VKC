@@ -109,6 +109,7 @@ class _Card extends ConsumerWidget {
       onTap: () => context.push(RoutePaths.productDetail(item.productSlug)),
       borderRadius: BorderRadius.circular(8),
       child: Container(
+        height: 130,
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: colors.parchment),
@@ -118,7 +119,7 @@ class _Card extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(
-              width: 100, height: 130,
+              width: 100,
               child: AppImage(
                 url: image,
                 borderRadius: const BorderRadius.only(

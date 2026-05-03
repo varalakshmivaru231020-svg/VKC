@@ -69,7 +69,16 @@ class _WishlistAction extends ConsumerWidget {
           return;
         }
         try {
-          await ref.read(toggleWishlistProvider).call(variantId: firstVariantId, isWishlisted: isWishlisted);
+          final nowWishlisted = await ref.read(toggleWishlistProvider).call(
+            variantId: firstVariantId, isWishlisted: isWishlisted,
+          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(nowWishlisted ? "Added to wishlist" : "Removed from wishlist"),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ));
+          }
         } on Failure catch (e) {
           if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
         }

@@ -4,6 +4,7 @@ import "package:go_router/go_router.dart";
 import "package:intl/intl.dart";
 import "package:url_launcher/url_launcher.dart";
 
+import "../../../core/config/env.dart";
 import "../../../core/errors/failures.dart";
 import "../../../core/routing/route_paths.dart";
 import "../../../core/theme/theme_extension.dart";
@@ -170,6 +171,18 @@ class _Body extends ConsumerWidget {
         )),
 
         const SizedBox(height: 24),
+        // Invoice — opens the web invoice page in the browser. The web app
+        // already serves a printable invoice view at /account/orders/{id}/invoice.
+        OutlinedButton.icon(
+          icon: const Icon(Icons.receipt_long_outlined),
+          label: const Text("View / download invoice"),
+          onPressed: () {
+            final url = "${Env.apiBaseUrl}/account/orders/${order.id}/invoice";
+            launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+          },
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+        ),
+        const SizedBox(height: 8),
         if (order.canCancel)
           OutlinedButton.icon(
             icon: const Icon(Icons.close),
