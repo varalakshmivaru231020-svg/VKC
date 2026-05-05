@@ -244,9 +244,15 @@ model Order {
   cancelReason       String?       @db.VarChar(500)
   cancelRefundMethod String?       @db.VarChar(20)   // SOURCE | WALLET
   returnReason       String?       @db.VarChar(500)
-  returnType         String?       @db.VarChar(20)   // RETURN | EXCHANGE
+  returnType         String?       @db.VarChar(20)   // RETURN | (legacy) EXCHANGE
   returnRefundMethod String?       @db.VarChar(20)   // SOURCE | WALLET
   returnRequestedAt  DateTime?
+  returnPickupCourier  String?     @db.VarChar(100)
+  returnPickupTracking String?     @db.VarChar(100)
+  returnPickedUpAt   DateTime?
+  returnPickedUpNotes  String?     @db.VarChar(1000)
+  returnDeliveredAt  DateTime?
+  returnRefundNotes    String?     @db.VarChar(1000)
   returnProcessedAt  DateTime?
   walletAmountUsed   Decimal       @default(0) @db.Decimal(10, 2)
   items              OrderItem[]
@@ -288,9 +294,12 @@ enum OrderStatus {
   CANCELLED
   REFUNDED
   RETURN_REQUESTED
+  RETURN_PICKUP_ASSIGNED
+  RETURN_PICKUP_COMPLETED
+  RETURN_DELIVERED
   RETURN_APPROVED
-  EXCHANGE_REQUESTED
-  EXCHANGE_APPROVED
+  EXCHANGE_REQUESTED          // legacy — kept so historical orders still display
+  EXCHANGE_APPROVED           // legacy
 }
 
 enum PaymentStatus {

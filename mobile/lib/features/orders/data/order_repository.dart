@@ -7,13 +7,12 @@ import "../../auth/data/auth_controller.dart";
 import "order_models.dart";
 
 class OrderReasons {
-  final List<String> cancel, ret, exchange;
-  const OrderReasons({required this.cancel, required this.ret, required this.exchange});
+  final List<String> cancel, ret;
+  const OrderReasons({required this.cancel, required this.ret});
 
   factory OrderReasons.fromJson(Map<String, dynamic> j) => OrderReasons(
-        cancel:   ((j["cancelReasons"]   as List?) ?? const []).map((e) => "$e").toList(),
-        ret:      ((j["returnReasons"]   as List?) ?? const []).map((e) => "$e").toList(),
-        exchange: ((j["exchangeReasons"] as List?) ?? const []).map((e) => "$e").toList(),
+        cancel: ((j["cancelReasons"] as List?) ?? const []).map((e) => "$e").toList(),
+        ret:    ((j["returnReasons"] as List?) ?? const []).map((e) => "$e").toList(),
       );
 }
 
@@ -87,15 +86,14 @@ class OrderRepository {
     );
   }
 
-  Future<OrderActionResult> returnOrExchange(
+  Future<OrderActionResult> returnOrder(
     String id, {
-    required String type,           // "RETURN" or "EXCHANGE"
     required String reason,
     String? remark,
     String? refundMethod,
   }) async {
     final json = await _api.post<Map<String, dynamic>>("/orders/$id/return", body: {
-      "type": type,
+      "type": "RETURN",
       "reason": reason,
       if (remark != null && remark.isNotEmpty) "remark": remark,
       if (refundMethod != null) "refundMethod": refundMethod,

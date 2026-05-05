@@ -2,20 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Printer, CheckCircle2, Wallet, AlertCircle } from "lucide-react";
+import { Printer, CheckCircle2, Wallet, AlertCircle, Truck, Package } from "lucide-react";
 
 const STATUSES = [
-  { value: "PENDING",            label: "Pending" },
-  { value: "CONFIRMED",          label: "Confirmed" },
-  { value: "PROCESSING",         label: "Processing" },
-  { value: "SHIPPED",            label: "Shipped" },
-  { value: "DELIVERED",          label: "Delivered" },
-  { value: "CANCELLED",          label: "Cancelled" },
-  { value: "REFUNDED",           label: "Refunded" },
-  { value: "RETURN_REQUESTED",   label: "Return Requested" },
-  { value: "RETURN_APPROVED",    label: "Return Approved" },
-  { value: "EXCHANGE_REQUESTED", label: "Exchange Requested" },
-  { value: "EXCHANGE_APPROVED",  label: "Exchange Approved" },
+  { value: "PENDING",                  label: "Pending" },
+  { value: "CONFIRMED",                label: "Confirmed" },
+  { value: "PROCESSING",               label: "Processing" },
+  { value: "SHIPPED",                  label: "Shipped" },
+  { value: "DELIVERED",                label: "Delivered" },
+  { value: "CANCELLED",                label: "Cancelled" },
+  { value: "REFUNDED",                 label: "Refunded" },
+  { value: "RETURN_REQUESTED",         label: "Return Requested" },
+  { value: "RETURN_PICKUP_ASSIGNED",   label: "Return Pickup Assigned" },
+  { value: "RETURN_PICKUP_COMPLETED",  label: "Return Pickup Completed" },
+  { value: "RETURN_DELIVERED",         label: "Return Delivered (at warehouse)" },
+  { value: "RETURN_APPROVED",          label: "Return Approved" },
 ];
 
 interface Props {
@@ -29,6 +30,10 @@ interface Props {
   returnReason?: string | null;
   returnType?: string | null;
   returnRefundMethod?: string | null;
+  returnPickupCourier?: string | null;
+  returnPickupTracking?: string | null;
+  returnPickedUpNotes?: string | null;
+  returnRefundNotes?: string | null;
   paymentStatus?: string;
 }
 
@@ -43,6 +48,10 @@ export default function OrderStatusForm({
   returnReason,
   returnType,
   returnRefundMethod,
+  returnPickupCourier,
+  returnPickupTracking,
+  returnPickedUpNotes,
+  returnRefundNotes,
   paymentStatus,
 }: Props) {
   const router = useRouter();
@@ -57,6 +66,33 @@ export default function OrderStatusForm({
   // Refund panel state
   const [processingRefund, setProcessingRefund] = useState(false);
   const [refundDone, setRefundDone] = useState(paymentStatus === "REFUNDED");
+
+  // Return-pickup workflow state
+  const [pickupCourier,  setPickupCourier]  = useState(returnPickupCourier  ?? "");
+  const [pickupTracking, setPickupTracking] = useState(returnPickupTracking ?? "");
+  const [pickupNotes,    setPickupNotes]    = useState(returnPickedUpNotes  ?? "");
+  const [refundNote,     setRefundNote]     = useState(returnRefundNotes    ?? "");
+  const [pickupBusy,     setPickupBusy]     = useState(false);
+
+  const callAdmin = async (body: Record<string, unknown>) => {
+    setError("");
+    setPickupBusy(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) { const d = await res.json(); setError(d.error ?? "Failed"); return false; }
+      router.refresh();
+      return true;
+    } catch {
+      setError("Network error");
+      return false;
+    } finally {
+      setPickupBusy(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true); setError(""); setSaved(false);
@@ -98,23 +134,6 @@ export default function OrderStatusForm({
     }
   };
 
-  const handleApproveExchange = async () => {
-    setSaving(true); setError("");
-    try {
-      const res = await fetch(`/api/admin/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "approve_exchange" }),
-      });
-      if (!res.ok) { const d = await res.json(); setError(d.error ?? "Failed"); return; }
-      router.refresh();
-    } catch {
-      setError("Network error");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleProcessRefund = async () => {
     setProcessingRefund(true); setError("");
     try {
@@ -137,12 +156,17 @@ export default function OrderStatusForm({
   const inputStyle = { borderColor: "var(--color-parchment)", background: "white" };
 
   const showCancelPanel = currentStatus === "CANCELLED" && cancelReason;
-  const showReturnPanel = ["RETURN_REQUESTED", "RETURN_APPROVED"].includes(currentStatus);
-  const showExchangePanel = ["EXCHANGE_REQUESTED", "EXCHANGE_APPROVED"].includes(currentStatus);
+  const showReturnPanel = [
+    "RETURN_REQUESTED",
+    "RETURN_PICKUP_ASSIGNED",
+    "RETURN_PICKUP_COMPLETED",
+    "RETURN_DELIVERED",
+    "RETURN_APPROVED",
+  ].includes(currentStatus);
 
   return (
     <div className="space-y-5">
-      {/* ── Cancel / Return / Exchange info panel ── */}
+      {/* ── Cancel / Return info panel ── */}
       {showCancelPanel && (
         <div className="p-4 rounded-xl border" style={{ background: "#FEF2F2", borderColor: "#FCA5A5" }}>
           <p className="text-sm font-semibold font-body mb-1" style={{ color: "var(--color-error)" }}>
@@ -174,67 +198,119 @@ export default function OrderStatusForm({
       )}
 
       {showReturnPanel && (
-        <div className="p-4 rounded-xl border" style={{ background: "#FFFBEB", borderColor: "#FCD34D" }}>
-          <p className="text-sm font-semibold font-body mb-1" style={{ color: "#92400E" }}>
-            {currentStatus === "RETURN_REQUESTED" ? "Return Requested by Customer" : "Return Approved"}
-          </p>
-          {returnReason && (
-            <p className="text-xs font-body" style={{ color: "#92400E" }}>Reason: {returnReason}</p>
-          )}
-          {returnRefundMethod && (
-            <p className="text-xs font-body mt-0.5" style={{ color: "#92400E" }}>
-              Refund to: {returnRefundMethod === "WALLET" ? "Customer Wallet" : "Original payment source"}
+        <div className="p-4 rounded-xl border space-y-3" style={{ background: "#FFFBEB", borderColor: "#FCD34D" }}>
+          <div>
+            <p className="text-sm font-semibold font-body" style={{ color: "#92400E" }}>
+              {currentStatus === "RETURN_REQUESTED"        && "Return Requested — assign a courier to pick it up"}
+              {currentStatus === "RETURN_PICKUP_ASSIGNED"  && "Pickup Assigned — record once the courier collects the parcel"}
+              {currentStatus === "RETURN_PICKUP_COMPLETED" && "Pickup Completed — mark as delivered when it reaches the warehouse"}
+              {currentStatus === "RETURN_DELIVERED"        && "Returned to Warehouse — process the refund"}
+              {currentStatus === "RETURN_APPROVED"         && "Return Approved"}
             </p>
-          )}
-          {currentStatus === "RETURN_REQUESTED" && (
-            <button
-              onClick={handleApproveReturn}
-              disabled={saving}
-              className="mt-3 flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold font-body text-white disabled:opacity-60"
-              style={{ background: "var(--color-primary)" }}>
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {saving ? "Approving…" : "Approve Return"}
-            </button>
-          )}
-          {currentStatus === "RETURN_APPROVED" && !refundDone && returnRefundMethod && (
-            <button
-              onClick={handleProcessRefund}
-              disabled={processingRefund}
-              className="mt-3 flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold font-body text-white disabled:opacity-60"
-              style={{ background: returnRefundMethod === "WALLET" ? "var(--color-primary)" : "var(--color-error)" }}>
-              {returnRefundMethod === "WALLET" ? <Wallet className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-              {processingRefund ? "Processing…" : returnRefundMethod === "WALLET" ? "Credit Wallet" : "Mark as Refunded"}
-            </button>
-          )}
-          {refundDone && currentStatus === "RETURN_APPROVED" && (
-            <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--color-success)" }}>
-              <CheckCircle2 className="h-3.5 w-3.5" /> Refund processed
-            </p>
-          )}
-        </div>
-      )}
+            {returnReason && (
+              <p className="text-xs font-body mt-1" style={{ color: "#92400E" }}>Reason: {returnReason}</p>
+            )}
+            {returnRefundMethod && (
+              <p className="text-xs font-body mt-0.5" style={{ color: "#92400E" }}>
+                Refund to: {returnRefundMethod === "WALLET" ? "Customer Wallet" : "Original payment source"}
+              </p>
+            )}
+          </div>
 
-      {showExchangePanel && (
-        <div className="p-4 rounded-xl border" style={{ background: "#EFF6FF", borderColor: "#93C5FD" }}>
-          <p className="text-sm font-semibold font-body mb-1" style={{ color: "#1E40AF" }}>
-            {currentStatus === "EXCHANGE_REQUESTED" ? "Exchange Requested by Customer" : "Exchange Approved — Wallet Credited"}
-          </p>
-          {returnReason && (
-            <p className="text-xs font-body" style={{ color: "#1E40AF" }}>Reason: {returnReason}</p>
+          {/* Step 1 — Assign pickup */}
+          {currentStatus === "RETURN_REQUESTED" && (
+            <div className="space-y-2 p-3 rounded-lg" style={{ background: "#FFF7E5", border: "1px solid #FCD34D" }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#92400E" }}>Step 1 · Assign pickup courier</p>
+              <input value={pickupCourier} onChange={(e) => setPickupCourier(e.target.value)}
+                placeholder="Courier name (e.g. BlueDart)"
+                className={inputCls} style={inputStyle} />
+              <input value={pickupTracking} onChange={(e) => setPickupTracking(e.target.value)}
+                placeholder="Pickup tracking number (optional)"
+                className={inputCls} style={inputStyle} />
+              <button
+                onClick={() => callAdmin({ action: "assign_return_pickup", pickupCourier, pickupTracking })}
+                disabled={pickupBusy || !pickupCourier.trim()}
+                className="flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold font-body text-white disabled:opacity-60"
+                style={{ background: "var(--color-primary)" }}>
+                <Truck className="h-3.5 w-3.5" />
+                {pickupBusy ? "Saving…" : "Assign pickup"}
+              </button>
+            </div>
           )}
-          {currentStatus === "EXCHANGE_REQUESTED" && (
-            <button
-              onClick={handleApproveExchange}
-              disabled={saving}
-              className="mt-3 flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold font-body text-white disabled:opacity-60"
-              style={{ background: "#1E40AF" }}>
-              <Wallet className="h-3.5 w-3.5" />
-              {saving ? "Approving…" : "Approve & Credit Wallet"}
-            </button>
+
+          {/* Step 2 — Mark pickup completed */}
+          {currentStatus === "RETURN_PICKUP_ASSIGNED" && (
+            <div className="space-y-2 p-3 rounded-lg" style={{ background: "#FFF7E5", border: "1px solid #FCD34D" }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#92400E" }}>Step 2 · Mark pickup completed</p>
+              {returnPickupCourier && (
+                <p className="text-xs font-body" style={{ color: "#92400E" }}>
+                  Courier: {returnPickupCourier}{returnPickupTracking ? ` · Tracking ${returnPickupTracking}` : ""}
+                </p>
+              )}
+              <textarea value={pickupNotes} onChange={(e) => setPickupNotes(e.target.value)} rows={3}
+                placeholder="Pickup notes (item condition, missing accessories, photos taken, etc.)"
+                className="w-full px-3 py-2 border rounded-sm text-sm font-body focus:outline-none"
+                style={{ borderColor: "var(--color-parchment)", background: "white" }} />
+              <button
+                onClick={() => callAdmin({ action: "complete_return_pickup", pickupNotes })}
+                disabled={pickupBusy}
+                className="flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold font-body text-white disabled:opacity-60"
+                style={{ background: "var(--color-primary)" }}>
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {pickupBusy ? "Saving…" : "Mark pickup completed"}
+              </button>
+            </div>
           )}
-          {currentStatus === "EXCHANGE_APPROVED" && (
-            <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--color-success)" }}>
-              <CheckCircle2 className="h-3.5 w-3.5" /> Wallet credited successfully
+
+          {/* Step 3 — Mark delivered to warehouse */}
+          {currentStatus === "RETURN_PICKUP_COMPLETED" && (
+            <div className="space-y-2 p-3 rounded-lg" style={{ background: "#FFF7E5", border: "1px solid #FCD34D" }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#92400E" }}>Step 3 · Confirm receipt at warehouse</p>
+              {returnPickedUpNotes && (
+                <p className="text-xs font-body" style={{ color: "#92400E" }}>Pickup notes: {returnPickedUpNotes}</p>
+              )}
+              <p className="text-xs font-body" style={{ color: "#92400E" }}>
+                This restocks inventory and unlocks the refund step.
+              </p>
+              <button
+                onClick={() => callAdmin({ action: "mark_return_delivered" })}
+                disabled={pickupBusy}
+                className="flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold font-body text-white disabled:opacity-60"
+                style={{ background: "var(--color-primary)" }}>
+                <Package className="h-3.5 w-3.5" />
+                {pickupBusy ? "Saving…" : "Mark delivered to warehouse"}
+              </button>
+            </div>
+          )}
+
+          {/* Step 4 — Process refund (RETURN_DELIVERED or legacy RETURN_APPROVED) */}
+          {(currentStatus === "RETURN_DELIVERED" || currentStatus === "RETURN_APPROVED") && !refundDone && returnRefundMethod && (
+            <div className="space-y-2 p-3 rounded-lg" style={{ background: "#FFF7E5", border: "1px solid #FCD34D" }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#92400E" }}>Final step · Process refund</p>
+              <textarea value={refundNote} onChange={(e) => setRefundNote(e.target.value)} rows={2}
+                placeholder="Refund note (transaction ref, deductions, etc.)"
+                className="w-full px-3 py-2 border rounded-sm text-sm font-body focus:outline-none"
+                style={{ borderColor: "var(--color-parchment)", background: "white" }} />
+              <button
+                onClick={async () => {
+                  setProcessingRefund(true);
+                  const ok = await callAdmin({ action: "process_refund", refundNote });
+                  if (ok) setRefundDone(true);
+                  setProcessingRefund(false);
+                }}
+                disabled={processingRefund || pickupBusy}
+                className="flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold font-body text-white disabled:opacity-60"
+                style={{ background: returnRefundMethod === "WALLET" ? "var(--color-primary)" : "var(--color-error)" }}>
+                {returnRefundMethod === "WALLET" ? <Wallet className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                {processingRefund ? "Processing…" : returnRefundMethod === "WALLET" ? "Credit Wallet" : "Mark as Refunded"}
+              </button>
+            </div>
+          )}
+
+          {refundDone && (
+            <p className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--color-success)" }}>
+              <CheckCircle2 className="h-3.5 w-3.5" /> Refund processed
+              {returnRefundNotes && <span style={{ color: "#92400E", fontWeight: 400 }}> — {returnRefundNotes}</span>}
             </p>
           )}
         </div>

@@ -6,14 +6,15 @@ export const dynamic = "force-dynamic";
 
 const RETURNABLE_STATUSES = ["DELIVERED"];
 
-/** POST { type: "RETURN" | "EXCHANGE", reason: string, refundMethod?: "SOURCE" | "WALLET" } */
+/** POST { reason: string, remark?: string, refundMethod?: "SOURCE" | "WALLET" } */
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const u = await requireMobileUser(req);
   if (isUnauthorized(u)) return u;
 
   const { type, reason, remark, refundMethod } = await req.json();
-  if (type !== "RETURN" && type !== "EXCHANGE") {
-    return NextResponse.json({ error: "type must be RETURN or EXCHANGE" }, { status: 400 });
+  // Exchange flow has been removed; only RETURN is accepted.
+  if (type && type !== "RETURN") {
+    return NextResponse.json({ error: "Only RETURN is accepted" }, { status: 400 });
   }
   if (!reason || typeof reason !== "string") {
     return NextResponse.json({ error: "Reason required" }, { status: 400 });
@@ -24,7 +25,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   if (!RETURNABLE_STATUSES.includes(order.status)) {
-    return NextResponse.json({ error: `Returns/exchanges allowed only after delivery (current: ${order.status})` }, { status: 400 });
+    return NextResponse.json({ error: `Returns allowed only after delivery (current: ${order.status})` }, { status: 400 });
   }
 
   // Enforce return window from the admin-configured policy.
@@ -43,18 +44,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const updated = await db.order.update({
     where: { id: order.id },
     data: {
-      status:             type === "RETURN" ? "RETURN_REQUESTED" : "EXCHANGE_REQUESTED",
+      status:             "RETURN_REQUESTED",
       returnReason:       finalReason,
-      returnType:         type,
-      returnRefundMethod: type === "RETURN" ? (refundMethod ?? "SOURCE") : null,
+      returnType:         "RETURN",
+      returnRefundMethod: refundMethod ?? "SOURCE",
       returnRequestedAt:  new Date(),
     },
   });
 
   return NextResponse.json({
     order: updated,
-    message: type === "RETURN"
-      ? "Return request raised. Our team will arrange a pickup; the refund will be processed once the item reaches our warehouse."
-      : "Exchange request raised. Our team will arrange a pickup and confirm the replacement once the item reaches our warehouse.",
+    message: "Return request raised. Our team will arrange a pickup; the refund will be processed once the item reaches our warehouse.",
   });
 }

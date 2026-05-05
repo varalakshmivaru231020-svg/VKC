@@ -16,10 +16,13 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
   DELIVERED:          { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Delivered" },
   CANCELLED:          { bg: "var(--color-error-bg)",    color: "var(--color-error)",    label: "Cancelled" },
   REFUNDED:           { bg: "var(--color-error-bg)",    color: "var(--color-error)",    label: "Refunded" },
-  RETURN_REQUESTED:   { bg: "#FEF3C7",                  color: "#D97706",               label: "Return Requested" },
-  RETURN_APPROVED:    { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Return Approved" },
-  EXCHANGE_REQUESTED: { bg: "#EEF2FF",                  color: "#4338CA",               label: "Exchange Requested" },
-  EXCHANGE_APPROVED:  { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Exchange Approved" },
+  RETURN_REQUESTED:        { bg: "#FEF3C7",                  color: "#D97706",               label: "Return Requested" },
+  RETURN_PICKUP_ASSIGNED:  { bg: "#FEF3C7",                  color: "#D97706",               label: "Pickup Assigned" },
+  RETURN_PICKUP_COMPLETED: { bg: "#FEF3C7",                  color: "#D97706",               label: "Pickup Completed" },
+  RETURN_DELIVERED:        { bg: "#EEF2FF",                  color: "#4338CA",               label: "Return Delivered" },
+  RETURN_APPROVED:         { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Return Approved" },
+  EXCHANGE_REQUESTED:      { bg: "#EEF2FF",                  color: "#4338CA",               label: "Exchange Requested" },
+  EXCHANGE_APPROVED:       { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Exchange Approved" },
 };
 
 const PAYMENT_STATUS_STYLES: Record<string, { bg: string; color: string }> = {
@@ -164,6 +167,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               returnReason={order.returnReason}
               returnType={order.returnType}
               returnRefundMethod={order.returnRefundMethod}
+              returnPickupCourier={(order as any).returnPickupCourier}
+              returnPickupTracking={(order as any).returnPickupTracking}
+              returnPickedUpNotes={(order as any).returnPickedUpNotes}
+              returnRefundNotes={(order as any).returnRefundNotes}
               paymentStatus={order.paymentStatus}
             />
           </div>

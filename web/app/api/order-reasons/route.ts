@@ -3,9 +3,10 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-// Public endpoint — returns cancel/return/exchange reasons from admin settings
+// Public endpoint — returns cancel/return reasons from admin settings.
+// (Exchange flow has been removed.)
 export async function GET() {
-  const keys = ["cancel_reasons", "return_reasons", "exchange_reasons"];
+  const keys = ["cancel_reasons", "return_reasons"];
   const rows = await db.siteSetting.findMany({ where: { key: { in: keys } } });
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
 
@@ -15,6 +16,5 @@ export async function GET() {
   return NextResponse.json({
     cancelReasons: parse("cancel_reasons", "Changed my mind\nOrdered by mistake\nFound better price elsewhere\nItem no longer needed\nDelivery time too long"),
     returnReasons: parse("return_reasons", "Item received is damaged\nWrong item delivered\nQuality not as expected\nItem not as described"),
-    exchangeReasons: parse("exchange_reasons", "Wrong size delivered\nWrong colour delivered\nWant different design\nGift exchange"),
   });
 }

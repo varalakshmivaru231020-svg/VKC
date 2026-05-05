@@ -66,22 +66,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return NextResponse.json({ order: updated });
     }
 
-    // ── EXCHANGE REQUEST ─────────────────────────────────────────────────────
+    // Exchange flow has been removed.
     if (action === "exchange") {
-      if (order.status !== "DELIVERED") {
-        return NextResponse.json({ error: "Exchange can only be requested after delivery" }, { status: 400 });
-      }
-      const updated = await db.order.update({
-        where: { id: params.id },
-        data: {
-          status: "EXCHANGE_REQUESTED",
-          returnType: "EXCHANGE",
-          returnReason: reason ?? null,
-          returnRefundMethod: "WALLET",
-          returnRequestedAt: new Date(),
-        },
-      });
-      return NextResponse.json({ order: updated });
+      return NextResponse.json({ error: "Exchange flow has been removed" }, { status: 410 });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });

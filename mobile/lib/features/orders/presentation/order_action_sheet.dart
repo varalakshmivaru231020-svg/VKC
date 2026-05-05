@@ -6,15 +6,13 @@ import "../../../core/theme/theme_extension.dart";
 import "../../../core/widgets/state_widgets.dart";
 import "../data/order_repository.dart";
 
-enum OrderAction { cancel, returnItem, exchange }
+enum OrderAction { cancel, returnItem }
 
 extension on OrderAction {
   String get title => switch (this) {
         OrderAction.cancel     => "Cancel order",
         OrderAction.returnItem => "Return order",
-        OrderAction.exchange   => "Exchange order",
       };
-  bool get refundApplies => this != OrderAction.exchange;
 }
 
 /// Bottom sheet that collects (reason, remark, optional refund destination)
@@ -73,18 +71,11 @@ class _OrderActionSheetState extends ConsumerState<_OrderActionSheet> {
             remark: remark.isEmpty ? null : remark,
             refundMethod: _refundMethod,
           ),
-        OrderAction.returnItem => await repo.returnOrExchange(
+        OrderAction.returnItem => await repo.returnOrder(
             widget.orderId,
-            type: "RETURN",
             reason: _reason!,
             remark: remark.isEmpty ? null : remark,
             refundMethod: _refundMethod,
-          ),
-        OrderAction.exchange => await repo.returnOrExchange(
-            widget.orderId,
-            type: "EXCHANGE",
-            reason: _reason!,
-            remark: remark.isEmpty ? null : remark,
           ),
       };
       ref.invalidate(orderDetailProvider(widget.orderId));
@@ -131,7 +122,6 @@ class _OrderActionSheetState extends ConsumerState<_OrderActionSheet> {
                   final list = switch (widget.action) {
                     OrderAction.cancel     => data.cancel,
                     OrderAction.returnItem => data.ret,
-                    OrderAction.exchange   => data.exchange,
                   };
                   return ListView(
                     controller: scroll,
@@ -156,7 +146,7 @@ class _OrderActionSheetState extends ConsumerState<_OrderActionSheet> {
                         maxLines: 3,
                         decoration: const InputDecoration(hintText: "Add any details to help us serve you faster"),
                       ),
-                      if (widget.action.refundApplies) ...[
+                      ...[
                         const SizedBox(height: 16),
                         Text("REFUND TO",
                             style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1.2, color: colors.textMuted)),

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ChevronRight, Package, Download, X, CheckCircle2, Clock, Truck,
-  Box, AlertCircle, RotateCcw, RefreshCw, Wallet,
+  Box, AlertCircle, RotateCcw, Wallet,
 } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 
@@ -55,10 +55,13 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
   DELIVERED:         { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Delivered" },
   CANCELLED:         { bg: "var(--color-error-bg)",    color: "var(--color-error)",    label: "Cancelled" },
   REFUNDED:          { bg: "var(--color-error-bg)",    color: "var(--color-error)",    label: "Refunded" },
-  RETURN_REQUESTED:  { bg: "#FEF3C7",                  color: "#D97706",               label: "Return Requested" },
-  RETURN_APPROVED:   { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Return Approved" },
-  EXCHANGE_REQUESTED:{ bg: "#FEF3C7",                  color: "#D97706",               label: "Exchange Requested" },
-  EXCHANGE_APPROVED: { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Exchange Approved" },
+  RETURN_REQUESTED:        { bg: "#FEF3C7",                  color: "#D97706",               label: "Return Requested" },
+  RETURN_PICKUP_ASSIGNED:  { bg: "#FEF3C7",                  color: "#D97706",               label: "Pickup Assigned" },
+  RETURN_PICKUP_COMPLETED: { bg: "#FEF3C7",                  color: "#D97706",               label: "Picked Up" },
+  RETURN_DELIVERED:        { bg: "#EEF2FF",                  color: "#4338CA",               label: "Returned to Warehouse" },
+  RETURN_APPROVED:         { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Return Approved" },
+  EXCHANGE_REQUESTED:      { bg: "#FEF3C7",                  color: "#D97706",               label: "Exchange Requested" },
+  EXCHANGE_APPROVED:       { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Exchange Approved" },
 };
 
 const TIMELINE_STEPS = [
@@ -102,7 +105,7 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
   const [order, setOrder] = useState(initial);
 
   // Modal state
-  const [modal, setModal] = useState<"cancel" | "return" | "exchange" | null>(null);
+  const [modal, setModal] = useState<"cancel" | "return" | null>(null);
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [refundMethod, setRefundMethod] = useState<"SOURCE" | "WALLET">("SOURCE");
@@ -112,17 +115,15 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
   // Reasons from settings
   const [cancelReasons, setCancelReasons] = useState<string[]>([]);
   const [returnReasons, setReturnReasons] = useState<string[]>([]);
-  const [exchangeReasons, setExchangeReasons] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/order-reasons").then(r => r.json()).then((d) => {
       if (d.cancelReasons) setCancelReasons(d.cancelReasons);
       if (d.returnReasons) setReturnReasons(d.returnReasons);
-      if (d.exchangeReasons) setExchangeReasons(d.exchangeReasons);
     }).catch(() => {});
   }, []);
 
-  const openModal = (m: "cancel" | "return" | "exchange") => {
+  const openModal = (m: "cancel" | "return") => {
     setReason("");
     setNotes("");
     setRefundMethod("SOURCE");
@@ -169,12 +170,11 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
   const currentReasons =
     modal === "cancel" ? cancelReasons :
     modal === "return" ? returnReasons :
-    exchangeReasons;
+    [];
 
   const modalTitle =
     modal === "cancel" ? "Cancel Order" :
-    modal === "return" ? "Return Order" :
-    "Exchange Order";
+    "Return Order";
 
   return (
     <div className="px-6 sm:px-8 lg:px-10 py-8 space-y-6">
@@ -218,12 +218,6 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
                 className="flex items-center gap-2 px-4 py-2 rounded-sm border text-sm font-body font-medium transition-colors hover:bg-amber-50"
                 style={{ borderColor: "#D97706", color: "#D97706" }}>
                 <RotateCcw className="h-3.5 w-3.5" /> Return
-              </button>
-              <button
-                onClick={() => openModal("exchange")}
-                className="flex items-center gap-2 px-4 py-2 rounded-sm border text-sm font-body font-medium transition-colors hover:bg-blue-50"
-                style={{ borderColor: "#4338CA", color: "#4338CA" }}>
-                <RefreshCw className="h-3.5 w-3.5" /> Exchange
               </button>
             </>
           )}
@@ -301,7 +295,7 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
       )}
 
       {/* Return / Exchange status banner */}
-      {["RETURN_REQUESTED", "RETURN_APPROVED", "EXCHANGE_REQUESTED", "EXCHANGE_APPROVED"].includes(order.status) && (
+      {["RETURN_REQUESTED", "RETURN_PICKUP_ASSIGNED", "RETURN_PICKUP_COMPLETED", "RETURN_DELIVERED", "RETURN_APPROVED", "EXCHANGE_REQUESTED", "EXCHANGE_APPROVED"].includes(order.status) && (
         <div className="p-4 rounded-md flex gap-3"
           style={{
             background: ["RETURN_APPROVED", "EXCHANGE_APPROVED"].includes(order.status) ? "var(--color-success-bg)" : "#FEF9C3",
@@ -312,10 +306,13 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
           <div>
             <p className="text-sm font-body font-semibold"
               style={{ color: ["RETURN_APPROVED", "EXCHANGE_APPROVED"].includes(order.status) ? "var(--color-success)" : "#92400E" }}>
-              {order.status === "RETURN_REQUESTED" && "Return request submitted — awaiting admin review"}
-              {order.status === "RETURN_APPROVED" && "Return approved — refund will be processed shortly"}
-              {order.status === "EXCHANGE_REQUESTED" && "Exchange request submitted — awaiting admin review"}
-              {order.status === "EXCHANGE_APPROVED" && "Exchange approved — wallet credited with order amount"}
+              {order.status === "RETURN_REQUESTED"        && "Return request submitted — we'll arrange a courier shortly"}
+              {order.status === "RETURN_PICKUP_ASSIGNED"  && "Courier assigned — they'll be in touch to schedule pickup"}
+              {order.status === "RETURN_PICKUP_COMPLETED" && "Picked up — your parcel is on the way to our warehouse"}
+              {order.status === "RETURN_DELIVERED"        && "Returned to warehouse — refund will be processed shortly"}
+              {order.status === "RETURN_APPROVED"         && "Return approved — refund will be processed shortly"}
+              {order.status === "EXCHANGE_REQUESTED"      && "Exchange request submitted — awaiting admin review"}
+              {order.status === "EXCHANGE_APPROVED"       && "Exchange approved — wallet credited with order amount"}
             </p>
             {order.returnReason && (
               <p className="text-xs font-body mt-0.5" style={{ color: "#92400E", opacity: 0.8 }}>
@@ -527,18 +524,6 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
                 </div>
               ) : null}
 
-              {/* Exchange info */}
-              {modal === "exchange" && (
-                <div className="p-4 rounded-xl" style={{ background: "var(--color-primary-50)" }}>
-                  <p className="text-sm font-semibold font-body" style={{ color: "var(--color-primary)" }}>
-                    How exchange works
-                  </p>
-                  <p className="text-xs font-body mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                    Once your return is received and approved, the full order amount will be credited to your Vijaylakshmi wallet. You can use it to place a new order.
-                  </p>
-                </div>
-              )}
-
               {/* Optional notes */}
               <div>
                 <label className="block text-sm font-semibold font-body mb-2" style={{ color: "var(--color-text-primary)" }}>
@@ -577,8 +562,7 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
                 style={{ background: modal === "cancel" ? "var(--color-error)" : "var(--color-primary)" }}>
                 {submitting ? "Submitting…" :
                   modal === "cancel" ? "Cancel Order" :
-                  modal === "return" ? "Request Return" :
-                  "Request Exchange"}
+                  "Request Return"}
               </button>
             </div>
 

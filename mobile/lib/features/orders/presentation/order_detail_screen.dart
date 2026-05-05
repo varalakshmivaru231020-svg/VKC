@@ -184,13 +184,6 @@ class _Body extends ConsumerWidget {
             onPressed: () => _runAction(context, OrderAction.returnItem),
             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
           ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.swap_horiz_rounded),
-            label: const Text("Exchange"),
-            onPressed: () => _runAction(context, OrderAction.exchange),
-            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-          ),
         ],
 
         // After-the-window message for delivered orders that can no longer be returned

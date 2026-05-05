@@ -1050,18 +1050,14 @@ function ReturnsTab() {
   const [loading, setLoading] = useState(false);
   const [cancelReasons, setCancelReasons] = useState("Changed my mind\nOrdered by mistake\nFound better price elsewhere\nItem no longer needed\nDelivery time too long");
   const [returnReasons, setReturnReasons] = useState("Item received is damaged\nWrong item delivered\nQuality not as expected\nItem not as described");
-  const [exchangeReasons, setExchangeReasons] = useState("Wrong size delivered\nWrong colour delivered\nWant different design\nGift exchange");
   const [returnPeriod, setReturnPeriod] = useState("15");
-  const [exchangePeriod, setExchangePeriod] = useState("7");
 
   useEffect(() => {
     fetch("/api/admin/settings").then(r => r.json()).then(({ settings }) => {
       if (!settings) return;
       setCancelReasons(settings.cancel_reasons ?? cancelReasons);
       setReturnReasons(settings.return_reasons ?? returnReasons);
-      setExchangeReasons(settings.exchange_reasons ?? exchangeReasons);
       setReturnPeriod(settings.return_period_days ?? "15");
-      setExchangePeriod(settings.exchange_period_days ?? "7");
     });
   }, []);
 
@@ -1069,7 +1065,7 @@ function ReturnsTab() {
     setLoading(true);
     await fetch("/api/admin/settings", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cancel_reasons: cancelReasons, return_reasons: returnReasons, exchange_reasons: exchangeReasons, return_period_days: returnPeriod, exchange_period_days: exchangePeriod }),
+      body: JSON.stringify({ cancel_reasons: cancelReasons, return_reasons: returnReasons, return_period_days: returnPeriod }),
     });
     setLoading(false); setSaved(true); setTimeout(() => setSaved(false), 2500);
   };
@@ -1079,16 +1075,11 @@ function ReturnsTab() {
 
   return (
     <div className="space-y-5">
-      <SectionCard title="Return & Exchange Windows" icon={RotateCcw}>
+      <SectionCard title="Return Window" icon={RotateCcw}>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Return Period (days after delivery)</label>
             <input type="number" value={returnPeriod} onChange={e => setReturnPeriod(e.target.value)}
-              className={inputCls} style={inputStyle} {...focusProps} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Exchange Period (days after delivery)</label>
-            <input type="number" value={exchangePeriod} onChange={e => setExchangePeriod(e.target.value)}
               className={inputCls} style={inputStyle} {...focusProps} />
           </div>
         </div>
@@ -1107,14 +1098,6 @@ function ReturnsTab() {
           <p className="text-xs font-body mb-2" style={{ color: "#9CA3AF" }}>One reason per line. Shown to customers in the return flow.</p>
           <textarea value={returnReasons} onChange={e => setReturnReasons(e.target.value)} rows={5}
             placeholder="Item received is damaged&#10;Wrong item delivered" className={taStyle} style={taBase} {...focusProps} />
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Exchange Order Reasons" icon={RotateCcw}>
-        <div className="space-y-1.5">
-          <p className="text-xs font-body mb-2" style={{ color: "#9CA3AF" }}>One reason per line.</p>
-          <textarea value={exchangeReasons} onChange={e => setExchangeReasons(e.target.value)} rows={5}
-            placeholder="Wrong size delivered&#10;Wrong colour delivered" className={taStyle} style={taBase} {...focusProps} />
         </div>
       </SectionCard>
 

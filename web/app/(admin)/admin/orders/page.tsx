@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingBag, Search, ChevronRight, Layers, Clock, CheckCircle2, Package, Truck, PackageCheck, XCircle, RotateCcw, RefreshCw } from "lucide-react";
+import { ShoppingBag, Search, ChevronRight, Layers, Clock, CheckCircle2, Package, Truck, PackageCheck, XCircle, RotateCcw } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatINR } from "@/lib/utils/format";
 
@@ -14,10 +14,13 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
   DELIVERED:          { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Delivered" },
   CANCELLED:          { bg: "var(--color-error-bg)",    color: "var(--color-error)",    label: "Cancelled" },
   REFUNDED:           { bg: "var(--color-error-bg)",    color: "var(--color-error)",    label: "Refunded" },
-  RETURN_REQUESTED:   { bg: "#FEF3C7",                  color: "#D97706",               label: "Return Requested" },
-  RETURN_APPROVED:    { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Return Approved" },
-  EXCHANGE_REQUESTED: { bg: "#EEF2FF",                  color: "#4338CA",               label: "Exchange Requested" },
-  EXCHANGE_APPROVED:  { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Exchange Approved" },
+  RETURN_REQUESTED:        { bg: "#FEF3C7",                  color: "#D97706",               label: "Return Requested" },
+  RETURN_PICKUP_ASSIGNED:  { bg: "#FEF3C7",                  color: "#D97706",               label: "Pickup Assigned" },
+  RETURN_PICKUP_COMPLETED: { bg: "#FEF3C7",                  color: "#D97706",               label: "Pickup Completed" },
+  RETURN_DELIVERED:        { bg: "#EEF2FF",                  color: "#4338CA",               label: "Return Delivered" },
+  RETURN_APPROVED:         { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Return Approved" },
+  EXCHANGE_REQUESTED:      { bg: "#EEF2FF",                  color: "#4338CA",               label: "Exchange Requested" },
+  EXCHANGE_APPROVED:       { bg: "var(--color-success-bg)",  color: "var(--color-success)",  label: "Exchange Approved" },
 };
 
 export default async function AdminOrdersPage({
@@ -69,8 +72,7 @@ export default async function AdminOrdersPage({
     { id: "shipped",            label: "Shipped",    statuses: ["SHIPPED"],                                             Icon: Truck,         bg: "#EEF2FF",                    color: "#4338CA" },
     { id: "delivered",          label: "Delivered",  statuses: ["DELIVERED"],                                           Icon: PackageCheck,  bg: "var(--color-success-bg)",    color: "var(--color-success)" },
     { id: "cancelled",          label: "Cancelled",  statuses: ["CANCELLED"],                                           Icon: XCircle,       bg: "var(--color-error-bg)",      color: "var(--color-error)" },
-    { id: "return_requested",   label: "Return",     statuses: ["RETURN_REQUESTED", "RETURN_APPROVED"],                 Icon: RotateCcw,     bg: "#FEF3C7",                    color: "#D97706" },
-    { id: "exchange_requested", label: "Exchange",   statuses: ["EXCHANGE_REQUESTED", "EXCHANGE_APPROVED"],             Icon: RefreshCw,     bg: "#EEF2FF",                    color: "#4338CA" },
+    { id: "return_requested",   label: "Return",     statuses: ["RETURN_REQUESTED", "RETURN_PICKUP_ASSIGNED", "RETURN_PICKUP_COMPLETED", "RETURN_DELIVERED", "RETURN_APPROVED"], Icon: RotateCcw, bg: "#FEF3C7", color: "#D97706" },
   ];
 
   const cardCount = (statuses: string[]) =>
@@ -142,7 +144,6 @@ export default async function AdminOrdersPage({
             { id: "delivered",         label: "Delivered" },
             { id: "cancelled",         label: "Cancelled" },
             { id: "return_requested",  label: "Return" },
-            { id: "exchange_requested",label: "Exchange" },
           ].map((s) => (
             <Link
               key={s.id}
