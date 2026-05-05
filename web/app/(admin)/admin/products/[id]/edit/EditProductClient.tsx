@@ -39,6 +39,7 @@ interface ProductData {
   name: string;
   description: string | null;
   shortDesc: string | null;
+  categoryId: string | null;
   isFeatured: boolean;
   isActive: boolean;
   videoUrl: string | null;
@@ -203,6 +204,8 @@ export default function EditProductClient({ product }: Props) {
   const [name, setName] = useState(product.name);
   const [description, setDescription] = useState(product.description ?? "");
   const [shortDesc, setShortDesc] = useState(product.shortDesc ?? "");
+  const [categoryId, setCategoryId] = useState(product.categoryId ?? "");
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; parentId?: string | null }>>([]);
   const [isFeatured, setIsFeatured] = useState(product.isFeatured);
   const [isActive, setIsActive] = useState(product.isActive);
   const [videoUrl, setVideoUrl] = useState(product.videoUrl ?? "");
@@ -222,6 +225,14 @@ export default function EditProductClient({ product }: Props) {
     fetch("/api/admin/attributes")
       .then((r) => r.json())
       .then((data) => { if (Array.isArray(data)) setAttributeDefs(data.filter((a: any) => a.isActive)); })
+      .catch(() => {});
+
+    fetch("/api/admin/categories")
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : (data.categories ?? []);
+        setCategories(list.filter((c: any) => c.isActive !== false));
+      })
       .catch(() => {});
   }, []);
 
@@ -291,6 +302,7 @@ export default function EditProductClient({ product }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name, description, shortDesc, isFeatured, isActive, videoUrl,
+          categoryId: categoryId || null,
           productAttributes: Object.entries(attrValues)
             .filter(([, vals]) => vals.length > 0)
             .map(([attributeId, values]) => ({ attributeId, values })),
@@ -355,6 +367,7 @@ export default function EditProductClient({ product }: Props) {
       <SectionCard title="Basic Information">
         <div className="space-y-4">
           <Field label="Product Name" value={name} onChange={setName} required placeholder="e.g. Kanjivaram Silk Saree with Zari Border" />
+          <CategorySelect categories={categories} value={categoryId} onChange={setCategoryId} />
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Short Description</label>
             <RichTextEditor value={shortDesc} onChange={setShortDesc} placeholder="One-line summary for listing pages" />
@@ -608,6 +621,57 @@ export default function EditProductClient({ product }: Props) {
           {saving ? "Saving…" : "Save Changes"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function CategorySelect({
+  categories, value, onChange,
+}: {
+  categories: Array<{ id: string; name: string; parentId?: string | null }>;
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const byParent: Record<string, typeof categories> = {};
+  for (const c of categories) {
+    const k = c.parentId ?? "ROOT";
+    (byParent[k] ||= []).push(c);
+  }
+  const ordered: Array<{ id: string; name: string; depth: number }> = [];
+  const walk = (parentId: string, depth: number) => {
+    for (const c of byParent[parentId] ?? []) {
+      ordered.push({ id: c.id, name: c.name, depth });
+      walk(c.id, depth + 1);
+    }
+  };
+  walk("ROOT", 0);
+  if (ordered.length === 0) {
+    for (const c of categories) ordered.push({ id: c.id, name: c.name, depth: 0 });
+  }
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Category</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full h-10 px-4 border rounded-lg text-sm font-body focus:outline-none transition-all appearance-none"
+        style={{
+          borderColor: "#E5E7EB",
+          background: "white",
+          color: value ? "#111827" : "#9CA3AF",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 12px center",
+          backgroundSize: "16px",
+        }}
+        onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-primary)"; e.currentTarget.style.boxShadow = "0 0 0 3px var(--color-primary-50)"; }}
+        onBlur={(e)  => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.boxShadow = "none"; }}
+      >
+        <option value="">— No category —</option>
+        {ordered.map(({ id, name, depth }) => (
+          <option key={id} value={id}>{"  ".repeat(depth) + (depth > 0 ? "└ " : "") + name}</option>
+        ))}
+      </select>
     </div>
   );
 }

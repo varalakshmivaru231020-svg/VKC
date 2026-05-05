@@ -204,6 +204,8 @@ export default function NewProductClient() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [shortDesc, setShortDesc] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; parentId?: string | null }>>([]);
   const [isFeatured, setIsFeatured] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [variants, setVariants] = useState<Variant[]>([emptyVariant()]);
@@ -220,6 +222,14 @@ export default function NewProductClient() {
     fetch("/api/admin/attributes")
       .then((r) => r.json())
       .then((data) => { if (Array.isArray(data)) setAttributeDefs(data.filter((a: any) => a.isActive)); })
+      .catch(() => {});
+
+    fetch("/api/admin/categories")
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : (data.categories ?? []);
+        setCategories(list.filter((c: any) => c.isActive !== false));
+      })
       .catch(() => {});
   }, []);
 
@@ -275,6 +285,7 @@ export default function NewProductClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name, description, shortDesc, isFeatured, isActive, videoUrl,
+          categoryId: categoryId || null,
           productAttributes: Object.entries(attrValues)
             .filter(([, vals]) => vals.length > 0)
             .map(([attributeId, values]) => ({ attributeId, values })),
@@ -339,6 +350,7 @@ export default function NewProductClient() {
       <SectionCard title="Basic Information">
         <div className="space-y-4">
           <Field label="Product Name" value={name} onChange={setName} required placeholder="e.g. Kanjivaram Silk Saree with Zari Border" />
+          <CategorySelect categories={categories} value={categoryId} onChange={setCategoryId} />
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Short Description</label>
             <RichTextEditor value={shortDesc} onChange={setShortDesc} placeholder="One-line summary for listing pages" />
@@ -600,6 +612,65 @@ export default function NewProductClient() {
           {saving ? "Saving…" : "Save Product"}
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Category dropdown. Renders a flat list of all active categories from
+ * `/api/admin/categories`, indenting child categories under their parents
+ * so the visual hierarchy is preserved without needing a tree picker.
+ */
+function CategorySelect({
+  categories, value, onChange,
+}: {
+  categories: Array<{ id: string; name: string; parentId?: string | null }>;
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  // Build a depth map for indentation (single-pass, BFS)
+  const byParent: Record<string, typeof categories> = {};
+  for (const c of categories) {
+    const k = c.parentId ?? "ROOT";
+    (byParent[k] ||= []).push(c);
+  }
+  const ordered: Array<{ id: string; name: string; depth: number }> = [];
+  const walk = (parentId: string, depth: number) => {
+    for (const c of byParent[parentId] ?? []) {
+      ordered.push({ id: c.id, name: c.name, depth });
+      walk(c.id, depth + 1);
+    }
+  };
+  walk("ROOT", 0);
+  if (ordered.length === 0) {
+    for (const c of categories) ordered.push({ id: c.id, name: c.name, depth: 0 });
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Category</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full h-10 px-4 border rounded-lg text-sm font-body focus:outline-none transition-all appearance-none"
+        style={{
+          borderColor: "#E5E7EB",
+          background: "white",
+          color: value ? "#111827" : "#9CA3AF",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 12px center",
+          backgroundSize: "16px",
+        }}
+        onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-primary)"; e.currentTarget.style.boxShadow = "0 0 0 3px var(--color-primary-50)"; }}
+        onBlur={(e)  => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.boxShadow = "none"; }}
+      >
+        <option value="">— No category —</option>
+        {ordered.map(({ id, name, depth }) => (
+          <option key={id} value={id}>{"  ".repeat(depth) + (depth > 0 ? "└ " : "") + name}</option>
+        ))}
+      </select>
+      <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>Choose where this product appears in the catalogue.</p>
     </div>
   );
 }

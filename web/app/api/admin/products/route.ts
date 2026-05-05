@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
     const {
       name, description, shortDesc, fabric, weaveType, regionOfOrigin,
       occasions, isFeatured, isActive, videoUrl, variants, productAttributes,
+      categoryId,
     } = body;
 
     if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
         weaveType: weaveType || null,
         regionOfOrigin: regionOfOrigin || null,
         occasions: occasions ?? [],
+        categoryId: categoryId || null,
         isFeatured: isFeatured ?? false,
         isActive: isActive ?? true,
         videoUrl: videoUrl || null,
