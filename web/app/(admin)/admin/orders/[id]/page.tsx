@@ -4,6 +4,7 @@ import { ChevronRight, Package, MapPin, User, Phone, CreditCard, Truck } from "l
 import { db } from "@/lib/db";
 import { formatINR } from "@/lib/utils/format";
 import OrderStatusForm from "./OrderStatusForm";
+import OrderReturnsPanel from "./OrderReturnsPanel";
 import { SmartImage } from "@/components/ui/SmartImage";
 
 export const dynamic = "force-dynamic";
@@ -174,6 +175,20 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               paymentStatus={order.paymentStatus}
             />
           </div>
+
+          <OrderReturnsPanel
+            orderId={order.id}
+            orderStatus={order.status}
+            orderItems={order.items.map((it) => ({
+              id: it.id,
+              productName: it.productName,
+              variantColor: it.variantColor,
+              sareeCode: it.sareeCode,
+              quantity: it.quantity,
+              totalPrice: it.totalPrice as any,
+              imageUrl: it.imageUrl,
+            }))}
+          />
         </div>
 
         {/* Right: Customer + Address + Summary */}

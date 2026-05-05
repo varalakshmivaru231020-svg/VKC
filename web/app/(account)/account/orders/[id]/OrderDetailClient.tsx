@@ -112,6 +112,12 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // Item picker state for the Return modal (orderItemId → qty)
+  const [returnPicks, setReturnPicks] = useState<Record<string, number>>({});
+
+  // Existing returns for this order (may be multiple — partial returns over time)
+  const [returns, setReturns] = useState<Array<any>>([]);
+
   // Reasons from settings
   const [cancelReasons, setCancelReasons] = useState<string[]>([]);
   const [returnReasons, setReturnReasons] = useState<string[]>([]);
@@ -121,7 +127,24 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
       if (d.cancelReasons) setCancelReasons(d.cancelReasons);
       if (d.returnReasons) setReturnReasons(d.returnReasons);
     }).catch(() => {});
-  }, []);
+
+    fetch(`/api/user/orders/${initial.id}/returns`).then(r => r.json()).then((d) => {
+      if (Array.isArray(d.returns)) setReturns(d.returns);
+    }).catch(() => {});
+  }, [initial.id]);
+
+  // Compute remaining-eligible quantity per order item, taking prior returns into account
+  const consumedByItem: Record<string, number> = {};
+  for (const r of returns) {
+    if (r.status === "REJECTED") continue;
+    for (const ri of r.items ?? []) {
+      consumedByItem[ri.orderItemId] = (consumedByItem[ri.orderItemId] ?? 0) + ri.quantity;
+    }
+  }
+  const eligibleItems = (initial.items ?? []).map((it) => ({
+    ...it,
+    available: it.quantity - (consumedByItem[it.id] ?? 0),
+  })).filter((it) => it.available > 0);
 
   const openModal = (m: "cancel" | "return") => {
     setReason("");
@@ -135,8 +158,31 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
     if (!reason) { setError("Please select a reason"); return; }
     setSubmitting(true);
     setError("");
-    const fullReason = notes.trim() ? `${reason} — ${notes.trim()}` : reason;
+
     try {
+      if (modal === "return") {
+        // Item-level return — POST to the new returns endpoint
+        const items = Object.entries(returnPicks)
+          .filter(([, q]) => q > 0)
+          .map(([orderItemId, quantity]) => ({ orderItemId, quantity }));
+        if (items.length === 0) { setError("Pick at least one item to return"); return; }
+
+        const res = await fetch(`/api/user/orders/${order.id}/returns`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items, reason, remark: notes.trim() || undefined, refundMethod }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setError(data.error ?? "Something went wrong"); return; }
+        setReturns((p) => [data.return, ...p]);
+        setOrder((o) => ({ ...o, status: "RETURN_REQUESTED" } as any));
+        setModal(null);
+        setReturnPicks({});
+        return;
+      }
+
+      // Cancel — uses the legacy whole-order endpoint
+      const fullReason = notes.trim() ? `${reason} — ${notes.trim()}` : reason;
       const res = await fetch(`/api/user/orders/${order.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -467,6 +513,43 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-5">
+              {/* Item picker — return only */}
+              {modal === "return" && (
+                <div>
+                  <p className="text-sm font-semibold font-body mb-3" style={{ color: "var(--color-text-primary)" }}>
+                    Pick items to return
+                  </p>
+                  {eligibleItems.length === 0 ? (
+                    <p className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>
+                      No items eligible for a new return.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {eligibleItems.map((it) => {
+                        const picked = returnPicks[it.id] ?? 0;
+                        return (
+                          <div key={it.id} className="flex items-center gap-3 p-2.5 rounded-xl border" style={{ borderColor: "var(--color-parchment)" }}>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-body font-medium truncate" style={{ color: "var(--color-text-primary)" }}>{it.productName}</p>
+                              <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
+                                {it.variantColor}{it.sareeCode ? ` · ${it.sareeCode}` : ""} · max {it.available}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button type="button" onClick={() => setReturnPicks((p) => ({ ...p, [it.id]: Math.max(0, picked - 1) }))}
+                                className="h-7 w-7 flex items-center justify-center rounded border" style={{ borderColor: "var(--color-parchment)" }}>−</button>
+                              <span className="w-7 text-center text-sm font-body">{picked}</span>
+                              <button type="button" onClick={() => setReturnPicks((p) => ({ ...p, [it.id]: Math.min(it.available, picked + 1) }))}
+                                className="h-7 w-7 flex items-center justify-center rounded border" style={{ borderColor: "var(--color-parchment)" }}>+</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Reason selection */}
               <div>
                 <p className="text-sm font-semibold font-body mb-3" style={{ color: "var(--color-text-primary)" }}>
