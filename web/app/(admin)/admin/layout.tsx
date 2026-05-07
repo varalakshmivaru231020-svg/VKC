@@ -9,7 +9,7 @@ import {
   Tag, BarChart3, Settings, Palette, Image,
   LogOut, Menu, X, Ticket, Bell, Search,
   ChevronRight, Store, Truck, BookOpen, FileText,
-  Layers, Wallet, Megaphone, Globe, Heart,
+  Layers, Wallet, Megaphone, Globe, Heart, Star,
 } from "lucide-react";
 
 const navGroups = [
@@ -21,6 +21,7 @@ const navGroups = [
       { href: "/admin/shipments", label: "Shipments", icon: Truck },
       { href: "/admin/products", label: "Products", icon: Package },
       { href: "/admin/customers", label: "Customers", icon: Users },
+      { href: "/admin/reviews", label: "Reviews", icon: Star },
     ],
   },
   {

@@ -41,5 +41,7 @@ npm-debug.log*
 # User-uploaded media (admin uploads — must persist on server, never commit)
 public/uploads/products/*
 public/uploads/videos/*
+public/uploads/reviews/*
 !public/uploads/products/.gitkeep
 !public/uploads/videos/.gitkeep
+!public/uploads/reviews/.gitkeep

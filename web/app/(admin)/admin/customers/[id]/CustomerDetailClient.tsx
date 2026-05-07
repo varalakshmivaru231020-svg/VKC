@@ -6,9 +6,24 @@ import Link from "next/link";
 import {
   ArrowLeft, User, MapPin, ShoppingBag, Wallet, Ban, CheckCircle,
   Plus, Minus, ChevronRight, Package, CreditCard, X, Loader2,
-  Calendar, Phone, Mail, Shield, TrendingUp, TrendingDown,
+  Calendar, Phone, Mail, Shield, TrendingUp, TrendingDown, Star,
 } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
+
+interface ReviewRow {
+  id: string;
+  rating: number;
+  title: string | null;
+  body: string | null;
+  images: string[];
+  isApproved: boolean;
+  createdAt: string;
+  product: { id: string; name: string; slug: string } | null;
+  orderItem: {
+    id: string; productName: string; variantColor: string; sareeCode: string | null;
+    order: { id: string; orderNumber: string };
+  } | null;
+}
 
 interface OrderItem {
   id: string; productName: string; variantColor: string;
@@ -49,7 +64,7 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
   CANCELLED:  { bg: "#FEE2E2", color: "#B91C1C", label: "Cancelled" },
 };
 
-type Tab = "overview" | "orders" | "addresses" | "wallet";
+type Tab = "overview" | "orders" | "addresses" | "wallet" | "reviews";
 
 function fmt(v: string | number) {
   return `₹${Number(v).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
@@ -63,7 +78,7 @@ function fmtDateTime(s: string) {
   return new Date(s).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-export default function CustomerDetailClient({ customer: init }: { customer: Customer }) {
+export default function CustomerDetailClient({ customer: init, reviews = [] }: { customer: Customer; reviews?: ReviewRow[] }) {
   const router = useRouter();
   const [customer, setCustomer] = useState(init);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -88,6 +103,7 @@ export default function CustomerDetailClient({ customer: init }: { customer: Cus
     { id: "orders",    label: `Orders (${customer._count.orders})`,   icon: ShoppingBag },
     { id: "addresses", label: `Addresses (${customer.addresses.length})`, icon: MapPin },
     { id: "wallet",    label: "Wallet",                               icon: Wallet },
+    { id: "reviews",   label: `Reviews (${reviews.length})`,          icon: Star },
   ];
 
   const handleBlock = async () => {
@@ -476,6 +492,75 @@ export default function CustomerDetailClient({ customer: init }: { customer: Cus
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {activeTab === "reviews" && (
+        <div className="space-y-3">
+          {reviews.length === 0 ? (
+            <div className="rounded-xl border p-14 text-center" style={{ background: "white", borderColor: "#E5E7EB" }}>
+              <Star className="h-12 w-12 mx-auto mb-3" style={{ color: "#E5E7EB" }} />
+              <p className="text-sm font-semibold font-body" style={{ color: "#374151" }}>No reviews yet</p>
+              <p className="text-xs font-body text-gray-400 mt-1">This customer has not reviewed any items.</p>
+            </div>
+          ) : reviews.map((r) => (
+            <div key={r.id} className="rounded-xl border p-4 flex gap-4" style={{ background: "white", borderColor: "#E5E7EB" }}>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+                  <Link href={r.product ? `/shop/${r.product.slug}` : "#"} target="_blank"
+                    className="text-sm font-body font-semibold hover:underline truncate"
+                    style={{ color: "#111827" }}>
+                    {r.product?.name ?? r.orderItem?.productName ?? "Product"}
+                  </Link>
+                  <span className="px-2 py-0.5 text-[10px] font-body font-bold uppercase tracking-wide rounded"
+                    style={{
+                      background: r.isApproved ? "#DCFCE7" : "#FEF3C7",
+                      color:      r.isApproved ? "#15803D" : "#92400E",
+                    }}>
+                    {r.isApproved ? "Approved" : "Pending"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-0.5 my-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star key={n} className="h-4 w-4"
+                      fill={r.rating >= n ? "#F59E0B" : "transparent"}
+                      style={{ color: r.rating >= n ? "#F59E0B" : "#E5E7EB" }} />
+                  ))}
+                  <span className="ml-2 text-xs font-body font-semibold" style={{ color: "#374151" }}>{r.rating}/5</span>
+                </div>
+                {r.orderItem?.order && (
+                  <p className="text-xs font-body" style={{ color: "#6B7280" }}>
+                    From order
+                    <Link href={`/admin/orders/${r.orderItem.order.id}`} className="ml-1 underline" style={{ color: "var(--color-primary)" }}>
+                      #{r.orderItem.order.orderNumber}
+                    </Link>
+                    {r.orderItem.variantColor ? ` · ${r.orderItem.variantColor}` : ""}
+                    {r.orderItem.sareeCode ? ` · ${r.orderItem.sareeCode}` : ""}
+                  </p>
+                )}
+                {r.title && <p className="text-sm font-body font-semibold mt-2" style={{ color: "#111827" }}>{r.title}</p>}
+                {r.body  && <p className="text-sm font-body whitespace-pre-wrap mt-1" style={{ color: "#374151" }}>{r.body}</p>}
+                {r.images.length > 0 && (
+                  <div className="flex gap-2 mt-3">
+                    {r.images.map((url) => (
+                      <a key={url} href={url} target="_blank" rel="noreferrer"
+                        className="relative w-14 h-14 rounded overflow-hidden border block" style={{ borderColor: "#E5E7EB" }}>
+                        <SmartImage src={url} alt="" fill objectFit="cover" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] font-body mt-2" style={{ color: "#9CA3AF" }}>
+                  Submitted {fmtDateTime(r.createdAt)}
+                </p>
+                <Link href="/admin/reviews"
+                  className="inline-flex items-center gap-1.5 mt-3 text-xs font-body font-medium underline"
+                  style={{ color: "var(--color-primary)" }}>
+                  Manage in Reviews →
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

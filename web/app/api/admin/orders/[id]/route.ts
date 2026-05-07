@@ -181,12 +181,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
+  // Record the actor (admin) on every transition so the audit timeline can
+  // attribute the change to a specific user.
+  const adminId = (session.user as any).id ?? null;
+
   const data: any = {};
   if (status) {
     data.status = status;
-    if (status === "SHIPPED") data.shippedAt = new Date();
-    if (status === "DELIVERED") data.deliveredAt = new Date();
-    if (status === "CANCELLED") data.cancelledAt = new Date();
+    const now = new Date();
+    if (status === "CONFIRMED")  { data.confirmedAt  = now; data.confirmedById  = adminId; }
+    if (status === "PROCESSING") { data.processingAt = now; data.processingById = adminId; }
+    if (status === "SHIPPED")    { data.shippedAt    = now; data.shippedById    = adminId; }
+    if (status === "DELIVERED")  { data.deliveredAt  = now; data.deliveredById  = adminId; }
+    if (status === "CANCELLED")  { data.cancelledAt  = now; data.cancelledById  = adminId; }
   }
   if (trackingNumber !== undefined) data.trackingNumber = trackingNumber || null;
   if (trackingUrl !== undefined) data.trackingUrl = trackingUrl || null;

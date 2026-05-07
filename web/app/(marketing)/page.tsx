@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import HeroSlider from "@/components/home/HeroSlider";
 import { PopupBanner } from "@/components/home/PopupBanner";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { PromoBanner } from "@/components/home/PromoBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,7 @@ const trustBadges = [
 
 export default async function HomePage() {
   const now = new Date();
-  const [, featuredProducts, dbSlides, activePopup, latestBlogs, homepageCatSetting] = await Promise.all([
+  const [, featuredProducts, dbSlides, activePopup, latestBlogs, homepageCatSetting, activeBanners] = await Promise.all([
     getThemeSettings(),
     getFeaturedProducts(8),
     db.heroSlide.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }).catch(() => []),
@@ -89,6 +90,15 @@ export default async function HomePage() {
       select: { id: true, title: true, slug: true, excerpt: true, imageUrl: true, tags: true, publishedAt: true, createdAt: true },
     })).catch(() => []),
     db.siteSetting.findUnique({ where: { key: "homepage_category_ids" } }).catch(() => null),
+    db.banner.findMany({
+      where: {
+        isActive: true,
+        position: { in: ["home_hero", "home_mid", "home_bottom"] },
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    }).catch(() => []),
   ]);
 
   const heroSlides = dbSlides.length > 0 ? dbSlides : FALLBACK_SLIDES;
@@ -108,12 +118,25 @@ export default async function HomePage() {
     .map(id => allHomepageCats.find(c => c.id === id))
     .filter(Boolean) as { id: string; name: string; slug: string; imageUrl: string | null }[];
 
+  const heroBanners = activeBanners.filter(b => b.position === "home_hero");
+  const midBanners = activeBanners.filter(b => b.position === "home_mid");
+  const bottomBanners = activeBanners.filter(b => b.position === "home_bottom");
+
   return (
     <>
       <PopupBanner popup={activePopup} />
 
       {/* ── HERO SLIDER ──────────────────────────────────────────────────────── */}
       <HeroSlider slides={heroSlides} />
+
+      {/* ── HERO BANNERS ─────────────────────────────────────────────────────── */}
+      {heroBanners.length > 0 && (
+        <section className="flex flex-col">
+          {heroBanners.map(banner => (
+            <PromoBanner key={banner.id} banner={banner} />
+          ))}
+        </section>
+      )}
 
       {/* ── SHOP BY CATEGORY ─────────────────────────────────────────────────── */}
       {homeCategories.length > 0 && (
@@ -227,6 +250,15 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── MID BANNERS ──────────────────────────────────────────────────────── */}
+      {midBanners.length > 0 && (
+        <section className="flex flex-col">
+          {midBanners.map(banner => (
+            <PromoBanner key={banner.id} banner={banner} />
+          ))}
+        </section>
+      )}
 
       {/* ── EDITORIAL BANNER ─────────────────────────────────────────────────── */}
       <section className="py-16 lg:py-24" style={{ background: "var(--color-ivory)" }}>
@@ -347,6 +379,15 @@ export default async function HomePage() {
               ))}
             </div>
           </div>
+        </section>
+      )}
+
+      {/* ── BOTTOM BANNERS ───────────────────────────────────────────────────── */}
+      {bottomBanners.length > 0 && (
+        <section className="flex flex-col">
+          {bottomBanners.map(banner => (
+            <PromoBanner key={banner.id} banner={banner} />
+          ))}
         </section>
       )}
 

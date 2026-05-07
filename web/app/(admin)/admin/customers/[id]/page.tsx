@@ -28,8 +28,23 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   if (!customer) notFound();
 
+  const reviews = await db.review.findMany({
+    where: { userId: params.id },
+    orderBy: { createdAt: "desc" },
+    include: {
+      product:   { select: { id: true, name: true, slug: true } },
+      orderItem: {
+        select: {
+          id: true, productName: true, variantColor: true, sareeCode: true,
+          order: { select: { id: true, orderNumber: true } },
+        },
+      },
+    },
+  });
+
   // Serialise to plain object (Decimal → string)
   const data = JSON.parse(JSON.stringify(customer));
+  const reviewsData = JSON.parse(JSON.stringify(reviews));
 
-  return <CustomerDetailClient customer={data} />;
+  return <CustomerDetailClient customer={data} reviews={reviewsData} />;
 }

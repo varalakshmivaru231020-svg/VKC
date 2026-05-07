@@ -257,9 +257,19 @@ model Order {
   walletAmountUsed   Decimal       @default(0) @db.Decimal(10, 2)
   items              OrderItem[]
   returns            OrderReturn[]
+  // Per-stage timestamps used to render audit timestamps in the order
+  // timeline. Older orders predate these fields and can be null.
+  confirmedAt        DateTime?
+  processingAt       DateTime?
   shippedAt          DateTime?
   deliveredAt        DateTime?
   cancelledAt        DateTime?
+  // Admin user who performed each transition (null for customer-driven).
+  confirmedById      String?
+  processingById     String?
+  shippedById        String?
+  deliveredById      String?
+  cancelledById      String?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
@@ -293,9 +303,12 @@ model OrderItem {
 // another). Each return has its own pickup workflow + refund record.
 
 model OrderReturn {
-  id        String        @id @default(cuid())
-  orderId   String
-  order     Order         @relation(fields: [orderId], references: [id])
+  id           String        @id @default(cuid())
+  // Human-friendly identifier surfaced to customers + admins, e.g. "RTN-A3B7K2X".
+  // Generated on creation; nullable for legacy rows that pre-date this column.
+  returnNumber String?       @unique @db.VarChar(40)
+  orderId      String
+  order        Order         @relation(fields: [orderId], references: [id])
 
   status    OrderReturnStatus @default(REQUESTED)
 
@@ -311,16 +324,21 @@ model OrderReturn {
   refundedAt     DateTime?
 
   // Pickup workflow (mirrors what was on Order before but per-request)
-  pickupCourier  String?  @db.VarChar(100)
-  pickupTracking String?  @db.VarChar(100)
-  pickedUpAt     DateTime?
-  pickedUpNotes  String?  @db.VarChar(1000)
-  deliveredAt    DateTime?
+  pickupCourier      String?  @db.VarChar(100)
+  pickupTracking     String?  @db.VarChar(100)
+  pickupAssignedAt   DateTime?
+  pickedUpAt         DateTime?
+  pickedUpNotes      String?  @db.VarChar(1000)
+  deliveredAt        DateTime?
 
-  // Audit
-  raisedBy       String   @db.VarChar(20)   // CUSTOMER | ADMIN
-  raisedById     String?                    // admin user id when raisedBy=ADMIN
-  rejectionReason String? @db.VarChar(500)
+  // Audit — who raised + which admin moved each step
+  raisedBy           String   @db.VarChar(20)   // CUSTOMER | ADMIN
+  raisedById         String?                    // user id (admin or customer)
+  pickupAssignedById String?
+  pickedUpById       String?
+  warehouseById      String?                    // recorded mark_delivered
+  refundedById       String?
+  rejectionReason    String? @db.VarChar(500)
 
   items     OrderReturnItem[]
   createdAt DateTime      @default(now())

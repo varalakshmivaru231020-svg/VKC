@@ -22,6 +22,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const adminId = (session.user as any).id ?? null;
   const { action, ...body } = await req.json();
   const ret = await db.orderReturn.findUnique({
     where: { id: params.id },
@@ -38,8 +39,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       where: { id: params.id },
       data: {
         status: "PICKUP_ASSIGNED",
-        pickupCourier:  body.pickupCourier  || null,
-        pickupTracking: body.pickupTracking || null,
+        pickupCourier:      body.pickupCourier  || null,
+        pickupTracking:     body.pickupTracking || null,
+        pickupAssignedAt:   new Date(),
+        pickupAssignedById: adminId,
       },
     });
     await db.order.update({ where: { id: ret.orderId }, data: { status: "RETURN_PICKUP_ASSIGNED" } });
@@ -54,8 +57,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const updated = await db.orderReturn.update({
       where: { id: params.id },
       data: {
-        status: "PICKUP_COMPLETED",
+        status:        "PICKUP_COMPLETED",
         pickedUpAt:    new Date(),
+        pickedUpById:  adminId,
         pickedUpNotes: body.pickupNotes || null,
       },
     });
@@ -77,7 +81,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       }
       const r = await tx.orderReturn.update({
         where: { id: params.id },
-        data: { status: "DELIVERED", deliveredAt: new Date() },
+        data: { status: "DELIVERED", deliveredAt: new Date(), warehouseById: adminId },
       });
       await tx.order.update({ where: { id: ret.orderId }, data: { status: "RETURN_DELIVERED" } });
       return r;
@@ -134,6 +138,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
           refundTxnId: body.refundTxnId || null,
           refundNote:  body.refundNote  || null,
           refundedAt:  new Date(),
+          refundedById: adminId,
         },
       });
 

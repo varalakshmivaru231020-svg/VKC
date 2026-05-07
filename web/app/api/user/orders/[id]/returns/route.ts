@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { generateReturnNumber } from "@/lib/returnNumber";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const created = await db.orderReturn.create({
     data: {
       orderId:      order.id,
+      returnNumber: generateReturnNumber(),
       reason:       finalReason,
       remark:       remark || null,
       refundMethod: (refundMethod === "WALLET" ? "WALLET" : "SOURCE"),

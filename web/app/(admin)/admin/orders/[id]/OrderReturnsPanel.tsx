@@ -27,6 +27,8 @@ interface ReturnItemRow {
 
 interface OrderReturnRow {
   id: string;
+  returnNumber: string | null;
+  refundAmount?: number;
   status: string;
   reason: string;
   remark: string | null;
@@ -78,6 +80,7 @@ const taCls = "w-full px-3 py-2 border rounded-sm text-sm font-body focus:outlin
 export default function OrderReturnsPanel({ orderId, orderStatus, orderItems }: Props) {
   const router = useRouter();
   const [returns, setReturns] = useState<OrderReturnRow[]>([]);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [showRaise, setShowRaise] = useState(false);
 
@@ -86,6 +89,7 @@ export default function OrderReturnsPanel({ orderId, orderStatus, orderItems }: 
     const res = await fetch(`/api/admin/orders/${orderId}/returns`);
     const data = await res.json().catch(() => ({}));
     setReturns(data.returns ?? []);
+    setWalletBalance(typeof data.walletBalance === "number" ? data.walletBalance : 0);
     setLoading(false);
   };
 
@@ -131,7 +135,7 @@ export default function OrderReturnsPanel({ orderId, orderStatus, orderItems }: 
           </p>
         ) : (
           returns.map((r) => (
-            <ReturnCard key={r.id} ret={r} onRefresh={() => { load(); router.refresh(); }} />
+            <ReturnCard key={r.id} ret={r} walletBalance={walletBalance} onRefresh={() => { load(); router.refresh(); }} />
           ))
         )}
       </div>
@@ -150,7 +154,7 @@ export default function OrderReturnsPanel({ orderId, orderStatus, orderItems }: 
 
 /* ──────────────── Single return card with all lifecycle controls ──────────────── */
 
-function ReturnCard({ ret, onRefresh }: { ret: OrderReturnRow; onRefresh: () => void }) {
+function ReturnCard({ ret, walletBalance, onRefresh }: { ret: OrderReturnRow; walletBalance: number; onRefresh: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -186,7 +190,13 @@ function ReturnCard({ ret, onRefresh }: { ret: OrderReturnRow; onRefresh: () => 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {ret.returnNumber && (
+              <span className="px-2 py-0.5 text-[11px] font-body font-bold rounded font-mono"
+                style={{ background: "var(--color-primary-50)", color: "var(--color-primary)" }}>
+                {ret.returnNumber}
+              </span>
+            )}
             <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded"
               style={{ background: `${statusColor}1f`, color: statusColor }}>
               {STATUS_LABEL[ret.status] ?? ret.status}
@@ -199,9 +209,16 @@ function ReturnCard({ ret, onRefresh }: { ret: OrderReturnRow; onRefresh: () => 
             <span className="font-medium">Reason:</span> {ret.reason}
           </p>
           {ret.refundMethod && (
-            <p className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>
-              Refund to: {ret.refundMethod === "WALLET" ? "Customer Wallet" : "Original payment source"}
-            </p>
+            <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-body font-semibold"
+              style={{
+                background: ret.refundMethod === "WALLET" ? "var(--color-primary-50)" : "#FEF2F2",
+                color:      ret.refundMethod === "WALLET" ? "var(--color-primary)"     : "var(--color-error)",
+                border:     `1px solid ${ret.refundMethod === "WALLET" ? "var(--color-primary)" : "#FCA5A5"}`,
+              }}>
+              {ret.refundMethod === "WALLET"
+                ? <><Wallet className="h-3 w-3" /> Customer requested refund to Wallet</>
+                : <><CheckCircle2 className="h-3 w-3" /> Customer requested refund to Original payment source</>}
+            </div>
           )}
         </div>
       </div>
@@ -305,28 +322,94 @@ function ReturnCard({ ret, onRefresh }: { ret: OrderReturnRow; onRefresh: () => 
         </div>
       )}
 
-      {ret.status === "DELIVERED" && (
-        <div className="space-y-2 mt-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>Step 4 · Process refund</p>
-          <div className="grid grid-cols-2 gap-2">
-            <input value={refundMode} onChange={(e) => setRefundMode(e.target.value)}
-              placeholder="Mode (UPI / NEFT / IMPS / Card / Cash)" className={inputCls} style={inputStyle} />
-            <input value={refundTxnId} onChange={(e) => setRefundTxnId(e.target.value)}
-              placeholder="Transaction ID / UTR / Cheque no." className={inputCls} style={inputStyle} />
+      {ret.status === "DELIVERED" && (() => {
+        const isWallet = ret.refundMethod === "WALLET";
+        const refundAmount = Number(ret.refundAmount ?? 0);
+        const newBalance = walletBalance + refundAmount;
+        const fmt = (v: number) => `₹${v.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // Validation: wallet → only Remark required; source → all three required.
+        const canSubmit = isWallet
+          ? refundNote.trim().length > 0
+          : refundMode.trim().length > 0 && refundTxnId.trim().length > 0 && refundNote.trim().length > 0;
+        return (
+          <div className="space-y-2 mt-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>Step 4 · Process refund</p>
+
+            {/* Prominent destination banner — colour and copy mirror the
+                customer's own choice so the admin can't accidentally refund
+                to the wrong place. */}
+            {ret.refundMethod && (
+              <div className="rounded-md p-3 flex items-start gap-2.5"
+                style={{
+                  background: isWallet ? "var(--color-primary-50)" : "#FEF2F2",
+                  border:     `1px solid ${isWallet ? "var(--color-primary)" : "#FCA5A5"}`,
+                }}>
+                {isWallet
+                  ? <Wallet className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "var(--color-primary)" }} />
+                  : <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "var(--color-error)" }} />}
+                <div>
+                  <p className="text-xs font-body font-semibold"
+                    style={{ color: isWallet ? "var(--color-primary)" : "var(--color-error)" }}>
+                    {isWallet
+                      ? "Customer requested refund to Wallet"
+                      : "Customer requested refund to Original Payment Source"}
+                  </p>
+                  <p className="text-[11px] font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+                    {isWallet
+                      ? "Clicking below will instantly add the refund amount to the customer's wallet balance."
+                      : "Process it via your gateway / bank, then record the mode + transaction reference below."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Wallet preview — current balance, refund amount, projected new balance */}
+            {isWallet && (
+              <div className="rounded-md p-3 grid grid-cols-3 gap-3 text-center"
+                style={{ background: "white", border: "1px solid var(--color-parchment)" }}>
+                <div>
+                  <p className="text-[10px] font-body font-semibold uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>Current Balance</p>
+                  <p className="text-sm font-body font-semibold mt-1" style={{ color: "var(--color-text-primary)" }}>{fmt(walletBalance)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-body font-semibold uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>Refund Amount</p>
+                  <p className="text-sm font-body font-semibold mt-1" style={{ color: "var(--color-success)" }}>+ {fmt(refundAmount)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-body font-semibold uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>New Balance</p>
+                  <p className="text-sm font-body font-semibold mt-1" style={{ color: "var(--color-primary)" }}>{fmt(newBalance)}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Source-account fields — Mode + Txn id, both required. */}
+            {!isWallet && (
+              <div className="grid grid-cols-2 gap-2">
+                <input value={refundMode} onChange={(e) => setRefundMode(e.target.value)}
+                  placeholder="Mode (UPI / NEFT / IMPS / Card / Cash) *" className={inputCls} style={inputStyle} />
+                <input value={refundTxnId} onChange={(e) => setRefundTxnId(e.target.value)}
+                  placeholder="Transaction ID / UTR / Cheque no. *" className={inputCls} style={inputStyle} />
+              </div>
+            )}
+
+            {/* Remark — required for both wallet and source. */}
+            <textarea value={refundNote} onChange={(e) => setRefundNote(e.target.value)} rows={2}
+              placeholder={isWallet
+                ? "Remark (reason for refund, partial refund detail, etc.) *"
+                : "Remark (deductions, partial refund detail, etc.) *"}
+              className={taCls} style={inputStyle} />
+
+            <button onClick={() => call({ action: "process_refund", refundMode, refundTxnId, refundNote })}
+              disabled={busy || !canSubmit}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-sm text-xs font-semibold text-white disabled:opacity-50"
+              style={{ background: isWallet ? "var(--color-primary)" : "var(--color-error)" }}>
+              {busy ? <Loader2 className="h-3 w-3 animate-spin" /> :
+                isWallet ? <Wallet className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
+              {isWallet ? "Credit wallet" : "Mark as refunded"}
+            </button>
           </div>
-          <textarea value={refundNote} onChange={(e) => setRefundNote(e.target.value)} rows={2}
-            placeholder="Remark (deductions, partial refund detail, etc.)"
-            className={taCls} style={inputStyle} />
-          <button onClick={() => call({ action: "process_refund", refundMode, refundTxnId, refundNote })}
-            disabled={busy}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-sm text-xs font-semibold text-white disabled:opacity-50"
-            style={{ background: ret.refundMethod === "WALLET" ? "var(--color-primary)" : "var(--color-error)" }}>
-            {busy ? <Loader2 className="h-3 w-3 animate-spin" /> :
-              ret.refundMethod === "WALLET" ? <Wallet className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
-            {ret.refundMethod === "WALLET" ? "Credit wallet" : "Mark as refunded"}
-          </button>
-        </div>
-      )}
+        );
+      })()}
 
       {error && (
         <p className="mt-3 flex items-center gap-1.5 text-xs font-body" style={{ color: "var(--color-error)" }}>
@@ -348,16 +431,34 @@ function RaiseReturnDialog({
   onCreated: () => void;
 }) {
   const [picks, setPicks] = useState<Record<string, number>>({});
-  const [reason, setReason] = useState("");
+  const [reasonChoice, setReasonChoice] = useState("");      // dropdown selection
+  const [reasonOther, setReasonOther] = useState("");        // free-text override
   const [remark, setRemark] = useState("");
   const [refundMethod, setRefundMethod] = useState<"SOURCE" | "WALLET">("SOURCE");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  // Reasons configured by admin under Settings → Return Order Reasons
+  const [reasons, setReasons] = useState<string[]>([]);
+  useEffect(() => {
+    fetch("/api/order-reasons").then((r) => r.json()).then((d) => {
+      if (Array.isArray(d.returnReasons)) setReasons(d.returnReasons);
+    }).catch(() => {});
+  }, []);
+
   const totalPicked = Object.values(picks).reduce((a, b) => a + (b || 0), 0);
 
+  // Final reason = dropdown choice (if any) plus the manual text appended.
+  // If only the manual text is filled, it stands alone.
+  const finalReason = (() => {
+    const a = reasonChoice.trim();
+    const b = reasonOther.trim();
+    if (a && b) return `${a} — ${b}`;
+    return a || b;
+  })();
+
   const submit = async () => {
-    if (!reason.trim()) { setError("Reason is required"); return; }
+    if (!finalReason) { setError("Pick a reason or enter one manually"); return; }
     const items = Object.entries(picks)
       .filter(([, q]) => q > 0)
       .map(([orderItemId, quantity]) => ({ orderItemId, quantity }));
@@ -368,7 +469,7 @@ function RaiseReturnDialog({
       const res = await fetch(`/api/admin/orders/${orderId}/returns`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, reason, remark, refundMethod }),
+        body: JSON.stringify({ items, reason: finalReason, remark, refundMethod }),
       });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? "Failed"); return; }
       onCreated();
@@ -416,9 +517,16 @@ function RaiseReturnDialog({
 
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#6B7280" }}>Reason *</p>
-            <input value={reason} onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. Item received is damaged"
-              className="w-full h-10 px-3 border rounded-lg text-sm" style={{ borderColor: "#E5E7EB" }} />
+            <select value={reasonChoice} onChange={(e) => setReasonChoice(e.target.value)}
+              className="w-full h-10 px-3 border rounded-lg text-sm bg-white" style={{ borderColor: "#E5E7EB" }}>
+              <option value="">— Select a reason —</option>
+              {reasons.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+            <input value={reasonOther} onChange={(e) => setReasonOther(e.target.value)}
+              placeholder="Other / additional details (optional)"
+              className="w-full h-10 px-3 mt-2 border rounded-lg text-sm" style={{ borderColor: "#E5E7EB" }} />
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#6B7280" }}>Remark</p>

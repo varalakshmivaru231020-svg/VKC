@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { generateReturnNumber } from "@/lib/returnNumber";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const created = await db.orderReturn.create({
     data: {
       orderId:      order.id,
+      returnNumber: generateReturnNumber(),
       reason:       finalReason,
       remark:       remark || null,
       refundMethod: (refundMethod === "WALLET" ? "WALLET" : "SOURCE"),
@@ -90,16 +92,45 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   return NextResponse.json({ return: created });
 }
 
-/** GET — list all returns for this order (admin view). */
+/** GET — list all returns for this order (admin view).
+ *
+ * Also includes the customer's current wallet balance and the computed
+ * refund amount per return (sum of items' unit price × returned qty), so
+ * the admin refund screen can preview the projected new balance for a
+ * wallet refund without an extra round-trip. */
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const order = await db.order.findUnique({
+    where: { id: params.id },
+    select: { userId: true, orderNumber: true },
+  });
   const returns = await db.orderReturn.findMany({
     where: { orderId: params.id },
     orderBy: { createdAt: "desc" },
-    include: { items: { include: { orderItem: { select: { productName: true, variantColor: true, sareeCode: true, imageUrl: true } } } } },
+    include: { items: { include: { orderItem: { select: {
+      productName: true, variantColor: true, sareeCode: true, imageUrl: true,
+      totalPrice: true, quantity: true,
+    } } } } },
   });
-  return NextResponse.json({ returns });
+
+  const wallet = order?.userId
+    ? await db.wallet.findUnique({ where: { userId: order.userId }, select: { balance: true } })
+    : null;
+  const walletBalance = wallet ? Number(wallet.balance) : 0;
+
+  const withAmount = returns.map((r) => {
+    let amount = 0;
+    for (const it of r.items) {
+      const oi: any = it.orderItem;
+      const unit = Number(oi.totalPrice) / Math.max(1, oi.quantity);
+      amount += unit * it.quantity;
+    }
+    amount = Math.round(amount * 100) / 100;
+    return { ...r, refundAmount: amount };
+  });
+
+  return NextResponse.json({ returns: withAmount, walletBalance });
 }

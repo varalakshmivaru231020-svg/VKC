@@ -8,6 +8,7 @@ import { formatINR, discountPercent, savedAmount } from "@/lib/utils/format";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import type { ProductData, ProductVariantData } from "@/lib/types/product";
 import { Button } from "@/components/ui/button";
+import ProductReviews from "./ProductReviews";
 
 interface Props {
   product: ProductData;
@@ -516,6 +517,9 @@ export default function ProductDetailClient({ product, careInstructions, deliver
           </div>
         </div>
       </div>
+
+      {/* Customer reviews — populated from approved Review rows */}
+      <ProductReviews slug={product.slug} />
 
       {/* Spacer so content above isn't hidden behind the sticky mobile action bar */}
       {available > 0 && <div className="lg:hidden h-20" aria-hidden />}

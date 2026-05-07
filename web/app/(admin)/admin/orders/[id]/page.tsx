@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { formatINR } from "@/lib/utils/format";
 import OrderStatusForm from "./OrderStatusForm";
 import OrderReturnsPanel from "./OrderReturnsPanel";
+import OrderTimeline from "./OrderTimeline";
 import { SmartImage } from "@/components/ui/SmartImage";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,60 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
   if (!order) notFound();
 
-  const statusStyle  = STATUS_STYLES[order.status]        ?? STATUS_STYLES.PENDING;
+  // Fetch the most-recent return for the timeline strip (with audit fields).
+  const latestReturn = await db.orderReturn.findFirst({
+    where: { orderId: order.id },
+    orderBy: { createdAt: "desc" },
+    select: {
+      status: true,
+      pickupCourier: true, pickupTracking: true,
+      createdAt: true, pickupAssignedAt: true, pickedUpAt: true, deliveredAt: true, refundedAt: true,
+      refundMode: true, refundTxnId: true,
+      raisedBy: true, raisedById: true,
+      pickupAssignedById: true, pickedUpById: true, warehouseById: true, refundedById: true,
+    },
+  });
+
+  // Resolve every admin user-id we plan to display to a "Firstname Lastname"
+  // (or email fallback) in a single round-trip.
+  const userIds = Array.from(new Set([
+    order.confirmedById, order.processingById, order.shippedById, order.deliveredById, order.cancelledById,
+    latestReturn?.raisedBy === "ADMIN" ? latestReturn?.raisedById : null,
+    latestReturn?.pickupAssignedById, latestReturn?.pickedUpById, latestReturn?.warehouseById, latestReturn?.refundedById,
+  ].filter(Boolean) as string[]));
+  const users = userIds.length
+    ? await db.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, firstName: true, lastName: true, email: true },
+      })
+    : [];
+  const nameById: Record<string, string> = {};
+  for (const u of users) {
+    nameById[u.id] = [u.firstName, u.lastName].filter(Boolean).join(" ") || u.email || "Admin";
+  }
+
+  // Map every order item to the latest non-rejected return it's part of, so
+  // each item row can show a per-product status pill alongside its return id.
+  const allReturns = await db.orderReturn.findMany({
+    where: { orderId: order.id, NOT: { status: "REJECTED" } },
+    orderBy: { createdAt: "desc" },
+    include: { items: { select: { orderItemId: true } } },
+  });
+  const itemReturnMap: Record<string, { returnNumber: string | null; status: string }> = {};
+  for (const r of allReturns) {
+    for (const ri of r.items) {
+      if (!itemReturnMap[ri.orderItemId]) {
+        itemReturnMap[ri.orderItemId] = { returnNumber: r.returnNumber, status: r.status };
+      }
+    }
+  }
+
+  // Override the chip when the latest return has already moved to REFUNDED —
+  // otherwise the chip stays stuck on "Returned to Warehouse" even though
+  // the order is fully refunded.
+  const displayOrderStatus =
+    latestReturn?.status === "REFUNDED" ? "REFUNDED" : order.status;
+  const statusStyle  = STATUS_STYLES[displayOrderStatus] ?? STATUS_STYLES[order.status] ?? STATUS_STYLES.PENDING;
   const payStyle     = PAYMENT_STATUS_STYLES[order.paymentStatus] ?? PAYMENT_STATUS_STYLES.PENDING;
   const addr         = order.shippingAddress as any;
   const fmtDate      = (d: Date | null) =>
@@ -111,6 +165,40 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         {/* Left: Items + Status */}
         <div className="lg:col-span-2 space-y-6">
 
+          <OrderTimeline
+            status={order.status}
+            trackingNumber={order.trackingNumber}
+            createdAt={order.createdAt}
+            confirmedAt={order.confirmedAt}
+            processingAt={order.processingAt}
+            shippedAt={order.shippedAt}
+            deliveredAt={order.deliveredAt}
+            confirmedByName={order.confirmedById ? nameById[order.confirmedById] : null}
+            processingByName={order.processingById ? nameById[order.processingById] : null}
+            shippedByName={order.shippedById ? nameById[order.shippedById] : null}
+            deliveredByName={order.deliveredById ? nameById[order.deliveredById] : null}
+            latestReturn={latestReturn ? {
+              status: latestReturn.status,
+              pickupCourier: latestReturn.pickupCourier,
+              pickupTracking: latestReturn.pickupTracking,
+              createdAt: latestReturn.createdAt,
+              pickupAssignedAt: latestReturn.pickupAssignedAt,
+              pickedUpAt: latestReturn.pickedUpAt,
+              deliveredAt: latestReturn.deliveredAt,
+              refundedAt: latestReturn.refundedAt,
+              refundMode: latestReturn.refundMode,
+              refundTxnId: latestReturn.refundTxnId,
+              raisedByName:
+                latestReturn.raisedBy === "ADMIN"
+                  ? (latestReturn.raisedById ? nameById[latestReturn.raisedById] : "Admin")
+                  : "Customer",
+              pickupAssignedByName: latestReturn.pickupAssignedById ? nameById[latestReturn.pickupAssignedById] : null,
+              pickedUpByName:       latestReturn.pickedUpById       ? nameById[latestReturn.pickedUpById]       : null,
+              warehouseByName:      latestReturn.warehouseById      ? nameById[latestReturn.warehouseById]      : null,
+              refundedByName:       latestReturn.refundedById       ? nameById[latestReturn.refundedById]       : null,
+            } : null}
+          />
+
           {/* Order Items */}
           <div className="rounded-md border" style={{ background: "white", borderColor: "var(--color-parchment)" }}>
             <h2 className="px-5 py-4 text-sm font-body font-semibold border-b" style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-primary)" }}>
@@ -119,6 +207,15 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
             <div className="divide-y" style={{ borderColor: "var(--color-parchment)" }}>
               {order.items.map((item) => {
                 const img = item.imageUrl ?? item.variant?.images?.[0]?.url ?? null;
+                const itemReturn = itemReturnMap[item.id];
+                const RETURN_PILL: Record<string, { label: string; bg: string; color: string }> = {
+                  REQUESTED:        { label: "Return Requested",      bg: "#FEF3C7", color: "#92400E" },
+                  PICKUP_ASSIGNED:  { label: "Pickup Assigned",       bg: "#FEF3C7", color: "#92400E" },
+                  PICKUP_COMPLETED: { label: "Picked Up",             bg: "#FEF3C7", color: "#92400E" },
+                  DELIVERED:        { label: "Returned to Warehouse", bg: "#EEF2FF", color: "#4338CA" },
+                  REFUNDED:         { label: "Refunded",              bg: "var(--color-success-bg)", color: "var(--color-success)" },
+                };
+                const pill = itemReturn ? RETURN_PILL[itemReturn.status] : null;
                 return (
                   <div key={item.id} className="flex gap-4 p-5">
                     <div className="relative shrink-0 w-16 h-20 rounded-sm overflow-hidden border"
@@ -140,6 +237,19 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                         Qty: <span className="font-medium" style={{ color: "var(--color-text-primary)" }}>{item.quantity}</span>
                         <span className="ml-3">Unit: {formatINR(Number(item.unitPrice))}</span>
                       </p>
+                      {pill && (
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <span className="px-2 py-0.5 text-[10px] font-body font-bold uppercase tracking-wide rounded"
+                            style={{ background: pill.bg, color: pill.color }}>
+                            {pill.label}
+                          </span>
+                          {itemReturn?.returnNumber && (
+                            <span className="text-[11px] font-body font-mono" style={{ color: "var(--color-text-muted)" }}>
+                              {itemReturn.returnNumber}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="text-right shrink-0">
                       <p style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", fontSize: "14px", color: "var(--color-primary)" }}>
@@ -173,6 +283,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               returnPickedUpNotes={(order as any).returnPickedUpNotes}
               returnRefundNotes={(order as any).returnRefundNotes}
               paymentStatus={order.paymentStatus}
+              hasReturns={!!latestReturn}
             />
           </div>
 
