@@ -110,6 +110,12 @@ export default function BannersClient({ banners: initial }: Props) {
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error(await res.text());
+      const saved: Banner = await res.json();
+      if (modal === "edit") {
+        setBanners((prev) => prev.map((b) => b.id === saved.id ? saved : b));
+      } else {
+        setBanners((prev) => [...prev, saved]);
+      }
       setModal(null);
       router.refresh();
     } catch (err: any) {
