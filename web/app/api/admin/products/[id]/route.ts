@@ -147,7 +147,28 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await db.product.delete({ where: { id: params.id } });
+    await db.$transaction(async (tx) => {
+      // Collect variant IDs for this product
+      const variants = await tx.productVariant.findMany({
+        where: { productId: params.id },
+        select: { id: true },
+      });
+      const variantIds = variants.map((v) => v.id);
+
+      // Delete records that reference variants (no cascade in schema)
+      if (variantIds.length) {
+        await tx.orderItem.deleteMany({ where: { variantId: { in: variantIds } } });
+        await tx.cartItem.deleteMany({ where: { variantId: { in: variantIds } } });
+        await tx.wishlistItem.deleteMany({ where: { variantId: { in: variantIds } } });
+      }
+
+      // Delete reviews referencing the product
+      await tx.review.deleteMany({ where: { productId: params.id } });
+
+      // Delete the product — schema cascades handle variants, images, attributes
+      await tx.product.delete({ where: { id: params.id } });
+    });
+
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
