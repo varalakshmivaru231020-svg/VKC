@@ -266,15 +266,16 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Image */}
             <div
-              className="aspect-[4/5] rounded-md overflow-hidden"
+              className="aspect-[4/5] rounded-md overflow-hidden relative"
               style={{ background: "linear-gradient(135deg, var(--color-cream), var(--color-parchment))" }}
             >
-              <div
-                className="h-full flex items-center justify-center"
-                style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-body)", fontSize: "13px" }}
-              >
-                Editorial / Weaver Story Image
-              </div>
+              <SmartImage
+                src="/uploads/Vijaylakshmi.png"
+                alt="Vijaylakshmi Sarees — Our Heritage"
+                fill
+                objectFit="cover"
+                objectPosition="center"
+              />
             </div>
             {/* Text */}
             <div className="space-y-6">
@@ -382,15 +383,6 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── BOTTOM BANNERS ───────────────────────────────────────────────────── */}
-      {bottomBanners.length > 0 && (
-        <section className="flex flex-col">
-          {bottomBanners.map(banner => (
-            <PromoBanner key={banner.id} banner={banner} />
-          ))}
-        </section>
-      )}
-
       {/* ── TRUST BADGES ─────────────────────────────────────────────────────── */}
       <section
         className="py-14"
@@ -423,6 +415,15 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── BOTTOM BANNERS (just above footer newsletter) ────────────────────── */}
+      {bottomBanners.length > 0 && (
+        <section className="flex flex-col">
+          {bottomBanners.map(banner => (
+            <PromoBanner key={banner.id} banner={banner} />
+          ))}
+        </section>
+      )}
     </>
   );
 }

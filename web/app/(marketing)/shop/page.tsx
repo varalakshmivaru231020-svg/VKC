@@ -7,6 +7,7 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import ShopFilters from "./ShopFilters";
 import ShopHeader from "./ShopHeader";
 import { attrKey } from "./attrKey";
+import { PromoBanner } from "@/components/home/PromoBanner";
 import type { ProductData } from "@/lib/types/product";
 
 export const metadata: Metadata = { title: "Shop All Sarees" };
@@ -23,12 +24,31 @@ interface Props {
 }
 
 export default async function ShopPage({ searchParams }: Props) {
-  const [settings, attributes] = await Promise.all([
+  const now = new Date();
+  const [settings, attributes, shopBanners, shopMidBanners] = await Promise.all([
     getThemeSettings(),
     db.attribute.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, options: true, inputType: true },
+    }).catch(() => []),
+    db.banner.findMany({
+      where: {
+        isActive: true,
+        position: "shop_top",
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    }).catch(() => []),
+    db.banner.findMany({
+      where: {
+        isActive: true,
+        position: "shop_banner",
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }).catch(() => []),
   ]);
 
@@ -72,16 +92,40 @@ export default async function ShopPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
-      {/* Page header */}
-      <div className="py-10 text-center border-b" style={{ background: "var(--color-cream)", borderColor: "var(--color-parchment)" }}>
-        <p className="text-label mb-2" style={{ color: "var(--color-gold)" }}>Explore</p>
-        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h1)", fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)" }}>
-          All Sarees
-        </h1>
-        <p className="text-body-sm mt-2 font-body" style={{ color: "var(--color-text-muted)" }}>
-          {result.total > 0 ? `${result.total} sarees curated for you` : "Handwoven from across India"}
-        </p>
-      </div>
+      {/* Shop top banners */}
+      {shopBanners.length > 0 && (
+        <section className="flex flex-col">
+          {shopBanners.map(banner => (
+            <PromoBanner key={banner.id} banner={banner} />
+          ))}
+        </section>
+      )}
+
+      {/* Page header — uses shop_banner image as background if uploaded */}
+      {(() => {
+        const bannerImg = shopMidBanners[0]?.imageUrl ?? null;
+        return (
+          <div
+            className="relative py-16 text-center border-b overflow-hidden"
+            style={
+              bannerImg
+                ? { backgroundImage: `url(${bannerImg})`, backgroundSize: "cover", backgroundPosition: "center", borderColor: "transparent" }
+                : { background: "var(--color-cream)", borderColor: "var(--color-parchment)" }
+            }
+          >
+            {bannerImg && <div className="absolute inset-0 bg-black/45 pointer-events-none" />}
+            <div className="relative z-10">
+              <p className="text-label mb-2" style={{ color: bannerImg ? "var(--color-gold)" : "var(--color-gold)" }}>Explore</p>
+              <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h1)", fontWeight: "var(--weight-heading)", color: bannerImg ? "white" : "var(--color-text-primary)" }}>
+                All Sarees
+              </h1>
+              <p className="text-body-sm mt-2 font-body" style={{ color: bannerImg ? "rgba(255,255,255,0.8)" : "var(--color-text-muted)" }}>
+                {result.total > 0 ? `${result.total} sarees curated for you` : "Handwoven from across India"}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex gap-8">

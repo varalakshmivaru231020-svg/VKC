@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Heart, Users, MapPin, Award } from "lucide-react";
+import { SmartImage } from "@/components/ui/SmartImage";
+import { db } from "@/lib/db";
+import { PromoBanner } from "@/components/home/PromoBanner";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Our Story — Vijaylakshmi Sarees",
@@ -38,20 +43,45 @@ const milestones = [
   { year: "2024", event: "Went online, bringing 2,000+ heritage sarees to customers across India and the world." },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const now = new Date();
+  const aboutBanners = await db.banner.findMany({
+    where: {
+      isActive: true,
+      position: "about_banner",
+      OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+      AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+    },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+  }).catch(() => []);
+
+  const heroBannerUrl = aboutBanners[0]?.imageUrl ?? null;
+
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
 
       {/* ── HERO ── */}
       <section
         className="relative overflow-hidden py-24 lg:py-36"
-        style={{ background: "var(--color-cream)" }}
+        style={
+          heroBannerUrl
+            ? { backgroundImage: `url(${heroBannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+            : { background: "var(--color-cream)" }
+        }
       >
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Dark overlay when banner image is active */}
+        {heroBannerUrl && (
+          <div className="absolute inset-0 bg-black/45 pointer-events-none" />
+        )}
+
+        <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px w-10" style={{ background: "var(--color-gold)" }} />
-              <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "var(--color-gold)" }}>
+              <span
+                className="text-xs font-semibold tracking-[0.18em] uppercase font-body"
+                style={{ color: "var(--color-gold)" }}
+              >
                 Est. 1968
               </span>
             </div>
@@ -61,7 +91,7 @@ export default function AboutPage() {
                 fontSize: "var(--text-display)",
                 fontWeight: "var(--weight-heading)",
                 lineHeight: "var(--leading-display)",
-                color: "var(--color-text-primary)",
+                color: heroBannerUrl ? "white" : "var(--color-text-primary)",
               }}
             >
               More Than a Saree.<br />A Living Tradition.
@@ -72,7 +102,7 @@ export default function AboutPage() {
                 fontFamily: "var(--font-body)",
                 fontSize: "var(--text-body-xl)",
                 lineHeight: "var(--leading-body)",
-                color: "var(--color-text-secondary)",
+                color: heroBannerUrl ? "rgba(255,255,255,0.85)" : "var(--color-text-secondary)",
               }}
             >
               For over five decades, Vijaylakshmi Sarees has been a bridge between India's
@@ -82,33 +112,39 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Decorative element */}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-1/3 opacity-30 pointer-events-none hidden lg:block"
-          style={{
-            background: "radial-gradient(ellipse at right center, var(--color-gold) 0%, transparent 70%)",
-          }}
-        />
+        {/* Decorative gradient — only shown without banner */}
+        {!heroBannerUrl && (
+          <div
+            className="absolute right-0 top-0 bottom-0 w-1/3 opacity-30 pointer-events-none hidden lg:block"
+            style={{
+              background: "radial-gradient(ellipse at right center, var(--color-gold) 0%, transparent 70%)",
+            }}
+          />
+        )}
       </section>
 
       {/* ── STORY ── */}
       <section className="py-20 lg:py-28" style={{ background: "var(--color-ivory)" }}>
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Image placeholder */}
-            <div
-              className="aspect-[4/5] rounded-2xl overflow-hidden"
-              style={{ background: "linear-gradient(145deg, var(--color-parchment) 0%, var(--color-sand) 100%)" }}
-            >
-              <div className="h-full flex items-end p-8">
-                <div className="space-y-1">
-                  <p className="text-xs font-body uppercase tracking-widest" style={{ color: "rgba(0,0,0,0.4)" }}>
-                    Kanchipuram, Tamil Nadu
-                  </p>
-                  <p className="text-sm font-body" style={{ color: "rgba(0,0,0,0.5)" }}>
-                    A master weaver at work — 1974
-                  </p>
-                </div>
+            {/* Story image */}
+            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden">
+              <SmartImage
+                src="/uploads/Vijaylakshmi.png"
+                alt="Vijaylakshmi Sarees — Born from a Love of Weaves"
+                fill
+                objectFit="cover"
+                objectPosition="center top"
+              />
+              {/* Caption overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-6 left-6 space-y-0.5">
+                <p className="text-[11px] font-body uppercase tracking-widest text-white/70">
+                  Kanchipuram, Tamil Nadu
+                </p>
+                <p className="text-sm font-body text-white/80">
+                  A master weaver at work — 1974
+                </p>
               </div>
             </div>
 

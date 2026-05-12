@@ -19,11 +19,14 @@ interface Banner {
 }
 
 const POSITIONS: Record<string, string> = {
-  home_hero: "Home — Hero",
-  home_mid: "Home — Mid Section",
-  home_bottom: "Home — Bottom",
-  category_top: "Category — Top",
-  shop_top: "Shop — Top",
+  home_hero:       "Home — Hero",
+  home_mid:        "Home — Mid Section",
+  home_bottom:     "Home — Bottom",
+  category_top:    "Category — Top",
+  category_banner: "Category — Banner",
+  shop_top:        "Shop — Top",
+  shop_banner:     "Shop — Banner",
+  about_banner:    "Our Story — Banner",
 };
 
 const emptyForm = () => ({
