@@ -76,7 +76,10 @@ export async function sendOrderConfirmationWhatsApp(order: OrderForWhatsApp): Pr
     },
   };
 
-  await fetch(apiUrl, {
+  console.log("[WhatsApp] Sending to", recipient, "via", apiUrl);
+  console.log("[WhatsApp] Payload", JSON.stringify(payload));
+
+  const res = await fetch(apiUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -84,4 +87,7 @@ export async function sendOrderConfirmationWhatsApp(order: OrderForWhatsApp): Pr
     },
     body: JSON.stringify(payload),
   });
+
+  const text = await res.text();
+  console.log("[WhatsApp] Response", res.status, text);
 }
