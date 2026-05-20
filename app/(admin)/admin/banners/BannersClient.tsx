@@ -14,6 +14,7 @@ interface Banner {
   mobileImageUrl: string | null;
   linkUrl: string | null;
   position: string;
+  bannerType: string;
   sortOrder: number;
   isActive: boolean;
 }
@@ -29,9 +30,19 @@ const POSITIONS: Record<string, string> = {
   about_banner:    "Our Story — Banner",
 };
 
+const BANNER_TYPES: Record<string, { label: string; color: string; bg: string }> = {
+  PROMOTIONAL:  { label: "Promotional",   color: "#7C3AED", bg: "#EDE9FE" },
+  SEASONAL:     { label: "Seasonal",      color: "#0369A1", bg: "#E0F2FE" },
+  SALE:         { label: "Sale / Offer",  color: "#DC2626", bg: "#FEE2E2" },
+  CATEGORY:     { label: "Category",      color: "#059669", bg: "#D1FAE5" },
+  BRAND:        { label: "Brand",         color: "#D97706", bg: "#FEF3C7" },
+  ANNOUNCEMENT: { label: "Announcement",  color: "#374151", bg: "#F3F4F6" },
+  CUSTOM:       { label: "Custom",        color: "#6B7280", bg: "#F9FAFB" },
+};
+
 const emptyForm = () => ({
   title: "", subtitle: "", imageUrl: "", mobileImageUrl: "", linkUrl: "",
-  position: "", sortOrder: "0", isActive: true,
+  position: "", bannerType: "PROMOTIONAL", sortOrder: "0", isActive: true,
 });
 
 interface Props { banners: Banner[] }
@@ -65,7 +76,8 @@ export default function BannersClient({ banners: initial }: Props) {
     setForm({
       title: b.title, subtitle: b.subtitle ?? "", imageUrl: b.imageUrl,
       mobileImageUrl: b.mobileImageUrl ?? "", linkUrl: b.linkUrl ?? "",
-      position: b.position, sortOrder: String(b.sortOrder), isActive: b.isActive,
+      position: b.position, bannerType: b.bannerType ?? "PROMOTIONAL",
+      sortOrder: String(b.sortOrder), isActive: b.isActive,
     });
     setPreview(b.imageUrl);
     setPreviewMobile(b.mobileImageUrl ?? null);
@@ -207,11 +219,20 @@ export default function BannersClient({ banners: initial }: Props) {
                   {banner.subtitle && (
                     <p className="text-xs font-body line-clamp-1 mt-0.5" style={{ color: "#9CA3AF" }}>{banner.subtitle}</p>
                   )}
-                  <div className="flex items-center gap-3 mt-2">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span className="text-xs font-body px-2 py-0.5 rounded-full"
                       style={{ background: "var(--color-primary-50)", color: "var(--color-primary)" }}>
                       {POSITIONS[banner.position] ?? banner.position}
                     </span>
+                    {banner.bannerType && BANNER_TYPES[banner.bannerType] && (
+                      <span className="text-xs font-body px-2 py-0.5 rounded-full font-medium"
+                        style={{
+                          background: BANNER_TYPES[banner.bannerType].bg,
+                          color: BANNER_TYPES[banner.bannerType].color,
+                        }}>
+                        {BANNER_TYPES[banner.bannerType].label}
+                      </span>
+                    )}
                     {banner.linkUrl && (
                       <span className="text-xs font-body truncate max-w-[200px]" style={{ color: "#9CA3AF" }}>
                         → {banner.linkUrl}
@@ -346,6 +367,23 @@ export default function BannersClient({ banners: initial }: Props) {
                     <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Banner Type */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Banner Type</label>
+                <select value={form.bannerType} onChange={(e) => set("bannerType")(e.target.value)}
+                  className="w-full h-10 px-4 border rounded-lg text-sm font-body focus:outline-none transition-all appearance-none"
+                  style={{
+                    borderColor: "#E5E7EB", background: "white", color: "#111827",
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", backgroundSize: "16px",
+                  }} {...focusStyle}>
+                  {Object.entries(BANNER_TYPES).map(([key, { label }]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+                <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Used to categorize and filter banners by campaign type</p>
               </div>
 
               {/* Link URL */}

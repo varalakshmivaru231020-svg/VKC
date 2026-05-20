@@ -123,8 +123,12 @@ function GeneralTab() {
 
   const [form, setForm] = useState({
     store_name: "", tagline: "", support_email: "", support_phone: "",
-    store_address: "", store_gst: "", currency_symbol: "₹", currency_code: "INR",
+    store_address: "", store_city: "", store_gst: "", currency_symbol: "₹", currency_code: "INR",
     return_address: "",
+    whatsapp_number: "",
+    store_hours_weekday: "Mon–Sat: 10 AM – 7 PM",
+    store_hours_weekend: "Sun: Closed",
+    store_maps_url: "",
   });
 
   useEffect(() => {
@@ -133,15 +137,20 @@ function GeneralTab() {
       if (settings.store_logo) setLogoPreview(settings.store_logo);
       setForm((f) => ({
         ...f,
-        store_name: settings.store_name ?? f.store_name,
-        tagline: settings.tagline ?? f.tagline,
-        support_email: settings.store_email ?? f.support_email,
-        support_phone: settings.store_phone ?? f.support_phone,
-        store_address: settings.store_address ?? f.store_address,
-        store_gst: settings.store_gst ?? f.store_gst,
-        currency_symbol: settings.currency_symbol ?? f.currency_symbol,
-        currency_code: settings.currency_code ?? f.currency_code,
-        return_address: settings.return_address ?? f.return_address,
+        store_name:          settings.store_name          ?? f.store_name,
+        tagline:             settings.tagline             ?? f.tagline,
+        support_email:       settings.store_email         ?? f.support_email,
+        support_phone:       settings.store_phone         ?? f.support_phone,
+        store_address:       settings.store_address       ?? f.store_address,
+        store_city:          settings.store_city          ?? f.store_city,
+        store_gst:           settings.store_gst           ?? f.store_gst,
+        currency_symbol:     settings.currency_symbol     ?? f.currency_symbol,
+        currency_code:       settings.currency_code       ?? f.currency_code,
+        return_address:      settings.return_address      ?? f.return_address,
+        whatsapp_number:     settings.whatsapp_number     ?? f.whatsapp_number,
+        store_hours_weekday: settings.store_hours_weekday ?? f.store_hours_weekday,
+        store_hours_weekend: settings.store_hours_weekend ?? f.store_hours_weekend,
+        store_maps_url:      settings.store_maps_url      ?? f.store_maps_url,
       }));
     });
   }, []);
@@ -165,15 +174,20 @@ function GeneralTab() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        store_name: form.store_name,
-        tagline: form.tagline,
-        store_email: form.support_email,
-        store_phone: form.support_phone,
-        store_address: form.store_address,
-        store_gst: form.store_gst,
-        currency_symbol: form.currency_symbol,
-        currency_code: form.currency_code,
-        return_address: form.return_address,
+        store_name:          form.store_name,
+        tagline:             form.tagline,
+        store_email:         form.support_email,
+        store_phone:         form.support_phone,
+        store_address:       form.store_address,
+        store_city:          form.store_city,
+        store_gst:           form.store_gst,
+        currency_symbol:     form.currency_symbol,
+        currency_code:       form.currency_code,
+        return_address:      form.return_address,
+        whatsapp_number:     form.whatsapp_number,
+        store_hours_weekday: form.store_hours_weekday,
+        store_hours_weekend: form.store_hours_weekend,
+        store_maps_url:      form.store_maps_url,
         ...(logoUrl ? { store_logo: logoUrl } : {}),
       }),
     });
@@ -234,6 +248,7 @@ function GeneralTab() {
             { label: "Tagline", key: "tagline" as const, placeholder: "Timeless Weaves. Modern Souls." },
             { label: "Support Email", key: "support_email" as const, placeholder: "care@yourstore.in" },
             { label: "Support Phone", key: "support_phone" as const, placeholder: "+91 98765 43210" },
+            { label: "WhatsApp Number", key: "whatsapp_number" as const, placeholder: "+919876543210" },
             { label: "GST Number", key: "store_gst" as const, placeholder: "22AAAAA0000A1Z5" },
             { label: "Currency Symbol", key: "currency_symbol" as const, placeholder: "₹" },
           ]).map(({ label, key, placeholder }) => (
@@ -243,15 +258,41 @@ function GeneralTab() {
             </div>
           ))}
         </div>
+        <p className="text-[11px] font-body mt-3" style={{ color: "#9CA3AF" }}>
+          WhatsApp number appears in the footer, header, and contact page. Use international format (e.g. +919876543210).
+        </p>
       </SectionCard>
 
-      <SectionCard title="Store Address" icon={MapPin}>
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Address (shown on invoices)</label>
-          <textarea value={form.store_address} onChange={u("store_address")} rows={3}
-            placeholder="123 Main Street, City, State - 600001"
-            className="w-full px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none resize-none"
-            style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} {...focusProps} />
+      <SectionCard title="Store Address & Hours" icon={MapPin}>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Street Address</label>
+              <textarea value={form.store_address} onChange={u("store_address")} rows={2}
+                placeholder="123 Main Street, Near Temple"
+                className="w-full px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none resize-none"
+                style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} {...focusProps} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>City</label>
+              <input value={form.store_city} onChange={u("store_city")} placeholder="Chennai" className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Weekday Hours</label>
+              <input value={form.store_hours_weekday} onChange={u("store_hours_weekday")} placeholder="Mon–Sat: 10 AM – 7 PM" className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Weekend Hours</label>
+              <input value={form.store_hours_weekend} onChange={u("store_hours_weekend")} placeholder="Sun: Closed" className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Google Maps URL</label>
+              <input value={form.store_maps_url} onChange={u("store_maps_url")} placeholder="https://maps.google.com/..." className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+          </div>
+          <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>
+            Address, city, hours, and Maps URL are shown on the Contact page.
+          </p>
         </div>
       </SectionCard>
 
@@ -1168,9 +1209,20 @@ function PaymentsTab() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
+    // Razorpay
+    razorpay_enabled: "true",
     razorpay_key_id: "", razorpay_key_secret: "",
-    cod_enabled: "true", upi_enabled: "true", card_enabled: "true",
     pg_test_mode: "true",
+    // Cashfree
+    cashfree_enabled: "false",
+    cashfree_app_id: "", cashfree_secret_key: "",
+    cashfree_test_mode: "true",
+    // ICICI Eazypay
+    icici_enabled: "false",
+    icici_merchant_id: "", icici_access_code: "", icici_working_key: "",
+    icici_test_mode: "true",
+    // Payment methods
+    cod_enabled: "true", upi_enabled: "true", card_enabled: "true",
   });
 
   useEffect(() => {
@@ -1178,12 +1230,22 @@ function PaymentsTab() {
       if (!settings) return;
       setForm(f => ({
         ...f,
-        razorpay_key_id: settings.razorpay_key_id ?? "",
+        razorpay_enabled:   settings.razorpay_enabled   ?? "true",
+        razorpay_key_id:    settings.razorpay_key_id    ?? "",
         razorpay_key_secret: settings.razorpay_key_secret ?? "",
-        cod_enabled: settings.cod_enabled ?? "true",
-        upi_enabled: settings.upi_enabled ?? "true",
-        card_enabled: settings.card_enabled ?? "true",
-        pg_test_mode: settings.pg_test_mode ?? "true",
+        pg_test_mode:       settings.pg_test_mode       ?? "true",
+        cashfree_enabled:   settings.cashfree_enabled   ?? "false",
+        cashfree_app_id:    settings.cashfree_app_id    ?? "",
+        cashfree_secret_key: settings.cashfree_secret_key ?? "",
+        cashfree_test_mode: settings.cashfree_test_mode ?? "true",
+        icici_enabled:      settings.icici_enabled      ?? "false",
+        icici_merchant_id:  settings.icici_merchant_id  ?? "",
+        icici_access_code:  settings.icici_access_code  ?? "",
+        icici_working_key:  settings.icici_working_key  ?? "",
+        icici_test_mode:    settings.icici_test_mode    ?? "true",
+        cod_enabled:        settings.cod_enabled        ?? "true",
+        upi_enabled:        settings.upi_enabled        ?? "true",
+        card_enabled:       settings.card_enabled       ?? "true",
       }));
     });
   }, []);
@@ -1209,31 +1271,120 @@ function PaymentsTab() {
     );
   }
 
+  function GatewayBadge({ testKey }: { testKey: keyof typeof form }) {
+    const isTest = form[testKey] === "true";
+    return (
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full" style={{ background: isTest ? "#F59E0B" : "#10B981" }} />
+        <span className="text-xs font-body font-semibold" style={{ color: isTest ? "#92400E" : "#065F46" }}>
+          {isTest ? "Test Mode" : "Live Mode"}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
+
+      {/* ── Razorpay ── */}
       <SectionCard title="Razorpay" icon={CreditCard}>
         <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-2 h-2 rounded-full" style={{ background: form.pg_test_mode === "true" ? "#F59E0B" : "#10B981" }} />
-            <span className="text-xs font-body font-semibold" style={{ color: form.pg_test_mode === "true" ? "#92400E" : "#065F46" }}>
-              {form.pg_test_mode === "true" ? "Test Mode" : "Live Mode"}
-            </span>
+          <div className="flex items-center justify-between">
+            <GatewayBadge testKey="pg_test_mode" />
+            <Toggle k="razorpay_enabled" label="Enable Razorpay" />
           </div>
-          <Toggle k="pg_test_mode" label="Test Mode (use test keys)" />
+          <div className="pt-1 border-t" style={{ borderColor: "#F3F4F6" }}>
+            <Toggle k="pg_test_mode" label="Test Mode (use test keys)" />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Key ID</label>
-              <input value={form.razorpay_key_id} onChange={e => setForm(f => ({ ...f, razorpay_key_id: e.target.value }))}
+              <input value={form.razorpay_key_id}
+                onChange={e => setForm(f => ({ ...f, razorpay_key_id: e.target.value }))}
                 placeholder="rzp_test_xxxxxxxxxx" className={inputCls} style={inputStyle} {...focusProps} />
             </div>
             <div className="space-y-1.5">
               <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Key Secret</label>
-              <SecretInput value={form.razorpay_key_secret} onChange={v => setForm(f => ({ ...f, razorpay_key_secret: v }))} placeholder="••••••••••••••" />
+              <SecretInput value={form.razorpay_key_secret}
+                onChange={v => setForm(f => ({ ...f, razorpay_key_secret: v }))}
+                placeholder="••••••••••••••" />
             </div>
           </div>
         </div>
       </SectionCard>
 
+      {/* ── Cashfree ── */}
+      <SectionCard title="Cashfree" icon={CreditCard}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <GatewayBadge testKey="cashfree_test_mode" />
+            <Toggle k="cashfree_enabled" label="Enable Cashfree" />
+          </div>
+          <div className="pt-1 border-t" style={{ borderColor: "#F3F4F6" }}>
+            <Toggle k="cashfree_test_mode" label="Test Mode (sandbox)" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>App ID</label>
+              <input value={form.cashfree_app_id}
+                onChange={e => setForm(f => ({ ...f, cashfree_app_id: e.target.value }))}
+                placeholder="Cashfree App ID" className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Secret Key</label>
+              <SecretInput value={form.cashfree_secret_key}
+                onChange={v => setForm(f => ({ ...f, cashfree_secret_key: v }))}
+                placeholder="••••••••••••••" />
+            </div>
+          </div>
+          <p className="text-xs font-body" style={{ color: "#6B7280" }}>
+            Get your credentials from the{" "}
+            <span className="underline cursor-pointer" style={{ color: "var(--color-primary)" }}>
+              Cashfree Merchant Dashboard
+            </span>
+            . Callback URL: <code className="text-xs bg-gray-100 px-1 rounded">/api/v1/checkout/cashfree/verify</code>
+          </p>
+        </div>
+      </SectionCard>
+
+      {/* ── ICICI Eazypay ── */}
+      <SectionCard title="ICICI Eazypay" icon={CreditCard}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <GatewayBadge testKey="icici_test_mode" />
+            <Toggle k="icici_enabled" label="Enable ICICI Eazypay" />
+          </div>
+          <div className="pt-1 border-t" style={{ borderColor: "#F3F4F6" }}>
+            <Toggle k="icici_test_mode" label="Test Mode" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Merchant ID</label>
+              <input value={form.icici_merchant_id}
+                onChange={e => setForm(f => ({ ...f, icici_merchant_id: e.target.value }))}
+                placeholder="ICICI Merchant ID" className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Access Code</label>
+              <input value={form.icici_access_code}
+                onChange={e => setForm(f => ({ ...f, icici_access_code: e.target.value }))}
+                placeholder="Access Code" className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Working Key</label>
+            <SecretInput value={form.icici_working_key}
+              onChange={v => setForm(f => ({ ...f, icici_working_key: v }))}
+              placeholder="32-character AES working key" />
+          </div>
+          <p className="text-xs font-body" style={{ color: "#6B7280" }}>
+            Response URL to configure in ICICI Eazypay dashboard:{" "}
+            <code className="text-xs bg-gray-100 px-1 rounded">/api/v1/checkout/icici/verify</code>
+          </p>
+        </div>
+      </SectionCard>
+
+      {/* ── Payment Methods ── */}
       <SectionCard title="Payment Methods" icon={CreditCard}>
         <div className="space-y-3">
           <Toggle k="cod_enabled" label="Cash on Delivery (COD)" />
@@ -1247,13 +1398,16 @@ function PaymentsTab() {
   );
 }
 
-/* ─────────────── SMS / WHATSAPP ─────────────── */
+/* ─────────────── SMS / WHATSAPP / SHIPROCKET ─────────────── */
 function SmsTab() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     msg91_auth_key: "", msg91_sender_id: "", msg91_template_id: "",
     whatsapp_api_url: "", whatsapp_token: "", whatsapp_phone_id: "",
+    whatsapp_number: "",
+    shiprocket_enabled: "false",
+    shiprocket_email: "", shiprocket_password: "", shiprocket_channel_id: "",
   });
 
   useEffect(() => {
@@ -1261,12 +1415,17 @@ function SmsTab() {
       if (!settings) return;
       setForm(f => ({
         ...f,
-        msg91_auth_key: settings.msg91_auth_key ?? "",
-        msg91_sender_id: settings.msg91_sender_id ?? "",
-        msg91_template_id: settings.msg91_template_id ?? "",
-        whatsapp_api_url: settings.whatsapp_api_url ?? "",
-        whatsapp_token: settings.whatsapp_token ?? "",
-        whatsapp_phone_id: settings.whatsapp_phone_id ?? "",
+        msg91_auth_key:        settings.msg91_auth_key        ?? "",
+        msg91_sender_id:       settings.msg91_sender_id       ?? "",
+        msg91_template_id:     settings.msg91_template_id     ?? "",
+        whatsapp_api_url:      settings.whatsapp_api_url      ?? "",
+        whatsapp_token:        settings.whatsapp_token        ?? "",
+        whatsapp_phone_id:     settings.whatsapp_phone_id     ?? "",
+        whatsapp_number:       settings.whatsapp_number       ?? "",
+        shiprocket_enabled:    settings.shiprocket_enabled    ?? "false",
+        shiprocket_email:      settings.shiprocket_email      ?? "",
+        shiprocket_password:   settings.shiprocket_password   ?? "",
+        shiprocket_channel_id: settings.shiprocket_channel_id ?? "",
       }));
     });
   }, []);
@@ -1280,9 +1439,16 @@ function SmsTab() {
   const u = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }));
 
+  const srEnabled = form.shiprocket_enabled === "true";
+
   return (
     <div className="space-y-5">
-      <SectionCard title="MSG91 (SMS Gateway)" icon={MessageSquare}>
+
+      {/* ── MSG91 SMS Gateway ── */}
+      <SectionCard title="MSG91 (SMS OTP)" icon={MessageSquare}>
+        <p className="text-xs font-body mb-4" style={{ color: "#6B7280" }}>
+          Used to send OTP codes to customers during mobile login. Set <code className="text-xs bg-gray-100 px-1 rounded">MOBILE_USE_FIXED_OTP=false</code> in your <code className="text-xs bg-gray-100 px-1 rounded">.env</code> to enable real SMS.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Auth Key</label>
@@ -1299,8 +1465,17 @@ function SmsTab() {
         </div>
       </SectionCard>
 
+      {/* ── WhatsApp Business API ── */}
       <SectionCard title="WhatsApp Business API (Meta)" icon={MessageSquare}>
+        <p className="text-xs font-body mb-4" style={{ color: "#6B7280" }}>
+          Auto-sends an order confirmation message to the customer when admin confirms their order. Requires an approved <strong>order_confirmation</strong> message template in Meta Business Manager.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Store WhatsApp Number</label>
+            <input value={form.whatsapp_number} onChange={u("whatsapp_number")} placeholder="+919876543210" className={inputCls} style={inputStyle} {...focusProps} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Shown in footer, header, and contact page</p>
+          </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Phone Number ID</label>
             <input value={form.whatsapp_phone_id} onChange={u("whatsapp_phone_id")} placeholder="Meta Phone Number ID" className={inputCls} style={inputStyle} {...focusProps} />
@@ -1309,11 +1484,55 @@ function SmsTab() {
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>API Token</label>
             <SecretInput value={form.whatsapp_token} onChange={v => setForm(f => ({ ...f, whatsapp_token: v }))} placeholder="EAAxxxxxxxx…" />
           </div>
-          <div className="space-y-1.5 sm:col-span-2">
+          <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>API URL (optional override)</label>
             <input value={form.whatsapp_api_url} onChange={u("whatsapp_api_url")} placeholder="https://graph.facebook.com/v18.0/…" className={inputCls} style={inputStyle} {...focusProps} />
           </div>
         </div>
+      </SectionCard>
+
+      {/* ── Shiprocket ── */}
+      <SectionCard
+        title="Shiprocket (Shipping Automation)"
+        icon={Truck}
+        action={
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div
+              onClick={() => setForm(f => ({ ...f, shiprocket_enabled: srEnabled ? "false" : "true" }))}
+              className="relative w-9 h-5 rounded-full transition-all cursor-pointer"
+              style={{ background: srEnabled ? "var(--color-primary)" : "#D1D5DB" }}
+            >
+              <div className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all" style={{ left: srEnabled ? "18px" : "2px" }} />
+            </div>
+            <span className="text-xs font-medium font-body" style={{ color: "#6B7280" }}>{srEnabled ? "Enabled" : "Disabled"}</span>
+          </label>
+        }
+      >
+        <p className="text-xs font-body mb-4" style={{ color: "#6B7280" }}>
+          When enabled, admin can create shipments directly from order detail pages. Courier AWB is auto-assigned.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Shiprocket Email</label>
+            <input value={form.shiprocket_email} onChange={u("shiprocket_email")} placeholder="your@email.com" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Password</label>
+            <SecretInput value={form.shiprocket_password} onChange={v => setForm(f => ({ ...f, shiprocket_password: v }))} placeholder="Shiprocket password" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Channel ID <span className="font-normal text-xs" style={{ color: "#9CA3AF" }}>(optional)</span></label>
+            <input value={form.shiprocket_channel_id} onChange={u("shiprocket_channel_id")} placeholder="e.g. 123456" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Found in Shiprocket → Settings → Channels</p>
+          </div>
+        </div>
+        {srEnabled && (
+          <div className="mt-4 p-3 rounded-lg border" style={{ background: "#F0FDF4", borderColor: "#BBF7D0" }}>
+            <p className="text-xs font-body" style={{ color: "#166534" }}>
+              After saving, go to any order detail page and use the <strong>Create Shipment</strong> button to push the order to Shiprocket and receive an AWB tracking number automatically.
+            </p>
+          </div>
+        )}
       </SectionCard>
 
       <div className="flex justify-end"><SaveButton saved={saved} loading={loading} onClick={handleSave} /></div>
@@ -1458,23 +1677,56 @@ function NotificationsTab() {
 /* ─────────────── ROLES & USERS ─────────────── */
 function RolesTab() {
   const [users, setUsers] = useState<any[]>([]);
+  const [roleTemplates, setRoleTemplates] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "ADMIN", roleTemplateId: "" });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
-  useEffect(() => {
-    fetch("/api/admin/users").then(r => r.json()).then(d => {
-      setUsers(d.users ?? []);
+  const loadUsers = () => {
+    setLoadingUsers(true);
+    Promise.all([
+      fetch("/api/admin/staff").then(r => r.json()),
+      fetch("/api/admin/roles").then(r => r.json()),
+    ]).then(([staffData, rolesData]) => {
+      setUsers(staffData.users ?? []);
+      setRoleTemplates(rolesData.roles ?? []);
       setLoadingUsers(false);
     }).catch(() => setLoadingUsers(false));
-  }, []);
+  };
+
+  useEffect(() => { loadUsers(); }, []);
+
+  const openModal = () => {
+    setForm({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "ADMIN", roleTemplateId: "" });
+    setSaveError("");
+    setShowModal(true);
+  };
+
+  const handleCreate = async () => {
+    if (!form.email.trim() || !form.password.trim()) { setSaveError("Email and password are required"); return; }
+    setSaving(true); setSaveError("");
+    try {
+      const res = await fetch("/api/admin/staff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, roleTemplateId: form.roleTemplateId || null }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to create user");
+      setShowModal(false);
+      loadUsers();
+    } catch (e: any) { setSaveError(e.message); }
+    setSaving(false);
+  };
+
+  const inp = "w-full px-3 py-2 text-sm font-body border rounded-lg outline-none focus:ring-2";
 
   return (
     <div className="space-y-5">
       <SectionCard title="Admin Users" icon={Users}
         action={
-          <a href="/admin/users/new" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold font-body"
+          <button onClick={openModal} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold font-body"
             style={{ background: "var(--color-primary)", color: "white" }}>
             <Plus className="h-3.5 w-3.5" /> New User
-          </a>
+          </button>
         }
       >
         {loadingUsers ? (
@@ -1502,7 +1754,7 @@ function RolesTab() {
                     style={{ background: "var(--color-primary-50)", color: "var(--color-primary)" }}>
                     {u.role}
                   </span>
-                  <Shield className="h-4 w-4" style={{ color: u.emailVerified ? "#10B981" : "#D1D5DB" }} />
+                  <Shield className="h-4 w-4" style={{ color: u.isActive ? "#10B981" : "#D1D5DB" }} />
                 </div>
               </div>
             ))}
@@ -1511,11 +1763,98 @@ function RolesTab() {
       </SectionCard>
 
       <div className="rounded-xl border p-5" style={{ background: "#FFFBEB", borderColor: "#FCD34D" }}>
-        <p className="text-sm font-semibold font-body mb-1" style={{ color: "#92400E" }}>Role Management</p>
-        <p className="text-xs font-body" style={{ color: "#92400E" }}>
-          Currently supported roles: <strong>ADMIN</strong> (full access) and <strong>CUSTOMER</strong>. Custom roles with granular permissions can be added in a future update.
+        <p className="text-sm font-semibold font-body mb-1" style={{ color: "#92400E" }}>Custom Role Templates</p>
+        <p className="text-xs font-body mb-2" style={{ color: "#92400E" }}>
+          Create custom role names (e.g. "Order Manager", "Warehouse Staff") with module-level permissions on the Roles page.
         </p>
+        <a href="/admin/roles" className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
+          style={{ background: "#92400E", color: "white" }}>
+          Go to Roles &amp; Permissions →
+        </a>
       </div>
+
+      {/* New User Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.4)" }}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold font-body" style={{ color: "var(--color-text-primary)" }}>Add New Admin User</h3>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-body font-medium mb-1" style={{ color: "#374151" }}>First Name</label>
+                <input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                  className={inp} style={{ borderColor: "#D1D5DB" }} placeholder="Anjali" />
+              </div>
+              <div>
+                <label className="block text-xs font-body font-medium mb-1" style={{ color: "#374151" }}>Last Name</label>
+                <input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                  className={inp} style={{ borderColor: "#D1D5DB" }} placeholder="Sharma" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-body font-medium mb-1" style={{ color: "#374151" }}>Email <span className="text-red-500">*</span></label>
+              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                className={inp} style={{ borderColor: "#D1D5DB" }} placeholder="staff@vijaylakshmi.in" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-body font-medium mb-1" style={{ color: "#374151" }}>Phone</label>
+              <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                className={inp} style={{ borderColor: "#D1D5DB" }} placeholder="+91 98765 43210" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-body font-medium mb-1" style={{ color: "#374151" }}>Password <span className="text-red-500">*</span></label>
+              <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                className={inp} style={{ borderColor: "#D1D5DB" }} placeholder="Min 8 characters" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-body font-medium mb-1" style={{ color: "#374151" }}>System Role</label>
+                <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
+                  className={inp} style={{ borderColor: "#D1D5DB" }}>
+                  <option value="ADMIN">ADMIN — Full Access</option>
+                  <option value="STAFF">STAFF — Limited Access</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-body font-medium mb-1" style={{ color: "#374151" }}>Role Template</label>
+                <select value={form.roleTemplateId} onChange={e => setForm(f => ({ ...f, roleTemplateId: e.target.value }))}
+                  className={inp} style={{ borderColor: "#D1D5DB" }}>
+                  <option value="">— None —</option>
+                  {roleTemplates.filter((r: any) => r.isActive).map((r: any) => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="text-xs" style={{ color: "#9CA3AF" }}>
+              To create custom role names, go to{" "}
+              <a href="/admin/roles" className="underline" style={{ color: "var(--color-primary)" }}>Roles &amp; Permissions</a>.
+            </p>
+
+            {saveError && <p className="text-xs text-red-600 font-body">{saveError}</p>}
+
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setShowModal(false)}
+                className="flex-1 py-2 rounded-lg text-sm font-body font-medium border"
+                style={{ borderColor: "#D1D5DB", color: "#374151" }}>
+                Cancel
+              </button>
+              <button onClick={handleCreate} disabled={saving}
+                className="flex-1 py-2 rounded-lg text-sm font-body font-semibold text-white disabled:opacity-60"
+                style={{ background: "var(--color-primary)" }}>
+                {saving ? "Creating…" : "Create User"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

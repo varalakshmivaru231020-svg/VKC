@@ -164,29 +164,47 @@ model OtpCode {
   @@map("otp_codes")
 }
 
+// ─── ROLE TEMPLATES (granular staff permissions) ──────────────────────────────
+
+model RoleTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(300)
+  /// JSON: { "orders":{"view":true,"edit":true,"delete":false}, "products":{...}, ... }
+  permissions Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
+
+  @@map("role_templates")
+}
+
 model User {
-  id             String    @id @default(cuid())
-  customerNumber Int?      @unique
-  email          String?   @unique @db.VarChar(255)
-  phone          String?   @unique @db.VarChar(20)
-  passwordHash   String?   @db.VarChar(255)
-  firstName      String?   @db.VarChar(100)
-  lastName       String?   @db.VarChar(100)
-  avatarUrl      String?   @db.VarChar(500)
-  role           UserRole  @default(CUSTOMER)
-  emailVerified  Boolean   @default(false)
-  phoneVerified  Boolean   @default(false)
-  isActive       Boolean   @default(true)
-  isBlocked      Boolean   @default(false)
-  blockedReason  String?   @db.VarChar(500)
-  addresses      Address[]
-  orders         Order[]
-  cart           Cart?
-  wishlist       WishlistItem[]
-  reviews        Review[]
-  wallet         Wallet?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id               String        @id @default(cuid())
+  customerNumber   Int?          @unique
+  email            String?       @unique @db.VarChar(255)
+  phone            String?       @unique @db.VarChar(20)
+  passwordHash     String?       @db.VarChar(255)
+  firstName        String?       @db.VarChar(100)
+  lastName         String?       @db.VarChar(100)
+  avatarUrl        String?       @db.VarChar(500)
+  role             UserRole      @default(CUSTOMER)
+  roleTemplateId   String?
+  roleTemplate     RoleTemplate? @relation(fields: [roleTemplateId], references: [id])
+  emailVerified    Boolean       @default(false)
+  phoneVerified    Boolean       @default(false)
+  isActive         Boolean       @default(true)
+  isBlocked        Boolean       @default(false)
+  blockedReason    String?       @db.VarChar(500)
+  addresses        Address[]
+  orders           Order[]
+  cart             Cart?
+  wishlist         WishlistItem[]
+  reviews          Review[]
+  wallet           Wallet?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   @@map("users")
 }
@@ -238,9 +256,11 @@ model Order {
   shippingAddress Json
   billingAddress  Json
   notes              String?       @db.Text
-  trackingNumber     String?       @db.VarChar(100)
-  trackingUrl        String?       @db.VarChar(500)
-  courierPartner     String?       @db.VarChar(100)
+  trackingNumber        String?       @db.VarChar(100)
+  trackingUrl           String?       @db.VarChar(500)
+  courierPartner        String?       @db.VarChar(100)
+  shiprocketOrderId     String?       @db.VarChar(50)
+  shiprocketShipmentId  String?       @db.VarChar(50)
   cancelReason       String?       @db.VarChar(500)
   cancelRefundMethod String?       @db.VarChar(20)   // SOURCE | WALLET
   returnReason       String?       @db.VarChar(500)
@@ -597,6 +617,7 @@ model Banner {
   mobileImageUrl String?  @db.VarChar(500)
   linkUrl       String?   @db.VarChar(500)
   position      String    @db.VarChar(50)
+  bannerType    String    @default("PROMOTIONAL") @db.VarChar(50)
   sortOrder     Int       @default(0)
   isActive      Boolean   @default(true)
   startsAt      DateTime?

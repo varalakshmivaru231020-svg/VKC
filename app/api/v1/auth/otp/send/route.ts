@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { sendOtpViaMSG91 } from "@/lib/api/msg91";
 
 function normalisePhone(raw: string): string {
   const clean = raw.trim();
@@ -10,7 +11,7 @@ function normalisePhone(raw: string): string {
   return "+" + digits;
 }
 
-const USE_FIXED_OTP = process.env.MOBILE_USE_FIXED_OTP === "false" ? false : true; // keep test mode by default
+const USE_FIXED_OTP = process.env.MOBILE_USE_FIXED_OTP === "false" ? false : true;
 
 export async function POST(req: Request) {
   try {
@@ -21,15 +22,21 @@ export async function POST(req: Request) {
 
     const normalised = normalisePhone(String(phone));
 
-    // Invalidate previous unused OTPs for this number
     await db.otpCode.updateMany({ where: { phone: normalised, used: false }, data: { used: true } });
 
     const code = USE_FIXED_OTP ? "123456" : String(Math.floor(100000 + Math.random() * 900000));
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     await db.otpCode.create({ data: { phone: normalised, code, expiresAt } });
 
-    if (process.env.NODE_ENV !== "production") console.log(`[v1/otp/send] ${normalised} -> ${code}`);
+    if (!USE_FIXED_OTP) {
+      // Send real OTP via MSG91 — fire-and-forget, don't block the response
+      sendOtpViaMSG91(normalised, code).catch((e) =>
+        console.error("[v1/otp/send] MSG91 error:", e)
+      );
+    } else {
+      console.log(`[v1/otp/send] DEV mode — ${normalised} → ${code}`);
+    }
 
     const existing = await db.user.findUnique({
       where: { phone: normalised },
@@ -39,7 +46,6 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       isNew: !existing,
-      // include code in dev for easier QA from mobile app
       ...(process.env.NODE_ENV !== "production" && USE_FIXED_OTP ? { devCode: code } : {}),
     });
   } catch (err) {

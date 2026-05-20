@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isUnauthorized, requireMobileUser } from "@/lib/api/mobile-auth";
 import { getRazorpayClient } from "@/lib/api/razorpay";
+import { createCashfreeOrder } from "@/lib/api/cashfree";
+import { buildIciciPaymentData } from "@/lib/api/icici";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +35,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const {
     address,
-    paymentMethod,                  // "cod" | "upi" | "card" | "netbanking" | "razorpay"
+    paymentMethod,                  // "cod" | "upi" | "card" | "netbanking" | "razorpay" | "cashfree" | "icici"
     shippingAmount = 0,
     discountAmount = 0,
     couponCode = null,
@@ -121,7 +123,7 @@ export async function POST(req: Request) {
     await db.coupon.updateMany({ where: { code: couponCode }, data: { usedCount: { increment: 1 } } }).catch(() => {});
   }
 
-  // For Razorpay: create the Razorpay order so the app can launch native checkout.
+  // Razorpay: create order and return id for native SDK checkout.
   if (paymentMethod === "razorpay" && finalTotal > 0) {
     try {
       const { client, keyId } = await getRazorpayClient();
@@ -138,6 +140,57 @@ export async function POST(req: Request) {
     } catch (err: any) {
       console.error("[v1/checkout razorpay]", err);
       return NextResponse.json({ order, razorpay: null, warning: "Razorpay not configured" });
+    }
+  }
+
+  // Cashfree: create order and return payment_session_id for Flutter SDK.
+  if (paymentMethod === "cashfree" && finalTotal > 0) {
+    try {
+      const user = await db.user.findUnique({ where: { id: u.id }, select: { name: true, email: true, phone: true } });
+      const cfOrder = await createCashfreeOrder({
+        orderId:       order.orderNumber,
+        amount:        finalTotal,
+        customerPhone: user?.phone ?? "9999999999",
+        customerEmail: user?.email,
+        customerName:  user?.name,
+      });
+      return NextResponse.json({
+        order,
+        cashfree: {
+          sessionId:      cfOrder.payment_session_id,
+          cashfreeOrderId: cfOrder.cf_order_id,
+          orderId:        cfOrder.order_id,
+        },
+      });
+    } catch (err: any) {
+      console.error("[v1/checkout cashfree]", err);
+      return NextResponse.json({ order, cashfree: null, warning: "Cashfree not configured" });
+    }
+  }
+
+  // ICICI Eazypay: build encrypted payment URL for WebView.
+  if (paymentMethod === "icici" && finalTotal > 0) {
+    try {
+      const user = await db.user.findUnique({ where: { id: u.id }, select: { name: true, email: true, phone: true } });
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+      const iciciData = await buildIciciPaymentData({
+        orderId:         order.orderNumber,
+        amount:          finalTotal,
+        redirectUrl:     `${baseUrl}/api/v1/checkout/icici/verify`,
+        cancelUrl:       `${baseUrl}/api/v1/checkout/icici/verify`,
+        billingName:     user?.name ?? "",
+        billingEmail:    user?.email ?? "",
+        billingTel:      user?.phone ?? "",
+        billingAddress:  typeof address === "object" ? (address.addressLine1 ?? "") : "",
+        billingCity:     typeof address === "object" ? (address.city ?? "") : "",
+        billingState:    typeof address === "object" ? (address.state ?? "") : "",
+        billingZip:      typeof address === "object" ? (address.pincode ?? "") : "",
+        billingCountry:  "India",
+      });
+      return NextResponse.json({ order, icici: iciciData });
+    } catch (err: any) {
+      console.error("[v1/checkout icici]", err);
+      return NextResponse.json({ order, icici: null, warning: "ICICI not configured" });
     }
   }
 

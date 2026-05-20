@@ -163,22 +163,30 @@ export default function ProductDetailClient({ product, careInstructions, deliver
 
         {/* ── LEFT: Sticky image panel ── */}
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <div className="flex gap-3">
+          {/* Desktop: side-by-side thumbnails | Mobile: main image then thumbnails below */}
+          <div className="flex gap-3 lg:flex-row flex-col-reverse">
 
-            {/* Vertical thumbnail strip */}
+            {/* Thumbnail strip — vertical on desktop, horizontal row on mobile */}
             {(images.length > 1 || product.videoUrl) && (
-              <div className="flex flex-col gap-2 shrink-0" style={{ width: 68 }}>
+              <div className="lg:flex-col flex flex-row lg:gap-2 gap-2 lg:shrink-0 overflow-x-auto lg:overflow-x-visible"
+                style={{ width: "auto" }}>
                 {images.map((img, idx) => (
                   <button
                     key={img.id}
                     onClick={() => { setActiveImage(idx); setShowVideo(false); }}
                     className={cn(
-                      "w-full rounded-sm overflow-hidden border-2 transition-all",
+                      "rounded-sm overflow-hidden border-2 transition-all shrink-0",
                       !showVideo && idx === activeImage
                         ? "border-primary opacity-100"
                         : "border-transparent opacity-55 hover:opacity-90"
                     )}
-                    style={{ aspectRatio: "3/4", background: "var(--color-cream)", position: "relative" }}
+                    style={{
+                      aspectRatio: "3/4",
+                      background: "var(--color-cream)",
+                      position: "relative",
+                      width: 64,
+                      minWidth: 64,
+                    }}
                   >
                     {img.url && (
                       <SmartImage src={img.url} alt="" fill objectFit="cover" />
@@ -189,10 +197,10 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                   <button
                     onClick={() => setShowVideo(true)}
                     className={cn(
-                      "w-full rounded-sm overflow-hidden border-2 transition-all relative flex items-center justify-center",
+                      "rounded-sm overflow-hidden border-2 transition-all relative flex items-center justify-center shrink-0",
                       showVideo ? "border-primary opacity-100" : "border-transparent opacity-55 hover:opacity-90"
                     )}
-                    style={{ aspectRatio: "3/4", background: "#111" }}
+                    style={{ aspectRatio: "3/4", background: "#111", width: 64, minWidth: 64 }}
                   >
                     <Play className="h-5 w-5 text-white" />
                   </button>

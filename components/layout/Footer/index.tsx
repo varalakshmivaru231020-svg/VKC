@@ -39,6 +39,7 @@ interface FooterProps {
   logoUrl?: string | null;
   phone?: string;
   email?: string;
+  whatsappNumber?: string;
   instagram?: string;
   facebook?: string;
   youtube?: string;
@@ -53,6 +54,7 @@ export function Footer({
   logoUrl,
   phone = "+91 98765 43210",
   email = "care@vijaylakshmi.in",
+  whatsappNumber,
   instagram,
   facebook,
   youtube,
@@ -156,6 +158,7 @@ export function Footer({
               {[
                 { Icon: Phone,  text: phone, href: phone ? `tel:${phone.replace(/\s/g, "")}` : null },
                 { Icon: Mail,   text: email, href: email ? `mailto:${email}` : null },
+                ...(whatsappNumber ? [{ Icon: Phone, text: `WhatsApp: ${whatsappNumber}`, href: `https://wa.me/${whatsappNumber.replace(/\D/g, "")}` }] : []),
               ].filter(c => c.text && c.href).map(({ Icon, text, href }) => (
                 <a
                   key={href}
