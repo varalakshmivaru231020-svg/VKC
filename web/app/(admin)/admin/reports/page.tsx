@@ -136,9 +136,8 @@ export default function ReportsPage() {
         ? `type=${tab}`
         : `type=${tab}&from=${range.from}&to=${range.to}`;
       const res = await fetch(`/api/admin/reports?${qs}`);
-      if (!res.ok) throw new Error(`Server error ${res.status}`);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
+      const json = await res.json().catch(() => ({ error: `Server error ${res.status}` }));
+      if (!res.ok || 'error' in json) throw new Error(json.error || `Server error ${res.status}`);
       setData(json);
     } catch (e: any) {
       setError(e.message ?? "Failed to load report");
@@ -285,7 +284,8 @@ export default function ReportsPage() {
 
 // ─── Dashboard Tab ─────────────────────────────────────────────────────────────
 function DashboardTab({ data, card, chartCard, range, mounted }: any) {
-  const k = data.kpis;
+  const k = data?.kpis;
+  if (!k) return <p className="text-center py-8 text-sm" style={{ color: "var(--color-text-muted)" }}>No data available for selected period.</p>;
   return (
     <div className="space-y-6">
       {/* KPI Row 1 */}
