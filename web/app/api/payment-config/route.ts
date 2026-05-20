@@ -6,15 +6,25 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const rows = await db.siteSetting.findMany({
     where: {
-      key: { in: ["razorpay_enabled", "cashfree_enabled", "icici_enabled"] },
+      key: {
+        in: [
+          "razorpay_enabled", "cashfree_enabled", "icici_enabled",
+          "cod_enabled", "upi_enabled", "card_enabled",
+        ],
+      },
     },
   });
   const s: Record<string, string> = {};
   rows.forEach((r) => { s[r.key] = r.value; });
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     razorpay: (s.razorpay_enabled ?? "true") === "true",
     cashfree: s.cashfree_enabled === "true",
     icici:    s.icici_enabled === "true",
+    cod:      (s.cod_enabled  ?? "true") === "true",
+    upi:      (s.upi_enabled  ?? "true") === "true",
+    card:     (s.card_enabled ?? "true") === "true",
   });
+  res.headers.set("Cache-Control", "no-store");
+  return res;
 }

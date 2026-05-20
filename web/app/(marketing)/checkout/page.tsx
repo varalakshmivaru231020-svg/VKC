@@ -352,14 +352,16 @@ export default function CheckoutPage() {
   const [placing, setPlacing]         = useState(false);
   const [ordered, setOrdered]         = useState(false);
   const [placedOrderNumber, setPlacedOrderNumber] = useState("");
-  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: true, cashfree: false, icici: false });
+  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: true, cashfree: false, icici: false, cod: true, upi: true, card: true });
 
   useEffect(() => {
-    fetch("/api/payment-config").then(r => r.json()).then(d => {
+    fetch("/api/payment-config", { cache: "no-store" }).then(r => r.json()).then(d => {
       setPaymentCfg(d);
       // default to first enabled method
-      if (!d.razorpay && d.cashfree) setPayment("cashfree");
-      else if (!d.razorpay && !d.cashfree && d.icici) setPayment("icici");
+      if (d.razorpay && d.upi) setPayment("upi");
+      else if (d.cashfree) setPayment("cashfree");
+      else if (d.icici) setPayment("icici");
+      else if (d.cod) setPayment("cod");
     }).catch(() => {});
   }, []);
 
@@ -808,8 +810,10 @@ export default function CheckoutPage() {
                 <div className="p-6 space-y-5">
                   <div className="space-y-2">
                     {([
-                      ...(paymentCfg.razorpay ? [
+                      ...(paymentCfg.razorpay && paymentCfg.upi ? [
                         { value: "upi",        label: "UPI",                 desc: "GPay, PhonePe, Paytm, BHIM" },
+                      ] : []),
+                      ...(paymentCfg.razorpay && paymentCfg.card ? [
                         { value: "card",       label: "Credit / Debit Card", desc: "Visa, Mastercard, RuPay, Amex" },
                         { value: "netbanking", label: "Net Banking",         desc: "All major banks supported" },
                       ] : []),
@@ -819,7 +823,9 @@ export default function CheckoutPage() {
                       ...(paymentCfg.icici ? [
                         { value: "icici",      label: "ICICI Eazypay",       desc: "All major cards & net banking" },
                       ] : []),
-                      { value: "cod", label: "Cash on Delivery", desc: "" },
+                      ...(paymentCfg.cod ? [
+                        { value: "cod", label: "Cash on Delivery", desc: "" },
+                      ] : []),
                     ] as { value: string; label: string; desc: string }[]).map(({ value, label, desc }) => (
                       <label key={value}
                         className="flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all"
