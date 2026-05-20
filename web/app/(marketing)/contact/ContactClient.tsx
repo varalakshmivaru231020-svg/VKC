@@ -3,41 +3,37 @@
 import { useState } from "react";
 import { Mail, Phone, MapPin, Clock, Send, Check, MessageSquare } from "lucide-react";
 
-const info = [
-  {
-    icon: Phone,
-    label: "Phone",
-    value: "+91 98765 43210",
-    sub: "Mon – Sat, 9 AM – 7 PM IST",
-    href: "tel:+919876543210",
-  },
-  {
-    icon: Mail,
-    label: "Email",
-    value: "care@vijaylakshmi.in",
-    sub: "We reply within 24 hours",
-    href: "mailto:care@vijaylakshmi.in",
-  },
-  {
-    icon: MapPin,
-    label: "Store",
-    value: "45, Usman Road, T. Nagar",
-    sub: "Chennai, Tamil Nadu 600017",
-    href: "https://maps.google.com",
-  },
-  {
-    icon: Clock,
-    label: "Hours",
-    value: "Mon – Sat: 9 AM – 8 PM",
-    sub: "Sunday: 10 AM – 6 PM",
-  },
-];
+interface Props {
+  phone: string;
+  email: string;
+  address: string;
+  city: string;
+  hoursWeekday: string;
+  hoursWeekend: string;
+  whatsappNumber: string;
+  mapsUrl: string;
+}
 
 const topics = ["Order Query", "Product Question", "Styling Advice", "Wholesale / Bulk", "Return / Exchange", "Other"];
 
 type Status = "idle" | "sending" | "sent" | "error";
 
-export default function ContactClient() {
+export default function ContactClient({
+  phone,
+  email,
+  address,
+  city,
+  hoursWeekday,
+  hoursWeekend,
+  whatsappNumber,
+  mapsUrl,
+}: Props) {
+  const info = [
+    { icon: Phone, label: "Phone", value: phone, sub: "Mon – Sat, 9 AM – 7 PM IST", href: `tel:${phone.replace(/\s/g, "")}` },
+    { icon: Mail,  label: "Email", value: email, sub: "We reply within 24 hours",    href: `mailto:${email}` },
+    { icon: MapPin,label: "Store", value: address, sub: city,                         href: mapsUrl },
+    { icon: Clock, label: "Hours", value: hoursWeekday, sub: hoursWeekend },
+  ];
   const [form, setForm] = useState({ name: "", email: "", phone: "", topic: "", message: "" });
   const [status, setStatus] = useState<Status>("idle");
 
@@ -148,7 +144,7 @@ export default function ContactClient() {
 
             {/* WhatsApp quick link */}
             <a
-              href="https://wa.me/919876543210"
+              href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`}
               target="_blank"
               rel="noopener"
               className="flex items-center gap-3 px-5 py-3.5 rounded-xl text-sm font-semibold font-body transition-all hover:shadow-md hover:-translate-y-0.5"

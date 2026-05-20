@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { sendOrderConfirmationWhatsApp } from "@/lib/whatsapp";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth();
@@ -223,5 +224,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const order = await db.order.update({ where: { id: params.id }, data });
+
+  if (status === "CONFIRMED") {
+    sendOrderConfirmationWhatsApp(order).catch(() => {});
+  }
+
   return NextResponse.json({ order });
 }

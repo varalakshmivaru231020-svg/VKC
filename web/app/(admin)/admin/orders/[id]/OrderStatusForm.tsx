@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Printer, CheckCircle2, Wallet, AlertCircle, Truck, Package } from "lucide-react";
+import { Printer, CheckCircle2, Wallet, AlertCircle, Truck, Package, ExternalLink } from "lucide-react";
 
 interface Props {
   orderId: string;
@@ -20,6 +20,9 @@ interface Props {
   returnPickedUpNotes?: string | null;
   returnRefundNotes?: string | null;
   paymentStatus?: string;
+  shiprocketEnabled?: boolean;
+  shiprocketOrderId?: string | null;
+  shiprocketShipmentId?: string | null;
   // True when the order has at least one OrderReturn row. The per-return
   // workflow lives in OrderReturnsPanel, so when this is set we hide the
   // legacy order-level return card to avoid two places to update the same
@@ -43,6 +46,9 @@ export default function OrderStatusForm({
   returnPickedUpNotes,
   returnRefundNotes,
   paymentStatus,
+  shiprocketEnabled = false,
+  shiprocketOrderId: initSROrderId,
+  shiprocketShipmentId: initSRShipmentId,
   hasReturns = false,
 }: Props) {
   const router = useRouter();
@@ -52,6 +58,13 @@ export default function OrderStatusForm({
   const [saving,     setSaving]   = useState(false);
   const [saved,      setSaved]    = useState(false);
   const [error,      setError]    = useState("");
+
+  // Shiprocket state
+  const [srOrderId,    setSrOrderId]    = useState(initSROrderId    ?? "");
+  const [srShipmentId, setSrShipmentId] = useState(initSRShipmentId ?? "");
+  const [srLoading,    setSrLoading]    = useState(false);
+  const [srError,      setSrError]      = useState("");
+  const [srAwb,        setSrAwb]        = useState("");
 
   // Refund panel state
   const [processingRefund, setProcessingRefund] = useState(false);
@@ -150,6 +163,31 @@ export default function OrderStatusForm({
       setError("Network error");
     } finally {
       setProcessingRefund(false);
+    }
+  };
+
+  const createShiprocketShipment = async () => {
+    setSrLoading(true); setSrError("");
+    try {
+      const res = await fetch("/api/admin/shiprocket", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create_shipment", orderId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setSrError(data.error ?? "Shiprocket error"); return; }
+      setSrOrderId(String(data.shiprocket_order_id ?? ""));
+      setSrShipmentId(String(data.shipment_id ?? ""));
+      if (data.awb_code) {
+        setSrAwb(data.awb_code);
+        setTracking(data.awb_code);
+        setCourier(data.courier_name ?? "");
+      }
+      router.refresh();
+    } catch {
+      setSrError("Network error");
+    } finally {
+      setSrLoading(false);
     }
   };
 
@@ -403,6 +441,31 @@ export default function OrderStatusForm({
               <p className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>
                 Enter the courier name and tracking number to dispatch the order.
               </p>
+
+              {/* Shiprocket auto-create */}
+              {shiprocketEnabled && !srOrderId && (
+                <div className="p-2.5 rounded-lg border" style={{ background: "#EFF6FF", borderColor: "#BFDBFE" }}>
+                  <p className="text-xs font-body mb-2" style={{ color: "#1D4ED8" }}>
+                    Shiprocket is enabled — auto-create shipment and get AWB:
+                  </p>
+                  <button
+                    onClick={createShiprocketShipment}
+                    disabled={srLoading}
+                    className="flex items-center gap-2 h-8 px-3 rounded-lg text-xs font-semibold font-body text-white disabled:opacity-60"
+                    style={{ background: "#1D4ED8" }}>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    {srLoading ? "Creating shipment…" : "Create Shipment via Shiprocket"}
+                  </button>
+                  {srError && <p className="text-xs mt-1" style={{ color: "var(--color-error)" }}>{srError}</p>}
+                </div>
+              )}
+              {srOrderId && (
+                <div className="p-2.5 rounded-lg border text-xs font-body" style={{ background: "#F0FDF4", borderColor: "#BBF7D0", color: "#166534" }}>
+                  ✓ Shiprocket shipment created (ID: {srOrderId})
+                  {srAwb && <> · AWB: <span className="font-mono font-medium">{srAwb}</span></>}
+                </div>
+              )}
+
               <input value={courier} onChange={(e) => { setCourier(e.target.value); setSaved(false); }}
                 placeholder="Courier name (e.g. BlueDart, DTDC, Delhivery) *"
                 className={inputCls} style={inputStyle} />

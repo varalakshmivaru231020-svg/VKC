@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { title, subtitle, imageUrl, mobileImageUrl, linkUrl, position, sortOrder, isActive } = await req.json();
+    const { title, subtitle, imageUrl, mobileImageUrl, linkUrl, position, bannerType, sortOrder, isActive } = await req.json();
     if (!title?.trim()) return NextResponse.json({ error: "Title is required" }, { status: 400 });
     if (!imageUrl?.trim()) return NextResponse.json({ error: "Image is required" }, { status: 400 });
     if (!position?.trim()) return NextResponse.json({ error: "Position is required" }, { status: 400 });
@@ -16,6 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         mobileImageUrl: mobileImageUrl || null,
         linkUrl: linkUrl || null,
         position,
+        bannerType: bannerType || "PROMOTIONAL",
         sortOrder: parseInt(sortOrder) || 0,
         isActive: isActive ?? true,
       },

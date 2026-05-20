@@ -7,6 +7,7 @@ import { QuickViewModal } from "@/components/product/QuickViewModal";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { LoginTrigger } from "@/components/auth/LoginTrigger";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { StoreSyncProvider } from "@/components/sync/StoreSyncProvider";
 import { getThemeSettings } from "@/lib/theme/server";
 import { db } from "@/lib/db";
 
@@ -68,6 +69,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
         logoUrl={siteSettings["store_logo"] || null}
         phone={siteSettings["store_phone"]}
         email={siteSettings["store_email"]}
+        whatsappNumber={siteSettings["whatsapp_number"]}
         instagram={siteSettings["social_instagram"]}
         facebook={siteSettings["social_facebook"]}
         youtube={siteSettings["social_youtube"]}
@@ -80,6 +82,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <LoginModal />
       <Suspense><LoginTrigger /></Suspense>
       <MobileBottomNav />
+      <StoreSyncProvider />
     </div>
   );
 }

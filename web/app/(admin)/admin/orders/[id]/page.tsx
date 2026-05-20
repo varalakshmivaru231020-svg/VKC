@@ -112,6 +112,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
     }
   }
 
+  // Check if Shiprocket is enabled for the "Create Shipment" button
+  const srSetting = await db.siteSetting.findUnique({ where: { key: "shiprocket_enabled" } });
+  const srEnabled = srSetting?.value === "true";
+
   // Override the chip when the latest return has already moved to REFUNDED —
   // otherwise the chip stays stuck on "Returned to Warehouse" even though
   // the order is fully refunded.
@@ -284,6 +288,9 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               returnRefundNotes={(order as any).returnRefundNotes}
               paymentStatus={order.paymentStatus}
               hasReturns={!!latestReturn}
+              shiprocketEnabled={srEnabled}
+              shiprocketOrderId={(order as any).shiprocketOrderId}
+              shiprocketShipmentId={(order as any).shiprocketShipmentId}
             />
           </div>
 
