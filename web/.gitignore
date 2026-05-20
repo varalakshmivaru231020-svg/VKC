@@ -7,7 +7,6 @@ node_modules/
 .next/
 out/
 build/
-dist/
 
 # Environment variables — NEVER commit these
 .env
@@ -18,6 +17,8 @@ dist/
 .env*.local
 
 # Prisma
+dev.db
+dev.db-journal
 prisma/dev.db
 prisma/dev.db-journal
 prisma/*.db
@@ -33,17 +34,14 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
 
 # Vercel
 .vercel
 
-# Turbo
-.turbo
+# User-uploaded media (admin uploads — must persist on server, never commit)
+public/uploads/products/*
+public/uploads/videos/*
+public/uploads/reviews/*
+!public/uploads/products/.gitkeep
+!public/uploads/videos/.gitkeep
+!public/uploads/reviews/.gitkeep
