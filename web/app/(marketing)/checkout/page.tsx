@@ -353,6 +353,7 @@ export default function CheckoutPage() {
   const [placedOrderNumber, setPlacedOrderNumber] = useState("");
   const [paymentCfg, setPaymentCfg]   = useState({ razorpay: false, cashfree: false, icici: false, cod: false });
   const [paymentCfgLoaded, setPaymentCfgLoaded] = useState(false);
+  const [cashfreeActive, setCashfreeActive] = useState(false);
 
   useEffect(() => {
     fetch("/api/payment-config", { cache: "no-store" }).then(r => r.json()).then(d => {
@@ -535,25 +536,27 @@ export default function CheckoutPage() {
 
         clearCart();
         clearCheckoutMeta();
+        setCashfreeActive(true);
 
         const cashfree = (window as any).Cashfree({
           mode: data.testMode ? "sandbox" : "production",
         });
 
-        // Open payment in modal overlay — stays on checkout page
+        // Render payment inline via Drop-In UI — stays on the same page
         cashfree.checkout({
           paymentSessionId: data.paymentSessionId,
-          redirectTarget: "_modal",
+          redirectTarget: "#cashfree-drop-in",
         }).then((result: any) => {
+          setCashfreeActive(false);
           if (result?.paymentDetails) {
             setPlacedOrderNumber(data.orderNumber);
             setOrdered(true);
             router.refresh();
           } else {
-            // User closed modal or payment failed — redirect to return page to check status
             window.location.href = `/checkout/cashfree-return?order=${data.orderNumber}`;
           }
         }).catch(() => {
+          setCashfreeActive(false);
           window.location.href = `/checkout/cashfree-return?order=${data.orderNumber}`;
         });
         return;
@@ -1255,5 +1258,17 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+
+    {/* Cashfree Drop-In overlay — renders payment form inline, no popup/new tab */}
+    {cashfreeActive && (
+      <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+        <div
+          className="relative w-full rounded-2xl overflow-auto shadow-2xl"
+          style={{ background: "white", maxWidth: 480, maxHeight: "90vh" }}
+        >
+          <div id="cashfree-drop-in" style={{ minHeight: 520 }} />
+        </div>
+      </div>
+    )}
   );
 }
