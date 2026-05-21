@@ -7,10 +7,7 @@ export async function GET() {
   const rows = await db.siteSetting.findMany({
     where: {
       key: {
-        in: [
-          "razorpay_enabled", "cashfree_enabled", "icici_enabled",
-          "cod_enabled", "upi_enabled", "card_enabled",
-        ],
+        in: ["razorpay_enabled", "cashfree_enabled", "icici_enabled", "cod_enabled"],
       },
     },
   });
@@ -22,8 +19,6 @@ export async function GET() {
     cashfree: s.cashfree_enabled === "true",
     icici:    s.icici_enabled === "true",
     cod:      (s.cod_enabled  ?? "true") === "true",
-    upi:      (s.upi_enabled  ?? "true") === "true",
-    card:     (s.card_enabled ?? "true") === "true",
   });
   res.headers.set("Cache-Control", "no-store");
   return res;

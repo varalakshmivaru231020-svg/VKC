@@ -1222,7 +1222,7 @@ function PaymentsTab() {
     icici_merchant_id: "", icici_access_code: "", icici_working_key: "",
     icici_test_mode: "true",
     // Payment methods
-    cod_enabled: "true", upi_enabled: "true", card_enabled: "true",
+    cod_enabled: "true",
   });
 
   useEffect(() => {
@@ -1244,8 +1244,6 @@ function PaymentsTab() {
         icici_working_key:  settings.icici_working_key  ?? "",
         icici_test_mode:    settings.icici_test_mode    ?? "true",
         cod_enabled:        settings.cod_enabled        ?? "true",
-        upi_enabled:        settings.upi_enabled        ?? "true",
-        card_enabled:       settings.card_enabled       ?? "true",
       }));
     });
   }, []);
@@ -1388,8 +1386,6 @@ function PaymentsTab() {
       <SectionCard title="Payment Methods" icon={CreditCard}>
         <div className="space-y-3">
           <Toggle k="cod_enabled" label="Cash on Delivery (COD)" />
-          <Toggle k="upi_enabled" label="UPI / QR Code" />
-          <Toggle k="card_enabled" label="Credit / Debit Card" />
         </div>
       </SectionCard>
 

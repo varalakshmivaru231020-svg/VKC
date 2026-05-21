@@ -347,18 +347,17 @@ export default function CheckoutPage() {
   const [useWallet, setUseWallet]         = useState(false);
 
   // Payment
-  const [payment, setPayment]   = useState<"upi" | "card" | "netbanking" | "cod" | "cashfree" | "icici">("upi");
-  const [upiId, setUpiId]       = useState("");
-  const [placing, setPlacing]         = useState(false);
+  const [payment, setPayment] = useState<"netbanking" | "cod" | "cashfree" | "icici">("netbanking");
+  const [placing, setPlacing] = useState(false);
   const [ordered, setOrdered]         = useState(false);
   const [placedOrderNumber, setPlacedOrderNumber] = useState("");
-  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: true, cashfree: false, icici: false, cod: true, upi: true, card: true });
+  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: true, cashfree: false, icici: false, cod: true });
 
   useEffect(() => {
     fetch("/api/payment-config", { cache: "no-store" }).then(r => r.json()).then(d => {
       setPaymentCfg(d);
       // default to first enabled method
-      if (d.razorpay && d.upi) setPayment("upi");
+      if (d.razorpay) setPayment("netbanking");
       else if (d.cashfree) setPayment("cashfree");
       else if (d.icici) setPayment("icici");
       else if (d.cod) setPayment("cod");
@@ -522,8 +521,8 @@ export default function CheckoutPage() {
         return;
       }
 
-      // ── Razorpay modal (UPI / Card / Net Banking) ─────────────────
-      if (["upi", "card", "netbanking"].includes(payment)) {
+      // ── Razorpay modal (Net Banking) ──────────────────────────────
+      if (payment === "netbanking") {
         const res = await fetch("/api/web/checkout/razorpay", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderPayload),
@@ -541,8 +540,6 @@ export default function CheckoutPage() {
           document.head.appendChild(s);
         });
 
-        const methodMap: Record<string, string> = { upi: "upi", card: "card", netbanking: "netbanking" };
-
         const rzp = new (window as any).Razorpay({
           key:         data.keyId,
           amount:      data.amount,
@@ -550,8 +547,7 @@ export default function CheckoutPage() {
           name:        "Vijaylakshmi Sarees",
           order_id:    data.razorpayOrderId,
           prefill:     { name: data.customerName, contact: data.customerPhone },
-          method:      methodMap[payment] ?? undefined,
-          upi_link:    upiId || undefined,
+          method:      "netbanking",
           handler: async (resp: any) => {
             const v = await fetch("/api/web/checkout/razorpay/verify", {
               method: "POST", headers: { "Content-Type": "application/json" },
@@ -879,8 +875,6 @@ export default function CheckoutPage() {
                   <div className="space-y-2">
                     {([
                       ...(paymentCfg.razorpay ? [
-                        { value: "upi",        label: "UPI",                 desc: "GPay, PhonePe, Paytm, BHIM" },
-                        { value: "card",       label: "Credit / Debit Card", desc: "Visa, Mastercard, RuPay, Amex" },
                         { value: "netbanking", label: "Net Banking",         desc: "All major banks supported" },
                       ] : []),
                       ...(paymentCfg.cashfree ? [
@@ -906,10 +900,6 @@ export default function CheckoutPage() {
                       </label>
                     ))}
                   </div>
-
-                  {payment === "upi" && (
-                    <Field label="UPI ID" value={upiId} onChange={setUpiId} placeholder="yourname@upi" />
-                  )}
 
                   <div className="flex gap-3 pt-1">
                     <Button variant="secondary" onClick={() => setStep(0)} className="shrink-0">← Back</Button>
@@ -963,7 +953,7 @@ export default function CheckoutPage() {
                         <button onClick={() => setStep(1)} className="text-xs font-medium" style={{ color: "var(--color-primary)" }}>Edit</button>
                       </div>
                       <p className="text-sm font-body" style={{ color: "var(--color-text-primary)" }}>
-                        {payment === "upi" ? `UPI · ${upiId || "—"}` : payment === "card" ? "Credit / Debit Card" : payment === "netbanking" ? "Net Banking" : payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : "Cash on Delivery"}
+                        {payment === "netbanking" ? "Net Banking" : payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : "Cash on Delivery"}
                       </p>
                     </div>
 
