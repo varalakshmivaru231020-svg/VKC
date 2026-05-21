@@ -59,6 +59,7 @@ export function LoginModal() {
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState("");
   const [countdown, setCountdown] = useState(0);
+  const [devOtp,    setDevOtp]    = useState("");
 
   // Lock body scroll when open
   useEffect(() => {
@@ -74,7 +75,7 @@ export function LoginModal() {
 
   const reset = () => {
     setPhone(""); setDialCode("+91"); setOtp(""); setName("");
-    setIsNew(false); setStep("phone"); setError(""); setCountdown(0);
+    setIsNew(false); setStep("phone"); setError(""); setCountdown(0); setDevOtp("");
   };
 
   const handleClose = () => { reset(); closeLoginModal(); };
@@ -97,6 +98,7 @@ export function LoginModal() {
       setIsNew(!!data.isNew);
       setStep("otp");
       startCountdown();
+      if (data.otp) setDevOtp(data.otp);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -231,6 +233,13 @@ export function LoginModal() {
                 </div>
               )}
 
+              {devOtp && (
+                <div className="px-3 py-2 rounded-lg text-xs font-body text-center"
+                  style={{ background: "#FEF9C3", color: "#92400E", border: "1px solid #FDE68A" }}>
+                  Dev mode — OTP: <strong>{devOtp}</strong>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium font-body text-center" style={{ color: "var(--color-text-primary)" }}>
                   Enter 6-digit OTP
@@ -251,7 +260,7 @@ export function LoginModal() {
 
               <div className="flex items-center justify-between text-sm font-body">
                 <button
-                  onClick={() => { setStep("phone"); setOtp(""); setError(""); }}
+                  onClick={() => { setStep("phone"); setOtp(""); setError(""); setDevOtp(""); }}
                   className="flex items-center gap-1 hover:underline"
                   style={{ color: "var(--color-text-muted)" }}
                 >
