@@ -523,7 +523,84 @@ export default function CheckoutPage() {
         return;
       }
 
-      // ── Default / Razorpay / COD / ICICI ─────────────────────────
+      // ── Razorpay modal (UPI / Card / Net Banking) ─────────────────
+      if (["upi", "card", "netbanking"].includes(payment)) {
+        const res = await fetch("/api/web/checkout/razorpay", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        const data = await res.json();
+        if (!res.ok) { setPlacing(false); return; }
+
+        // Load Razorpay script
+        await new Promise<void>((resolve, reject) => {
+          if ((window as any).Razorpay) { resolve(); return; }
+          const s = document.createElement("script");
+          s.src = "https://checkout.razorpay.com/v1/checkout.js";
+          s.onload = () => resolve();
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+
+        const methodMap: Record<string, string> = { upi: "upi", card: "card", netbanking: "netbanking" };
+
+        const rzp = new (window as any).Razorpay({
+          key:         data.keyId,
+          amount:      data.amount,
+          currency:    "INR",
+          name:        "Vijaylakshmi Sarees",
+          order_id:    data.razorpayOrderId,
+          prefill:     { name: data.customerName, contact: data.customerPhone },
+          method:      methodMap[payment] ?? undefined,
+          upi_link:    upiId || undefined,
+          handler: async (resp: any) => {
+            const v = await fetch("/api/web/checkout/razorpay/verify", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId:           data.orderId,
+                razorpayOrderId:   resp.razorpay_order_id,
+                razorpayPaymentId: resp.razorpay_payment_id,
+                razorpaySignature: resp.razorpay_signature,
+              }),
+            });
+            const vData = await v.json();
+            if (vData.success) {
+              clearCart(); clearCheckoutMeta();
+              setPlacedOrderNumber(vData.orderNumber);
+              setOrdered(true); router.refresh();
+            }
+          },
+          modal: { ondismiss: () => setPlacing(false) },
+        });
+        rzp.open();
+        return;
+      }
+
+      // ── ICICI Eazypay (same-tab form POST) ────────────────────────
+      if (payment === "icici") {
+        const res = await fetch("/api/web/checkout/icici", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        const data = await res.json();
+        if (!res.ok) { setPlacing(false); return; }
+        clearCart(); clearCheckoutMeta();
+        // Build a hidden form and submit it in the same tab
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = data.paymentUrl;
+        form.target = "_self";
+        [["encRequest", data.encRequest], ["access_code", data.accessCode]].forEach(([name, value]) => {
+          const inp = document.createElement("input");
+          inp.type = "hidden"; inp.name = name; inp.value = value;
+          form.appendChild(inp);
+        });
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
+
+      // ── COD ───────────────────────────────────────────────────────
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -535,7 +612,7 @@ export default function CheckoutPage() {
       clearCheckoutMeta();
       setPlacedOrderNumber(data.order.orderNumber);
       setOrdered(true);
-      router.refresh(); // invalidate router cache so orders page fetches fresh
+      router.refresh();
     } catch {
       setPlacing(false);
     }
