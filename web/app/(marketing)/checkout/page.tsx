@@ -347,18 +347,17 @@ export default function CheckoutPage() {
   const [useWallet, setUseWallet]         = useState(false);
 
   // Payment
-  const [payment, setPayment] = useState<"netbanking" | "cod" | "cashfree" | "icici">("netbanking");
+  const [payment, setPayment] = useState<"cod" | "cashfree" | "icici">("cod");
   const [placing, setPlacing] = useState(false);
   const [ordered, setOrdered]         = useState(false);
   const [placedOrderNumber, setPlacedOrderNumber] = useState("");
-  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: true, cashfree: false, icici: false, cod: true });
+  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: false, cashfree: false, icici: false, cod: false });
 
   useEffect(() => {
     fetch("/api/payment-config", { cache: "no-store" }).then(r => r.json()).then(d => {
       setPaymentCfg(d);
       // default to first enabled method
-      if (d.razorpay) setPayment("netbanking");
-      else if (d.cashfree) setPayment("cashfree");
+      if (d.cashfree) setPayment("cashfree");
       else if (d.icici) setPayment("icici");
       else if (d.cod) setPayment("cod");
     }).catch(() => {});
@@ -874,9 +873,6 @@ export default function CheckoutPage() {
                 <div className="p-6 space-y-5">
                   <div className="space-y-2">
                     {([
-                      ...(paymentCfg.razorpay ? [
-                        { value: "netbanking", label: "Net Banking",         desc: "All major banks supported" },
-                      ] : []),
                       ...(paymentCfg.cashfree ? [
                         { value: "cashfree",   label: "Pay via Cashfree",    desc: "UPI, Cards, Net Banking, Wallets" },
                       ] : []),
