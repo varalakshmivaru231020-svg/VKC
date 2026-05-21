@@ -357,7 +357,6 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     fetch("/api/payment-config", { cache: "no-store" }).then(r => r.json()).then(d => {
-      console.log("[payment-config] received:", d);
       setPaymentCfg(d);
       // auto-select first enabled method; "" means none available
       if (d.razorpay) setPayment("netbanking");
@@ -366,7 +365,7 @@ export default function CheckoutPage() {
       else if (d.cod) setPayment("cod");
       else setPayment("");
       setPaymentCfgLoaded(true);
-    }).catch((e) => { console.error("[payment-config] error:", e); setPaymentCfgLoaded(true); });
+    }).catch(() => { setPaymentCfgLoaded(true); });
   }, []);
 
 
