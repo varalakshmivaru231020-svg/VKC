@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { sendOtpViaMSG91 } from "@/lib/api/msg91";
 
 function generateOTP(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -29,12 +30,15 @@ export async function POST(req: Request) {
       data: { used: true },
     });
 
-    const code = "123456"; // Fixed OTP for testing
+    const code = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
     await db.otpCode.create({ data: { phone: normalised, code, expiresAt } });
 
     console.log(`[OTP] ${normalised} → ${code}`);
+
+    // Try to send via MSG91 — if not configured, fall back to dev mode (show OTP on screen)
+    const sent = await sendOtpViaMSG91(normalised, code);
 
     const existingUser = await db.user.findUnique({
       where: { phone: normalised },
@@ -44,6 +48,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       isNew: !existingUser,
+      // Only expose OTP in response when MSG91 is not configured (dev/testing)
+      ...(sent ? {} : { otp: code }),
     });
   } catch (err) {
     console.error("[OTP send]", err);

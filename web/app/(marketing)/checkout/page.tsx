@@ -347,20 +347,24 @@ export default function CheckoutPage() {
   const [useWallet, setUseWallet]         = useState(false);
 
   // Payment
-  const [payment, setPayment] = useState<"cod" | "cashfree" | "icici">("cod");
+  const [payment, setPayment] = useState<"cod" | "cashfree" | "icici" | "netbanking" | "">("");
   const [placing, setPlacing] = useState(false);
   const [ordered, setOrdered]         = useState(false);
   const [placedOrderNumber, setPlacedOrderNumber] = useState("");
   const [paymentCfg, setPaymentCfg]   = useState({ razorpay: false, cashfree: false, icici: false, cod: false });
+  const [paymentCfgLoaded, setPaymentCfgLoaded] = useState(false);
 
   useEffect(() => {
     fetch("/api/payment-config", { cache: "no-store" }).then(r => r.json()).then(d => {
       setPaymentCfg(d);
-      // default to first enabled method
-      if (d.cashfree) setPayment("cashfree");
+      // auto-select first enabled method; "" means none available
+      if (d.razorpay) setPayment("netbanking");
+      else if (d.cashfree) setPayment("cashfree");
       else if (d.icici) setPayment("icici");
       else if (d.cod) setPayment("cod");
-    }).catch(() => {});
+      else setPayment("");
+      setPaymentCfgLoaded(true);
+    }).catch(() => { setPaymentCfgLoaded(true); });
   }, []);
 
 
@@ -493,6 +497,7 @@ export default function CheckoutPage() {
   };
 
   const placeOrder = async () => {
+    if (!payment) return;
     setPlacing(true);
     try {
       const orderPayload = {
@@ -512,11 +517,45 @@ export default function CheckoutPage() {
           body: JSON.stringify(orderPayload),
         });
         const data = await res.json();
-        if (!res.ok) { setPlacing(false); return; }
+        if (!res.ok) {
+          alert(data.error || "Payment setup failed. Please try again.");
+          setPlacing(false);
+          return;
+        }
+
+        // Load Cashfree JS SDK
+        await new Promise<void>((resolve, reject) => {
+          if ((window as any).Cashfree) { resolve(); return; }
+          const s = document.createElement("script");
+          s.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error("Failed to load Cashfree SDK"));
+          document.head.appendChild(s);
+        });
+
         clearCart();
         clearCheckoutMeta();
-        // Redirect in same tab — direct URL, no SDK popup issue
-        window.location.href = data.paymentUrl;
+
+        const cashfree = (window as any).Cashfree({
+          mode: data.testMode ? "sandbox" : "production",
+        });
+
+        // Open payment in modal overlay — stays on checkout page
+        cashfree.checkout({
+          paymentSessionId: data.paymentSessionId,
+          redirectTarget: "_modal",
+        }).then((result: any) => {
+          if (result?.paymentDetails) {
+            setPlacedOrderNumber(data.orderNumber);
+            setOrdered(true);
+            router.refresh();
+          } else {
+            // User closed modal or payment failed — redirect to return page to check status
+            window.location.href = `/checkout/cashfree-return?order=${data.orderNumber}`;
+          }
+        }).catch(() => {
+          window.location.href = `/checkout/cashfree-return?order=${data.orderNumber}`;
+        });
         return;
       }
 
@@ -570,7 +609,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      // ── ICICI Eazypay (same-tab form POST) ────────────────────────
+      // ── ICICI Eazypay (popup window) ─────────────────────────────
       if (payment === "icici") {
         const res = await fetch("/api/web/checkout/icici", {
           method: "POST", headers: { "Content-Type": "application/json" },
@@ -578,12 +617,14 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!res.ok) { setPlacing(false); return; }
-        clearCart(); clearCheckoutMeta();
-        // Build a hidden form and submit it in the same tab
+
+        // Open popup window for ICICI payment
+        const popup = window.open("", "icici_payment", "width=700,height=750,scrollbars=yes,resizable=yes");
+
         const form = document.createElement("form");
         form.method = "POST";
         form.action = data.paymentUrl;
-        form.target = "_self";
+        form.target = popup ? "icici_payment" : "_self";
         [["encRequest", data.encRequest], ["access_code", data.accessCode]].forEach(([name, value]) => {
           const inp = document.createElement("input");
           inp.type = "hidden"; inp.name = name; inp.value = value;
@@ -591,6 +632,36 @@ export default function CheckoutPage() {
         });
         document.body.appendChild(form);
         form.submit();
+        form.remove();
+
+        if (!popup) return; // popup blocked — form submitted to _self (navigates away)
+
+        clearCart(); clearCheckoutMeta();
+
+        // Listen for popup to post result back
+        const handleMsg = (e: MessageEvent) => {
+          if (e.origin !== window.location.origin) return;
+          if (e.data?.type !== "icici_payment_complete") return;
+          window.removeEventListener("message", handleMsg);
+          clearInterval(pollTimer);
+          if (e.data.status === "success") {
+            setPlacedOrderNumber(e.data.orderNumber || data.orderNumber);
+            setOrdered(true);
+            router.refresh();
+          } else {
+            setPlacing(false);
+          }
+        };
+        window.addEventListener("message", handleMsg);
+
+        // Fallback: if user closes popup without completing
+        const pollTimer = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(pollTimer);
+            window.removeEventListener("message", handleMsg);
+            setPlacing(false);
+          }
+        }, 600);
         return;
       }
 
@@ -871,35 +942,46 @@ export default function CheckoutPage() {
                   <h2 className="text-base font-semibold font-body" style={{ color: "var(--color-text-primary)" }}>Payment Method</h2>
                 </div>
                 <div className="p-6 space-y-5">
-                  <div className="space-y-2">
-                    {([
-                      ...(paymentCfg.cashfree ? [
-                        { value: "cashfree",   label: "Pay via Cashfree",    desc: "UPI, Cards, Net Banking, Wallets" },
-                      ] : []),
-                      ...(paymentCfg.icici ? [
-                        { value: "icici",      label: "ICICI Eazypay",       desc: "All major cards & net banking" },
-                      ] : []),
-                      ...(paymentCfg.cod ? [
-                        { value: "cod", label: "Cash on Delivery", desc: "" },
-                      ] : []),
-                    ] as { value: string; label: string; desc: string }[]).map(({ value, label, desc }) => (
-                      <label key={value}
-                        className="flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all"
-                        style={{ borderColor: payment === value ? "var(--color-primary)" : "var(--color-parchment)", background: payment === value ? "var(--color-primary-50)" : "white" }}>
-                        <input type="radio" className="accent-primary" checked={payment === value} onChange={() => setPayment(value as any)} />
-                        <div>
-                          <p className="text-sm font-medium font-body" style={{ color: "var(--color-text-primary)" }}>{label}</p>
-                          {desc && (
-                            <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>{desc}</p>
-                          )}
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                  {!paymentCfgLoaded ? (
+                    <div className="flex items-center justify-center py-8">
+                      <span className="h-5 w-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    </div>
+                  ) : (() => {
+                    const methods = [
+                      ...(paymentCfg.razorpay ? [{ value: "netbanking", label: "Pay via Razorpay",   desc: "UPI, Cards, Net Banking, Wallets" }] : []),
+                      ...(paymentCfg.cashfree ? [{ value: "cashfree",   label: "Pay via Cashfree",   desc: "UPI, Cards, Net Banking, Wallets" }] : []),
+                      ...(paymentCfg.icici    ? [{ value: "icici",      label: "ICICI Eazypay",      desc: "All major cards & net banking"    }] : []),
+                      ...(paymentCfg.cod      ? [{ value: "cod",        label: "Cash on Delivery",   desc: ""                                 }] : []),
+                    ] as { value: string; label: string; desc: string }[];
+
+                    return methods.length === 0 ? (
+                      <div className="flex items-start gap-3 p-4 rounded-lg border text-sm font-body"
+                        style={{ background: "#FEF9C3", borderColor: "#FCD34D", color: "#92400E" }}>
+                        <Info className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#D97706" }} />
+                        <p>No payment methods are currently available. Please contact us to complete your order.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {methods.map(({ value, label, desc }) => (
+                          <label key={value}
+                            className="flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all"
+                            style={{ borderColor: payment === value ? "var(--color-primary)" : "var(--color-parchment)", background: payment === value ? "var(--color-primary-50)" : "white" }}>
+                            <input type="radio" className="accent-primary" checked={payment === value} onChange={() => setPayment(value as any)} />
+                            <div>
+                              <p className="text-sm font-medium font-body" style={{ color: "var(--color-text-primary)" }}>{label}</p>
+                              {desc && (
+                                <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>{desc}</p>
+                              )}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    );
+                  })()}
 
                   <div className="flex gap-3 pt-1">
                     <Button variant="secondary" onClick={() => setStep(0)} className="shrink-0">← Back</Button>
-                    <Button size="lg" className="flex-1" onClick={() => setStep(2)}>
+                    <Button size="lg" className="flex-1" disabled={!payment || !paymentCfgLoaded} onClick={() => setStep(2)}>
                       Review Order <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>
@@ -948,8 +1030,8 @@ export default function CheckoutPage() {
                         </p>
                         <button onClick={() => setStep(1)} className="text-xs font-medium" style={{ color: "var(--color-primary)" }}>Edit</button>
                       </div>
-                      <p className="text-sm font-body" style={{ color: "var(--color-text-primary)" }}>
-                        {payment === "netbanking" ? "Net Banking" : payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : "Cash on Delivery"}
+                      <p className="text-sm font-body" style={{ color: payment ? "var(--color-text-primary)" : "var(--color-error)" }}>
+                        {payment === "netbanking" ? "Razorpay" : payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : payment === "cod" ? "Cash on Delivery" : "No payment method selected"}
                       </p>
                     </div>
 
@@ -976,7 +1058,7 @@ export default function CheckoutPage() {
 
                     {/* Place order */}
                     <div className="pt-2 space-y-3">
-                      <Button size="xl" className="w-full" loading={placing} onClick={placeOrder}>
+                      <Button size="xl" className="w-full" loading={placing} disabled={!payment} onClick={placeOrder}>
                         {!placing && <Check className="mr-2 h-5 w-5" />}
                         {finalTotal === 0 ? "Place Order · Pay from Wallet" : `Place Order · ${formatINR(finalTotal)}`}
                       </Button>
@@ -1153,7 +1235,7 @@ export default function CheckoutPage() {
                 </div>
                 {walletDeduction > 0 && (
                   <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
-                    {finalTotal === 0 ? "Fully paid from wallet — no payment needed" : `${formatINR(walletDeduction)} from wallet + ${formatINR(finalTotal)} via ${payment}`}
+                    {finalTotal === 0 ? "Fully paid from wallet — no payment needed" : `${formatINR(walletDeduction)} from wallet + ${formatINR(finalTotal)} via ${payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : "COD"}`}
                   </p>
                 )}
                 <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>Inclusive of all taxes</p>
