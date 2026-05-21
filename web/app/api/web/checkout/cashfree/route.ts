@@ -90,10 +90,15 @@ export async function POST(req: NextRequest) {
   const testRow = await db.siteSetting.findUnique({ where: { key: "cashfree_test_mode" } });
   const testMode = (testRow?.value ?? "true") !== "false";
 
+  // Build the hosted checkout URL directly from payment_session_id
+  const baseCheckout = testMode
+    ? "https://payments-test.cashfree.com/order/#"
+    : "https://payments.cashfree.com/order/#";
+
   return NextResponse.json({
     orderNumber:      order.orderNumber,
     paymentSessionId: cfOrder.payment_session_id,
-    paymentLink:      cfOrder.payment_link ?? null,
+    paymentUrl:       `${baseCheckout}${cfOrder.payment_session_id}`,
     testMode,
   });
 }

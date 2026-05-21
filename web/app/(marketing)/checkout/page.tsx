@@ -517,9 +517,8 @@ export default function CheckoutPage() {
         if (!res.ok) { setPlacing(false); return; }
         clearCart();
         clearCheckoutMeta();
-        // Redirect in same tab — window.location.href is the most reliable approach
-        const redirectUrl = data.paymentLink ?? `https://${data.testMode ? "sandbox" : "api"}.cashfree.com/pg/view/sessions/${data.paymentSessionId}`;
-        window.location.href = redirectUrl;
+        // Redirect in same tab — direct URL, no SDK popup issue
+        window.location.href = data.paymentUrl;
         return;
       }
 
@@ -879,10 +878,8 @@ export default function CheckoutPage() {
                 <div className="p-6 space-y-5">
                   <div className="space-y-2">
                     {([
-                      ...(paymentCfg.razorpay && paymentCfg.upi ? [
+                      ...(paymentCfg.razorpay ? [
                         { value: "upi",        label: "UPI",                 desc: "GPay, PhonePe, Paytm, BHIM" },
-                      ] : []),
-                      ...(paymentCfg.razorpay && paymentCfg.card ? [
                         { value: "card",       label: "Credit / Debit Card", desc: "Visa, Mastercard, RuPay, Amex" },
                         { value: "netbanking", label: "Net Banking",         desc: "All major banks supported" },
                       ] : []),
