@@ -1,6 +1,6 @@
 /** Format a number as Indian Rupees: ₹1,18,500 */
-export function formatINR(amount: number): string {
-  return "₹" + amount.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+export function formatINR(amount: number | null | undefined): string {
+  return "₹" + (amount ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 export function discountPercent(original: number, sale: number): number {

@@ -347,11 +347,24 @@ export default function CheckoutPage() {
   const [useWallet, setUseWallet]         = useState(false);
 
   // Payment
-  const [payment, setPayment]   = useState<"upi" | "card" | "netbanking" | "cod">("upi");
-  const [upiId, setUpiId]       = useState("");
-  const [placing, setPlacing]         = useState(false);
+  const [payment, setPayment] = useState<"cod" | "cashfree" | "icici" | "">("");
+  const [placing, setPlacing] = useState(false);
   const [ordered, setOrdered]         = useState(false);
   const [placedOrderNumber, setPlacedOrderNumber] = useState("");
+  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: false, cashfree: false, icici: false, cod: false });
+  const [paymentCfgLoaded, setPaymentCfgLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/payment-config", { cache: "no-store" }).then(r => r.json()).then(d => {
+      setPaymentCfg(d);
+      // auto-select first enabled method; "" means none available
+      if (d.cashfree) setPayment("cashfree");
+      else if (d.icici) setPayment("icici");
+      else if (d.cod) setPayment("cod");
+      else setPayment("");
+      setPaymentCfgLoaded(true);
+    }).catch(() => { setPaymentCfgLoaded(true); });
+  }, []);
 
 
   // International shipping — derived from ?intl=1 URL param set by cart page
@@ -483,20 +496,113 @@ export default function CheckoutPage() {
   };
 
   const placeOrder = async () => {
+    if (!payment) return;
     setPlacing(true);
     try {
+      const orderPayload = {
+        address:        activeAddress,
+        paymentMethod:  payment,
+        shippingAmount: shippingCost,
+        discountAmount: discount,
+        couponCode:     coupon?.code ?? null,
+        walletAmount:   walletDeduction,
+        items,
+      };
+
+      // ── Cashfree gateway flow ──────────────────────────────────────
+      if (payment === "cashfree") {
+        const res = await fetch("/api/web/checkout/cashfree", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        const data = await res.json();
+        if (!res.ok) { setPlacing(false); return; }
+        clearCart();
+        clearCheckoutMeta();
+        // Redirect in same tab — direct URL, no SDK popup issue
+        window.location.href = data.paymentUrl;
+        return;
+      }
+
+      // ── Razorpay modal (Net Banking) ──────────────────────────────
+      if (payment === "netbanking") {
+        const res = await fetch("/api/web/checkout/razorpay", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        const data = await res.json();
+        if (!res.ok) { setPlacing(false); return; }
+
+        // Load Razorpay script
+        await new Promise<void>((resolve, reject) => {
+          if ((window as any).Razorpay) { resolve(); return; }
+          const s = document.createElement("script");
+          s.src = "https://checkout.razorpay.com/v1/checkout.js";
+          s.onload = () => resolve();
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+
+        const rzp = new (window as any).Razorpay({
+          key:         data.keyId,
+          amount:      data.amount,
+          currency:    "INR",
+          name:        "Vijaylakshmi Sarees",
+          order_id:    data.razorpayOrderId,
+          prefill:     { name: data.customerName, contact: data.customerPhone },
+          method:      "netbanking",
+          handler: async (resp: any) => {
+            const v = await fetch("/api/web/checkout/razorpay/verify", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId:           data.orderId,
+                razorpayOrderId:   resp.razorpay_order_id,
+                razorpayPaymentId: resp.razorpay_payment_id,
+                razorpaySignature: resp.razorpay_signature,
+              }),
+            });
+            const vData = await v.json();
+            if (vData.success) {
+              clearCart(); clearCheckoutMeta();
+              setPlacedOrderNumber(vData.orderNumber);
+              setOrdered(true); router.refresh();
+            }
+          },
+          modal: { ondismiss: () => setPlacing(false) },
+        });
+        rzp.open();
+        return;
+      }
+
+      // ── ICICI Eazypay (same-tab form POST) ────────────────────────
+      if (payment === "icici") {
+        const res = await fetch("/api/web/checkout/icici", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        const data = await res.json();
+        if (!res.ok) { setPlacing(false); return; }
+        clearCart(); clearCheckoutMeta();
+        // Build a hidden form and submit it in the same tab
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = data.paymentUrl;
+        form.target = "_self";
+        [["encRequest", data.encRequest], ["access_code", data.accessCode]].forEach(([name, value]) => {
+          const inp = document.createElement("input");
+          inp.type = "hidden"; inp.name = name; inp.value = value;
+          form.appendChild(inp);
+        });
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
+
+      // ── COD ───────────────────────────────────────────────────────
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address:        activeAddress,
-          paymentMethod:  payment,
-          shippingAmount: shippingCost,
-          discountAmount: discount,
-          couponCode:     coupon?.code ?? null,
-          walletAmount:   walletDeduction,
-          items,
-        }),
+        body: JSON.stringify(orderPayload),
       });
       const data = await res.json();
       if (!res.ok) { setPlacing(false); return; }
@@ -504,7 +610,7 @@ export default function CheckoutPage() {
       clearCheckoutMeta();
       setPlacedOrderNumber(data.order.orderNumber);
       setOrdered(true);
-      router.refresh(); // invalidate router cache so orders page fetches fresh
+      router.refresh();
     } catch {
       setPlacing(false);
     }
@@ -769,34 +875,45 @@ export default function CheckoutPage() {
                   <h2 className="text-base font-semibold font-body" style={{ color: "var(--color-text-primary)" }}>Payment Method</h2>
                 </div>
                 <div className="p-6 space-y-5">
-                  <div className="space-y-2">
-                    {([
-                      { value: "upi",        label: "UPI",                 desc: "GPay, PhonePe, Paytm, BHIM" },
-                      { value: "card",       label: "Credit / Debit Card", desc: "Visa, Mastercard, RuPay, Amex" },
-                      { value: "netbanking", label: "Net Banking",         desc: "All major banks supported" },
-                      { value: "cod",        label: "Cash on Delivery",    desc: "" },
-                    ] as const).map(({ value, label, desc }) => (
-                      <label key={value}
-                        className="flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all"
-                        style={{ borderColor: payment === value ? "var(--color-primary)" : "var(--color-parchment)", background: payment === value ? "var(--color-primary-50)" : "white" }}>
-                        <input type="radio" className="accent-primary" checked={payment === value} onChange={() => setPayment(value)} />
-                        <div>
-                          <p className="text-sm font-medium font-body" style={{ color: "var(--color-text-primary)" }}>{label}</p>
-                          {desc && (
-                            <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>{desc}</p>
-                          )}
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                  {!paymentCfgLoaded ? (
+                    <div className="flex items-center justify-center py-8">
+                      <span className="h-5 w-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    </div>
+                  ) : (() => {
+                    const methods = [
+                      ...(paymentCfg.cashfree ? [{ value: "cashfree", label: "Pay via Cashfree",    desc: "UPI, Cards, Net Banking, Wallets" }] : []),
+                      ...(paymentCfg.icici    ? [{ value: "icici",    label: "ICICI Eazypay",       desc: "All major cards & net banking"    }] : []),
+                      ...(paymentCfg.cod      ? [{ value: "cod",      label: "Cash on Delivery",    desc: ""                                 }] : []),
+                    ] as { value: string; label: string; desc: string }[];
 
-                  {payment === "upi" && (
-                    <Field label="UPI ID" value={upiId} onChange={setUpiId} placeholder="yourname@upi" />
-                  )}
+                    return methods.length === 0 ? (
+                      <div className="flex items-start gap-3 p-4 rounded-lg border text-sm font-body"
+                        style={{ background: "#FEF9C3", borderColor: "#FCD34D", color: "#92400E" }}>
+                        <Info className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#D97706" }} />
+                        <p>No payment methods are currently available. Please contact us to complete your order.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {methods.map(({ value, label, desc }) => (
+                          <label key={value}
+                            className="flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all"
+                            style={{ borderColor: payment === value ? "var(--color-primary)" : "var(--color-parchment)", background: payment === value ? "var(--color-primary-50)" : "white" }}>
+                            <input type="radio" className="accent-primary" checked={payment === value} onChange={() => setPayment(value as any)} />
+                            <div>
+                              <p className="text-sm font-medium font-body" style={{ color: "var(--color-text-primary)" }}>{label}</p>
+                              {desc && (
+                                <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>{desc}</p>
+                              )}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    );
+                  })()}
 
                   <div className="flex gap-3 pt-1">
                     <Button variant="secondary" onClick={() => setStep(0)} className="shrink-0">← Back</Button>
-                    <Button size="lg" className="flex-1" onClick={() => setStep(2)}>
+                    <Button size="lg" className="flex-1" disabled={!payment || !paymentCfgLoaded} onClick={() => setStep(2)}>
                       Review Order <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>
@@ -845,8 +962,8 @@ export default function CheckoutPage() {
                         </p>
                         <button onClick={() => setStep(1)} className="text-xs font-medium" style={{ color: "var(--color-primary)" }}>Edit</button>
                       </div>
-                      <p className="text-sm font-body" style={{ color: "var(--color-text-primary)" }}>
-                        {payment === "upi" ? `UPI · ${upiId || "—"}` : payment === "card" ? "Credit / Debit Card" : payment === "netbanking" ? "Net Banking" : "Cash on Delivery"}
+                      <p className="text-sm font-body" style={{ color: payment ? "var(--color-text-primary)" : "var(--color-error)" }}>
+                        {payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : payment === "cod" ? "Cash on Delivery" : "No payment method selected"}
                       </p>
                     </div>
 
@@ -873,7 +990,7 @@ export default function CheckoutPage() {
 
                     {/* Place order */}
                     <div className="pt-2 space-y-3">
-                      <Button size="xl" className="w-full" loading={placing} onClick={placeOrder}>
+                      <Button size="xl" className="w-full" loading={placing} disabled={!payment} onClick={placeOrder}>
                         {!placing && <Check className="mr-2 h-5 w-5" />}
                         {finalTotal === 0 ? "Place Order · Pay from Wallet" : `Place Order · ${formatINR(finalTotal)}`}
                       </Button>
@@ -1050,7 +1167,7 @@ export default function CheckoutPage() {
                 </div>
                 {walletDeduction > 0 && (
                   <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
-                    {finalTotal === 0 ? "Fully paid from wallet — no payment needed" : `${formatINR(walletDeduction)} from wallet + ${formatINR(finalTotal)} via ${payment}`}
+                    {finalTotal === 0 ? "Fully paid from wallet — no payment needed" : `${formatINR(walletDeduction)} from wallet + ${formatINR(finalTotal)} via ${payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : "COD"}`}
                   </p>
                 )}
                 <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>Inclusive of all taxes</p>

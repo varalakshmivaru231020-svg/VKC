@@ -136,9 +136,8 @@ export default function ReportsPage() {
         ? `type=${tab}`
         : `type=${tab}&from=${range.from}&to=${range.to}`;
       const res = await fetch(`/api/admin/reports?${qs}`);
-      if (!res.ok) throw new Error(`Server error ${res.status}`);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
+      const json = await res.json().catch(() => ({ error: `Server error ${res.status}` }));
+      if (!res.ok || 'error' in json) throw new Error(json.error || `Server error ${res.status}`);
       setData(json);
     } catch (e: any) {
       setError(e.message ?? "Failed to load report");
@@ -285,7 +284,8 @@ export default function ReportsPage() {
 
 // ─── Dashboard Tab ─────────────────────────────────────────────────────────────
 function DashboardTab({ data, card, chartCard, range, mounted }: any) {
-  const k = data.kpis;
+  const k = data?.kpis;
+  if (!k) return <p className="text-center py-8 text-sm" style={{ color: "var(--color-text-muted)" }}>No data available for selected period.</p>;
   return (
     <div className="space-y-6">
       {/* KPI Row 1 */}
@@ -451,7 +451,7 @@ function ExportBar({ onCSV, onExcel, onPDF }: { onCSV(): void; onExcel(): void; 
 // ─── Sales Summary Tab ─────────────────────────────────────────────────────────
 function SalesSummaryTab({ data, range }: any) {
   const HEADERS = ["Date", "Orders", "Revenue (₹)", "Discount (₹)", "Shipping (₹)", "Tax (₹)", "Net Revenue (₹)"];
-  const toRows = (rows: any[]) => rows.map((r: any) => [r.date, r.orders, r.revenue.toFixed(2), r.discount.toFixed(2), r.shipping.toFixed(2), r.tax.toFixed(2), r.net.toFixed(2)]);
+  const toRows = (rows: any[]) => rows.map((r: any) => [r.date, r.orders, (r.revenue ?? 0).toFixed(2), (r.discount ?? 0).toFixed(2), (r.shipping ?? 0).toFixed(2), (r.tax ?? 0).toFixed(2), (r.net ?? 0).toFixed(2)]);
   const fname = `sales_summary_${range.from}_${range.to}`;
   const { sorted, Th } = useSortedRows(data.rows ?? []);
 
@@ -523,7 +523,7 @@ function SalesSummaryTab({ data, range }: any) {
 // ─── Order Status Tab ──────────────────────────────────────────────────────────
 function OrderStatusTab({ data, range }: any) {
   const HEADERS = ["Order #", "Customer", "Items", "Amount (₹)", "Status", "Payment", "Method", "Date"];
-  const toRows = (rows: any[]) => rows.map((r: any) => [r.orderNumber, r.customer, r.items, r.amount.toFixed(2), r.status, r.paymentStatus, r.paymentMethod, r.date.slice(0, 10)]);
+  const toRows = (rows: any[]) => rows.map((r: any) => [r.orderNumber, r.customer, r.items, (r.amount ?? 0).toFixed(2), r.status, r.paymentStatus, r.paymentMethod, r.date.slice(0, 10)]);
   const fname = `order_status_${range.from}_${range.to}`;
   const { sorted, Th } = useSortedRows(data.rows ?? []);
 
@@ -579,7 +579,7 @@ function OrderStatusTab({ data, range }: any) {
 // ─── Pending Orders Tab ────────────────────────────────────────────────────────
 function PendingOrdersTab({ data, range }: any) {
   const HEADERS = ["Order #", "Customer", "Products", "Amount (₹)", "Status", "Date", "Age (Days)"];
-  const toRows = (rows: any[]) => rows.map((r: any) => [r.orderNumber, r.customer, r.products, r.amount.toFixed(2), r.status, r.date.slice(0, 10), r.ageDays]);
+  const toRows = (rows: any[]) => rows.map((r: any) => [r.orderNumber, r.customer, r.products, (r.amount ?? 0).toFixed(2), r.status, r.date.slice(0, 10), r.ageDays]);
   const fname = `pending_orders_${range.from}_${range.to}`;
   const { sorted, Th } = useSortedRows(data.rows ?? []);
 
@@ -637,7 +637,7 @@ function PendingOrdersTab({ data, range }: any) {
 // ─── Stock On Hand Tab ─────────────────────────────────────────────────────────
 function StockOnHandTab({ data }: any) {
   const HEADERS = ["Product", "Category", "Colour", "Saree Code", "Sale Price (₹)", "Cost Price (₹)", "Stock", "Reserved", "Available", "Stock Value (₹)"];
-  const toRows = (rows: any[]) => rows.map((r: any) => [r.productName, r.category, r.colorName, r.sareeCode, r.salePrice.toFixed(2), r.costPrice.toFixed(2), r.stockQty, r.reservedQty, r.availableQty, r.stockValue.toFixed(2)]);
+  const toRows = (rows: any[]) => rows.map((r: any) => [r.productName, r.category, r.colorName, r.sareeCode, (r.salePrice ?? 0).toFixed(2), (r.costPrice ?? 0).toFixed(2), r.stockQty, r.reservedQty, r.availableQty, (r.stockValue ?? 0).toFixed(2)]);
   const fname = `stock_on_hand_${new Date().toISOString().slice(0, 10)}`;
   const { sorted, Th } = useSortedRows(data.rows ?? []);
 
@@ -697,7 +697,7 @@ function StockOnHandTab({ data }: any) {
 // ─── Low Stock Tab ─────────────────────────────────────────────────────────────
 function LowStockTab({ data }: any) {
   const HEADERS = ["Product", "Category", "Colour", "Saree Code", "Sale Price (₹)", "Stock Qty", "Status"];
-  const toRows = (rows: any[]) => rows.map((r: any) => [r.productName, r.category, r.colorName, r.sareeCode, r.salePrice.toFixed(2), r.stockQty, r.status]);
+  const toRows = (rows: any[]) => rows.map((r: any) => [r.productName, r.category, r.colorName, r.sareeCode, (r.salePrice ?? 0).toFixed(2), r.stockQty, r.status]);
   const fname = `low_stock_alert_${new Date().toISOString().slice(0, 10)}`;
   const { sorted, Th } = useSortedRows(data.rows ?? []);
 
@@ -756,7 +756,7 @@ function LowStockTab({ data }: any) {
 // ─── GST Report Tab ───────────────────────────────────────────────────────────
 function GSTReportTab({ data, range }: any) {
   const HEADERS = ["Date", "Orders", "Taxable Amount (₹)", "CGST (₹)", "SGST (₹)", "Total Tax (₹)", "Invoice Total (₹)"];
-  const toRows = (rows: any[]) => rows.map((r: any) => [r.date, r.orders, r.subtotal.toFixed(2), r.cgst.toFixed(2), r.sgst.toFixed(2), r.tax.toFixed(2), r.total.toFixed(2)]);
+  const toRows = (rows: any[]) => rows.map((r: any) => [r.date, r.orders, (r.subtotal ?? 0).toFixed(2), (r.cgst ?? 0).toFixed(2), (r.sgst ?? 0).toFixed(2), (r.tax ?? 0).toFixed(2), (r.total ?? 0).toFixed(2)]);
   const fname = `gst_report_${range.from}_${range.to}`;
   const { sorted, Th } = useSortedRows(data.rows ?? []);
 
