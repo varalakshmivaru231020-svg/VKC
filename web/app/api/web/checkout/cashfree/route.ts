@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     orderNumber:      order.orderNumber,
     paymentSessionId: cfOrder.payment_session_id,
+    paymentLink:      cfOrder.payment_link ?? null,
     testMode,
   });
 }

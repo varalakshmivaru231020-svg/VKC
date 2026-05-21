@@ -517,17 +517,9 @@ export default function CheckoutPage() {
         if (!res.ok) { setPlacing(false); return; }
         clearCart();
         clearCheckoutMeta();
-        // Load Cashfree JS SDK and open checkout
-        const cashfreeJs: any = await new Promise((resolve, reject) => {
-          if ((window as any).Cashfree) { resolve((window as any).Cashfree); return; }
-          const script = document.createElement("script");
-          script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
-          script.onload = () => resolve((window as any).Cashfree);
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-        const cf = cashfreeJs({ mode: data.testMode ? "sandbox" : "production" });
-        cf.checkout({ paymentSessionId: data.paymentSessionId, redirectTarget: "_self" });
+        // Redirect in same tab — window.location.href is the most reliable approach
+        const redirectUrl = data.paymentLink ?? `https://${data.testMode ? "sandbox" : "api"}.cashfree.com/pg/view/sessions/${data.paymentSessionId}`;
+        window.location.href = redirectUrl;
         return;
       }
 

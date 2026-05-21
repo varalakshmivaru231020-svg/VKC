@@ -67,7 +67,7 @@ export async function createCashfreeOrder(params: {
     const err = await res.json().catch(() => ({}));
     throw new Error(`Cashfree order creation failed: ${JSON.stringify(err)}`);
   }
-  return res.json() as Promise<{ cf_order_id: string; order_id: string; payment_session_id: string; order_status: string }>;
+  return res.json() as Promise<{ cf_order_id: string; order_id: string; payment_session_id: string; payment_link: string; order_status: string }>;
 }
 
 /** Verify Cashfree webhook signature. */
