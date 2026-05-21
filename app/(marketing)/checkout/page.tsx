@@ -347,7 +347,7 @@ export default function CheckoutPage() {
   const [useWallet, setUseWallet]         = useState(false);
 
   // Payment
-  const [payment, setPayment] = useState<"cod" | "cashfree" | "icici" | "">("");
+  const [payment, setPayment] = useState<"cod" | "cashfree" | "icici" | "netbanking" | "">("");
   const [placing, setPlacing] = useState(false);
   const [ordered, setOrdered]         = useState(false);
   const [placedOrderNumber, setPlacedOrderNumber] = useState("");
@@ -358,7 +358,8 @@ export default function CheckoutPage() {
     fetch("/api/payment-config", { cache: "no-store" }).then(r => r.json()).then(d => {
       setPaymentCfg(d);
       // auto-select first enabled method; "" means none available
-      if (d.cashfree) setPayment("cashfree");
+      if (d.razorpay) setPayment("netbanking");
+      else if (d.cashfree) setPayment("cashfree");
       else if (d.icici) setPayment("icici");
       else if (d.cod) setPayment("cod");
       else setPayment("");
@@ -915,9 +916,10 @@ export default function CheckoutPage() {
                     </div>
                   ) : (() => {
                     const methods = [
-                      ...(paymentCfg.cashfree ? [{ value: "cashfree", label: "Pay via Cashfree",    desc: "UPI, Cards, Net Banking, Wallets" }] : []),
-                      ...(paymentCfg.icici    ? [{ value: "icici",    label: "ICICI Eazypay",       desc: "All major cards & net banking"    }] : []),
-                      ...(paymentCfg.cod      ? [{ value: "cod",      label: "Cash on Delivery",    desc: ""                                 }] : []),
+                      ...(paymentCfg.razorpay ? [{ value: "netbanking", label: "Pay via Razorpay",   desc: "UPI, Cards, Net Banking, Wallets" }] : []),
+                      ...(paymentCfg.cashfree ? [{ value: "cashfree",   label: "Pay via Cashfree",   desc: "UPI, Cards, Net Banking, Wallets" }] : []),
+                      ...(paymentCfg.icici    ? [{ value: "icici",      label: "ICICI Eazypay",      desc: "All major cards & net banking"    }] : []),
+                      ...(paymentCfg.cod      ? [{ value: "cod",        label: "Cash on Delivery",   desc: ""                                 }] : []),
                     ] as { value: string; label: string; desc: string }[];
 
                     return methods.length === 0 ? (
@@ -997,7 +999,7 @@ export default function CheckoutPage() {
                         <button onClick={() => setStep(1)} className="text-xs font-medium" style={{ color: "var(--color-primary)" }}>Edit</button>
                       </div>
                       <p className="text-sm font-body" style={{ color: payment ? "var(--color-text-primary)" : "var(--color-error)" }}>
-                        {payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : payment === "cod" ? "Cash on Delivery" : "No payment method selected"}
+                        {payment === "netbanking" ? "Razorpay" : payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : payment === "cod" ? "Cash on Delivery" : "No payment method selected"}
                       </p>
                     </div>
 
