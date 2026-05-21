@@ -753,6 +753,7 @@ export default function CheckoutPage() {
   const activeAddress = getActiveAddress();
 
   return (
+    <>
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
 
       {/* Guest phone verify modal — part of delivery flow, not an interruption */}
@@ -1270,5 +1271,6 @@ export default function CheckoutPage() {
         </div>
       </div>
     )}
+    </>
   );
 }
