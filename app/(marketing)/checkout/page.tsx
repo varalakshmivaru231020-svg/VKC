@@ -516,11 +516,45 @@ export default function CheckoutPage() {
           body: JSON.stringify(orderPayload),
         });
         const data = await res.json();
-        if (!res.ok) { setPlacing(false); return; }
+        if (!res.ok) {
+          alert(data.error || "Payment setup failed. Please try again.");
+          setPlacing(false);
+          return;
+        }
+
+        // Load Cashfree JS SDK
+        await new Promise<void>((resolve, reject) => {
+          if ((window as any).Cashfree) { resolve(); return; }
+          const s = document.createElement("script");
+          s.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error("Failed to load Cashfree SDK"));
+          document.head.appendChild(s);
+        });
+
         clearCart();
         clearCheckoutMeta();
-        // Redirect in same tab — direct URL, no SDK popup issue
-        window.location.href = data.paymentUrl;
+
+        const cashfree = (window as any).Cashfree({
+          mode: data.testMode ? "sandbox" : "production",
+        });
+
+        // Open payment in modal overlay — stays on checkout page
+        cashfree.checkout({
+          paymentSessionId: data.paymentSessionId,
+          redirectTarget: "_modal",
+        }).then((result: any) => {
+          if (result?.paymentDetails) {
+            setPlacedOrderNumber(data.orderNumber);
+            setOrdered(true);
+            router.refresh();
+          } else {
+            // User closed modal or payment failed — redirect to return page to check status
+            window.location.href = `/checkout/cashfree-return?order=${data.orderNumber}`;
+          }
+        }).catch(() => {
+          window.location.href = `/checkout/cashfree-return?order=${data.orderNumber}`;
+        });
         return;
       }
 
