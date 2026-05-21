@@ -2,6 +2,7 @@
 const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
+  swcMinify: false,
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
@@ -12,6 +13,10 @@ const nextConfig = {
   },
   experimental: {
     serverActions: { allowedOrigins: ["localhost:3000"] },
+  },
+  webpack: (config) => {
+    config.parallelism = 1;
+    return config;
   },
 };
 
