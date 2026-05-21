@@ -47,3 +47,11 @@ yarn-error.log*
 
 # Turbo
 .turbo
+
+# User-uploaded files — never delete these with git clean
+public/uploads/products/
+public/uploads/reviews/
+public/uploads/videos/
+web/public/uploads/products/
+web/public/uploads/reviews/
+web/public/uploads/videos/
