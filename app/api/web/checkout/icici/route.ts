@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   const iciciData = await buildIciciPaymentData({
     orderId:        order.orderNumber,
     amount:         finalTotal,
-    redirectUrl:    `${baseUrl}/api/v1/checkout/icici/verify`,
+    redirectUrl:    `${baseUrl}/api/web/checkout/icici/verify`,
     cancelUrl:      `${baseUrl}/checkout?cancelled=1`,
     billingName:    address.fullName    ?? "",
     billingAddress: address.addressLine1 ?? "",

@@ -609,7 +609,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      // ── ICICI Eazypay (same-tab form POST) ────────────────────────
+      // ── ICICI Eazypay (popup window) ─────────────────────────────
       if (payment === "icici") {
         const res = await fetch("/api/web/checkout/icici", {
           method: "POST", headers: { "Content-Type": "application/json" },
@@ -617,12 +617,14 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!res.ok) { setPlacing(false); return; }
-        clearCart(); clearCheckoutMeta();
-        // Build a hidden form and submit it in the same tab
+
+        // Open popup window for ICICI payment
+        const popup = window.open("", "icici_payment", "width=700,height=750,scrollbars=yes,resizable=yes");
+
         const form = document.createElement("form");
         form.method = "POST";
         form.action = data.paymentUrl;
-        form.target = "_self";
+        form.target = popup ? "icici_payment" : "_self";
         [["encRequest", data.encRequest], ["access_code", data.accessCode]].forEach(([name, value]) => {
           const inp = document.createElement("input");
           inp.type = "hidden"; inp.name = name; inp.value = value;
@@ -630,6 +632,36 @@ export default function CheckoutPage() {
         });
         document.body.appendChild(form);
         form.submit();
+        form.remove();
+
+        if (!popup) return; // popup blocked — form submitted to _self (navigates away)
+
+        clearCart(); clearCheckoutMeta();
+
+        // Listen for popup to post result back
+        const handleMsg = (e: MessageEvent) => {
+          if (e.origin !== window.location.origin) return;
+          if (e.data?.type !== "icici_payment_complete") return;
+          window.removeEventListener("message", handleMsg);
+          clearInterval(pollTimer);
+          if (e.data.status === "success") {
+            setPlacedOrderNumber(e.data.orderNumber || data.orderNumber);
+            setOrdered(true);
+            router.refresh();
+          } else {
+            setPlacing(false);
+          }
+        };
+        window.addEventListener("message", handleMsg);
+
+        // Fallback: if user closes popup without completing
+        const pollTimer = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(pollTimer);
+            window.removeEventListener("message", handleMsg);
+            setPlacing(false);
+          }
+        }, 600);
         return;
       }
 
