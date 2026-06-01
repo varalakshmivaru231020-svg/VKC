@@ -42,7 +42,9 @@ export default function ShiprocketDialog({
   const [breadth, setBreadth] = useState("30");
   const [height,  setHeight]  = useState("5");
   const [weight,  setWeight]  = useState(String(0.5 * itemCount || 0.5));
-  const [pickup,  setPickup]  = useState(pickupPincodeDefault ?? "");
+  // Pickup pincode is FIXED — sourced from Settings → Shiprocket → Pickup
+  // Pincode. Admin can change it once in Settings; not per-shipment.
+  const pickup = pickupPincodeDefault ?? "";
 
   // Step 2 — couriers
   const [couriers, setCouriers] = useState<Courier[]>([]);
@@ -216,9 +218,12 @@ export default function ShiprocketDialog({
                   Shipping Route
                 </p>
                 <div className="grid grid-cols-2 gap-3">
-                  <NumField label="Pickup Pincode" value={pickup} onChange={setPickup} maxLength={6} />
-                  <NumField label="Delivery Pincode" value={deliveryPincode} readOnly />
+                  <NumField label="Pickup Pincode (from Settings)" value={pickup} readOnly />
+                  <NumField label="Delivery Pincode (from order)" value={deliveryPincode} readOnly />
                 </div>
+                <p className="mt-2 text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
+                  To change the pickup pincode, go to Settings → Shiprocket → Pickup Pincode.
+                </p>
                 {isCOD && (
                   <p className="mt-2 text-xs font-body inline-flex items-center gap-1.5 px-2 py-1 rounded" style={{ background: "#FEF3C7", color: "#92400E" }}>
                     <Package className="h-3 w-3" /> COD order — only COD-supporting couriers will appear
