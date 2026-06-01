@@ -92,8 +92,15 @@ export interface ShiprocketOrderPayload {
   weight: number;
 }
 
-/** Create a Shiprocket order and request AWB assignment */
-export async function createShiprocketOrder(payload: ShiprocketOrderPayload): Promise<{
+/**
+ * Create a Shiprocket order. Optionally assign a specific courier (via courierId)
+ * to skip auto-cheapest selection. Returns the SR order_id, shipment_id, and AWB
+ * info if a courier was successfully assigned.
+ */
+export async function createShiprocketOrder(
+  payload: ShiprocketOrderPayload,
+  opts: { courierId?: number } = {},
+): Promise<{
   shiprocket_order_id: number;
   shipment_id: number;
   awb_code?: string;
@@ -110,24 +117,66 @@ export async function createShiprocketOrder(payload: ShiprocketOrderPayload): Pr
     body: JSON.stringify(orderPayload),
   });
 
-  const shiprocketOrderId = orderRes.order_id as number;
-  const shipmentId = orderRes.shipment_id as number;
+  // Shiprocket returns either { order_id, shipment_id, ... } on success
+  // or { status_code: 422, message: "..." } on validation failure.
+  if (!orderRes?.order_id || !orderRes?.shipment_id) {
+    throw Object.assign(
+      new Error(`Shiprocket /orders/create/adhoc returned no order_id: ${JSON.stringify(orderRes)}`),
+      { data: orderRes },
+    );
+  }
 
-  // Auto-assign cheapest courier
+  const shiprocketOrderId = orderRes.order_id as number;
+  const shipmentId        = orderRes.shipment_id as number;
+
+  // Assign courier — pass courier_id when caller picked one explicitly,
+  // otherwise Shiprocket picks the cheapest.
   let awb_code: string | undefined;
   let courier_name: string | undefined;
   try {
+    const awbPayload: Record<string, unknown> = { shipment_id: shipmentId };
+    if (opts.courierId) awbPayload.courier_id = opts.courierId;
     const awbRes = await shiprocketFetch("/courier/assign/awb", {
       method: "POST",
-      body: JSON.stringify({ shipment_id: String(shipmentId) }),
+      body: JSON.stringify(awbPayload),
     });
-    awb_code = awbRes.response?.data?.awb_code;
+    awb_code     = awbRes.response?.data?.awb_code;
     courier_name = awbRes.response?.data?.courier_name;
-  } catch (e) {
-    console.warn("[Shiprocket] AWB auto-assign failed:", e);
+  } catch (e: any) {
+    console.warn("[Shiprocket] AWB assign failed:", e?.message ?? e);
   }
 
   return { shiprocket_order_id: shiprocketOrderId, shipment_id: shipmentId, awb_code, courier_name };
+}
+
+/**
+ * Serviceability check — returns list of couriers that can deliver between
+ * the two pincodes for the given weight. Used by the admin "pick courier" UI.
+ */
+export async function checkServiceability(args: {
+  pickupPincode:   string;
+  deliveryPincode: string;
+  weight:          number;
+  cod:             0 | 1;
+  declaredValue?:  number;
+}): Promise<Array<{
+  courier_company_id: number;
+  courier_name:       string;
+  rate:               number;
+  estimated_delivery_days: string;
+  rating:             number;
+  cod:                number;
+  is_surface:         boolean;
+}>> {
+  const params = new URLSearchParams({
+    pickup_postcode:   args.pickupPincode,
+    delivery_postcode: args.deliveryPincode,
+    weight:            String(args.weight),
+    cod:               String(args.cod),
+  });
+  if (args.declaredValue) params.set("declared_value", String(args.declaredValue));
+  const res = await shiprocketFetch(`/courier/serviceability/?${params}`);
+  return res?.data?.available_courier_companies ?? [];
 }
 
 /** Generate pickup request for a Shiprocket shipment */

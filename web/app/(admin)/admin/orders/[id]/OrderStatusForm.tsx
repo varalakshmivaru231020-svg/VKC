@@ -3,9 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Printer, CheckCircle2, Wallet, AlertCircle, Truck, Package, ExternalLink } from "lucide-react";
+import ShiprocketDialog from "./ShiprocketDialog";
 
 interface Props {
   orderId: string;
+  orderNumber: string;
+  itemCount: number;
+  deliveryPincode: string;
+  isCOD: boolean;
   currentStatus: string;
   trackingNumber: string | null;
   trackingUrl?: string | null;
@@ -23,6 +28,7 @@ interface Props {
   shiprocketEnabled?: boolean;
   shiprocketOrderId?: string | null;
   shiprocketShipmentId?: string | null;
+  pickupPincodeDefault?: string;
   // True when the order has at least one OrderReturn row. The per-return
   // workflow lives in OrderReturnsPanel, so when this is set we hide the
   // legacy order-level return card to avoid two places to update the same
@@ -32,6 +38,10 @@ interface Props {
 
 export default function OrderStatusForm({
   orderId,
+  orderNumber,
+  itemCount,
+  deliveryPincode,
+  isCOD,
   currentStatus,
   trackingNumber,
   trackingUrl: initialTrackingUrl,
@@ -49,6 +59,7 @@ export default function OrderStatusForm({
   shiprocketEnabled = false,
   shiprocketOrderId: initSROrderId,
   shiprocketShipmentId: initSRShipmentId,
+  pickupPincodeDefault,
   hasReturns = false,
 }: Props) {
   const router = useRouter();
@@ -65,6 +76,7 @@ export default function OrderStatusForm({
   const [srLoading,    setSrLoading]    = useState(false);
   const [srError,      setSrError]      = useState("");
   const [srAwb,        setSrAwb]        = useState("");
+  const [srDialogOpen, setSrDialogOpen] = useState(false);
 
   // Refund panel state
   const [processingRefund, setProcessingRefund] = useState(false);
@@ -166,30 +178,8 @@ export default function OrderStatusForm({
     }
   };
 
-  const createShiprocketShipment = async () => {
-    setSrLoading(true); setSrError("");
-    try {
-      const res = await fetch("/api/admin/shiprocket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "create_shipment", orderId }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setSrError(data.error ?? "Shiprocket error"); return; }
-      setSrOrderId(String(data.shiprocket_order_id ?? ""));
-      setSrShipmentId(String(data.shipment_id ?? ""));
-      if (data.awb_code) {
-        setSrAwb(data.awb_code);
-        setTracking(data.awb_code);
-        setCourier(data.courier_name ?? "");
-      }
-      router.refresh();
-    } catch {
-      setSrError("Network error");
-    } finally {
-      setSrLoading(false);
-    }
-  };
+  // (Legacy auto-create flow removed — admin now picks dimensions + courier
+  // via the ShiprocketDialog modal. See setSrDialogOpen.)
 
   const inputCls = "w-full h-9 px-3 border rounded-sm text-sm font-body focus:outline-none";
   const inputStyle = { borderColor: "var(--color-parchment)", background: "white" };
@@ -442,28 +432,49 @@ export default function OrderStatusForm({
                 Enter the courier name and tracking number to dispatch the order.
               </p>
 
-              {/* Shiprocket auto-create */}
+              {/* Shiprocket — opens dialog for dimensions + courier picker */}
               {shiprocketEnabled && !srOrderId && (
                 <div className="p-2.5 rounded-lg border" style={{ background: "#EFF6FF", borderColor: "#BFDBFE" }}>
                   <p className="text-xs font-body mb-2" style={{ color: "#1D4ED8" }}>
-                    Shiprocket is enabled — auto-create shipment and get AWB:
+                    Shiprocket is enabled — set dimensions and choose a courier:
                   </p>
                   <button
-                    onClick={createShiprocketShipment}
-                    disabled={srLoading}
-                    className="flex items-center gap-2 h-8 px-3 rounded-lg text-xs font-semibold font-body text-white disabled:opacity-60"
+                    onClick={() => setSrDialogOpen(true)}
+                    className="flex items-center gap-2 h-8 px-3 rounded-lg text-xs font-semibold font-body text-white"
                     style={{ background: "#1D4ED8" }}>
                     <ExternalLink className="h-3.5 w-3.5" />
-                    {srLoading ? "Creating shipment…" : "Create Shipment via Shiprocket"}
+                    Create Shipment via Shiprocket
                   </button>
                   {srError && <p className="text-xs mt-1" style={{ color: "var(--color-error)" }}>{srError}</p>}
                 </div>
               )}
-              {srOrderId && (
+              {srOrderId && srOrderId !== "undefined" && (
                 <div className="p-2.5 rounded-lg border text-xs font-body" style={{ background: "#F0FDF4", borderColor: "#BBF7D0", color: "#166534" }}>
                   ✓ Shiprocket shipment created (ID: {srOrderId})
+                  {srShipmentId && <> · Shipment: {srShipmentId}</>}
                   {srAwb && <> · AWB: <span className="font-mono font-medium">{srAwb}</span></>}
                 </div>
+              )}
+
+              {srDialogOpen && (
+                <ShiprocketDialog
+                  orderId={orderId}
+                  orderNumber={orderNumber}
+                  itemCount={itemCount}
+                  deliveryPincode={deliveryPincode}
+                  pickupPincodeDefault={pickupPincodeDefault}
+                  isCOD={isCOD}
+                  onClose={() => setSrDialogOpen(false)}
+                  onCreated={(info) => {
+                    setSrOrderId(info.shiprocket_order_id);
+                    setSrShipmentId(info.shipment_id);
+                    if (info.awb_code) {
+                      setSrAwb(info.awb_code);
+                      setTracking(info.awb_code);
+                      setCourier(info.courier_name ?? "");
+                    }
+                  }}
+                />
               )}
 
               <input value={courier} onChange={(e) => { setCourier(e.target.value); setSaved(false); }}

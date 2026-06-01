@@ -273,6 +273,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
             </h2>
             <OrderStatusForm
               orderId={order.id}
+              orderNumber={order.orderNumber}
+              itemCount={order.items.reduce((s, i) => s + i.quantity, 0)}
+              deliveryPincode={(addr?.pincode ?? addr?.zip ?? "") as string}
+              isCOD={order.paymentMethod === "COD" || order.paymentMethod === "cod"}
               currentStatus={order.status}
               trackingNumber={order.trackingNumber}
               trackingUrl={order.trackingUrl}
@@ -291,6 +295,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               shiprocketEnabled={srEnabled}
               shiprocketOrderId={(order as any).shiprocketOrderId}
               shiprocketShipmentId={(order as any).shiprocketShipmentId}
+              pickupPincodeDefault={process.env.SHIPROCKET_PICKUP_PINCODE ?? "560036"}
             />
           </div>
 
