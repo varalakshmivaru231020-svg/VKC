@@ -89,7 +89,8 @@ export async function POST(req: NextRequest) {
     const addr = (order.shippingAddress ?? {}) as Record<string, string>;
     const dims = (body.dimensions ?? {}) as { length?: number; breadth?: number; height?: number; weight?: number };
     const courierId = body.courierId ? Number(body.courierId) : undefined;
-    const pickupLocation = (body.pickupLocation ?? "Primary") as string;
+    // Fall back to configured pickup location name if client didn't override
+    const pickupLocation = (body.pickupLocation ?? cfg.pickupLocation ?? "Primary") as string;
 
     const orderItems = order.items.map((item) => ({
       name: item.productName ?? "Saree",

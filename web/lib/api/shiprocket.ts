@@ -1,25 +1,37 @@
 import { db } from "@/lib/db";
 
 interface ShiprocketConfig {
-  email: string;
-  password: string;
-  enabled: boolean;
-  channelId?: string;
+  email:           string;
+  password:        string;
+  enabled:         boolean;
+  channelId?:      string;
+  pickupLocation:  string;   // exact name from Shiprocket Pickup Addresses
+  pickupPincode?:  string;
 }
 
 let _tokenCache: { token: string; expiry: number } | null = null;
 
 export async function getShiprocketConfig(): Promise<ShiprocketConfig | null> {
-  const keys = ["shiprocket_enabled", "shiprocket_email", "shiprocket_password", "shiprocket_channel_id"];
+  const keys = [
+    "shiprocket_enabled", "shiprocket_email", "shiprocket_password",
+    "shiprocket_channel_id", "shiprocket_pickup_location", "shiprocket_pickup_pincode",
+  ];
   const rows = await db.siteSetting.findMany({ where: { key: { in: keys } } });
   const s = Object.fromEntries(rows.map((r) => [r.key, r.value]));
 
-  const enabled = s.shiprocket_enabled === "true";
-  const email = s.shiprocket_email || process.env.SHIPROCKET_EMAIL || "";
+  const enabled  = s.shiprocket_enabled === "true";
+  const email    = s.shiprocket_email    || process.env.SHIPROCKET_EMAIL    || "";
   const password = s.shiprocket_password || process.env.SHIPROCKET_PASSWORD || "";
+  const pickupLocation = s.shiprocket_pickup_location || "Primary";
+  const pickupPincode  = s.shiprocket_pickup_pincode  || process.env.SHIPROCKET_PICKUP_PINCODE || undefined;
 
   if (!email || !password) return null;
-  return { email, password, enabled, channelId: s.shiprocket_channel_id || undefined };
+  // channelId must be numeric; ignore obvious junk like a pincode (6 digits)
+  // but accept other numeric-looking IDs.
+  const rawChannel = (s.shiprocket_channel_id || "").trim();
+  const channelId = /^\d{4,}$/.test(rawChannel) && rawChannel !== (s.shiprocket_pickup_pincode || "") ? rawChannel : undefined;
+
+  return { email, password, enabled, channelId, pickupLocation, pickupPincode };
 }
 
 async function getToken(cfg: ShiprocketConfig): Promise<string> {

@@ -1217,10 +1217,16 @@ function PaymentsTab() {
     cashfree_enabled: "false",
     cashfree_app_id: "", cashfree_secret_key: "",
     cashfree_test_mode: "true",
-    // ICICI Eazypay
-    icici_enabled: "false",
-    icici_merchant_id: "", icici_access_code: "", icici_working_key: "",
-    icici_test_mode: "true",
+    // ICICI PG Direct (Phicommerce) — replaces legacy Eazypay
+    icici_pg_enabled:       "false",
+    icici_pg_base_url:      "",
+    icici_pg_command_url:   "",
+    icici_pg_merchant_id:   "",
+    icici_pg_aggregator_id: "",
+    icici_pg_key:           "",
+    icici_pg_return_url:    "",
+    icici_pg_allowed_modes: "",
+    icici_pg_test_mode:     "true",
     // Payment methods
     cod_enabled: "true",
   });
@@ -1238,12 +1244,16 @@ function PaymentsTab() {
         cashfree_app_id:    settings.cashfree_app_id    ?? "",
         cashfree_secret_key: settings.cashfree_secret_key ?? "",
         cashfree_test_mode: settings.cashfree_test_mode ?? "true",
-        icici_enabled:      settings.icici_enabled      ?? "false",
-        icici_merchant_id:  settings.icici_merchant_id  ?? "",
-        icici_access_code:  settings.icici_access_code  ?? "",
-        icici_working_key:  settings.icici_working_key  ?? "",
-        icici_test_mode:    settings.icici_test_mode    ?? "true",
-        cod_enabled:        settings.cod_enabled        ?? "true",
+        icici_pg_enabled:       settings.icici_pg_enabled       ?? "false",
+        icici_pg_base_url:      settings.icici_pg_base_url      ?? "",
+        icici_pg_command_url:   settings.icici_pg_command_url   ?? "",
+        icici_pg_merchant_id:   settings.icici_pg_merchant_id   ?? "",
+        icici_pg_aggregator_id: settings.icici_pg_aggregator_id ?? "",
+        icici_pg_key:           settings.icici_pg_key           ?? "",
+        icici_pg_return_url:    settings.icici_pg_return_url    ?? "",
+        icici_pg_allowed_modes: settings.icici_pg_allowed_modes ?? "",
+        icici_pg_test_mode:     settings.icici_pg_test_mode     ?? "true",
+        cod_enabled:            settings.cod_enabled            ?? "true",
       }));
     });
   }, []);
@@ -1345,39 +1355,66 @@ function PaymentsTab() {
         </div>
       </SectionCard>
 
-      {/* ── ICICI Eazypay ── */}
-      <SectionCard title="ICICI Eazypay" icon={CreditCard}>
+      {/* ── ICICI PG Direct (Phicommerce v2) — replaces legacy Eazypay ── */}
+      <SectionCard title="ICICI PG Direct (Phicommerce)" icon={CreditCard}>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <GatewayBadge testKey="icici_test_mode" />
-            <Toggle k="icici_enabled" label="Enable ICICI Eazypay" />
+            <GatewayBadge testKey="icici_pg_test_mode" />
+            <Toggle k="icici_pg_enabled" label="Enable ICICI PG" />
           </div>
           <div className="pt-1 border-t" style={{ borderColor: "#F3F4F6" }}>
-            <Toggle k="icici_test_mode" label="Test Mode" />
+            <Toggle k="icici_pg_test_mode" label="Test Mode (UAT — pgpayuat URLs)" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Merchant ID</label>
-              <input value={form.icici_merchant_id}
-                onChange={e => setForm(f => ({ ...f, icici_merchant_id: e.target.value }))}
-                placeholder="ICICI Merchant ID" className={inputCls} style={inputStyle} {...focusProps} />
+              <input value={form.icici_pg_merchant_id}
+                onChange={e => setForm(f => ({ ...f, icici_pg_merchant_id: e.target.value }))}
+                placeholder="100000000007164" className={inputCls} style={inputStyle} {...focusProps} />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Access Code</label>
-              <input value={form.icici_access_code}
-                onChange={e => setForm(f => ({ ...f, icici_access_code: e.target.value }))}
-                placeholder="Access Code" className={inputCls} style={inputStyle} {...focusProps} />
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Aggregator ID</label>
+              <input value={form.icici_pg_aggregator_id}
+                onChange={e => setForm(f => ({ ...f, icici_pg_aggregator_id: e.target.value }))}
+                placeholder="A100000000007164" className={inputCls} style={inputStyle} {...focusProps} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Working Key</label>
-            <SecretInput value={form.icici_working_key}
-              onChange={v => setForm(f => ({ ...f, icici_working_key: v }))}
-              placeholder="32-character AES working key" />
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Secret Key (HMAC)</label>
+            <SecretInput value={form.icici_pg_key}
+              onChange={v => setForm(f => ({ ...f, icici_pg_key: v }))}
+              placeholder="UUID format secret key" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Return URL (public, customer redirects here)</label>
+            <input value={form.icici_pg_return_url}
+              onChange={e => setForm(f => ({ ...f, icici_pg_return_url: e.target.value }))}
+              placeholder="https://yoursite.com/api/web/checkout/icici-pg/return" className={inputCls} style={inputStyle} {...focusProps} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Base URL (override)</label>
+              <input value={form.icici_pg_base_url}
+                onChange={e => setForm(f => ({ ...f, icici_pg_base_url: e.target.value }))}
+                placeholder="Auto if blank — UAT: pgpayuat..." className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Command URL (override)</label>
+              <input value={form.icici_pg_command_url}
+                onChange={e => setForm(f => ({ ...f, icici_pg_command_url: e.target.value }))}
+                placeholder="Auto if blank" className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Allowed Payment Modes (optional CSV)</label>
+            <input value={form.icici_pg_allowed_modes}
+              onChange={e => setForm(f => ({ ...f, icici_pg_allowed_modes: e.target.value }))}
+              placeholder="CARD,NB,UPI,WALLET — leave blank for all" className={inputCls} style={inputStyle} {...focusProps} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Empty = no restriction. Listing all 4 = no restriction.</p>
           </div>
           <p className="text-xs font-body" style={{ color: "#6B7280" }}>
-            Response URL to configure in ICICI Eazypay dashboard:{" "}
-            <code className="text-xs bg-gray-100 px-1 rounded">/api/v1/checkout/icici/verify</code>
+            Verify URL to configure in ICICI dashboard:{" "}
+            <code className="text-xs bg-gray-100 px-1 rounded">/api/web/checkout/icici-pg/return</code>
           </p>
         </div>
       </SectionCard>
@@ -1404,6 +1441,8 @@ function SmsTab() {
     whatsapp_number: "",
     shiprocket_enabled: "false",
     shiprocket_email: "", shiprocket_password: "", shiprocket_channel_id: "",
+    shiprocket_pickup_location: "Primary",
+    shiprocket_pickup_pincode:  "",
   });
 
   useEffect(() => {
@@ -1418,10 +1457,12 @@ function SmsTab() {
         whatsapp_token:        settings.whatsapp_token        ?? "",
         whatsapp_phone_id:     settings.whatsapp_phone_id     ?? "",
         whatsapp_number:       settings.whatsapp_number       ?? "",
-        shiprocket_enabled:    settings.shiprocket_enabled    ?? "false",
-        shiprocket_email:      settings.shiprocket_email      ?? "",
-        shiprocket_password:   settings.shiprocket_password   ?? "",
-        shiprocket_channel_id: settings.shiprocket_channel_id ?? "",
+        shiprocket_enabled:         settings.shiprocket_enabled         ?? "false",
+        shiprocket_email:           settings.shiprocket_email           ?? "",
+        shiprocket_password:        settings.shiprocket_password        ?? "",
+        shiprocket_channel_id:      settings.shiprocket_channel_id      ?? "",
+        shiprocket_pickup_location: settings.shiprocket_pickup_location ?? "Primary",
+        shiprocket_pickup_pincode:  settings.shiprocket_pickup_pincode  ?? "",
       }));
     });
   }, []);
@@ -1518,8 +1559,18 @@ function SmsTab() {
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Channel ID <span className="font-normal text-xs" style={{ color: "#9CA3AF" }}>(optional)</span></label>
-            <input value={form.shiprocket_channel_id} onChange={u("shiprocket_channel_id")} placeholder="e.g. 123456" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
-            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Found in Shiprocket → Settings → Channels</p>
+            <input value={form.shiprocket_channel_id} onChange={u("shiprocket_channel_id")} placeholder="e.g. 123456 (numeric only)" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Numeric ID from Shiprocket → Settings → Channels. Not a pincode.</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Pickup Location Name *</label>
+            <input value={form.shiprocket_pickup_location} onChange={u("shiprocket_pickup_location")} placeholder="Primary" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Exact name (case-sensitive) from Shiprocket → Settings → Pickup Addresses</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Pickup Pincode (for serviceability)</label>
+            <input value={form.shiprocket_pickup_pincode} onChange={u("shiprocket_pickup_pincode")} placeholder="560036" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Used by the courier-picker dialog. Defaults to SHIPROCKET_PICKUP_PINCODE env var.</p>
           </div>
         </div>
         {srEnabled && (

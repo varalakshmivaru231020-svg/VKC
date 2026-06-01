@@ -112,9 +112,13 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
     }
   }
 
-  // Check if Shiprocket is enabled for the "Create Shipment" button
-  const srSetting = await db.siteSetting.findUnique({ where: { key: "shiprocket_enabled" } });
-  const srEnabled = srSetting?.value === "true";
+  // Shiprocket enable flag + pickup pincode default for the dialog
+  const srSettings = await db.siteSetting.findMany({
+    where: { key: { in: ["shiprocket_enabled", "shiprocket_pickup_pincode"] } },
+  });
+  const srMap = Object.fromEntries(srSettings.map((r) => [r.key, r.value]));
+  const srEnabled = srMap.shiprocket_enabled === "true";
+  const srPickupPincode = srMap.shiprocket_pickup_pincode || process.env.SHIPROCKET_PICKUP_PINCODE || "560036";
 
   // Override the chip when the latest return has already moved to REFUNDED —
   // otherwise the chip stays stuck on "Returned to Warehouse" even though
@@ -295,7 +299,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               shiprocketEnabled={srEnabled}
               shiprocketOrderId={(order as any).shiprocketOrderId}
               shiprocketShipmentId={(order as any).shiprocketShipmentId}
-              pickupPincodeDefault={process.env.SHIPROCKET_PICKUP_PINCODE ?? "560036"}
+              pickupPincodeDefault={srPickupPincode}
             />
           </div>
 
