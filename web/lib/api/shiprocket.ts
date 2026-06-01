@@ -79,7 +79,9 @@ export interface ShiprocketOrderPayload {
   order_date: string;
   pickup_location: string;
   billing_customer_name: string;
-  billing_last_name?: string;
+  /** REQUIRED by Shiprocket — must be present in the JSON even if empty.
+   *  Sending undefined → 422 "validation.present" error. */
+  billing_last_name: string;
   billing_address: string;
   billing_city: string;
   billing_pincode: string;

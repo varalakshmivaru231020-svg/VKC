@@ -99,13 +99,19 @@ export async function POST(req: NextRequest) {
       selling_price: Number(item.unitPrice),
     }));
 
+    // Shiprocket REQUIRES billing_last_name as a present field (even if empty
+    // string). Returning undefined → "validation.present" 422 error.
+    const nameParts  = (addr.fullName ?? "Customer").trim().split(/\s+/).filter(Boolean);
+    const firstName  = nameParts[0] ?? "Customer";
+    const lastName   = nameParts.slice(1).join(" "); // may be empty string — that's fine
+
     try {
       const result = await createShiprocketOrder({
-        order_id:        order.orderNumber,
-        order_date:      order.createdAt.toISOString().slice(0, 10),
-        pickup_location: pickupLocation,
-        billing_customer_name: addr.fullName?.split(" ")[0] ?? "Customer",
-        billing_last_name:     addr.fullName?.split(" ").slice(1).join(" ") || undefined,
+        order_id:              order.orderNumber,
+        order_date:            order.createdAt.toISOString().slice(0, 10),
+        pickup_location:       pickupLocation,
+        billing_customer_name: firstName,
+        billing_last_name:     lastName, // always present; empty string ok
         billing_address:       addr.addressLine1 ?? addr.address ?? "",
         billing_city:          addr.city ?? "",
         billing_pincode:       addr.pincode ?? addr.zip ?? "",
@@ -136,9 +142,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, ...result });
     } catch (e: any) {
       console.error("[Shiprocket] createShipment error:", e?.message ?? e, e?.data);
+
+      // When Shiprocket rejects with "Wrong Pickup location", they include the
+      // list of valid pickup locations in `data.data[]`. Surface those names so
+      // the admin can fix the setting in one click instead of guessing.
+      const data = e?.data;
+      let helpfulError = e?.message ?? "Create shipment failed";
+      if (typeof data?.message === "string" && /pickup location/i.test(data.message)) {
+        const names = Array.isArray(data?.data?.data)
+          ? data.data.data.map((p: any) => p?.pickup_location).filter(Boolean)
+          : [];
+        if (names.length) {
+          helpfulError = `${data.message}. Available pickup locations on your Shiprocket account: ${names.map((n: string) => `"${n}"`).join(", ")}. Update Settings → Shiprocket → Pickup Location Name.`;
+        }
+      } else if (data?.errors) {
+        // Validation-error case: pull field names out of { field: ["validation.xxx"] }
+        const fields = Object.keys(data.errors);
+        if (fields.length) helpfulError = `${data.message ?? "Validation failed"} — fields: ${fields.join(", ")}`;
+      }
+
       return NextResponse.json({
-        error:   e?.message ?? "Create shipment failed",
-        details: e?.data,
+        error:   helpfulError,
+        details: data,
       }, { status: 500 });
     }
   }
