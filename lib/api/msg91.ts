@@ -35,13 +35,14 @@ export async function sendOtpViaMSG91(phone: string, otp: string): Promise<boole
 
   const payload = {
     template_id: cfg.templateId,
-    mobile,
-    authkey: cfg.authKey,
-    otp,
+    sender: cfg.senderId,
+    short_url: "0",
+    mobiles: mobile,
+    OTP: otp,
   };
 
   try {
-    const res = await fetch("https://api.msg91.com/api/v5/otp", {
+    const res = await fetch("https://api.msg91.com/api/v5/flow/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

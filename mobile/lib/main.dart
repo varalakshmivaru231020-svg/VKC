@@ -5,6 +5,7 @@ import "package:hive_flutter/hive_flutter.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 import "app.dart";
+import "core/api/api_client.dart";
 import "core/storage/local_prefs.dart";
 import "features/cart/data/cart_controller.dart";
 
@@ -24,7 +25,7 @@ Future<void> main() async {
     ProviderScope(
       overrides: [
         localPrefsProvider.overrideWithValue(LocalPrefs(prefs)),
-        cartControllerProvider.overrideWith((_) => CartController(prefs)),
+        cartControllerProvider.overrideWith((ref) => CartController(prefs, ref.read(apiClientProvider))),
       ],
       child: const VijaylakshmiApp(),
     ),

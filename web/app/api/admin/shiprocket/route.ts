@@ -106,6 +106,9 @@ export async function POST(req: NextRequest) {
     const lastName   = nameParts.slice(1).join(" "); // may be empty string — that's fine
 
     try {
+      // Determine payment method based on payment status
+      const paymentMethod = order.paymentStatus === "PAID" ? "Prepaid" : order.paymentMethod === "COD" ? "COD" : "Prepaid";
+
       const result = await createShiprocketOrder({
         order_id:              order.orderNumber,
         order_date:            order.createdAt.toISOString().slice(0, 10),
@@ -117,15 +120,16 @@ export async function POST(req: NextRequest) {
         billing_pincode:       addr.pincode ?? addr.zip ?? "",
         billing_state:         addr.state ?? "",
         billing_country:       addr.country ?? "India",
+        billing_email:         addr.email || addr.billingEmail || undefined,
         billing_phone:         addr.phone ?? "",
         shipping_is_billing:   true,
         order_items:           orderItems,
-        payment_method:        order.paymentMethod === "COD" ? "COD" : "Prepaid",
+        payment_method:        paymentMethod,
         sub_total:             Number(order.totalAmount),
         length:  Number(dims.length)  || 40,
         breadth: Number(dims.breadth) || 30,
         height:  Number(dims.height)  || 5,
-        weight:  Number(dims.weight)  || 0.5 * order.items.reduce((s, i) => s + i.quantity, 0),
+        weight:  Number(dims.weight)  || Math.max(0.5, 0.5 * order.items.reduce((s, i) => s + i.quantity, 0)),
       }, { courierId });
 
       // Persist AWB + courier info back to the order
