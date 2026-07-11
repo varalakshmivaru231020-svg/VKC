@@ -12,6 +12,7 @@ import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import { useUIStore } from "@/lib/store/ui";
+import { VideoShoppingButton } from "@/components/VideoShoppingButton";
 
 export interface NavCategory {
   id: string;
@@ -61,9 +62,10 @@ interface HeaderProps {
   facebook?: string;
   youtube?: string;
   navCategories?: NavCategory[];
+  whatsappNumber?: string;
 }
 
-export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook, youtube, navCategories = [] }: HeaderProps) {
+export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook, youtube, navCategories = [], whatsappNumber }: HeaderProps) {
   const socialLinks = [
     { Icon: Instagram, href: instagram, label: "Instagram" },
     { Icon: Facebook,  href: facebook,  label: "Facebook" },
@@ -381,6 +383,11 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                     Sign In / Create Account
                   </button>
                 )}
+              </div>
+
+              {/* Video Shopping CTA */}
+              <div className="px-3 pt-3">
+                <VideoShoppingButton className="w-full justify-center" onTrigger={() => setMobileOpen(false)} whatsappNumber={whatsappNumber} />
               </div>
 
               {/* Nav items — scrollable */}

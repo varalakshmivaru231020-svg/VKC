@@ -80,6 +80,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
         facebook={siteSettings["social_facebook"]}
         youtube={siteSettings["social_youtube"]}
         navCategories={navCategories}
+        whatsappNumber={siteSettings["whatsapp_number"]}
       />
       <main><PageTransition>{children}</PageTransition></main>
       <Footer
