@@ -6,6 +6,7 @@ import { formatINR } from "@/lib/utils/format";
 import OrderStatusForm from "./OrderStatusForm";
 import OrderReturnsPanel from "./OrderReturnsPanel";
 import OrderTimeline from "./OrderTimeline";
+import PartnerTrackingPanel from "./PartnerTrackingPanel";
 import { SmartImage } from "@/components/ui/SmartImage";
 
 export const dynamic = "force-dynamic";
@@ -112,13 +113,15 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
     }
   }
 
-  // Shiprocket enable flag + pickup pincode default for the dialog
+  // Courier enable flags + pickup pincode default for the dispatch dialogs
   const srSettings = await db.siteSetting.findMany({
-    where: { key: { in: ["shiprocket_enabled", "shiprocket_pickup_pincode"] } },
+    where: { key: { in: ["shiprocket_enabled", "shiprocket_pickup_pincode", "dtdc_enabled", "delhivery_enabled"] } },
   });
   const srMap = Object.fromEntries(srSettings.map((r) => [r.key, r.value]));
   const srEnabled = srMap.shiprocket_enabled === "true";
   const srPickupPincode = srMap.shiprocket_pickup_pincode || process.env.SHIPROCKET_PICKUP_PINCODE || "560036";
+  const dtdcEnabled = srMap.dtdc_enabled === "true";
+  const delhiveryEnabled = srMap.delhivery_enabled === "true";
 
   // Override the chip when the latest return has already moved to REFUNDED —
   // otherwise the chip stays stuck on "Returned to Warehouse" even though
@@ -130,6 +133,18 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
   const addr         = order.shippingAddress as any;
   const fmtDate      = (d: Date | null) =>
     d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+
+  // Detect the courier a dispatch went through so we can show tracking +
+  // "delete dispatch" controls. Shiprocket is checked FIRST (via its dedicated
+  // id) so it isn't misread when Shiprocket assigns a courier literally named
+  // "DTDC"/"Delhivery"; the direct carriers set courierPartner to
+  // "DTDC[ · service]" / "Delhivery".
+  const srOrderIdVal = (order as any).shiprocketOrderId as string | null;
+  const partnerProvider: "dtdc" | "delhivery" | "shiprocket" | null =
+    srOrderIdVal && srOrderIdVal !== "undefined" ? "shiprocket"
+    : order.trackingNumber && order.courierPartner?.toUpperCase().startsWith("DTDC") ? "dtdc"
+    : order.trackingNumber && order.courierPartner?.toUpperCase() === "DELHIVERY" ? "delhivery"
+    : null;
 
   const customerId = order.user?.id ? order.user.id.slice(0, 8).toUpperCase() : null;
   const customerName = order.user
@@ -300,6 +315,8 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               shiprocketOrderId={(order as any).shiprocketOrderId}
               shiprocketShipmentId={(order as any).shiprocketShipmentId}
               pickupPincodeDefault={srPickupPincode}
+              dtdcEnabled={dtdcEnabled}
+              delhiveryEnabled={delhiveryEnabled}
             />
           </div>
 
@@ -431,8 +448,18 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
             )}
           </div>
 
+          {/* Courier tracking + delete-dispatch (Shiprocket / DTDC / Delhivery) */}
+          {partnerProvider && (
+            <PartnerTrackingPanel
+              provider={partnerProvider}
+              orderId={order.id}
+              awb={order.trackingNumber ?? ""}
+              courierPartner={order.courierPartner ?? (partnerProvider === "dtdc" ? "DTDC" : partnerProvider === "delhivery" ? "Delhivery" : "Shiprocket")}
+            />
+          )}
+
           {/* Tracking */}
-          {(order.trackingNumber || order.shippedAt || order.deliveredAt) && (
+          {!partnerProvider && (order.trackingNumber || order.shippedAt || order.deliveredAt) && (
             <div className="rounded-md border p-5" style={{ background: "white", borderColor: "var(--color-parchment)" }}>
               <h2 className="text-sm font-body font-semibold mb-3 flex items-center gap-2" style={{ color: "var(--color-text-primary)" }}>
                 <Truck className="h-4 w-4" /> Shipping

@@ -1443,6 +1443,16 @@ function SmsTab() {
     shiprocket_email: "", shiprocket_password: "", shiprocket_channel_id: "",
     shiprocket_pickup_location: "Primary",
     shiprocket_pickup_pincode:  "",
+    // DTDC (Shipsy) — direct carrier
+    dtdc_enabled: "false",
+    dtdc_api_key: "", dtdc_customer_code: "", dtdc_service_type: "B2C SMART EXPRESS",
+    dtdc_tracking_token: "",
+    dtdc_origin_name: "", dtdc_origin_phone: "",
+    dtdc_origin_address_1: "", dtdc_origin_address_2: "",
+    dtdc_origin_pincode: "", dtdc_origin_city: "", dtdc_origin_state: "",
+    // Delhivery — direct carrier
+    delhivery_enabled: "false",
+    delhivery_api_token: "", delhivery_pickup_name: "",
   });
 
   useEffect(() => {
@@ -1463,6 +1473,21 @@ function SmsTab() {
         shiprocket_channel_id:      settings.shiprocket_channel_id      ?? "",
         shiprocket_pickup_location: settings.shiprocket_pickup_location ?? "Primary",
         shiprocket_pickup_pincode:  settings.shiprocket_pickup_pincode  ?? "",
+        dtdc_enabled:          settings.dtdc_enabled          ?? "false",
+        dtdc_api_key:          settings.dtdc_api_key          ?? "",
+        dtdc_customer_code:    settings.dtdc_customer_code    ?? "",
+        dtdc_service_type:     settings.dtdc_service_type     ?? "B2C SMART EXPRESS",
+        dtdc_tracking_token:   settings.dtdc_tracking_token   ?? "",
+        dtdc_origin_name:      settings.dtdc_origin_name      ?? "",
+        dtdc_origin_phone:     settings.dtdc_origin_phone     ?? "",
+        dtdc_origin_address_1: settings.dtdc_origin_address_1 ?? "",
+        dtdc_origin_address_2: settings.dtdc_origin_address_2 ?? "",
+        dtdc_origin_pincode:   settings.dtdc_origin_pincode   ?? "",
+        dtdc_origin_city:      settings.dtdc_origin_city      ?? "",
+        dtdc_origin_state:     settings.dtdc_origin_state     ?? "",
+        delhivery_enabled:     settings.delhivery_enabled     ?? "false",
+        delhivery_api_token:   settings.delhivery_api_token   ?? "",
+        delhivery_pickup_name: settings.delhivery_pickup_name ?? "",
       }));
     });
   }, []);
@@ -1477,6 +1502,8 @@ function SmsTab() {
     setForm(f => ({ ...f, [k]: e.target.value }));
 
   const srEnabled = form.shiprocket_enabled === "true";
+  const dtdcEnabled = form.dtdc_enabled === "true";
+  const delhiveryEnabled = form.delhivery_enabled === "true";
 
   return (
     <div className="space-y-5">
@@ -1580,6 +1607,110 @@ function SmsTab() {
             </p>
           </div>
         )}
+      </SectionCard>
+
+      {/* ── DTDC (direct carrier) ── */}
+      <SectionCard
+        title="DTDC (Direct Courier)"
+        icon={Truck}
+        action={
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div
+              onClick={() => setForm(f => ({ ...f, dtdc_enabled: dtdcEnabled ? "false" : "true" }))}
+              className="relative w-9 h-5 rounded-full transition-all cursor-pointer"
+              style={{ background: dtdcEnabled ? "var(--color-primary)" : "#D1D5DB" }}
+            >
+              <div className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all" style={{ left: dtdcEnabled ? "18px" : "2px" }} />
+            </div>
+            <span className="text-xs font-medium font-body" style={{ color: "#6B7280" }}>{dtdcEnabled ? "Enabled" : "Disabled"}</span>
+          </label>
+        }
+      >
+        <p className="text-xs font-body mb-4" style={{ color: "#6B7280" }}>
+          Book consignments directly with DTDC (Shipsy API). When enabled, admin can dispatch orders via DTDC from the order detail page. The order/label API uses the API key; live tracking needs the separate tracking token.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>API Key *</label>
+            <SecretInput value={form.dtdc_api_key} onChange={v => setForm(f => ({ ...f, dtdc_api_key: v }))} placeholder="DTDC api-key" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Customer Code *</label>
+            <input value={form.dtdc_customer_code} onChange={u("dtdc_customer_code")} placeholder="e.g. GL1234" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Default Service Type</label>
+            <input value={form.dtdc_service_type} onChange={u("dtdc_service_type")} placeholder="B2C SMART EXPRESS" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Tracking Token <span className="font-normal text-xs" style={{ color: "#9CA3AF" }}>(for status)</span></label>
+            <SecretInput value={form.dtdc_tracking_token} onChange={v => setForm(f => ({ ...f, dtdc_tracking_token: v }))} placeholder="DTDC tracking apikey" />
+          </div>
+        </div>
+        <p className="text-xs font-semibold uppercase tracking-wider mt-5 mb-2" style={{ color: "#9CA3AF" }}>Pickup / Origin Address</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin Name *</label>
+            <input value={form.dtdc_origin_name} onChange={u("dtdc_origin_name")} placeholder="Vijaylakshmi Sarees" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin Phone *</label>
+            <input value={form.dtdc_origin_phone} onChange={u("dtdc_origin_phone")} placeholder="10-digit phone" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Address Line 1 *</label>
+            <input value={form.dtdc_origin_address_1} onChange={u("dtdc_origin_address_1")} placeholder="Street / building" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Address Line 2</label>
+            <input value={form.dtdc_origin_address_2} onChange={u("dtdc_origin_address_2")} placeholder="Area / landmark" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin Pincode *</label>
+            <input value={form.dtdc_origin_pincode} onChange={u("dtdc_origin_pincode")} placeholder="560036" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin City *</label>
+            <input value={form.dtdc_origin_city} onChange={u("dtdc_origin_city")} placeholder="Bengaluru" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin State *</label>
+            <input value={form.dtdc_origin_state} onChange={u("dtdc_origin_state")} placeholder="Karnataka" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* ── Delhivery (direct carrier) ── */}
+      <SectionCard
+        title="Delhivery (Direct Courier)"
+        icon={Truck}
+        action={
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div
+              onClick={() => setForm(f => ({ ...f, delhivery_enabled: delhiveryEnabled ? "false" : "true" }))}
+              className="relative w-9 h-5 rounded-full transition-all cursor-pointer"
+              style={{ background: delhiveryEnabled ? "var(--color-primary)" : "#D1D5DB" }}
+            >
+              <div className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all" style={{ left: delhiveryEnabled ? "18px" : "2px" }} />
+            </div>
+            <span className="text-xs font-medium font-body" style={{ color: "#6B7280" }}>{delhiveryEnabled ? "Enabled" : "Disabled"}</span>
+          </label>
+        }
+      >
+        <p className="text-xs font-body mb-4" style={{ color: "#6B7280" }}>
+          Book shipments directly with Delhivery&apos;s B2C API. The pickup location name must exactly match a registered warehouse on your Delhivery account.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>API Token *</label>
+            <SecretInput value={form.delhivery_api_token} onChange={v => setForm(f => ({ ...f, delhivery_api_token: v }))} placeholder="Delhivery API token" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Pickup Location Name *</label>
+            <input value={form.delhivery_pickup_name} onChange={u("delhivery_pickup_name")} placeholder="Registered warehouse name" className={inputCls} style={{ ...inputStyle, opacity: delhiveryEnabled ? 1 : 0.6 }} {...focusProps} disabled={!delhiveryEnabled} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Exact name (case-sensitive) from your Delhivery dashboard → Warehouses.</p>
+          </div>
+        </div>
       </SectionCard>
 
       <div className="flex justify-end"><SaveButton saved={saved} loading={loading} onClick={handleSave} /></div>

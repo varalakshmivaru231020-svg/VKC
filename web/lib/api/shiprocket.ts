@@ -214,6 +214,36 @@ export async function cancelShiprocketOrder(orderIds: number[]): Promise<any> {
   });
 }
 
+export type InternalDeliveryEvent =
+  | "PICKED_UP" | "IN_TRANSIT" | "OUT_FOR_DELIVERY" | "DELIVERED"
+  | "NDR" | "RTO_INITIATED" | "RTO_DELIVERED" | "CANCELLED" | "UNKNOWN";
+
+/** Map a Shiprocket status string to our internal delivery event. */
+export function mapShiprocketStatus(status: string | undefined | null): InternalDeliveryEvent {
+  const s = String(status ?? "").trim().toUpperCase();
+  if (!s) return "UNKNOWN";
+  if (s.includes("RTO") && s.includes("DELIVER"))       return "RTO_DELIVERED";
+  if (s.includes("RTO"))                                return "RTO_INITIATED";
+  if (s.includes("DELIVERED"))                          return "DELIVERED";
+  if (s.includes("OUT FOR DELIVERY") || s.includes("OUT_FOR_DELIVERY")) return "OUT_FOR_DELIVERY";
+  if (s.includes("IN TRANSIT") || s.includes("IN-TRANSIT") || s.includes("TRANSIT") || s.includes("SHIPPED")) return "IN_TRANSIT";
+  if (s.includes("PICKED") || s.includes("PICKUP") || s.includes("MANIFEST")) return "PICKED_UP";
+  if (s.includes("CANCEL"))                             return "CANCELLED";
+  if (s.includes("UNDELIVERED") || s.includes("NDR") || s.includes("PENDING")) return "NDR";
+  return "UNKNOWN";
+}
+
+/** Pull a human-readable current status out of Shiprocket's track response. */
+export function extractShiprocketStatus(trackResponse: any): string | null {
+  const td = trackResponse?.tracking_data ?? trackResponse;
+  return (
+    td?.shipment_track?.[0]?.current_status ??
+    td?.shipment_status ??
+    td?.track_status ??
+    null
+  ) as string | null;
+}
+
 /** Get available couriers for a shipment */
 export async function getAvailableCouriers(params: {
   pickup_postcode: string;

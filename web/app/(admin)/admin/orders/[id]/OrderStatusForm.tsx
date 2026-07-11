@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Printer, CheckCircle2, Wallet, AlertCircle, Truck, Package, ExternalLink } from "lucide-react";
 import ShiprocketDialog from "./ShiprocketDialog";
+import PartnerDispatchDialog from "./PartnerDispatchDialog";
 
 interface Props {
   orderId: string;
@@ -29,6 +30,9 @@ interface Props {
   shiprocketOrderId?: string | null;
   shiprocketShipmentId?: string | null;
   pickupPincodeDefault?: string;
+  dtdcEnabled?: boolean;
+  delhiveryEnabled?: boolean;
+  dtdcServiceTypes?: string[];
   // True when the order has at least one OrderReturn row. The per-return
   // workflow lives in OrderReturnsPanel, so when this is set we hide the
   // legacy order-level return card to avoid two places to update the same
@@ -60,6 +64,9 @@ export default function OrderStatusForm({
   shiprocketOrderId: initSROrderId,
   shiprocketShipmentId: initSRShipmentId,
   pickupPincodeDefault,
+  dtdcEnabled = false,
+  delhiveryEnabled = false,
+  dtdcServiceTypes,
   hasReturns = false,
 }: Props) {
   const router = useRouter();
@@ -77,6 +84,9 @@ export default function OrderStatusForm({
   const [srError,      setSrError]      = useState("");
   const [srAwb,        setSrAwb]        = useState("");
   const [srDialogOpen, setSrDialogOpen] = useState(false);
+
+  // Direct-carrier partner dialog (DTDC / Delhivery)
+  const [partnerDialog, setPartnerDialog] = useState<"dtdc" | "delhivery" | null>(null);
 
   // Refund panel state
   const [processingRefund, setProcessingRefund] = useState(false);
@@ -473,6 +483,53 @@ export default function OrderStatusForm({
                       setTracking(info.awb_code);
                       setCourier(info.courier_name ?? "");
                     }
+                  }}
+                />
+              )}
+
+              {/* DTDC / Delhivery — direct-carrier booking (no rate/courier picker) */}
+              {(dtdcEnabled || delhiveryEnabled) && (
+                <div className="p-2.5 rounded-lg border" style={{ background: "#FAFAF9", borderColor: "var(--color-parchment)" }}>
+                  <p className="text-xs font-body mb-2" style={{ color: "var(--color-text-secondary)" }}>
+                    Book directly with a courier partner:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {dtdcEnabled && (
+                      <button
+                        onClick={() => setPartnerDialog("dtdc")}
+                        className="flex items-center gap-2 h-8 px-3 rounded-lg text-xs font-semibold font-body text-white"
+                        style={{ background: "#B91C1C" }}>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Book via DTDC
+                      </button>
+                    )}
+                    {delhiveryEnabled && (
+                      <button
+                        onClick={() => setPartnerDialog("delhivery")}
+                        className="flex items-center gap-2 h-8 px-3 rounded-lg text-xs font-semibold font-body text-white"
+                        style={{ background: "#B45309" }}>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Book via Delhivery
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {partnerDialog && (
+                <PartnerDispatchDialog
+                  provider={partnerDialog}
+                  orderId={orderId}
+                  orderNumber={orderNumber}
+                  itemCount={itemCount}
+                  deliveryPincode={deliveryPincode}
+                  isCOD={isCOD}
+                  serviceTypes={partnerDialog === "dtdc" ? (dtdcServiceTypes ?? ["B2C SMART EXPRESS", "B2C PRIORITY"]) : undefined}
+                  onClose={() => setPartnerDialog(null)}
+                  onCreated={(info) => {
+                    setTracking(info.awb);
+                    setCourier(info.courier_name);
+                    if (info.trackingUrl) setUrl(info.trackingUrl);
                   }}
                 />
               )}

@@ -8,6 +8,8 @@ import {
   cancelShiprocketOrder,
   getShiprocketConfig,
   checkServiceability,
+  mapShiprocketStatus,
+  extractShiprocketStatus,
 } from "@/lib/api/shiprocket";
 
 export const dynamic = "force-dynamic";
@@ -184,16 +186,59 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ── CANCEL SHIPMENT ───────────────────────────────────────────────────────
-  if (action === "cancel_shipment") {
-    const { shiprocketOrderId } = body;
-    if (!shiprocketOrderId) return NextResponse.json({ error: "shiprocketOrderId required" }, { status: 400 });
+  // ── TRACK ───────────────────────────────────────────────────────────────
+  // Live status pull for an order's AWB, returning the raw Shiprocket status
+  // plus our mapped internal event (same shape as the DTDC/Delhivery routes).
+  if (action === "track") {
+    const awb = body.awb || (orderId ? (await db.order.findUnique({ where: { id: orderId }, select: { trackingNumber: true } }))?.trackingNumber : null);
+    if (!awb) return NextResponse.json({ error: "No AWB for this order" }, { status: 400 });
     try {
-      const data = await cancelShiprocketOrder([Number(shiprocketOrderId)]);
-      return NextResponse.json({ success: true, data });
+      const data = await trackShipment(awb);
+      const status = extractShiprocketStatus(data);
+      return NextResponse.json({ success: true, awb, status, mapped: mapShiprocketStatus(status) });
     } catch (e: any) {
       return NextResponse.json({ error: e.message }, { status: 500 });
     }
+  }
+
+  // ── CANCEL / DELETE DISPATCH ───────────────────────────────────────────────
+  // Cancels the order with Shiprocket AND clears the wrongly-dispatched shipment
+  // off the order (AWB, courier, shiprocket ids), reverting SHIPPED → PROCESSING
+  // so it can be re-dispatched. Accepts orderId (preferred) or a raw
+  // shiprocketOrderId. `force:true` clears locally even if the carrier cancel
+  // fails, so a bad booking never sticks.
+  if (action === "cancel_shipment") {
+    const order = orderId
+      ? await db.order.findUnique({ where: { id: orderId }, select: { status: true, shiprocketOrderId: true } })
+      : null;
+    const srOrderId = body.shiprocketOrderId ?? order?.shiprocketOrderId;
+    if (!srOrderId) return NextResponse.json({ error: "shiprocketOrderId required" }, { status: 400 });
+
+    let carrierError: string | null = null;
+    try {
+      await cancelShiprocketOrder([Number(srOrderId)]);
+    } catch (e: any) {
+      carrierError = e?.message ?? "Shiprocket cancel failed";
+      if (!body.force) {
+        return NextResponse.json({ error: carrierError, canForceClear: !!orderId }, { status: 502 });
+      }
+    }
+
+    if (orderId) {
+      await db.order.update({
+        where: { id: orderId },
+        data: {
+          trackingNumber:       null,
+          trackingUrl:          null,
+          courierPartner:       null,
+          shiprocketOrderId:    null,
+          shiprocketShipmentId: null,
+          ...(order?.status === "SHIPPED" ? { status: "PROCESSING", shippedAt: null, shippedById: null } : {}),
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true, cleared: !!orderId, carrierError });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
