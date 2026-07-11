@@ -653,23 +653,6 @@ model HeroSlide {
   @@map("hero_slides")
 }
 
-// ─── VIDEO SHOPPING ─────────────────────────────────────────────────────────────
-
-model VideoBooking {
-  id            String   @id @default(cuid())
-  name          String   @db.VarChar(150)
-  phone         String   @db.VarChar(20)
-  email         String?  @db.VarChar(200)
-  preferredDate DateTime
-  preferredTime String   @db.VarChar(50)
-  notes         String?  @db.Text
-  status        String   @default("PENDING") @db.VarChar(20) // PENDING | CONFIRMED | COMPLETED | CANCELLED
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@map("video_bookings")
-}
-
 // ─── EVENTS ─────────────────────────────────────────────────────────────────────
 
 model Event {
@@ -777,19 +760,3 @@ model SareeStoryMedia {
   @@map("saree_story_media")
 }
 
-// ─── FESTIVAL THEMES ────────────────────────────────────────────────────────────
-
-model ThemePreset {
-  id           String   @id @default(cuid())
-  name         String   @db.VarChar(100)
-  emoji        String?  @db.VarChar(10)
-  colorPrimary String   @db.VarChar(20)
-  colorGold    String   @db.VarChar(20)
-  bannerImage  String?  @db.VarChar(500)
-  bannerText   String?  @db.VarChar(300)
-  eventId      String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@map("theme_presets")
-}

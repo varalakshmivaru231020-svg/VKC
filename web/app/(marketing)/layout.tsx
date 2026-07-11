@@ -20,15 +20,55 @@ function parseFooterLinks(v: string | undefined): { label: string; href: string 
   try { const p = JSON.parse(v); return Array.isArray(p) ? p : undefined; } catch { return undefined; }
 }
 
+interface CategoryRow { id: string; name: string; slug: string; parentId: string | null }
+
+function buildNavCategories(categories: CategoryRow[], headerNavRaw: string | undefined) {
+  const byId = new Map(categories.map((c) => [c.id, c]));
+
+  let navIds: string[] = [];
+  try { navIds = headerNavRaw ? JSON.parse(headerNavRaw) : []; } catch { navIds = []; }
+  navIds = navIds.filter((id) => byId.has(id));
+
+  if (navIds.length === 0) {
+    return categories
+      .filter((c) => !c.parentId)
+      .map((c) => ({
+        id: c.id, name: c.name, slug: c.slug,
+        children: categories.filter((ch) => ch.parentId === c.id).map((ch) => ({ id: ch.id, name: ch.name, slug: ch.slug })),
+      }));
+  }
+
+  const navIdSet = new Set(navIds);
+  const topLevelIds = navIds.filter((id) => {
+    const parentId = byId.get(id)!.parentId;
+    return !parentId || !navIdSet.has(parentId);
+  });
+
+  return topLevelIds.map((id) => {
+    const cat = byId.get(id)!;
+    const children = navIds
+      .filter((cid) => byId.get(cid)!.parentId === id)
+      .map((cid) => { const c = byId.get(cid)!; return { id: c.id, name: c.name, slug: c.slug }; });
+    return { id: cat.id, name: cat.name, slug: cat.slug, children };
+  });
+}
+
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
-  const [settings, siteSettings] = await Promise.all([
+  const [settings, siteSettings, categories] = await Promise.all([
     getThemeSettings(),
     db.siteSetting.findMany().then(rows => {
       const m: Record<string, string> = {};
       rows.forEach(r => { m[r.key] = r.value; });
       return m;
     }).catch(() => ({} as Record<string, string>)),
+    db.category.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, slug: true, parentId: true },
+      orderBy: { sortOrder: "asc" },
+    }).catch(() => [] as CategoryRow[]),
   ]);
+
+  const navCategories = buildNavCategories(categories, siteSettings["header_nav"]);
 
   return (
     <div className="marketing-layout">
@@ -39,6 +79,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
         instagram={siteSettings["social_instagram"]}
         facebook={siteSettings["social_facebook"]}
         youtube={siteSettings["social_youtube"]}
+        navCategories={navCategories}
       />
       <main><PageTransition>{children}</PageTransition></main>
       <Footer

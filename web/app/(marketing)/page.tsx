@@ -8,7 +8,6 @@ import HeroSlider from "@/components/home/HeroSlider";
 import { PopupBanner } from "@/components/home/PopupBanner";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { PromoBanner } from "@/components/home/PromoBanner";
-import { getActiveFestivalPreset } from "@/lib/theme/festival";
 import { getActiveGalleryItems } from "@/lib/db/gallery";
 import { EventGallery } from "@/components/events/EventGallery";
 
@@ -73,7 +72,7 @@ const trustBadges = [
 
 export default async function HomePage() {
   const now = new Date();
-  const [, featuredProducts, dbSlides, activePopup, latestBlogs, homepageCatSetting, activeBanners, festivalPreset, galleryItems, facebookSetting] = await Promise.all([
+  const [, featuredProducts, dbSlides, activePopup, latestBlogs, homepageCatSetting, activeBanners, galleryItems, facebookSetting] = await Promise.all([
     getThemeSettings(),
     getFeaturedProducts(4),
     db.heroSlide.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }).catch(() => []),
@@ -102,7 +101,6 @@ export default async function HomePage() {
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }).catch(() => []),
-    getActiveFestivalPreset().catch(() => null),
     getActiveGalleryItems(20).catch(() => []),
     db.siteSetting.findUnique({ where: { key: "social_facebook" } }).catch(() => null),
   ]);
@@ -142,31 +140,6 @@ export default async function HomePage() {
           Welcome to Vijaylakshmi Sarees — thank you for visiting. Every weave here is chosen with care, just for you.
         </p>
       </div>
-
-      {/* ── FESTIVAL BANNER (shown when a festival theme is active) ─────────────── */}
-      {festivalPreset && (festivalPreset.bannerImage || festivalPreset.bannerText) && (
-        <Link
-          href={festivalPreset.eventSlug ? `/events/${festivalPreset.eventSlug}` : "/events"}
-          className="relative flex items-center justify-center overflow-hidden"
-          style={{ minHeight: festivalPreset.bannerImage ? 220 : "auto", background: "var(--color-primary)" }}
-        >
-          {festivalPreset.bannerImage && (
-            <SmartImage src={festivalPreset.bannerImage} alt={festivalPreset.name} fill objectFit="cover" className="opacity-90" />
-          )}
-          {(festivalPreset.bannerText || festivalPreset.name) && (
-            <div className="relative z-10 text-center px-6 py-8" style={{ background: festivalPreset.bannerImage ? "rgba(0,0,0,0.35)" : "transparent", width: "100%" }}>
-              <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] mb-1.5" style={{ color: "var(--color-gold-light)" }}>
-                {festivalPreset.emoji ? `${festivalPreset.emoji} ` : ""}{festivalPreset.name}
-              </p>
-              {festivalPreset.bannerText && (
-                <p style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.25rem, 3vw, 1.75rem)", color: "white" }}>
-                  {festivalPreset.bannerText}
-                </p>
-              )}
-            </div>
-          )}
-        </Link>
-      )}
 
       {/* ── HERO SLIDER ──────────────────────────────────────────────────────── */}
       <HeroSlider slides={heroSlides} />

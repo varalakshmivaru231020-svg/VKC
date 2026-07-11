@@ -11,6 +11,9 @@ import {
 import type { ProductOptions } from "@/lib/db/product-options";
 import { uploadImageFile } from "@/lib/utils/upload";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Props { options: ProductOptions }
 
@@ -2038,6 +2041,53 @@ function RolesTab() {
 }
 
 /* ─────────────── HEADER NAVIGATION ─────────────── */
+function SortableNavItem({
+  id, index, isLast, name, isSubcategory, onMoveUp, onMoveDown, onRemove,
+}: {
+  id: string; index: number; isLast: boolean; name: string; isSubcategory: boolean;
+  onMoveUp: () => void; onMoveDown: () => void; onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, borderColor: "#E5E7EB", background: "white" };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-3 p-3 rounded-xl border">
+      <button {...attributes} {...listeners} className="h-7 w-7 flex items-center justify-center rounded-lg shrink-0 cursor-grab active:cursor-grabbing touch-none" style={{ color: "#9CA3AF" }} aria-label="Drag to reorder">
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="w-7 h-7 flex items-center justify-center rounded-lg text-xs font-bold font-body shrink-0"
+        style={{ background: "var(--color-primary-50)", color: "var(--color-primary)" }}>
+        {index + 1}
+      </div>
+      <span className="text-sm font-medium font-body flex-1" style={{ color: "#111827" }}>
+        {name}
+        {isSubcategory && (
+          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-body" style={{ background: "#F3F4F6", color: "#9CA3AF" }}>
+            subcategory
+          </span>
+        )}
+      </span>
+      <div className="flex items-center gap-1">
+        <button onClick={onMoveUp} disabled={index === 0}
+          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-gray-50 disabled:opacity-30"
+          style={{ borderColor: "#E5E7EB" }}>
+          <ChevronUp className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
+        </button>
+        <button onClick={onMoveDown} disabled={isLast}
+          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-gray-50 disabled:opacity-30"
+          style={{ borderColor: "#E5E7EB" }}>
+          <ChevronDown className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
+        </button>
+        <button onClick={onRemove}
+          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-red-50"
+          style={{ borderColor: "#E5E7EB" }}>
+          <X className="h-3.5 w-3.5" style={{ color: "#EF4444" }} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function NavTab() {
   const [allCats, setAllCats] = useState<{ id: string; name: string; parentId: string | null; isActive: boolean }[]>([]);
   const [navIds, setNavIds] = useState<string[]>([]);
@@ -2078,6 +2128,18 @@ function NavTab() {
     const a = [...prev]; [a[i], a[i + 1]] = [a[i + 1], a[i]]; return a;
   });
 
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    setNavIds(prev => {
+      const oldIndex = prev.indexOf(active.id as string);
+      const newIndex = prev.indexOf(over.id as string);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
+
   const handleSave = async () => {
     setLoading(true);
     await fetch("/api/admin/settings", {
@@ -2113,41 +2175,17 @@ function NavTab() {
                   <p className="text-xs font-body mt-0.5" style={{ color: "#D1D5DB" }}>Add categories from the list below. If empty, all top-level categories are shown.</p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {inNav.map((cat, i) => (
-                    <div key={cat.id} className="flex items-center gap-3 p-3 rounded-xl border" style={{ borderColor: "#E5E7EB", background: "white" }}>
-                      <div className="w-7 h-7 flex items-center justify-center rounded-lg text-xs font-bold font-body shrink-0"
-                        style={{ background: "var(--color-primary-50)", color: "var(--color-primary)" }}>
-                        {i + 1}
-                      </div>
-                      <span className="text-sm font-medium font-body flex-1" style={{ color: "#111827" }}>
-                        {cat.name}
-                        {cat.parentId && (
-                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-body" style={{ background: "#F3F4F6", color: "#9CA3AF" }}>
-                            subcategory
-                          </span>
-                        )}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => moveUp(i)} disabled={i === 0}
-                          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-gray-50 disabled:opacity-30"
-                          style={{ borderColor: "#E5E7EB" }}>
-                          <ChevronUp className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
-                        </button>
-                        <button onClick={() => moveDown(i)} disabled={i === inNav.length - 1}
-                          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-gray-50 disabled:opacity-30"
-                          style={{ borderColor: "#E5E7EB" }}>
-                          <ChevronDown className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
-                        </button>
-                        <button onClick={() => remove(cat.id)}
-                          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-red-50"
-                          style={{ borderColor: "#E5E7EB" }}>
-                          <X className="h-3.5 w-3.5" style={{ color: "#EF4444" }} />
-                        </button>
-                      </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={navIds} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {inNav.map((cat, i) => (
+                        <SortableNavItem key={cat.id} id={cat.id} index={i} isLast={i === inNav.length - 1}
+                          name={cat.name} isSubcategory={!!cat.parentId}
+                          onMoveUp={() => moveUp(i)} onMoveDown={() => moveDown(i)} onRemove={() => remove(cat.id)} />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
 

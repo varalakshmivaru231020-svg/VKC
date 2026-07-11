@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Search, Heart, ShoppingBag, User, Menu, X,
+  Search, Heart, ShoppingBag, User, Menu, X, ChevronDown,
   Instagram, Facebook, Youtube, LogOut,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,20 +12,25 @@ import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import { useUIStore } from "@/lib/store/ui";
-import { VideoShoppingButton } from "@/components/VideoShoppingButton";
 
-// ── Flat top-level nav ─────────────────────────────────────────────────────────
+export interface NavCategory {
+  id: string;
+  name: string;
+  slug: string;
+  children: { id: string; name: string; slug: string }[];
+}
 
-const NAV_ITEMS = [
-  { label: "Home",           href: "/" },
-  { label: "Sarees",         href: "/category/sarees" },
-  { label: "Salwar",         href: "/category/salwar" },
-  { label: "Shop",           href: "/shop" },
-  { label: "About Us",       href: "/about" },
-  { label: "Saree Stories",  href: "/saree-stories" },
-  { label: "Events",         href: "/events" },
-  { label: "Video Sharing",  href: "/gallery" },
-  { label: "Contact",        href: "/contact" },
+// ── Static nav links — dynamic category items are spliced in between ──────────
+
+const NAV_BEFORE = [{ label: "Home", href: "/" }];
+
+const NAV_AFTER = [
+  { label: "Shop",          href: "/shop" },
+  { label: "About Us",      href: "/about" },
+  { label: "Saree Stories", href: "/saree-stories" },
+  { label: "Events",        href: "/events" },
+  { label: "Video Sharing", href: "/gallery" },
+  { label: "Contact",       href: "/contact" },
 ];
 
 // ── Animation variants ─────────────────────────────────────────────────────────
@@ -55,9 +60,10 @@ interface HeaderProps {
   instagram?: string;
   facebook?: string;
   youtube?: string;
+  navCategories?: NavCategory[];
 }
 
-export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook, youtube }: HeaderProps) {
+export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook, youtube, navCategories = [] }: HeaderProps) {
   const socialLinks = [
     { Icon: Instagram, href: instagram, label: "Instagram" },
     { Icon: Facebook,  href: facebook,  label: "Facebook" },
@@ -209,7 +215,41 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
         <div className="hidden lg:block border-b" style={{ background: "var(--color-cream)", borderColor: "var(--color-parchment)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex items-center justify-center h-11">
-              {NAV_ITEMS.map((item) => (
+              {NAV_BEFORE.map((item) => (
+                <DesktopNavLink key={item.href} href={item.href} label={item.label} isActive={isActive(item.href)} />
+              ))}
+              {navCategories.map((cat) => (
+                <div key={cat.id} className="relative group">
+                  <Link
+                    href={`/category/${cat.slug}`}
+                    className={NAV_LINK_CLS}
+                    style={{ color: isActive(`/category/${cat.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
+                  >
+                    {cat.name}
+                    {cat.children.length > 0 && <ChevronDown className="h-3 w-3 shrink-0" />}
+                  </Link>
+                  {cat.children.length > 0 && (
+                    <div
+                      className="absolute left-0 top-full hidden group-hover:block min-w-[200px] py-2 rounded-b-lg shadow-lg border-t-0 border z-10"
+                      style={{ background: "var(--color-ivory)", borderColor: "var(--color-parchment)" }}
+                    >
+                      {cat.children.map((child) => (
+                        <Link
+                          key={child.id}
+                          href={`/category/${child.slug}`}
+                          className="block px-4 py-2 text-[13px] font-body whitespace-nowrap transition-colors"
+                          style={{ color: isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)"; e.currentTarget.style.background = "transparent"; }}
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {NAV_AFTER.map((item) => (
                 <DesktopNavLink key={item.href} href={item.href} label={item.label} isActive={isActive(item.href)} />
               ))}
             </nav>
@@ -343,14 +383,56 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                 )}
               </div>
 
-              {/* Video Shopping CTA */}
-              <div className="px-3 pt-3">
-                <VideoShoppingButton className="w-full justify-center" onTrigger={() => setMobileOpen(false)} />
-              </div>
-
               {/* Nav items — scrollable */}
               <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
-                {NAV_ITEMS.map((item) => (
+                {NAV_BEFORE.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-3 py-3 rounded-lg text-[15px] font-body font-medium transition-all"
+                    style={{
+                      color: isActive(item.href) ? "var(--color-primary)" : "var(--color-text-primary)",
+                      background: isActive(item.href) ? "var(--color-primary-50)" : "transparent",
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                {navCategories.map((cat) => (
+                  <div key={cat.id}>
+                    <Link
+                      href={`/category/${cat.slug}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="block px-3 py-3 rounded-lg text-[15px] font-body font-medium transition-all"
+                      style={{
+                        color: isActive(`/category/${cat.slug}`) ? "var(--color-primary)" : "var(--color-text-primary)",
+                        background: isActive(`/category/${cat.slug}`) ? "var(--color-primary-50)" : "transparent",
+                      }}
+                    >
+                      {cat.name}
+                    </Link>
+                    {cat.children.length > 0 && (
+                      <div className="pl-4 space-y-0.5">
+                        {cat.children.map((child) => (
+                          <Link
+                            key={child.id}
+                            href={`/category/${child.slug}`}
+                            onClick={() => setMobileOpen(false)}
+                            className="block px-3 py-2 rounded-lg text-[13px] font-body transition-all"
+                            style={{
+                              color: isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                              background: isActive(`/category/${child.slug}`) ? "var(--color-primary-50)" : "transparent",
+                            }}
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {NAV_AFTER.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
