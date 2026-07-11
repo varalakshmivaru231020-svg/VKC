@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Pencil, Trash2, Eye, EyeOff, X, Save, Image as ImageIcon, Video, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, X, Save, Image as ImageIcon, Video, Loader2, Upload, AlertCircle } from "lucide-react";
+import { uploadImageFile } from "@/lib/utils/upload";
 
 interface EventMedia {
   id: string;
@@ -38,20 +39,40 @@ export default function EventsClient({ events: initial }: { events: EventRow[] }
   const [deleting, setDeleting] = useState<string | null>(null);
   const [mediaForm, setMediaForm] = useState({ type: "IMAGE", url: "", caption: "" });
   const [addingMedia, setAddingMedia] = useState(false);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverUploadError, setCoverUploadError] = useState<string | null>(null);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const coverFileRef = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof ReturnType<typeof emptyForm>) => (v: any) => setForm((f) => ({ ...f, [k]: v }));
 
-  const openAdd = () => { setForm(emptyForm()); setEditTarget(null); setModal("add"); };
+  const openAdd = () => { setForm(emptyForm()); setEditTarget(null); setCoverPreview(null); setCoverUploadError(null); setModal("add"); };
   const openEdit = (ev: EventRow) => {
     setForm({
       title: ev.title, description: ev.description ?? "", coverImage: ev.coverImage ?? "",
       isActive: ev.isActive, sortOrder: String(ev.sortOrder),
       startsAt: ev.startsAt ? ev.startsAt.slice(0, 10) : "", endsAt: ev.endsAt ? ev.endsAt.slice(0, 10) : "",
     });
+    setCoverPreview(ev.coverImage ?? null);
+    setCoverUploadError(null);
     setEditTarget(ev);
     setModal("edit");
   };
   const close = () => { setModal(null); setEditTarget(null); };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverUploadError(null);
+    setCoverPreview(URL.createObjectURL(file));
+    setCoverUploading(true);
+    const result = await uploadImageFile(file);
+    setCoverUploading(false);
+    if (!result.ok) { setCoverUploadError(`${result.error} — ${result.details}`); setCoverPreview(form.coverImage || null); return; }
+    set("coverImage")(result.url);
+    setCoverPreview(result.url);
+  };
 
   const refreshList = async () => {
     const res = await fetch("/api/admin/events");
@@ -98,6 +119,16 @@ export default function EventsClient({ events: initial }: { events: EventRow[] }
       body: JSON.stringify({ ...ev, isActive: !ev.isActive }),
     });
     if (res.ok) refreshList();
+  };
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setMediaUploading(true);
+    const result = await uploadImageFile(file);
+    setMediaUploading(false);
+    if (!result.ok) { alert(`${result.error} — ${result.details}`); return; }
+    setMediaForm((f) => ({ ...f, type: "IMAGE", url: result.url }));
   };
 
   const addMedia = async () => {
@@ -183,9 +214,31 @@ export default function EventsClient({ events: initial }: { events: EventRow[] }
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Cover Image URL</label>
-                <input value={form.coverImage} onChange={(e) => set("coverImage")(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" placeholder="https://..." />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Cover Image</label>
+                <div
+                  onClick={() => coverFileRef.current?.click()}
+                  className="relative cursor-pointer border-2 border-dashed border-gray-200 rounded-xl overflow-hidden transition-colors hover:border-primary"
+                  style={{ height: 140 }}>
+                  {coverPreview
+                    ? <img src={coverPreview} alt="preview" className="w-full h-full object-cover" />
+                    : <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-400">
+                        <Upload className="h-6 w-6" />
+                        <span className="text-sm">Click to upload image</span>
+                      </div>}
+                  {coverUploading && (
+                    <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin" style={{ color: "var(--color-primary)" }} />
+                    </div>
+                  )}
+                </div>
+                <input ref={coverFileRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+                {coverUploadError && (
+                  <div className="flex items-start gap-2 p-2.5 rounded-lg text-xs mt-1.5" style={{ background: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}>
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" /><span>{coverUploadError}</span>
+                  </div>
+                )}
+                <input value={form.coverImage} onChange={(e) => { set("coverImage")(e.target.value); setCoverPreview(e.target.value || null); }}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary mt-1.5" placeholder="or paste an image URL" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -230,8 +283,15 @@ export default function EventsClient({ events: initial }: { events: EventRow[] }
                       <option value="IMAGE">Image</option>
                       <option value="VIDEO">Video</option>
                     </select>
+                    {mediaForm.type === "IMAGE" && (
+                      <label className="shrink-0 px-3 rounded-lg text-xs font-medium border border-gray-200 flex items-center gap-1.5 cursor-pointer hover:bg-gray-50">
+                        {mediaUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                        Choose file
+                        <input type="file" accept="image/*" className="hidden" onChange={handleMediaUpload} />
+                      </label>
+                    )}
                     <input value={mediaForm.url} onChange={(e) => setMediaForm((f) => ({ ...f, url: e.target.value }))}
-                      placeholder="Media URL" className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs" />
+                      placeholder={mediaForm.type === "IMAGE" ? "or paste an image URL" : "Video URL (YouTube, Vimeo, etc.)"} className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs" />
                     <button onClick={addMedia} disabled={addingMedia} className="px-3 rounded-lg text-xs font-semibold text-white shrink-0" style={{ background: "var(--color-primary)" }}>
                       {addingMedia ? "…" : "Add"}
                     </button>

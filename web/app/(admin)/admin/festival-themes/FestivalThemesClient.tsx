@@ -87,12 +87,17 @@ export default function FestivalThemesClient({
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this festival theme?")) return;
+    const deletingActive = activeId === id;
+    const msg = deletingActive
+      ? "This theme is currently active. Deleting it will reset the site to the default theme. Continue?"
+      : "Delete this festival theme?";
+    if (!confirm(msg)) return;
     setBusyId(id);
     try {
       const res = await fetch(`/api/admin/theme-presets/${id}`, { method: "DELETE" });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error ?? "Failed"); }
       setPresets((s) => s.filter((p) => p.id !== id));
+      if (deletingActive) setActiveId(null);
     } catch (e: any) {
       alert(e.message);
     } finally {

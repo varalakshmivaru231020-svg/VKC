@@ -293,7 +293,7 @@ export function QuickViewModal() {
             {/* View full details */}
             <Link
               href={`/shop/${p.slug}`}
-              onClick={closeQuickView}
+              onClick={() => setTimeout(closeQuickView, 0)}
               className="flex items-center gap-1.5 text-sm font-body font-medium transition-colors hover:gap-2.5 mt-auto"
               style={{ color: "var(--color-primary)" }}
             >

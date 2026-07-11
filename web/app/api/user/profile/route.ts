@@ -8,7 +8,10 @@ export async function GET() {
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+    select: {
+      id: true, firstName: true, lastName: true, email: true, phone: true,
+      dob: true, anniversary: true, motherTongue: true,
+    },
   });
 
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -19,16 +22,22 @@ export async function PATCH(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { firstName, lastName, email } = await req.json();
+  const { firstName, lastName, email, dob, anniversary, motherTongue } = await req.json();
 
   const user = await db.user.update({
     where: { id: session.user.id },
     data: {
-      firstName: firstName?.trim() || null,
-      lastName:  lastName?.trim()  || null,
-      email:     email?.trim()     || null,
+      firstName:    firstName?.trim()    || null,
+      lastName:     lastName?.trim()     || null,
+      email:        email?.trim()        || null,
+      dob:          dob                  ? new Date(dob)         : null,
+      anniversary:  anniversary          ? new Date(anniversary) : null,
+      motherTongue: motherTongue?.trim() || null,
     },
-    select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+    select: {
+      id: true, firstName: true, lastName: true, email: true, phone: true,
+      dob: true, anniversary: true, motherTongue: true,
+    },
   });
 
   return NextResponse.json({ user });
