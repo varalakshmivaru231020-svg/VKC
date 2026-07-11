@@ -124,9 +124,10 @@ export function PhoneInput({
           type="tel"
           inputMode="numeric"
           value={value}
-          onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 15))}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 10))}
           onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
           placeholder={placeholder}
+          maxLength={10}
           className={`flex-1 ${height} px-3 text-sm font-body focus:outline-none bg-white rounded-r-lg`}
           style={{ color: "var(--color-text-primary)" }}
           autoFocus={autoFocus}
