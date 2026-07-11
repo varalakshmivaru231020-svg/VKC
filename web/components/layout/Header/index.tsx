@@ -1,67 +1,34 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Search, Heart, ShoppingBag, User, Menu, X,
-  ChevronDown, ChevronRight, Instagram, Facebook, Youtube, LogOut,
+  Instagram, Facebook, Youtube, LogOut,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import { useUIStore } from "@/lib/store/ui";
+import { VideoShoppingButton } from "@/components/VideoShoppingButton";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Flat top-level nav ─────────────────────────────────────────────────────────
 
-export interface NavCategory {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string | null;
-  imageUrl?: string | null;
-  children: NavCategory[];
-}
-
-// ── Static fallback nav ────────────────────────────────────────────────────────
-
-const FALLBACK_COLLECTIONS = [
-  { label: "Kanjivaram",    href: "/category/kanjivaram",  desc: "Royal silk from Tamil Nadu" },
-  { label: "Banarasi",      href: "/category/banarasi",    desc: "Opulent brocades from Varanasi" },
-  { label: "Patola",        href: "/category/patola",      desc: "Double ikat from Gujarat" },
-  { label: "Chanderi",      href: "/category/chanderi",    desc: "Gossamer weaves from MP" },
-  { label: "Tussar Silk",   href: "/category/tussar-silk", desc: "Wild silk with texture" },
-  { label: "Cotton Sarees", href: "/category/cotton",      desc: "Breathable everyday grace" },
-];
-
-const SHOP_CHILDREN = [
-  { label: "All Sarees",  href: "/shop",                   desc: "Browse the full catalogue" },
-  { label: "Wedding",     href: "/shop?occasion=wedding",  desc: "Timeless bridal elegance" },
-  { label: "Festival",    href: "/shop?occasion=festival", desc: "Celebrate every occasion" },
-  { label: "Party Wear",  href: "/shop?occasion=party",    desc: "Make every entrance count" },
-  { label: "Daily Wear",  href: "/shop?occasion=daily",    desc: "Effortless everyday looks" },
-  { label: "Sale",        href: "/shop?sale=true",         desc: "Great deals on fine weaves" },
-];
-
-const socialLinks = [
-  { Icon: Instagram, href: "#", label: "Instagram" },
-  { Icon: Facebook,  href: "#", label: "Facebook" },
-  { Icon: Youtube,   href: "#", label: "YouTube" },
+const NAV_ITEMS = [
+  { label: "Home",           href: "/" },
+  { label: "Sarees",         href: "/category/sarees" },
+  { label: "Salwar",         href: "/category/salwar" },
+  { label: "Shop",           href: "/shop" },
+  { label: "About Us",       href: "/about" },
+  { label: "Saree Stories",  href: "/saree-stories" },
+  { label: "Events",         href: "/events" },
+  { label: "Video Sharing",  href: "/gallery" },
+  { label: "Contact",        href: "/contact" },
 ];
 
 // ── Animation variants ─────────────────────────────────────────────────────────
-
-const dropdownV = {
-  hidden:  { opacity: 0, y: -6, scale: 0.97 },
-  visible: { opacity: 1, y: 0,  scale: 1,    transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] } },
-  exit:    { opacity: 0, y: -4, scale: 0.97, transition: { duration: 0.12, ease: "easeIn" } },
-};
-
-const itemV = {
-  hidden:  { opacity: 0, x: -6 },
-  visible: (i: number) => ({ opacity: 1, x: 0, transition: { delay: i * 0.04, duration: 0.15, ease: "easeOut" } }),
-};
 
 const drawerV = {
   hidden:  { x: "100%" },
@@ -80,274 +47,31 @@ const overlayV = {
 const NAV_LINK_CLS =
   "flex items-center gap-1 px-4 h-11 text-[13px] font-medium font-body transition-all duration-150 relative whitespace-nowrap select-none";
 
-// ── MegaMenu (dropdown for a single top-level DB category) ───────────────────
-
-function MegaMenu({ category, onClose }: { category: NavCategory; onClose: () => void }) {
-  const l2 = category.children;
-  const hasMega = l2.some((c) => c.children.length > 0);
-
-  if (!hasMega) {
-    return (
-      <div
-        className="rounded-xl overflow-hidden py-2"
-        style={{
-          background: "white",
-          border: "1px solid var(--color-parchment)",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
-          minWidth: 220,
-        }}
-      >
-        <div className="h-0.5 mx-3 mb-2 rounded-full" style={{ background: "linear-gradient(90deg, var(--color-primary), var(--color-gold))" }} />
-        {l2.map((child, i) => (
-          <motion.div key={child.id} custom={i} variants={itemV} initial="hidden" animate="visible">
-            <Link
-              href={`/category/${child.slug}`}
-              onClick={onClose}
-              className="flex items-start gap-3 px-4 py-2.5 transition-colors"
-              style={{ color: "var(--color-text-secondary)" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-primary-50)"; e.currentTarget.style.color = "var(--color-primary)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-text-secondary)"; }}
-            >
-              <div>
-                <p className="text-sm font-semibold font-body leading-tight whitespace-nowrap">{child.name}</p>
-                {child.description && <p className="text-xs font-body mt-0.5 leading-tight" style={{ color: "var(--color-text-muted)" }}>{child.description}</p>}
-              </div>
-            </Link>
-          </motion.div>
-        ))}
-        <div className="mt-1 pt-1 mx-4 border-t" style={{ borderColor: "var(--color-parchment)" }}>
-          <Link
-            href={`/category/${category.slug}`}
-            onClick={onClose}
-            className="flex items-center gap-1 py-2 text-xs font-body font-semibold"
-            style={{ color: "var(--color-primary)" }}
-          >
-            View All {category.name} <ChevronRight className="h-3 w-3" />
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const cols = Math.min(l2.length, 5);
-  return (
-    <div
-      className="rounded-xl overflow-hidden"
-      style={{
-        background: "white",
-        border: "1px solid var(--color-parchment)",
-        boxShadow: "0 16px 60px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
-        minWidth: cols * 172 + 48,
-        maxWidth: "80vw",
-      }}
-    >
-      <div className="h-0.5" style={{ background: "linear-gradient(90deg, var(--color-primary), var(--color-gold), var(--color-primary))" }} />
-      <div className="p-5">
-        <div className="grid gap-6" style={{ gridTemplateColumns: `repeat(${cols}, minmax(160px, 1fr))` }}>
-          {l2.map((l2cat, ci) => (
-            <motion.div key={l2cat.id} custom={ci} variants={itemV} initial="hidden" animate="visible" className="space-y-2">
-              <Link href={`/category/${l2cat.slug}`} onClick={onClose} className="block group">
-                <p
-                  className="text-[12px] font-semibold font-body uppercase tracking-wider pb-2 border-b group-hover:text-primary transition-colors"
-                  style={{ color: "var(--color-text-primary)", borderColor: "var(--color-parchment)" }}
-                >
-                  {l2cat.name}
-                </p>
-              </Link>
-              {l2cat.children.length > 0 && (
-                <ul className="space-y-1">
-                  {l2cat.children.map((l3) => (
-                    <li key={l3.id}>
-                      <Link
-                        href={`/category/${l3.slug}`}
-                        onClick={onClose}
-                        className="text-sm font-body transition-colors"
-                        style={{ color: "var(--color-text-secondary)" }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--color-primary)"; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--color-text-secondary)"; }}
-                      >
-                        {l3.name}
-                      </Link>
-                    </li>
-                  ))}
-                  <li>
-                    <Link
-                      href={`/category/${l2cat.slug}`}
-                      onClick={onClose}
-                      className="text-xs font-body font-medium flex items-center gap-0.5"
-                      style={{ color: "var(--color-primary)" }}
-                    >
-                      View All <ChevronRight className="h-3 w-3" />
-                    </Link>
-                  </li>
-                </ul>
-              )}
-            </motion.div>
-          ))}
-        </div>
-        <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: "var(--color-parchment)" }}>
-          <p className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>{category.name} Collection</p>
-          <Link
-            href={`/category/${category.slug}`}
-            onClick={onClose}
-            className="flex items-center gap-1 text-xs font-body font-semibold hover:gap-1.5 transition-all"
-            style={{ color: "var(--color-primary)" }}
-          >
-            Browse All {category.name} <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Simple list dropdown ───────────────────────────────────────────────────────
-
-function SimpleDropdown({
-  items,
-  onClose,
-}: {
-  items: Array<{ label?: string; name?: string; href?: string; slug?: string; desc?: string }>;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      className="rounded-xl overflow-hidden py-2"
-      style={{
-        background: "white",
-        border: "1px solid var(--color-parchment)",
-        boxShadow: "0 8px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
-        minWidth: 220,
-      }}
-    >
-      <div className="h-0.5 mx-3 mb-2 rounded-full" style={{ background: "linear-gradient(90deg, var(--color-primary), var(--color-gold))" }} />
-      {items.map((item, i) => {
-        const label = item.label ?? item.name ?? "";
-        const href  = item.href ?? (item.slug ? `/category/${item.slug}` : "#");
-        return (
-          <motion.div key={label} custom={i} variants={itemV} initial="hidden" animate="visible">
-            <Link
-              href={href}
-              onClick={onClose}
-              className="flex flex-col px-4 py-2.5 transition-colors"
-              style={{ color: "var(--color-text-secondary)" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-primary-50)"; e.currentTarget.style.color = "var(--color-primary)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-text-secondary)"; }}
-            >
-              <span className="text-sm font-semibold font-body whitespace-nowrap">{label}</span>
-              {item.desc && <span className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>{item.desc}</span>}
-            </Link>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Mobile accordion item ─────────────────────────────────────────────────────
-
-function MobileNavItem({
-  label, href, children, close,
-}: {
-  label: string; href: string;
-  children?: Array<{ id?: string; label?: string; name?: string; href?: string; slug?: string; children?: any[] }>;
-  close: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  const active = href !== "#" && (pathname === href || pathname.startsWith(href + "/"));
-
-  return (
-    <div>
-      <div className="flex items-center">
-        <Link
-          href={href}
-          onClick={children?.length ? undefined : close}
-          className="flex-1 px-3 py-3 rounded-lg text-[15px] font-body font-medium transition-all"
-          style={{ color: active ? "var(--color-primary)" : "var(--color-text-primary)", background: active ? "var(--color-primary-50)" : "transparent" }}
-        >
-          {label}
-        </Link>
-        {children?.length ? (
-          <button
-            onClick={() => setOpen((o) => !o)}
-            className="h-10 w-10 flex items-center justify-center rounded-lg"
-            style={{ color: "var(--color-text-muted)" }}
-          >
-            <motion.span animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.2 }} style={{ display: "inline-flex" }}>
-              <ChevronRight className="h-4 w-4" />
-            </motion.span>
-          </button>
-        ) : null}
-      </div>
-      {children?.length && open ? (
-        <div className="pl-4 pb-1 space-y-0.5">
-          {children.map((child) => {
-            const childLabel = child.label ?? child.name ?? "";
-            const childHref  = child.href ?? (child.slug ? `/category/${child.slug}` : "#");
-            const l3         = (child as any).children as NavCategory[] | undefined;
-            return (
-              <div key={child.id ?? childLabel}>
-                <Link
-                  href={childHref}
-                  onClick={close}
-                  className="block px-3 py-2 rounded-lg text-sm font-body font-medium transition-all"
-                  style={{ color: "var(--color-text-secondary)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-secondary)"; e.currentTarget.style.background = "transparent"; }}
-                >
-                  {childLabel}
-                </Link>
-                {l3?.length ? (
-                  <div className="pl-4 space-y-0.5">
-                    {l3.map((l3item) => (
-                      <Link
-                        key={l3item.id}
-                        href={`/category/${l3item.slug}`}
-                        onClick={close}
-                        className="block px-3 py-1.5 text-xs font-body rounded-lg transition-all"
-                        style={{ color: "var(--color-text-muted)" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-muted)"; }}
-                      >
-                        {l3item.name}
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 // ── Header ────────────────────────────────────────────────────────────────────
 
 interface HeaderProps {
   siteName?: string;
   logoUrl?: string | null;
-  navCategories?: NavCategory[];
+  instagram?: string;
+  facebook?: string;
+  youtube?: string;
 }
 
-export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] }: HeaderProps) {
+export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook, youtube }: HeaderProps) {
+  const socialLinks = [
+    { Icon: Instagram, href: instagram, label: "Instagram" },
+    { Icon: Facebook,  href: facebook,  label: "Facebook" },
+    { Icon: Youtube,   href: youtube,   label: "YouTube" },
+  ].filter((s): s is { Icon: typeof Instagram; href: string; label: string } => Boolean(s.href));
   const pathname = usePathname();
-  const [scrolled, setScrolled]         = useState(false);
-  const [mobileOpen, setMobileOpen]     = useState(false);
-  const [searchOpen, setSearchOpen]     = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [mounted, setMounted]           = useState(false);
-  const [visibleCount, setVisibleCount] = useState(navCategories.length);
-  const closeTimer = useRef<NodeJS.Timeout | null>(null);
-  const navRef     = useRef<HTMLElement>(null);
-  const measureRef = useRef<HTMLDivElement>(null);
+  const [scrolled, setScrolled]     = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [mounted, setMounted]       = useState(false);
 
   const { openCart, openLoginModal } = useUIStore();
   const cartCount     = useCartStore((s) => s.totalItems());
   const wishlistCount = useWishlistStore((s) => s.variantIds.length);
-  const useDynamic    = navCategories.length > 0;
   const { data: session } = useSession();
   const isLoggedIn    = mounted && !!session;
   const userInitial   = session?.user?.name?.trim()[0]?.toUpperCase() ?? null;
@@ -363,68 +87,8 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
   // Close drawers on navigation
   useEffect(() => { setMobileOpen(false); setSearchOpen(false); }, [pathname]);
 
-  // Overflow detection: how many categories fit before "More" is needed
-  useEffect(() => {
-    if (!useDynamic || !navRef.current || !measureRef.current) {
-      setVisibleCount(navCategories.length);
-      return;
-    }
-
-    const calculate = () => {
-      if (!navRef.current || !measureRef.current) return;
-      const nav      = navRef.current;
-      const measurer = measureRef.current;
-      const navW     = nav.offsetWidth;
-
-      const getW = (sel: string): number =>
-        (measurer.querySelector(sel) as HTMLElement | null)?.offsetWidth ?? 0;
-
-      // Static items on each side
-      const staticW =
-        getW("[data-m='new-arrivals']") +
-        getW("[data-m='shop']") +
-        getW("[data-m='our-story']") +
-        getW("[data-m='contact']");
-
-      const moreW = getW("[data-m='more']");
-
-      // Widths of each category item
-      const catWidths = navCategories.map((_, i) =>
-        getW(`[data-m='cat-${i}']`)
-      );
-
-      const totalCatW = catWidths.reduce((a, b) => a + b, 0);
-
-      // If everything fits → show all
-      if (staticW + totalCatW <= navW) {
-        setVisibleCount(navCategories.length);
-        return;
-      }
-
-      // Not all fit → reserve space for "More" button
-      const available = navW - staticW - moreW;
-      let used = 0, count = 0;
-      for (let i = 0; i < catWidths.length; i++) {
-        if (used + catWidths[i] <= available) {
-          used += catWidths[i];
-          count++;
-        } else break;
-      }
-      setVisibleCount(count);
-    };
-
-    calculate();
-    // Re-run after fonts load so measurements use actual rendered widths
-    document.fonts?.ready.then(calculate);
-    const ro = new ResizeObserver(calculate);
-    if (navRef.current) ro.observe(navRef.current);
-    return () => ro.disconnect();
-  }, [useDynamic, navCategories]);
-
-  const openMenu     = useCallback((key: string) => { if (closeTimer.current) clearTimeout(closeTimer.current); setOpenDropdown(key); }, []);
-  const scheduleClose = useCallback(() => { closeTimer.current = setTimeout(() => setOpenDropdown(null), 120); }, []);
-  const cancelClose  = useCallback(() => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
-  const isActive     = (href: string) => href !== "#" && (pathname === href || pathname.startsWith(href + "?") || pathname.startsWith(href + "/"));
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : (pathname === href || pathname.startsWith(href + "?") || pathname.startsWith(href + "/"));
 
   const iconBtnCls   = "relative h-10 w-10 flex items-center justify-center rounded-lg transition-all duration-150";
   const iconBtnStyle = { color: "var(--color-text-muted)" };
@@ -432,9 +96,6 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; },
     onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = "var(--color-text-muted)"; e.currentTarget.style.background = "transparent"; },
   };
-
-  const visibleCats  = navCategories.slice(0, visibleCount);
-  const overflowCats = navCategories.slice(visibleCount);
 
   return (
     <>
@@ -455,7 +116,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                 </button>
                 {/* Social links — desktop only */}
                 {socialLinks.map(({ Icon, href, label }) => (
-                  <a key={label} href={href} aria-label={label}
+                  <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
                     className="hidden lg:flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150"
                     style={{ color: "var(--color-text-muted)" }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
@@ -487,7 +148,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
               </div>
 
               {/* Right — actions */}
-              <div className="flex items-center justify-end gap-0.5">
+              <div className="flex items-center justify-end gap-1.5">
                 <button onClick={() => setSearchOpen(true)} className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Search">
                   <Search className="h-5 w-5" />
                 </button>
@@ -544,127 +205,15 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
           </div>
         </div>
 
-        {/* ── Desktop nav bar ── */}
+        {/* ── Desktop nav bar (flat, fixed items) ── */}
         <div className="hidden lg:block border-b" style={{ background: "var(--color-cream)", borderColor: "var(--color-parchment)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <nav ref={navRef} className="flex items-center justify-center h-11">
-
-              {/* ── New Arrivals (always visible) ── */}
-              <DesktopNavLink href="/new-arrivals" label="New Arrivals" isActive={isActive("/new-arrivals")} />
-
-              {useDynamic ? (
-                <>
-                  {/* Visible categories */}
-                  {visibleCats.map((cat) => (
-                    <div key={cat.id} className="relative"
-                      onMouseEnter={() => cat.children.length ? openMenu(cat.id) : cancelClose()}
-                      onMouseLeave={scheduleClose}>
-                      <Link
-                        href={`/category/${cat.slug}`}
-                        className={NAV_LINK_CLS}
-                        style={{ color: isActive(`/category/${cat.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--color-primary)"; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = isActive(`/category/${cat.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)"; }}
-                      >
-                        {cat.name}
-                        {cat.children.length > 0 && (
-                          <motion.span animate={{ rotate: openDropdown === cat.id ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: "inline-flex" }}>
-                            <ChevronDown className="h-3.5 w-3.5" />
-                          </motion.span>
-                        )}
-                        {isActive(`/category/${cat.slug}`) && (
-                          <motion.span layoutId="nav-underline" className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
-                            style={{ background: "var(--color-primary)" }} transition={{ type: "spring", stiffness: 380, damping: 30 }} />
-                        )}
-                      </Link>
-                      <AnimatePresence>
-                        {cat.children.length > 0 && openDropdown === cat.id && (
-                          <motion.div key={cat.id} variants={dropdownV} initial="hidden" animate="visible" exit="exit"
-                            className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50"
-                            onMouseEnter={cancelClose} onMouseLeave={scheduleClose}
-                            style={{ transformOrigin: "top center" }}>
-                            <MegaMenu category={cat} onClose={() => setOpenDropdown(null)} />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ))}
-
-                  {/* ── More dropdown (overflow categories) ── */}
-                  {overflowCats.length > 0 && (
-                    <div className="relative"
-                      onMouseEnter={() => openMenu("__more__")}
-                      onMouseLeave={scheduleClose}>
-                      <button
-                        className={cn(NAV_LINK_CLS, "cursor-pointer")}
-                        style={{ color: overflowCats.some(c => isActive(`/category/${c.slug}`)) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--color-primary)"; }}
-                        onMouseLeave={(e) => {
-                          const hasActive = overflowCats.some(c => isActive(`/category/${c.slug}`));
-                          (e.currentTarget as HTMLElement).style.color = hasActive ? "var(--color-primary)" : "var(--color-text-secondary)";
-                        }}>
-                        More
-                        <motion.span animate={{ rotate: openDropdown === "__more__" ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: "inline-flex" }}>
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        </motion.span>
-                      </button>
-                      <AnimatePresence>
-                        {openDropdown === "__more__" && (
-                          <motion.div key="more" variants={dropdownV} initial="hidden" animate="visible" exit="exit"
-                            className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50"
-                            onMouseEnter={cancelClose} onMouseLeave={scheduleClose}
-                            style={{ transformOrigin: "top center" }}>
-                            <SimpleDropdown
-                              items={overflowCats.map(c => ({ name: c.name, slug: c.slug }))}
-                              onClose={() => setOpenDropdown(null)}
-                            />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )}
-                </>
-              ) : (
-                /* ── Fallback: hardcoded Collections + Shop ── */
-                <>
-                  <DesktopNavDropdown
-                    label="Collections" href="#"
-                    isActive={false}
-                    items={FALLBACK_COLLECTIONS}
-                    openDropdown={openDropdown}
-                    openMenu={openMenu} cancelClose={cancelClose} scheduleClose={scheduleClose}
-                    onClose={() => setOpenDropdown(null)}
-                  />
-                </>
-              )}
-
-              {/* ── Shop (always visible) ── */}
-              <DesktopNavLink href="/shop" label="Shop" isActive={isActive("/shop")} />
-
-              {/* ── Our Story / Contact (always visible) ── */}
-              <DesktopNavLink href="/about"   label="Our Story" isActive={isActive("/about")} />
-              <DesktopNavLink href="/contact" label="Contact"   isActive={isActive("/contact")} />
+            <nav className="flex items-center justify-center h-11">
+              {NAV_ITEMS.map((item) => (
+                <DesktopNavLink key={item.href} href={item.href} label={item.label} isActive={isActive(item.href)} />
+              ))}
             </nav>
           </div>
-        </div>
-
-        {/* ── Hidden measurement div (fixed off-screen so it never adds to scroll width) ── */}
-        <div
-          ref={measureRef}
-          aria-hidden="true"
-          style={{ position: "fixed", visibility: "hidden", display: "flex", top: 0, left: "-9999px", pointerEvents: "none", zIndex: -1 }}
-        >
-          <div data-m="new-arrivals" className={NAV_LINK_CLS}>New Arrivals</div>
-          <div data-m="more"         className={NAV_LINK_CLS}>More <ChevronDown className="h-3.5 w-3.5" /></div>
-          <div data-m="shop"         className={NAV_LINK_CLS}>Shop <ChevronDown className="h-3.5 w-3.5" /></div>
-          <div data-m="our-story"    className={NAV_LINK_CLS}>Our Story</div>
-          <div data-m="contact"      className={NAV_LINK_CLS}>Contact</div>
-          {navCategories.map((cat, i) => (
-            <div key={cat.id} data-m={`cat-${i}`} className={NAV_LINK_CLS}>
-              {cat.name}
-              {cat.children.length > 0 && <ChevronDown className="h-3.5 w-3.5" />}
-            </div>
-          ))}
         </div>
       </header>
 
@@ -794,26 +343,27 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                 )}
               </div>
 
+              {/* Video Shopping CTA */}
+              <div className="px-3 pt-3">
+                <VideoShoppingButton className="w-full justify-center" onTrigger={() => setMobileOpen(false)} />
+              </div>
+
               {/* Nav items — scrollable */}
               <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
-                <MobileNavItem label="New Arrivals" href="/new-arrivals" close={() => setMobileOpen(false)} />
-                {useDynamic
-                  ? navCategories.map((cat, i) => (
-                      <motion.div key={cat.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: (i + 1) * 0.05, duration: 0.2, ease: "easeOut" }}>
-                        <MobileNavItem label={cat.name} href={`/category/${cat.slug}`}
-                          close={() => setMobileOpen(false)} children={cat.children} />
-                      </motion.div>
-                    ))
-                  : FALLBACK_COLLECTIONS.map((c, i) => (
-                      <motion.div key={c.label} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: (i + 1) * 0.05, duration: 0.2, ease: "easeOut" }}>
-                        <MobileNavItem label={c.label} href={c.href} close={() => setMobileOpen(false)} />
-                      </motion.div>
-                    ))}
-                <MobileNavItem label="Shop" href="/shop" close={() => setMobileOpen(false)} />
-                <MobileNavItem label="Our Story" href="/about"   close={() => setMobileOpen(false)} />
-                <MobileNavItem label="Contact"   href="/contact" close={() => setMobileOpen(false)} />
+                {NAV_ITEMS.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-3 py-3 rounded-lg text-[15px] font-body font-medium transition-all"
+                    style={{
+                      color: isActive(item.href) ? "var(--color-primary)" : "var(--color-text-primary)",
+                      background: isActive(item.href) ? "var(--color-primary-50)" : "transparent",
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </nav>
 
               {/* Footer — sign out (if logged in) + social links */}
@@ -830,7 +380,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
                 )}
                 <div className="flex items-center gap-3">
                   {socialLinks.map(({ Icon, href, label }) => (
-                    <a key={label} href={href} aria-label={label}
+                    <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
                       className="h-8 w-8 flex items-center justify-center rounded-lg"
                       style={{ color: "var(--color-text-muted)", background: "var(--color-cream)" }}>
                       <Icon className="h-4 w-4" />
@@ -846,7 +396,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, navCategories = [] 
   );
 }
 
-// ── Desktop nav helper components ─────────────────────────────────────────────
+// ── Desktop nav helper ────────────────────────────────────────────────────────
 
 function DesktopNavLink({ href, label, isActive }: { href: string; label: string; isActive: boolean }) {
   return (
@@ -860,45 +410,5 @@ function DesktopNavLink({ href, label, isActive }: { href: string; label: string
           style={{ background: "var(--color-primary)" }} transition={{ type: "spring", stiffness: 380, damping: 30 }} />
       )}
     </Link>
-  );
-}
-
-function DesktopNavDropdown({
-  label, href, isActive, items, openDropdown, openMenu, cancelClose, scheduleClose, onClose,
-}: {
-  label: string; href: string; isActive: boolean;
-  items: Array<{ label?: string; name?: string; href?: string; slug?: string; desc?: string }>;
-  openDropdown: string | null;
-  openMenu: (k: string) => void;
-  cancelClose: () => void;
-  scheduleClose: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <div className="relative" onMouseEnter={() => openMenu(label)} onMouseLeave={scheduleClose}>
-      <Link href={href} className={NAV_LINK_CLS}
-        style={{ color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)" }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--color-primary)"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = isActive ? "var(--color-primary)" : "var(--color-text-secondary)"; }}>
-        {label}
-        <motion.span animate={{ rotate: openDropdown === label ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: "inline-flex" }}>
-          <ChevronDown className="h-3.5 w-3.5" />
-        </motion.span>
-        {isActive && (
-          <span className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
-            style={{ background: "var(--color-primary)" }} />
-        )}
-      </Link>
-      <AnimatePresence>
-        {openDropdown === label && (
-          <motion.div key={label} variants={dropdownV} initial="hidden" animate="visible" exit="exit"
-            className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50"
-            onMouseEnter={cancelClose} onMouseLeave={scheduleClose}
-            style={{ transformOrigin: "top center" }}>
-            <SimpleDropdown items={items} onClose={onClose} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
   );
 }

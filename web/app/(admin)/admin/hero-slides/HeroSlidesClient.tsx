@@ -17,6 +17,7 @@ interface HeroSlide {
   bgColor: string;
   imageBg: string;
   imageUrl: string | null;
+  videoUrl: string | null;
   sortOrder: number;
   isActive: boolean;
 }
@@ -25,7 +26,7 @@ const emptyForm = () => ({
   tag: "", heading: "", subtext: "",
   ctaLabel: "Explore Collection", ctaHref: "/shop",
   ctaSecLabel: "", ctaSecHref: "",
-  bgColor: "#F2EBE0", imageBg: "", imageUrl: "",
+  bgColor: "#F2EBE0", imageBg: "", imageUrl: "", videoUrl: "",
   sortOrder: "0", isActive: true,
 });
 
@@ -56,7 +57,7 @@ export default function HeroSlidesClient({ slides: initial }: { slides: HeroSlid
       tag: s.tag, heading: s.heading, subtext: s.subtext,
       ctaLabel: s.ctaLabel, ctaHref: s.ctaHref,
       ctaSecLabel: s.ctaSecLabel ?? "", ctaSecHref: s.ctaSecHref ?? "",
-      bgColor: s.bgColor, imageBg: s.imageBg, imageUrl: s.imageUrl ?? "",
+      bgColor: s.bgColor, imageBg: s.imageBg, imageUrl: s.imageUrl ?? "", videoUrl: s.videoUrl ?? "",
       sortOrder: String(s.sortOrder), isActive: s.isActive,
     });
     setPreview(s.imageUrl ?? null);
@@ -236,6 +237,14 @@ export default function HeroSlidesClient({ slides: initial }: { slides: HeroSlid
                 <input value={form.imageUrl} onChange={(e) => { set("imageUrl")(e.target.value); setPreview(e.target.value || null); }}
                   className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                   placeholder="https://..." />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Background Video URL (optional)</label>
+                <input value={form.videoUrl} onChange={(e) => set("videoUrl")(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                  placeholder="https://... .mp4" />
+                <p className="text-xs text-gray-400 mt-1">When set, this video plays instead of the image above (muted, looping).</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

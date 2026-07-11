@@ -7,6 +7,8 @@ import { QuickViewModal } from "@/components/product/QuickViewModal";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { LoginTrigger } from "@/components/auth/LoginTrigger";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { PageTransition } from "@/components/layout/PageTransition";
+import { WhatsAppFloatButton } from "@/components/layout/WhatsAppFloatButton";
 import { StoreSyncProvider } from "@/components/sync/StoreSyncProvider";
 import { getThemeSettings } from "@/lib/theme/server";
 import { db } from "@/lib/db";
@@ -19,24 +21,8 @@ function parseFooterLinks(v: string | undefined): { label: string; href: string 
 }
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
-  const [settings, allActiveCategories, siteSettings] = await Promise.all([
+  const [settings, siteSettings] = await Promise.all([
     getThemeSettings(),
-    db.category.findMany({
-      where: { isActive: true },
-      include: {
-        children: {
-          where: { isActive: true },
-          orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-          include: {
-            children: {
-              where: { isActive: true },
-              orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-            },
-          },
-        },
-      },
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    }).catch(() => []),
     db.siteSetting.findMany().then(rows => {
       const m: Record<string, string> = {};
       rows.forEach(r => { m[r.key] = r.value; });
@@ -44,25 +30,17 @@ export default async function MarketingLayout({ children }: { children: React.Re
     }).catch(() => ({} as Record<string, string>)),
   ]);
 
-  // Determine header nav from admin setting or fall back to all root categories
-  const navOrder: string[] = (() => {
-    try { return siteSettings["header_nav"] ? JSON.parse(siteSettings["header_nav"]) : []; }
-    catch { return []; }
-  })();
-
-  const topCategories = navOrder.length > 0
-    ? (navOrder.map(id => allActiveCategories.find(c => c.id === id)).filter(Boolean) as typeof allActiveCategories)
-    : allActiveCategories.filter(c => !c.parentId);
-
   return (
     <div className="marketing-layout">
       <AnnouncementBar />
       <Header
         siteName={settings["site.name"]}
         logoUrl={siteSettings["store_logo"] || null}
-        navCategories={topCategories}
+        instagram={siteSettings["social_instagram"]}
+        facebook={siteSettings["social_facebook"]}
+        youtube={siteSettings["social_youtube"]}
       />
-      <main>{children}</main>
+      <main><PageTransition>{children}</PageTransition></main>
       <Footer
         siteName={siteSettings["store_name"] || settings["site.name"]}
         tagline={siteSettings["tagline"] || settings["site.tagline"]}
@@ -82,6 +60,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <LoginModal />
       <Suspense><LoginTrigger /></Suspense>
       <MobileBottomNav />
+      <WhatsAppFloatButton phoneNumber={siteSettings["whatsapp_number"]} />
       <StoreSyncProvider />
     </div>
   );

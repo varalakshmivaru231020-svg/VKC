@@ -347,11 +347,11 @@ export default function CheckoutPage() {
   const [useWallet, setUseWallet]         = useState(false);
 
   // Payment
-  const [payment, setPayment] = useState<"cod" | "cashfree" | "icici" | "netbanking" | "">("");
+  const [payment, setPayment] = useState<"cod" | "cashfree" | "icici" | "icici-pg" | "netbanking" | "">("");
   const [placing, setPlacing] = useState(false);
   const [ordered, setOrdered]         = useState(false);
   const [placedOrderNumber, setPlacedOrderNumber] = useState("");
-  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: false, cashfree: false, icici: false, cod: false });
+  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: false, cashfree: false, icici: false, iciciPg: false, cod: false });
   const [paymentCfgLoaded, setPaymentCfgLoaded] = useState(false);
 
   useEffect(() => {
@@ -360,6 +360,7 @@ export default function CheckoutPage() {
       // auto-select first enabled method; "" means none available
       if (d.razorpay) setPayment("netbanking");
       else if (d.cashfree) setPayment("cashfree");
+      else if (d.iciciPg) setPayment("icici-pg");
       else if (d.icici) setPayment("icici");
       else if (d.cod) setPayment("cod");
       else setPayment("");
@@ -666,6 +667,23 @@ export default function CheckoutPage() {
         return;
       }
 
+      // ── ICICI PG Direct — UPI, Cards, Net Banking (hosted redirect) ─
+      if (payment === "icici-pg") {
+        const res = await fetch("/api/web/checkout/icici-pg", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || "Payment setup failed. Please try again.");
+          setPlacing(false);
+          return;
+        }
+        clearCart(); clearCheckoutMeta();
+        window.location.href = data.redirectUrl;
+        return;
+      }
+
       // ── COD ───────────────────────────────────────────────────────
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -725,8 +743,11 @@ export default function CheckoutPage() {
             <span className="text-sm font-mono font-semibold" style={{ color: "var(--color-primary)" }}>#{placedOrderNumber}</span>
           </div>
         )}
-        <p className="text-sm font-body mb-7 max-w-md animate-fade-up" style={{ color: "var(--color-text-muted)", animationDelay: "0.35s" }}>
+        <p className="text-sm font-body mb-2 max-w-md animate-fade-up" style={{ color: "var(--color-text-muted)", animationDelay: "0.35s" }}>
           We've received your order and will email you once it ships. Estimated delivery: <span className="font-semibold" style={{ color: "var(--color-text-secondary)" }}>4–7 business days</span>.
+        </p>
+        <p className="text-sm font-body mb-7 max-w-md animate-fade-up" style={{ color: "var(--color-text-muted)", animationDelay: "0.4s" }}>
+          From our family of weavers to your home — thank you for choosing Vijaylakshmi Sarees.
         </p>
 
         <div className="flex gap-3 flex-wrap justify-center w-full max-w-md animate-fade-up" style={{ animationDelay: "0.45s" }}>
@@ -951,6 +972,7 @@ export default function CheckoutPage() {
                     const methods = [
                       ...(paymentCfg.razorpay ? [{ value: "netbanking", label: "Pay via Razorpay",   desc: "UPI, Cards, Net Banking, Wallets" }] : []),
                       ...(paymentCfg.cashfree ? [{ value: "cashfree",   label: "Pay via Cashfree",   desc: "UPI, Cards, Net Banking, Wallets" }] : []),
+                      ...(paymentCfg.iciciPg  ? [{ value: "icici-pg",   label: "ICICI UPI / Pay",    desc: "UPI, Cards, Net Banking — lower fees, instant credit" }] : []),
                       ...(paymentCfg.icici    ? [{ value: "icici",      label: "ICICI Eazypay",      desc: "All major cards & net banking"    }] : []),
                       ...(paymentCfg.cod      ? [{ value: "cod",        label: "Cash on Delivery",   desc: ""                                 }] : []),
                     ] as { value: string; label: string; desc: string }[];
@@ -1032,7 +1054,7 @@ export default function CheckoutPage() {
                         <button onClick={() => setStep(1)} className="text-xs font-medium" style={{ color: "var(--color-primary)" }}>Edit</button>
                       </div>
                       <p className="text-sm font-body" style={{ color: payment ? "var(--color-text-primary)" : "var(--color-error)" }}>
-                        {payment === "netbanking" ? "Razorpay" : payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : payment === "cod" ? "Cash on Delivery" : "No payment method selected"}
+                        {payment === "netbanking" ? "Razorpay" : payment === "cashfree" ? "Cashfree" : payment === "icici-pg" ? "ICICI UPI / Pay" : payment === "icici" ? "ICICI Eazypay" : payment === "cod" ? "Cash on Delivery" : "No payment method selected"}
                       </p>
                     </div>
 
@@ -1236,7 +1258,7 @@ export default function CheckoutPage() {
                 </div>
                 {walletDeduction > 0 && (
                   <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
-                    {finalTotal === 0 ? "Fully paid from wallet — no payment needed" : `${formatINR(walletDeduction)} from wallet + ${formatINR(finalTotal)} via ${payment === "cashfree" ? "Cashfree" : payment === "icici" ? "ICICI Eazypay" : "COD"}`}
+                    {finalTotal === 0 ? "Fully paid from wallet — no payment needed" : `${formatINR(walletDeduction)} from wallet + ${formatINR(finalTotal)} via ${payment === "cashfree" ? "Cashfree" : payment === "icici-pg" ? "ICICI UPI / Pay" : payment === "icici" ? "ICICI Eazypay" : "COD"}`}
                   </p>
                 )}
                 <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>Inclusive of all taxes</p>

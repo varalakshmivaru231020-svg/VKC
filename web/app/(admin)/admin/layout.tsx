@@ -11,7 +11,7 @@ import {
   ChevronRight, Store, Truck, BookOpen, FileText,
   Megaphone, Globe, Star, Heart,
   ChevronDown, ChevronUp, Layers, Shield, Boxes,
-  Megaphone as MegaphoneIcon,
+  Megaphone as MegaphoneIcon, Video,
 } from "lucide-react";
 
 // ── Sub-item type ─────────────────────────────────────────────────────────────
@@ -77,13 +77,19 @@ const navGroups: NavGroupDef[] = [
       { href: "/admin/popup",            label: "Popup",            icon: Megaphone },
       { href: "/admin/cart-history",     label: "Cart History",     icon: ShoppingCart },
       { href: "/admin/wishlist-history", label: "Wishlist History", icon: Heart },
+      { href: "/admin/video-bookings",   label: "Video Bookings",   icon: Users },
     ],
   },
   {
     title: "Content",
     items: [
-      { href: "/admin/blogs", label: "Blogs",     icon: BookOpen },
-      { href: "/admin/pages", label: "CMS Pages", icon: FileText },
+      { href: "/admin/blogs",           label: "Blogs",           icon: BookOpen },
+      { href: "/admin/saree-stories",   label: "Saree Stories",   icon: Layers },
+      { href: "/admin/gallery",         label: "Gallery",         icon: Image },
+      { href: "/admin/videos",          label: "Videos",          icon: Video },
+      { href: "/admin/pages",           label: "CMS Pages",       icon: FileText },
+      { href: "/admin/events",          label: "Events",          icon: Star },
+      { href: "/admin/festival-themes", label: "Festival Themes", icon: MegaphoneIcon },
     ],
   },
   {

@@ -78,7 +78,7 @@ export function PopupBanner({ popup }: { popup: PopupData | null }) {
               className="text-[11px] font-semibold uppercase tracking-[0.2em] font-body"
               style={{ color: "var(--color-gold-light)" }}
             >
-              Exclusive Offer
+              New Arrivals
             </span>
           </div>
 

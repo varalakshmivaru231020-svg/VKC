@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
-import { getProducts } from "@/lib/db/products";
+import { getProducts, getAvailableColors } from "@/lib/db/products";
 import { getThemeSettings } from "@/lib/theme/server";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import ShopFilters from "./ShopFilters";
@@ -25,13 +25,14 @@ interface Props {
 
 export default async function ShopPage({ searchParams }: Props) {
   const now = new Date();
-  const [settings, attributes, shopBanners, shopMidBanners] = await Promise.all([
+  const [settings, attributes, colors, shopBanners, shopMidBanners] = await Promise.all([
     getThemeSettings(),
     db.attribute.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, options: true, inputType: true },
     }).catch(() => []),
+    getAvailableColors().catch(() => []),
     db.banner.findMany({
       where: {
         isActive: true,
@@ -72,6 +73,7 @@ export default async function ShopPage({ searchParams }: Props) {
       minPrice: searchParams.minPrice ? parseInt(searchParams.minPrice) : undefined,
       maxPrice: searchParams.maxPrice ? parseInt(searchParams.maxPrice) : undefined,
       inStock: searchParams.inStock === "true",
+      color: searchParams.color,
       search: searchParams.q,
       page,
       limit: 24,
@@ -88,6 +90,10 @@ export default async function ShopPage({ searchParams }: Props) {
     if (val) activeFilters.push(val);
   }
   if (searchParams.inStock === "true") activeFilters.push("In Stock");
+  if (searchParams.color) {
+    const matched = colors.find((c) => c.hex === searchParams.color);
+    activeFilters.push(matched?.name ?? "Color");
+  }
   if (searchParams.q) activeFilters.push(`"${searchParams.q}"`);
 
   return (
@@ -132,7 +138,7 @@ export default async function ShopPage({ searchParams }: Props) {
           {/* Sidebar filters */}
           <aside className="hidden lg:block w-64 shrink-0">
             <div className="sidebar-sticky pr-1">
-              <ShopFilters attributes={attributes} current={searchParams} />
+              <ShopFilters attributes={attributes} colors={colors} current={searchParams} />
             </div>
           </aside>
 
@@ -144,6 +150,7 @@ export default async function ShopPage({ searchParams }: Props) {
               currentSort={searchParams.sort ?? "newest"}
               activeFilters={activeFilters}
               attributes={attributes}
+              colors={colors}
               current={searchParams}
             />
             <div className="mt-0 sm:mt-6">

@@ -36,6 +36,7 @@ model Category {
   sortOrder   Int        @default(0)
   isActive    Boolean    @default(true)
   products    Product[]
+  sareeStories SareeStory[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
@@ -640,10 +641,152 @@ model HeroSlide {
   bgColor      String   @db.VarChar(50)  @default("#F2EBE0")
   imageBg      String   @db.VarChar(500) @default("")
   imageUrl     String?  @db.VarChar(500)
+  videoUrl     String?  @db.VarChar(500)
   sortOrder    Int      @default(0)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@map("hero_slides")
+}
+
+// ─── VIDEO SHOPPING ─────────────────────────────────────────────────────────────
+
+model VideoBooking {
+  id            String   @id @default(cuid())
+  name          String   @db.VarChar(150)
+  phone         String   @db.VarChar(20)
+  email         String?  @db.VarChar(200)
+  preferredDate DateTime
+  preferredTime String   @db.VarChar(50)
+  notes         String?  @db.Text
+  status        String   @default("PENDING") @db.VarChar(20) // PENDING | CONFIRMED | COMPLETED | CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("video_bookings")
+}
+
+// ─── EVENTS ─────────────────────────────────────────────────────────────────────
+
+model Event {
+  id          String       @id @default(cuid())
+  title       String       @db.VarChar(200)
+  slug        String       @unique @db.VarChar(220)
+  description String?      @db.Text
+  coverImage  String?      @db.VarChar(500)
+  isActive    Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  media       EventMedia[]
+
+  @@map("events")
+}
+
+model EventMedia {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  type      String   @db.VarChar(10) // IMAGE | VIDEO
+  url       String   @db.VarChar(500)
+  caption   String?  @db.VarChar(300)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("event_media")
+}
+
+// ─── GALLERY ────────────────────────────────────────────────────────────────────
+
+model GalleryItem {
+  id        String   @id @default(cuid())
+  type      String   @db.VarChar(10) // IMAGE | VIDEO
+  url       String   @db.VarChar(500)
+  caption   String?  @db.VarChar(300)
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("gallery_items")
+}
+
+// ─── SAREE STORIES ────────────────────────────────────────────────────────────
+
+model SareeStory {
+  id     String @id @default(cuid())
+  name   String @db.VarChar(200)
+  slug   String @unique @db.VarChar(200)
+
+  region String? @db.VarChar(100)
+  fabric String? @db.VarChar(100)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  heroImage     String? @db.VarChar(500)
+  featuredImage String? @db.VarChar(500)
+  shortIntro    String? @db.VarChar(600)
+
+  history               String? @db.Text
+  origin                String? @db.Text
+  geographicalLocation  String? @db.Text
+  weavingTechnique      String? @db.Text
+  fabricInfo            String? @db.Text
+  borderDesign          String? @db.Text
+  motifs                String? @db.Text
+  traditionalUsage      String? @db.Text
+  occasionsToWear       String? @db.Text
+  culturalSignificance  String? @db.Text
+  interestingFacts      String[]
+  careInstructions      String? @db.Text
+
+  isPublished Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  metaTitle    String? @db.VarChar(200)
+  metaDesc     String? @db.VarChar(400)
+  canonicalUrl String? @db.VarChar(300)
+  ogImage      String? @db.VarChar(500)
+
+  media SareeStoryMedia[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("saree_stories")
+}
+
+model SareeStoryMedia {
+  id      String     @id @default(cuid())
+  storyId String
+  story   SareeStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  type      String   @db.VarChar(10) // IMAGE | VIDEO
+  url       String   @db.VarChar(500)
+  caption   String?  @db.VarChar(300)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("saree_story_media")
+}
+
+// ─── FESTIVAL THEMES ────────────────────────────────────────────────────────────
+
+model ThemePreset {
+  id           String   @id @default(cuid())
+  name         String   @db.VarChar(100)
+  emoji        String?  @db.VarChar(10)
+  colorPrimary String   @db.VarChar(20)
+  colorGold    String   @db.VarChar(20)
+  bannerImage  String?  @db.VarChar(500)
+  bannerText   String?  @db.VarChar(300)
+  eventId      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("theme_presets")
 }

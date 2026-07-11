@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { getProducts } from "@/lib/db/products";
+import { getProducts, getAvailableColors, type ColorSwatch } from "@/lib/db/products";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import ShopFilters from "../../shop/ShopFilters";
 import ShopHeader from "../../shop/ShopHeader";
@@ -33,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CategoryPage({ params, searchParams }: Props) {
   let category: Awaited<ReturnType<typeof db.category.findUnique>> = null;
   let attributes: { id: string; name: string; options: string[]; inputType: string }[] = [];
+  let colors: ColorSwatch[] = [];
 
   const now = new Date();
   let categoryBanners: Awaited<ReturnType<typeof db.banner.findMany>> = [];
@@ -40,13 +41,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   let categoryMidBanners: Awaited<ReturnType<typeof db.banner.findMany>> = [];
 
   try {
-    [category, attributes, categoryBanners, categoryMidBanners] = await Promise.all([
+    [category, attributes, colors, categoryBanners, categoryMidBanners] = await Promise.all([
       db.category.findUnique({ where: { slug: params.slug } }),
       db.attribute.findMany({
         where: { isActive: true },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         select: { id: true, name: true, options: true, inputType: true },
       }),
+      getAvailableColors(),
       db.banner.findMany({
         where: {
           isActive: true,
@@ -93,6 +95,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       minPrice: searchParams.minPrice ? parseInt(searchParams.minPrice) : undefined,
       maxPrice: searchParams.maxPrice ? parseInt(searchParams.maxPrice) : undefined,
       inStock: searchParams.inStock === "true",
+      color: searchParams.color,
       page,
       limit: 24,
     });
@@ -109,6 +112,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     if (val) activeFilters.push(val);
   }
   if (searchParams.inStock === "true") activeFilters.push("In Stock");
+  if (searchParams.color) {
+    const matched = colors.find((c) => c.hex === searchParams.color);
+    activeFilters.push(matched?.name ?? "Color");
+  }
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
@@ -156,7 +163,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           <aside className="hidden lg:block w-64 shrink-0">
-            <ShopFilters attributes={attributes} current={searchParams} />
+            <ShopFilters attributes={attributes} colors={colors} current={searchParams} />
           </aside>
           <div className="flex-1 min-w-0">
             <ShopHeader
@@ -165,6 +172,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               currentSort={searchParams.sort ?? "newest"}
               activeFilters={activeFilters}
               attributes={attributes}
+              colors={colors}
               current={searchParams}
             />
             <div className="mt-6">

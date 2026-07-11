@@ -16,40 +16,15 @@ function parseFooterLinks(v: string | undefined): { label: string; href: string 
 }
 
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
-  const [settings, session, allCategories, siteSettings] = await Promise.all([
+  const [settings, session, siteSettings] = await Promise.all([
     getThemeSettings(),
     auth(),
-    db.category.findMany({
-      where: { isActive: true },
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      include: {
-        children: {
-          where: { isActive: true },
-          orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-          include: {
-            children: {
-              where: { isActive: true },
-              orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-            },
-          },
-        },
-      },
-    }).catch(() => []),
     db.siteSetting.findMany().then(rows => {
       const m: Record<string, string> = {};
       rows.forEach(r => { m[r.key] = r.value; });
       return m;
     }).catch(() => ({} as Record<string, string>)),
   ]);
-
-  // Same header_nav logic as marketing layout
-  const navOrder: string[] = (() => {
-    try { return siteSettings["header_nav"] ? JSON.parse(siteSettings["header_nav"]) : []; }
-    catch { return []; }
-  })();
-  const topCategories = navOrder.length > 0
-    ? (navOrder.map(id => allCategories.find(c => c.id === id)).filter(Boolean) as typeof allCategories)
-    : allCategories.filter(c => !c.parentId);
 
   const user = session?.user;
 
@@ -64,7 +39,9 @@ export default async function AccountLayout({ children }: { children: React.Reac
       <Header
         siteName={settings["site.name"]}
         logoUrl={siteSettings["store_logo"] || null}
-        navCategories={topCategories}
+        instagram={siteSettings["social_instagram"]}
+        facebook={siteSettings["social_facebook"]}
+        youtube={siteSettings["social_youtube"]}
       />
 
       {/* Full-screen two-column layout */}
