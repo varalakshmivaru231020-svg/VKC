@@ -42,6 +42,11 @@ describe("parseVideoUrl", () => {
     expect(result?.platform).toBe("facebook");
   });
 
+  it("parses a facebook.com/watch?v= link", () => {
+    const result = parseVideoUrl("https://www.facebook.com/watch?v=2202314363879554");
+    expect(result?.platform).toBe("facebook");
+  });
+
   it("returns null for a direct video file URL", () => {
     expect(parseVideoUrl("https://cdn.example.com/uploads/saree-demo.mp4")).toBeNull();
   });

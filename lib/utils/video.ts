@@ -34,8 +34,8 @@ export function parseVideoUrl(url: string): ParsedVideo | null {
     };
   }
 
-  // Facebook — video page or fb.watch short link, or reel
-  if (/facebook\.com\/.*\/videos\/|fb\.watch\/|facebook\.com\/reel\//.test(url)) {
+  // Facebook — video page, watch?v=, fb.watch short link, or reel
+  if (/facebook\.com\/.*\/videos\/|fb\.watch\/|facebook\.com\/reel\/|facebook\.com\/watch\/?\?v=/.test(url)) {
     return {
       platform: "facebook",
       embedUrl: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false`,
