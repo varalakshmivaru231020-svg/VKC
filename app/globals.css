@@ -152,6 +152,14 @@
 
 /* ── Utility Classes ─────────────────────────────────────────────────────── */
 @layer utilities {
+  .scrollbar-hide {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
+  }
+
   .text-display {
     font-family: var(--font-heading);
     font-size: var(--text-display);
