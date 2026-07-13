@@ -43,3 +43,23 @@ export function uploadBufferToCloudinary(
     Readable.from(buffer).pipe(stream);
   });
 }
+
+/** Uploads a raw video buffer (MP4/WebM/MOV) to Cloudinary. */
+export function uploadVideoBufferToCloudinary(
+  buffer: Buffer,
+  options: { folder?: string } = {}
+): Promise<CloudinaryUploadResult> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: options.folder ?? "vijaylakshmi/videos",
+        resource_type: "video",
+      },
+      (error, result) => {
+        if (error || !result) return reject(error ?? new Error("Cloudinary upload returned no result"));
+        resolve(result as unknown as CloudinaryUploadResult);
+      }
+    );
+    Readable.from(buffer).pipe(stream);
+  });
+}

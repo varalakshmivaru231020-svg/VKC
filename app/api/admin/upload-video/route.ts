@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { isCloudinaryConfigured, uploadVideoBufferToCloudinary } from "@/lib/cloudinary";
 
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads", "videos");
 const MAX_SIZE = 100 * 1024 * 1024; // 100MB
@@ -21,14 +22,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Only MP4, WebM, MOV allowed" }, { status: 400 });
     }
 
-    await mkdir(UPLOADS_DIR, { recursive: true });
+    const buffer = Buffer.from(await file.arrayBuffer());
 
+    // Cloudinary is preferred — local disk writes don't survive on most hosting
+    // platforms (and even where they do, static file serving can be misconfigured),
+    // which is why uploaded media can go missing in production even though it
+    // works fine locally. Falls back to local disk only when Cloudinary isn't
+    // configured (e.g. a bare local dev checkout without credentials).
+    if (isCloudinaryConfigured()) {
+      try {
+        const result = await uploadVideoBufferToCloudinary(buffer, { folder: "vijaylakshmi/videos" });
+        return NextResponse.json({ url: result.secure_url });
+      } catch (uploadErr: any) {
+        console.error("[Upload Video] ✗ Cloudinary upload failed:", uploadErr.message ?? uploadErr);
+        return NextResponse.json(
+          {
+            error: "Failed to upload video",
+            details: `Cloudinary upload error: ${uploadErr.message ?? "unknown error"}. Contact support if this persists.`,
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    await mkdir(UPLOADS_DIR, { recursive: true });
     const ext = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4";
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const filepath = path.join(UPLOADS_DIR, filename);
-
-    const bytes = await file.arrayBuffer();
-    await writeFile(filepath, Buffer.from(bytes));
+    await writeFile(filepath, buffer);
+    console.warn("[Upload Video] ⚠ CLOUDINARY_* env vars not set — saved to local disk. This file will NOT be available on a deployed/production server.");
 
     const url = `/uploads/videos/${filename}`;
     return NextResponse.json({ url });

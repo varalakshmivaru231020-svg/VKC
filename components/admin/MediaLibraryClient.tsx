@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Eye, EyeOff, Loader2, X, Save, AlertCircle } from "lucide-react";
-import { uploadImageFile } from "@/lib/utils/upload";
+import { uploadImageFile, uploadVideoFile } from "@/lib/utils/upload";
 import { parseVideoUrl, isDirectVideoFile } from "@/lib/utils/video";
 
 interface MediaItemRow {
@@ -60,14 +60,14 @@ export default function MediaLibraryClient({ items: initial, mediaType, title, d
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const result = await uploadImageFile(file);
+    const result = isImage ? await uploadImageFile(file) : await uploadVideoFile(file);
     setUploading(false);
     if (!result.ok) { alert(`${result.error} — ${result.details}`); return; }
     setForm((f) => ({ ...f, url: result.url }));
   };
 
   const handleAdd = async () => {
-    if (!form.url.trim()) { alert("Provide a media URL" + (isImage ? " or upload an image" : "")); return; }
+    if (!form.url.trim()) { alert(isImage ? "Upload an image" : "Provide a media URL or upload a video"); return; }
     setSaving(true);
     try {
       const res = await fetch("/api/admin/gallery", {
@@ -148,41 +148,40 @@ export default function MediaLibraryClient({ items: initial, mediaType, title, d
               <button onClick={() => setModalOpen(false)}><X className="h-5 w-5 text-gray-400" /></button>
             </div>
             <div className="space-y-4">
-              {isImage ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Upload Image</label>
-                  <input type="file" accept="image/*" onChange={handleUpload} className="text-sm" />
-                  {uploading && <p className="text-xs text-gray-400 mt-1">Uploading…</p>}
-                </div>
-              ) : null}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  {isImage ? "Or Image URL" : "Video URL"}
+                  Upload {isImage ? "Image" : "Video"}
                 </label>
-                <input value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                  placeholder={isImage ? "https://... .jpg" : "YouTube, Facebook, Vimeo link, or a direct .mp4 URL"} />
-                {!isImage && (
+                <input type="file" accept={isImage ? "image/*" : "video/mp4,video/webm,video/quicktime"} onChange={handleUpload} className="text-sm" />
+                {!isImage && <p className="text-xs text-gray-400 mt-1">MP4, WebM, or MOV — up to 100MB.</p>}
+                {uploading && <p className="text-xs text-gray-400 mt-1">Uploading…</p>}
+              </div>
+              {!isImage && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Or Video URL</label>
+                  <input value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    placeholder="YouTube, Facebook, Vimeo link, or a direct .mp4 URL" />
                   <p className="text-xs text-gray-400 mt-1">
                     Paste a normal YouTube, Facebook, or Vimeo video link — it'll be embedded automatically.
                   </p>
-                )}
-                {urlWarning && (
-                  <div className="flex items-start gap-1.5 mt-1.5 text-xs text-amber-700">
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    <span>This doesn't look like a YouTube/Facebook/Vimeo link or a direct video file — it may not play.</span>
-                  </div>
-                )}
-              </div>
+                  {urlWarning && (
+                    <div className="flex items-start gap-1.5 mt-1.5 text-xs text-amber-700">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <span>This doesn't look like a YouTube/Facebook/Vimeo link or a direct video file — it may not play.</span>
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Caption (optional)</label>
                 <input value={form.caption} onChange={(e) => setForm((f) => ({ ...f, caption: e.target.value }))}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
               </div>
-              <button onClick={handleAdd} disabled={saving}
+              <button onClick={handleAdd} disabled={saving || uploading}
                 className="w-full h-11 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2" style={{ background: "var(--color-primary)" }}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Add
+                {saving || uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {uploading ? "Uploading…" : "Add"}
               </button>
             </div>
           </div>
