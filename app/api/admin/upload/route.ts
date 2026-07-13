@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
+import { isCloudinaryConfigured, uploadBufferToCloudinary } from "@/lib/cloudinary";
 
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads", "products");
 const MAX_INPUT_SIZE = 30 * 1024 * 1024; // 30 MB raw input
@@ -111,23 +112,50 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Write file ────────────────────────────────────────────────────────────
-    await mkdir(UPLOADS_DIR, { recursive: true });
+    // ── Store file ────────────────────────────────────────────────────────────
+    // Cloudinary is preferred — local disk writes don't survive on most hosting
+    // platforms (ephemeral/serverless filesystems), which is why uploaded images
+    // can go missing in production even though they work fine locally. Falls
+    // back to local disk only when Cloudinary isn't configured (e.g. a bare
+    // local dev checkout without credentials).
+    let url: string;
+    let storedWidth = meta.width;
+    let storedHeight = meta.height;
 
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}.webp`;
-    const filepath  = path.join(UPLOADS_DIR, filename);
-
-    try {
-      await writeFile(filepath, outputBuffer);
-    } catch (writeErr: any) {
-      console.error(`[Upload] ✗ Write failed for ${filename}:`, writeErr.message);
-      return NextResponse.json(
-        {
-          error: "Failed to save image",
-          details: `Server disk write error: ${writeErr.message}. Contact support if this persists.`,
-        },
-        { status: 500 }
-      );
+    if (isCloudinaryConfigured()) {
+      try {
+        const result = await uploadBufferToCloudinary(outputBuffer, { folder: "vijaylakshmi/products" });
+        url = result.secure_url;
+        storedWidth = result.width ?? storedWidth;
+        storedHeight = result.height ?? storedHeight;
+      } catch (uploadErr: any) {
+        console.error("[Upload] ✗ Cloudinary upload failed:", uploadErr.message ?? uploadErr);
+        return NextResponse.json(
+          {
+            error: "Failed to upload image",
+            details: `Cloudinary upload error: ${uploadErr.message ?? "unknown error"}. Contact support if this persists.`,
+          },
+          { status: 500 }
+        );
+      }
+    } else {
+      await mkdir(UPLOADS_DIR, { recursive: true });
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}.webp`;
+      const filepath  = path.join(UPLOADS_DIR, filename);
+      try {
+        await writeFile(filepath, outputBuffer);
+      } catch (writeErr: any) {
+        console.error(`[Upload] ✗ Write failed for ${filename}:`, writeErr.message);
+        return NextResponse.json(
+          {
+            error: "Failed to save image",
+            details: `Server disk write error: ${writeErr.message}. Contact support if this persists.`,
+          },
+          { status: 500 }
+        );
+      }
+      url = `/uploads/products/${filename}`;
+      console.warn("[Upload] ⚠ CLOUDINARY_* env vars not set — saved to local disk. This file will NOT be available on a deployed/production server.");
     }
 
     // ── Done ──────────────────────────────────────────────────────────────────
@@ -136,18 +164,18 @@ export async function POST(req: NextRequest) {
     const elapsed       = Date.now() - t0;
 
     console.log(
-      `[Upload] ✓ ${filename} | Output: ${outputKB} KB | Saved: ${savedPct}% smaller | ${elapsed} ms`
+      `[Upload] ✓ ${url} | Output: ${outputKB} KB | Saved: ${savedPct}% smaller | ${elapsed} ms`
     );
 
     return NextResponse.json({
-      url: `/uploads/products/${filename}`,
+      url,
       meta: {
         originalSize:       file.size,
         outputSize:         outputBuffer.length,
         compressionPercent: Number(savedPct),
         format:             "webp",
-        width:              meta.width,
-        height:             meta.height,
+        width:              storedWidth,
+        height:             storedHeight,
       },
     });
 

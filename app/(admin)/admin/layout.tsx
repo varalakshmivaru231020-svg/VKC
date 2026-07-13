@@ -11,7 +11,7 @@ import {
   ChevronRight, Store, Truck, BookOpen, FileText,
   Megaphone, Globe, Star, Heart,
   ChevronDown, ChevronUp, Layers, Shield, Boxes,
-  Megaphone as MegaphoneIcon,
+  Video,
 } from "lucide-react";
 
 // ── Sub-item type ─────────────────────────────────────────────────────────────
@@ -82,8 +82,12 @@ const navGroups: NavGroupDef[] = [
   {
     title: "Content",
     items: [
-      { href: "/admin/blogs", label: "Blogs",     icon: BookOpen },
-      { href: "/admin/pages", label: "CMS Pages", icon: FileText },
+      { href: "/admin/blogs",           label: "Blogs",           icon: BookOpen },
+      { href: "/admin/saree-stories",   label: "Saree Stories",   icon: Layers },
+      { href: "/admin/gallery",         label: "Gallery",         icon: Image },
+      { href: "/admin/videos",          label: "Videos",          icon: Video },
+      { href: "/admin/pages",           label: "CMS Pages",       icon: FileText },
+      { href: "/admin/events",          label: "Events",          icon: Star },
     ],
   },
   {

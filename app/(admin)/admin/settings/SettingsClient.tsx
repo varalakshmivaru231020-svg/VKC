@@ -11,6 +11,9 @@ import {
 import type { ProductOptions } from "@/lib/db/product-options";
 import { uploadImageFile } from "@/lib/utils/upload";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Props { options: ProductOptions }
 
@@ -1217,10 +1220,16 @@ function PaymentsTab() {
     cashfree_enabled: "false",
     cashfree_app_id: "", cashfree_secret_key: "",
     cashfree_test_mode: "true",
-    // ICICI Eazypay
-    icici_enabled: "false",
-    icici_merchant_id: "", icici_access_code: "", icici_working_key: "",
-    icici_test_mode: "true",
+    // ICICI PG Direct (Phicommerce) — replaces legacy Eazypay
+    icici_pg_enabled:       "false",
+    icici_pg_base_url:      "",
+    icici_pg_command_url:   "",
+    icici_pg_merchant_id:   "",
+    icici_pg_aggregator_id: "",
+    icici_pg_key:           "",
+    icici_pg_return_url:    "",
+    icici_pg_allowed_modes: "",
+    icici_pg_test_mode:     "true",
     // Payment methods
     cod_enabled: "true",
   });
@@ -1238,12 +1247,16 @@ function PaymentsTab() {
         cashfree_app_id:    settings.cashfree_app_id    ?? "",
         cashfree_secret_key: settings.cashfree_secret_key ?? "",
         cashfree_test_mode: settings.cashfree_test_mode ?? "true",
-        icici_enabled:      settings.icici_enabled      ?? "false",
-        icici_merchant_id:  settings.icici_merchant_id  ?? "",
-        icici_access_code:  settings.icici_access_code  ?? "",
-        icici_working_key:  settings.icici_working_key  ?? "",
-        icici_test_mode:    settings.icici_test_mode    ?? "true",
-        cod_enabled:        settings.cod_enabled        ?? "true",
+        icici_pg_enabled:       settings.icici_pg_enabled       ?? "false",
+        icici_pg_base_url:      settings.icici_pg_base_url      ?? "",
+        icici_pg_command_url:   settings.icici_pg_command_url   ?? "",
+        icici_pg_merchant_id:   settings.icici_pg_merchant_id   ?? "",
+        icici_pg_aggregator_id: settings.icici_pg_aggregator_id ?? "",
+        icici_pg_key:           settings.icici_pg_key           ?? "",
+        icici_pg_return_url:    settings.icici_pg_return_url    ?? "",
+        icici_pg_allowed_modes: settings.icici_pg_allowed_modes ?? "",
+        icici_pg_test_mode:     settings.icici_pg_test_mode     ?? "true",
+        cod_enabled:            settings.cod_enabled            ?? "true",
       }));
     });
   }, []);
@@ -1345,39 +1358,66 @@ function PaymentsTab() {
         </div>
       </SectionCard>
 
-      {/* ── ICICI Eazypay ── */}
-      <SectionCard title="ICICI Eazypay" icon={CreditCard}>
+      {/* ── ICICI PG Direct (Phicommerce v2) — replaces legacy Eazypay ── */}
+      <SectionCard title="ICICI PG Direct (Phicommerce)" icon={CreditCard}>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <GatewayBadge testKey="icici_test_mode" />
-            <Toggle k="icici_enabled" label="Enable ICICI Eazypay" />
+            <GatewayBadge testKey="icici_pg_test_mode" />
+            <Toggle k="icici_pg_enabled" label="Enable ICICI PG" />
           </div>
           <div className="pt-1 border-t" style={{ borderColor: "#F3F4F6" }}>
-            <Toggle k="icici_test_mode" label="Test Mode" />
+            <Toggle k="icici_pg_test_mode" label="Test Mode (UAT — pgpayuat URLs)" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Merchant ID</label>
-              <input value={form.icici_merchant_id}
-                onChange={e => setForm(f => ({ ...f, icici_merchant_id: e.target.value }))}
-                placeholder="ICICI Merchant ID" className={inputCls} style={inputStyle} {...focusProps} />
+              <input value={form.icici_pg_merchant_id}
+                onChange={e => setForm(f => ({ ...f, icici_pg_merchant_id: e.target.value }))}
+                placeholder="100000000007164" className={inputCls} style={inputStyle} {...focusProps} />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Access Code</label>
-              <input value={form.icici_access_code}
-                onChange={e => setForm(f => ({ ...f, icici_access_code: e.target.value }))}
-                placeholder="Access Code" className={inputCls} style={inputStyle} {...focusProps} />
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Aggregator ID</label>
+              <input value={form.icici_pg_aggregator_id}
+                onChange={e => setForm(f => ({ ...f, icici_pg_aggregator_id: e.target.value }))}
+                placeholder="A100000000007164" className={inputCls} style={inputStyle} {...focusProps} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Working Key</label>
-            <SecretInput value={form.icici_working_key}
-              onChange={v => setForm(f => ({ ...f, icici_working_key: v }))}
-              placeholder="32-character AES working key" />
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Secret Key (HMAC)</label>
+            <SecretInput value={form.icici_pg_key}
+              onChange={v => setForm(f => ({ ...f, icici_pg_key: v }))}
+              placeholder="UUID format secret key" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Return URL (public, customer redirects here)</label>
+            <input value={form.icici_pg_return_url}
+              onChange={e => setForm(f => ({ ...f, icici_pg_return_url: e.target.value }))}
+              placeholder="https://yoursite.com/api/web/checkout/icici-pg/return" className={inputCls} style={inputStyle} {...focusProps} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Base URL (override)</label>
+              <input value={form.icici_pg_base_url}
+                onChange={e => setForm(f => ({ ...f, icici_pg_base_url: e.target.value }))}
+                placeholder="Auto if blank — UAT: pgpayuat..." className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Command URL (override)</label>
+              <input value={form.icici_pg_command_url}
+                onChange={e => setForm(f => ({ ...f, icici_pg_command_url: e.target.value }))}
+                placeholder="Auto if blank" className={inputCls} style={inputStyle} {...focusProps} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Allowed Payment Modes (optional CSV)</label>
+            <input value={form.icici_pg_allowed_modes}
+              onChange={e => setForm(f => ({ ...f, icici_pg_allowed_modes: e.target.value }))}
+              placeholder="CARD,NB,UPI,WALLET — leave blank for all" className={inputCls} style={inputStyle} {...focusProps} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Empty = no restriction. Listing all 4 = no restriction.</p>
           </div>
           <p className="text-xs font-body" style={{ color: "#6B7280" }}>
-            Response URL to configure in ICICI Eazypay dashboard:{" "}
-            <code className="text-xs bg-gray-100 px-1 rounded">/api/v1/checkout/icici/verify</code>
+            Verify URL to configure in ICICI dashboard:{" "}
+            <code className="text-xs bg-gray-100 px-1 rounded">/api/web/checkout/icici-pg/return</code>
           </p>
         </div>
       </SectionCard>
@@ -1404,6 +1444,18 @@ function SmsTab() {
     whatsapp_number: "",
     shiprocket_enabled: "false",
     shiprocket_email: "", shiprocket_password: "", shiprocket_channel_id: "",
+    shiprocket_pickup_location: "Primary",
+    shiprocket_pickup_pincode:  "",
+    // DTDC (Shipsy) — direct carrier
+    dtdc_enabled: "false",
+    dtdc_api_key: "", dtdc_customer_code: "", dtdc_service_type: "B2C SMART EXPRESS",
+    dtdc_tracking_token: "",
+    dtdc_origin_name: "", dtdc_origin_phone: "",
+    dtdc_origin_address_1: "", dtdc_origin_address_2: "",
+    dtdc_origin_pincode: "", dtdc_origin_city: "", dtdc_origin_state: "",
+    // Delhivery — direct carrier
+    delhivery_enabled: "false",
+    delhivery_api_token: "", delhivery_pickup_name: "",
   });
 
   useEffect(() => {
@@ -1418,10 +1470,27 @@ function SmsTab() {
         whatsapp_token:        settings.whatsapp_token        ?? "",
         whatsapp_phone_id:     settings.whatsapp_phone_id     ?? "",
         whatsapp_number:       settings.whatsapp_number       ?? "",
-        shiprocket_enabled:    settings.shiprocket_enabled    ?? "false",
-        shiprocket_email:      settings.shiprocket_email      ?? "",
-        shiprocket_password:   settings.shiprocket_password   ?? "",
-        shiprocket_channel_id: settings.shiprocket_channel_id ?? "",
+        shiprocket_enabled:         settings.shiprocket_enabled         ?? "false",
+        shiprocket_email:           settings.shiprocket_email           ?? "",
+        shiprocket_password:        settings.shiprocket_password        ?? "",
+        shiprocket_channel_id:      settings.shiprocket_channel_id      ?? "",
+        shiprocket_pickup_location: settings.shiprocket_pickup_location ?? "Primary",
+        shiprocket_pickup_pincode:  settings.shiprocket_pickup_pincode  ?? "",
+        dtdc_enabled:          settings.dtdc_enabled          ?? "false",
+        dtdc_api_key:          settings.dtdc_api_key          ?? "",
+        dtdc_customer_code:    settings.dtdc_customer_code    ?? "",
+        dtdc_service_type:     settings.dtdc_service_type     ?? "B2C SMART EXPRESS",
+        dtdc_tracking_token:   settings.dtdc_tracking_token   ?? "",
+        dtdc_origin_name:      settings.dtdc_origin_name      ?? "",
+        dtdc_origin_phone:     settings.dtdc_origin_phone     ?? "",
+        dtdc_origin_address_1: settings.dtdc_origin_address_1 ?? "",
+        dtdc_origin_address_2: settings.dtdc_origin_address_2 ?? "",
+        dtdc_origin_pincode:   settings.dtdc_origin_pincode   ?? "",
+        dtdc_origin_city:      settings.dtdc_origin_city      ?? "",
+        dtdc_origin_state:     settings.dtdc_origin_state     ?? "",
+        delhivery_enabled:     settings.delhivery_enabled     ?? "false",
+        delhivery_api_token:   settings.delhivery_api_token   ?? "",
+        delhivery_pickup_name: settings.delhivery_pickup_name ?? "",
       }));
     });
   }, []);
@@ -1436,6 +1505,8 @@ function SmsTab() {
     setForm(f => ({ ...f, [k]: e.target.value }));
 
   const srEnabled = form.shiprocket_enabled === "true";
+  const dtdcEnabled = form.dtdc_enabled === "true";
+  const delhiveryEnabled = form.delhivery_enabled === "true";
 
   return (
     <div className="space-y-5">
@@ -1518,8 +1589,18 @@ function SmsTab() {
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Channel ID <span className="font-normal text-xs" style={{ color: "#9CA3AF" }}>(optional)</span></label>
-            <input value={form.shiprocket_channel_id} onChange={u("shiprocket_channel_id")} placeholder="e.g. 123456" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
-            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Found in Shiprocket → Settings → Channels</p>
+            <input value={form.shiprocket_channel_id} onChange={u("shiprocket_channel_id")} placeholder="e.g. 123456 (numeric only)" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Numeric ID from Shiprocket → Settings → Channels. Not a pincode.</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Pickup Location Name *</label>
+            <input value={form.shiprocket_pickup_location} onChange={u("shiprocket_pickup_location")} placeholder="Primary" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Exact name (case-sensitive) from Shiprocket → Settings → Pickup Addresses</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Pickup Pincode (for serviceability)</label>
+            <input value={form.shiprocket_pickup_pincode} onChange={u("shiprocket_pickup_pincode")} placeholder="560036" className={inputCls} style={{ ...inputStyle, opacity: srEnabled ? 1 : 0.6 }} {...focusProps} disabled={!srEnabled} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Used by the courier-picker dialog. Defaults to SHIPROCKET_PICKUP_PINCODE env var.</p>
           </div>
         </div>
         {srEnabled && (
@@ -1529,6 +1610,110 @@ function SmsTab() {
             </p>
           </div>
         )}
+      </SectionCard>
+
+      {/* ── DTDC (direct carrier) ── */}
+      <SectionCard
+        title="DTDC (Direct Courier)"
+        icon={Truck}
+        action={
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div
+              onClick={() => setForm(f => ({ ...f, dtdc_enabled: dtdcEnabled ? "false" : "true" }))}
+              className="relative w-9 h-5 rounded-full transition-all cursor-pointer"
+              style={{ background: dtdcEnabled ? "var(--color-primary)" : "#D1D5DB" }}
+            >
+              <div className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all" style={{ left: dtdcEnabled ? "18px" : "2px" }} />
+            </div>
+            <span className="text-xs font-medium font-body" style={{ color: "#6B7280" }}>{dtdcEnabled ? "Enabled" : "Disabled"}</span>
+          </label>
+        }
+      >
+        <p className="text-xs font-body mb-4" style={{ color: "#6B7280" }}>
+          Book consignments directly with DTDC (Shipsy API). When enabled, admin can dispatch orders via DTDC from the order detail page. The order/label API uses the API key; live tracking needs the separate tracking token.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>API Key *</label>
+            <SecretInput value={form.dtdc_api_key} onChange={v => setForm(f => ({ ...f, dtdc_api_key: v }))} placeholder="DTDC api-key" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Customer Code *</label>
+            <input value={form.dtdc_customer_code} onChange={u("dtdc_customer_code")} placeholder="e.g. GL1234" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Default Service Type</label>
+            <input value={form.dtdc_service_type} onChange={u("dtdc_service_type")} placeholder="B2C SMART EXPRESS" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Tracking Token <span className="font-normal text-xs" style={{ color: "#9CA3AF" }}>(for status)</span></label>
+            <SecretInput value={form.dtdc_tracking_token} onChange={v => setForm(f => ({ ...f, dtdc_tracking_token: v }))} placeholder="DTDC tracking apikey" />
+          </div>
+        </div>
+        <p className="text-xs font-semibold uppercase tracking-wider mt-5 mb-2" style={{ color: "#9CA3AF" }}>Pickup / Origin Address</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin Name *</label>
+            <input value={form.dtdc_origin_name} onChange={u("dtdc_origin_name")} placeholder="Vijaylakshmi Sarees" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin Phone *</label>
+            <input value={form.dtdc_origin_phone} onChange={u("dtdc_origin_phone")} placeholder="10-digit phone" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Address Line 1 *</label>
+            <input value={form.dtdc_origin_address_1} onChange={u("dtdc_origin_address_1")} placeholder="Street / building" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Address Line 2</label>
+            <input value={form.dtdc_origin_address_2} onChange={u("dtdc_origin_address_2")} placeholder="Area / landmark" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin Pincode *</label>
+            <input value={form.dtdc_origin_pincode} onChange={u("dtdc_origin_pincode")} placeholder="560036" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin City *</label>
+            <input value={form.dtdc_origin_city} onChange={u("dtdc_origin_city")} placeholder="Bengaluru" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin State *</label>
+            <input value={form.dtdc_origin_state} onChange={u("dtdc_origin_state")} placeholder="Karnataka" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* ── Delhivery (direct carrier) ── */}
+      <SectionCard
+        title="Delhivery (Direct Courier)"
+        icon={Truck}
+        action={
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div
+              onClick={() => setForm(f => ({ ...f, delhivery_enabled: delhiveryEnabled ? "false" : "true" }))}
+              className="relative w-9 h-5 rounded-full transition-all cursor-pointer"
+              style={{ background: delhiveryEnabled ? "var(--color-primary)" : "#D1D5DB" }}
+            >
+              <div className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all" style={{ left: delhiveryEnabled ? "18px" : "2px" }} />
+            </div>
+            <span className="text-xs font-medium font-body" style={{ color: "#6B7280" }}>{delhiveryEnabled ? "Enabled" : "Disabled"}</span>
+          </label>
+        }
+      >
+        <p className="text-xs font-body mb-4" style={{ color: "#6B7280" }}>
+          Book shipments directly with Delhivery&apos;s B2C API. The pickup location name must exactly match a registered warehouse on your Delhivery account.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>API Token *</label>
+            <SecretInput value={form.delhivery_api_token} onChange={v => setForm(f => ({ ...f, delhivery_api_token: v }))} placeholder="Delhivery API token" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Pickup Location Name *</label>
+            <input value={form.delhivery_pickup_name} onChange={u("delhivery_pickup_name")} placeholder="Registered warehouse name" className={inputCls} style={{ ...inputStyle, opacity: delhiveryEnabled ? 1 : 0.6 }} {...focusProps} disabled={!delhiveryEnabled} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Exact name (case-sensitive) from your Delhivery dashboard → Warehouses.</p>
+          </div>
+        </div>
       </SectionCard>
 
       <div className="flex justify-end"><SaveButton saved={saved} loading={loading} onClick={handleSave} /></div>
@@ -1856,6 +2041,53 @@ function RolesTab() {
 }
 
 /* ─────────────── HEADER NAVIGATION ─────────────── */
+function SortableNavItem({
+  id, index, isLast, name, isSubcategory, onMoveUp, onMoveDown, onRemove,
+}: {
+  id: string; index: number; isLast: boolean; name: string; isSubcategory: boolean;
+  onMoveUp: () => void; onMoveDown: () => void; onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, borderColor: "#E5E7EB", background: "white" };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-3 p-3 rounded-xl border">
+      <button {...attributes} {...listeners} className="h-7 w-7 flex items-center justify-center rounded-lg shrink-0 cursor-grab active:cursor-grabbing touch-none" style={{ color: "#9CA3AF" }} aria-label="Drag to reorder">
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="w-7 h-7 flex items-center justify-center rounded-lg text-xs font-bold font-body shrink-0"
+        style={{ background: "var(--color-primary-50)", color: "var(--color-primary)" }}>
+        {index + 1}
+      </div>
+      <span className="text-sm font-medium font-body flex-1" style={{ color: "#111827" }}>
+        {name}
+        {isSubcategory && (
+          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-body" style={{ background: "#F3F4F6", color: "#9CA3AF" }}>
+            subcategory
+          </span>
+        )}
+      </span>
+      <div className="flex items-center gap-1">
+        <button onClick={onMoveUp} disabled={index === 0}
+          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-gray-50 disabled:opacity-30"
+          style={{ borderColor: "#E5E7EB" }}>
+          <ChevronUp className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
+        </button>
+        <button onClick={onMoveDown} disabled={isLast}
+          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-gray-50 disabled:opacity-30"
+          style={{ borderColor: "#E5E7EB" }}>
+          <ChevronDown className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
+        </button>
+        <button onClick={onRemove}
+          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-red-50"
+          style={{ borderColor: "#E5E7EB" }}>
+          <X className="h-3.5 w-3.5" style={{ color: "#EF4444" }} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function NavTab() {
   const [allCats, setAllCats] = useState<{ id: string; name: string; parentId: string | null; isActive: boolean }[]>([]);
   const [navIds, setNavIds] = useState<string[]>([]);
@@ -1896,6 +2128,18 @@ function NavTab() {
     const a = [...prev]; [a[i], a[i + 1]] = [a[i + 1], a[i]]; return a;
   });
 
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    setNavIds(prev => {
+      const oldIndex = prev.indexOf(active.id as string);
+      const newIndex = prev.indexOf(over.id as string);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
+
   const handleSave = async () => {
     setLoading(true);
     await fetch("/api/admin/settings", {
@@ -1931,41 +2175,17 @@ function NavTab() {
                   <p className="text-xs font-body mt-0.5" style={{ color: "#D1D5DB" }}>Add categories from the list below. If empty, all top-level categories are shown.</p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {inNav.map((cat, i) => (
-                    <div key={cat.id} className="flex items-center gap-3 p-3 rounded-xl border" style={{ borderColor: "#E5E7EB", background: "white" }}>
-                      <div className="w-7 h-7 flex items-center justify-center rounded-lg text-xs font-bold font-body shrink-0"
-                        style={{ background: "var(--color-primary-50)", color: "var(--color-primary)" }}>
-                        {i + 1}
-                      </div>
-                      <span className="text-sm font-medium font-body flex-1" style={{ color: "#111827" }}>
-                        {cat.name}
-                        {cat.parentId && (
-                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-body" style={{ background: "#F3F4F6", color: "#9CA3AF" }}>
-                            subcategory
-                          </span>
-                        )}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => moveUp(i)} disabled={i === 0}
-                          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-gray-50 disabled:opacity-30"
-                          style={{ borderColor: "#E5E7EB" }}>
-                          <ChevronUp className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
-                        </button>
-                        <button onClick={() => moveDown(i)} disabled={i === inNav.length - 1}
-                          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-gray-50 disabled:opacity-30"
-                          style={{ borderColor: "#E5E7EB" }}>
-                          <ChevronDown className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
-                        </button>
-                        <button onClick={() => remove(cat.id)}
-                          className="h-7 w-7 flex items-center justify-center rounded-lg border transition-colors hover:bg-red-50"
-                          style={{ borderColor: "#E5E7EB" }}>
-                          <X className="h-3.5 w-3.5" style={{ color: "#EF4444" }} />
-                        </button>
-                      </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={navIds} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {inNav.map((cat, i) => (
+                        <SortableNavItem key={cat.id} id={cat.id} index={i} isLast={i === inNav.length - 1}
+                          name={cat.name} isSubcategory={!!cat.parentId}
+                          onMoveUp={() => moveUp(i)} onMoveDown={() => moveDown(i)} onRemove={() => remove(cat.id)} />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
 

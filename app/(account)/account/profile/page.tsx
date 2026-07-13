@@ -6,6 +6,13 @@ import { useSession } from "next-auth/react";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+function formatDisplayDate(isoDate: string): string {
+  if (!isoDate) return "";
+  const d = new Date(isoDate + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+}
+
 function DisplayField({ label, value, placeholder = "Not set" }: {
   label: string; value: string; placeholder?: string;
 }) {
@@ -153,11 +160,11 @@ export default function ProfilePage() {
 
   // Persisted data
   const [phone, setPhone]       = useState("");
-  const [personal, setPersonal] = useState({ firstName: "", lastName: "" });
+  const [personal, setPersonal] = useState({ firstName: "", lastName: "", dob: "", anniversary: "", motherTongue: "" });
   const [email, setEmail]       = useState("");
 
   // Edit drafts
-  const [personalDraft, setPersonalDraft] = useState({ firstName: "", lastName: "" });
+  const [personalDraft, setPersonalDraft] = useState({ firstName: "", lastName: "", dob: "", anniversary: "", motherTongue: "" });
   const [emailDraft, setEmailDraft]       = useState("");
 
   // Edit modes
@@ -173,7 +180,12 @@ export default function ProfilePage() {
       .then((r) => r.json())
       .then(({ user }) => {
         if (!user) return;
-        setPersonal({ firstName: user.firstName ?? "", lastName: user.lastName ?? "" });
+        setPersonal({
+          firstName: user.firstName ?? "", lastName: user.lastName ?? "",
+          dob: user.dob ? user.dob.slice(0, 10) : "",
+          anniversary: user.anniversary ? user.anniversary.slice(0, 10) : "",
+          motherTongue: user.motherTongue ?? "",
+        });
         setEmail(user.email ?? "");
         setPhone(user.phone ? user.phone.replace(/^\+91/, "") : "");
       })
@@ -262,12 +274,39 @@ export default function ProfilePage() {
                 placeholder="Sharma"
               />
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <EditInput
+                label="Date of Birth"
+                type="date"
+                value={personalDraft.dob}
+                onChange={(v) => setPersonalDraft((p) => ({ ...p, dob: v }))}
+              />
+              <EditInput
+                label="Anniversary"
+                type="date"
+                value={personalDraft.anniversary}
+                onChange={(v) => setPersonalDraft((p) => ({ ...p, anniversary: v }))}
+              />
+            </div>
+            <EditInput
+              label="Mother Tongue"
+              value={personalDraft.motherTongue}
+              onChange={(v) => setPersonalDraft((p) => ({ ...p, motherTongue: v }))}
+              placeholder="Telugu"
+            />
             <SaveCancel onSave={savePersonal} onCancel={() => setEditPersonal(false)} saving={savingPersonal} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <DisplayField label="First Name" value={personal.firstName} />
-            <DisplayField label="Last Name"  value={personal.lastName} />
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <DisplayField label="First Name" value={personal.firstName} />
+              <DisplayField label="Last Name"  value={personal.lastName} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <DisplayField label="Date of Birth" value={formatDisplayDate(personal.dob)} />
+              <DisplayField label="Anniversary"   value={formatDisplayDate(personal.anniversary)} />
+            </div>
+            <DisplayField label="Mother Tongue" value={personal.motherTongue} />
           </div>
         )}
       </SectionCard>

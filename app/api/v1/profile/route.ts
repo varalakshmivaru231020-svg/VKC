@@ -13,6 +13,7 @@ export async function GET(req: Request) {
     select: {
       id: true, firstName: true, lastName: true, email: true, phone: true,
       role: true, customerNumber: true, createdAt: true,
+      dob: true, anniversary: true, motherTongue: true,
     },
   });
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -27,13 +28,17 @@ export async function PATCH(req: Request) {
   const updated = await db.user.update({
     where: { id: u.id },
     data: {
-      firstName: typeof body.firstName === "string" ? body.firstName.trim() || null : undefined,
-      lastName:  typeof body.lastName  === "string" ? body.lastName.trim()  || null : undefined,
-      email:     typeof body.email     === "string" ? body.email.trim().toLowerCase() || null : undefined,
+      firstName:    typeof body.firstName    === "string" ? body.firstName.trim() || null : undefined,
+      lastName:     typeof body.lastName     === "string" ? body.lastName.trim()  || null : undefined,
+      email:        typeof body.email        === "string" ? body.email.trim().toLowerCase() || null : undefined,
+      dob:          typeof body.dob          === "string" ? (body.dob ? new Date(body.dob) : null) : undefined,
+      anniversary:  typeof body.anniversary  === "string" ? (body.anniversary ? new Date(body.anniversary) : null) : undefined,
+      motherTongue: typeof body.motherTongue === "string" ? body.motherTongue.trim() || null : undefined,
     },
     select: {
       id: true, firstName: true, lastName: true, email: true, phone: true,
       role: true, customerNumber: true, createdAt: true,
+      dob: true, anniversary: true, motherTongue: true,
     },
   });
   return NextResponse.json({ user: updated });

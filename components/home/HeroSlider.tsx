@@ -16,6 +16,7 @@ interface Slide {
   bgColor: string;
   imageBg: string;
   imageUrl?: string | null;
+  videoUrl?: string | null;
 }
 
 interface Props {
@@ -55,7 +56,9 @@ export default function HeroSlider({ slides }: Props) {
   return (
     <section className="relative overflow-hidden" style={{ minHeight: "88vh" }}>
       {/* Slides */}
-      {slides.map((sl, i) => (
+      {slides.map((sl, i) => {
+        const hasMedia = Boolean(sl.videoUrl || sl.imageUrl);
+        return (
         <div
           key={i}
           className="absolute inset-0"
@@ -74,14 +77,23 @@ export default function HeroSlider({ slides }: Props) {
           }}
         >
           {/* Full-bleed background */}
-          <div className="absolute inset-0" style={{ background: sl.imageUrl ? sl.imageBg : sl.bgColor }}>
-            {sl.imageUrl && (
+          <div className="absolute inset-0" style={{ background: sl.videoUrl || sl.imageUrl ? sl.imageBg : sl.bgColor }}>
+            {sl.videoUrl ? (
+              <video
+                src={sl.videoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : sl.imageUrl && (
               <SmartImage src={sl.imageUrl} alt={sl.tag} fill objectFit="cover" objectPosition="center" />
             )}
           </div>
 
           {/* Gradient overlay — only when there is text to keep readable */}
-          {sl.imageUrl && (sl.tag || sl.heading || sl.subtext || sl.ctaLabel) && (
+          {(sl.videoUrl || sl.imageUrl) && (sl.tag || sl.heading || sl.subtext || sl.ctaLabel) && (
             <div
               className="absolute inset-0"
               style={{ background: "linear-gradient(105deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.38) 45%, rgba(0,0,0,0.08) 100%)" }}
@@ -98,7 +110,7 @@ export default function HeroSlider({ slides }: Props) {
                       <div className="h-px w-10" style={{ background: "var(--color-gold)" }} />
                       <span
                         className="text-xs font-semibold tracking-[0.18em] uppercase font-body"
-                        style={{ color: sl.imageUrl ? "var(--color-gold-light)" : "var(--color-gold)" }}
+                        style={{ color: hasMedia ? "var(--color-gold-light)" : "var(--color-gold)" }}
                       >
                         {sl.tag}
                       </span>
@@ -114,7 +126,7 @@ export default function HeroSlider({ slides }: Props) {
                         fontWeight: "var(--weight-heading)",
                         lineHeight: "var(--leading-display)",
                         letterSpacing: "var(--tracking-display)",
-                        color: sl.imageUrl ? "#FFFFFF" : "var(--color-text-primary)",
+                        color: hasMedia ? "#FFFFFF" : "var(--color-text-primary)",
                         wordBreak: "break-word",
                         overflowWrap: "break-word",
                       }}
@@ -130,7 +142,7 @@ export default function HeroSlider({ slides }: Props) {
                         fontFamily: "var(--font-body)",
                         fontSize: "var(--text-body-xl)",
                         lineHeight: "var(--leading-body)",
-                        color: sl.imageUrl ? "rgba(255,255,255,0.82)" : "var(--color-text-secondary)",
+                        color: hasMedia ? "rgba(255,255,255,0.82)" : "var(--color-text-secondary)",
                       }}
                     >
                       {sl.subtext}
@@ -154,9 +166,9 @@ export default function HeroSlider({ slides }: Props) {
                           href={sl.ctaSecHref}
                           className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xs text-sm font-semibold font-body border transition-colors duration-normal"
                           style={{
-                            borderColor: sl.imageUrl ? "rgba(255,255,255,0.6)" : "var(--color-primary)",
-                            color: sl.imageUrl ? "#FFFFFF" : "var(--color-primary)",
-                            background: sl.imageUrl ? "rgba(255,255,255,0.08)" : "transparent",
+                            borderColor: hasMedia ? "rgba(255,255,255,0.6)" : "var(--color-primary)",
+                            color: hasMedia ? "#FFFFFF" : "var(--color-primary)",
+                            background: hasMedia ? "rgba(255,255,255,0.08)" : "transparent",
                           }}
                         >
                           {sl.ctaSecLabel}
@@ -169,7 +181,8 @@ export default function HeroSlider({ slides }: Props) {
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
 
       {/* Dots */}
       {slides.length > 1 && (
@@ -185,8 +198,8 @@ export default function HeroSlider({ slides }: Props) {
                 height: 8,
                 borderRadius: 4,
                 background: i === current
-                  ? (s.imageUrl ? "#FFFFFF" : "var(--color-primary)")
-                  : (s.imageUrl ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.2)"),
+                  ? ((s.videoUrl || s.imageUrl) ? "#FFFFFF" : "var(--color-primary)")
+                  : ((s.videoUrl || s.imageUrl) ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.2)"),
               }}
             />
           ))}
@@ -197,7 +210,7 @@ export default function HeroSlider({ slides }: Props) {
       {slides.length > 1 && (
         <div
           className="absolute bottom-8 right-4 lg:right-8 z-10 text-xs font-body font-medium tabular-nums"
-          style={{ color: s.imageUrl ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.35)" }}
+          style={{ color: (s.videoUrl || s.imageUrl) ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.35)" }}
         >
           {String(current + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
         </div>

@@ -26,7 +26,7 @@ export default async function ProductDetailPage({ params }: Props) {
   let product: ProductData | null = null;
   let related: ProductData[] = [];
   let careInstructions = "";
-  let deliveryInstructions = "• Free shipping on orders above ₹2,999\n• Standard delivery: 4–7 business days\n• Express delivery available at checkout\n• Easy 15-day returns on unworn items with tags intact\n• Exchange available for different colour of same product";
+  let deliveryInstructions = "• Free shipping on this product – Domestic orders only\n• Standard delivery: 4–7 business days\n• Express delivery available at checkout\n• Easy 15-day returns on unworn items with tags intact\n• Exchange available for different colour of same product";
 
   try {
     [product, related] = await Promise.all([

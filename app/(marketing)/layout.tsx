@@ -7,6 +7,8 @@ import { QuickViewModal } from "@/components/product/QuickViewModal";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { LoginTrigger } from "@/components/auth/LoginTrigger";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { PageTransition } from "@/components/layout/PageTransition";
+import { WhatsAppFloatButton } from "@/components/layout/WhatsAppFloatButton";
 import { StoreSyncProvider } from "@/components/sync/StoreSyncProvider";
 import { getThemeSettings } from "@/lib/theme/server";
 import { db } from "@/lib/db";
@@ -18,41 +20,55 @@ function parseFooterLinks(v: string | undefined): { label: string; href: string 
   try { const p = JSON.parse(v); return Array.isArray(p) ? p : undefined; } catch { return undefined; }
 }
 
+interface CategoryRow { id: string; name: string; slug: string; parentId: string | null }
+
+function buildNavCategories(categories: CategoryRow[], headerNavRaw: string | undefined) {
+  const byId = new Map(categories.map((c) => [c.id, c]));
+
+  let navIds: string[] = [];
+  try { navIds = headerNavRaw ? JSON.parse(headerNavRaw) : []; } catch { navIds = []; }
+  navIds = navIds.filter((id) => byId.has(id));
+
+  if (navIds.length === 0) {
+    return categories
+      .filter((c) => !c.parentId)
+      .map((c) => ({
+        id: c.id, name: c.name, slug: c.slug,
+        children: categories.filter((ch) => ch.parentId === c.id).map((ch) => ({ id: ch.id, name: ch.name, slug: ch.slug })),
+      }));
+  }
+
+  const navIdSet = new Set(navIds);
+  const topLevelIds = navIds.filter((id) => {
+    const parentId = byId.get(id)!.parentId;
+    return !parentId || !navIdSet.has(parentId);
+  });
+
+  return topLevelIds.map((id) => {
+    const cat = byId.get(id)!;
+    const children = navIds
+      .filter((cid) => byId.get(cid)!.parentId === id)
+      .map((cid) => { const c = byId.get(cid)!; return { id: c.id, name: c.name, slug: c.slug }; });
+    return { id: cat.id, name: cat.name, slug: cat.slug, children };
+  });
+}
+
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
-  const [settings, allActiveCategories, siteSettings] = await Promise.all([
+  const [settings, siteSettings, categories] = await Promise.all([
     getThemeSettings(),
-    db.category.findMany({
-      where: { isActive: true },
-      include: {
-        children: {
-          where: { isActive: true },
-          orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-          include: {
-            children: {
-              where: { isActive: true },
-              orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-            },
-          },
-        },
-      },
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    }).catch(() => []),
     db.siteSetting.findMany().then(rows => {
       const m: Record<string, string> = {};
       rows.forEach(r => { m[r.key] = r.value; });
       return m;
     }).catch(() => ({} as Record<string, string>)),
+    db.category.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, slug: true, parentId: true },
+      orderBy: { sortOrder: "asc" },
+    }).catch(() => [] as CategoryRow[]),
   ]);
 
-  // Determine header nav from admin setting or fall back to all root categories
-  const navOrder: string[] = (() => {
-    try { return siteSettings["header_nav"] ? JSON.parse(siteSettings["header_nav"]) : []; }
-    catch { return []; }
-  })();
-
-  const topCategories = navOrder.length > 0
-    ? (navOrder.map(id => allActiveCategories.find(c => c.id === id)).filter(Boolean) as typeof allActiveCategories)
-    : allActiveCategories.filter(c => !c.parentId);
+  const navCategories = buildNavCategories(categories, siteSettings["header_nav"]);
 
   return (
     <div className="marketing-layout">
@@ -60,9 +76,13 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <Header
         siteName={settings["site.name"]}
         logoUrl={siteSettings["store_logo"] || null}
-        navCategories={topCategories}
+        instagram={siteSettings["social_instagram"]}
+        facebook={siteSettings["social_facebook"]}
+        youtube={siteSettings["social_youtube"]}
+        navCategories={navCategories}
+        whatsappNumber={siteSettings["whatsapp_number"]}
       />
-      <main>{children}</main>
+      <main><PageTransition>{children}</PageTransition></main>
       <Footer
         siteName={siteSettings["store_name"] || settings["site.name"]}
         tagline={siteSettings["tagline"] || settings["site.tagline"]}
@@ -82,6 +102,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <LoginModal />
       <Suspense><LoginTrigger /></Suspense>
       <MobileBottomNav />
+      <WhatsAppFloatButton phoneNumber={siteSettings["whatsapp_number"]} />
       <StoreSyncProvider />
     </div>
   );

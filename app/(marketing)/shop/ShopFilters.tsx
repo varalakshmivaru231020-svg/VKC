@@ -13,9 +13,24 @@ export interface FilterAttribute {
   inputType: string;
 }
 
+export interface ColorSwatch {
+  hex: string;
+  name: string;
+}
+
 interface Props {
   attributes: FilterAttribute[];
+  colors?: ColorSwatch[];
   current: Record<string, string | undefined>;
+}
+
+function isLightColor(hex: string): boolean {
+  const h = hex.replace("#", "");
+  if (h.length !== 6) return false;
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 170;
 }
 
 const PRICE_PRESETS = [
@@ -25,7 +40,7 @@ const PRICE_PRESETS = [
   { label: "Above ₹30K", min: "30000", max: "" },
 ];
 
-export default function ShopFilters({ attributes, current }: Props) {
+export default function ShopFilters({ attributes, colors = [], current }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -149,6 +164,45 @@ export default function ShopFilters({ attributes, current }: Props) {
           </div>
         </div>
       </Section>
+
+      {/* Color — swatch picker */}
+      {colors.length > 0 && (
+        <>
+          <div className="gold-divider" />
+          <Section id="color" title="Color">
+            <div className="flex flex-wrap gap-3 mb-4">
+              {colors.map(({ hex, name }) => {
+                const active = current.color === hex;
+                return (
+                  <button
+                    key={hex}
+                    onClick={() => toggle("color", hex)}
+                    aria-label={name}
+                    title={name}
+                    className="relative h-7 w-7 rounded-full shrink-0 transition-transform duration-150"
+                    style={{
+                      background: hex,
+                      border: active ? "2px solid var(--color-primary)" : "1px solid var(--color-parchment)",
+                      outline: active ? "2px solid var(--color-primary-50)" : "none",
+                      outlineOffset: "1px",
+                      transform: active ? "scale(1.1)" : "scale(1)",
+                    }}
+                  >
+                    {active && (
+                      <span
+                        className="absolute inset-0 flex items-center justify-center text-[10px] font-bold"
+                        style={{ color: isLightColor(hex) ? "#1c1410" : "white" }}
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+        </>
+      )}
 
       {/* Dynamic attribute filters */}
       {attributes.map((attr) => {

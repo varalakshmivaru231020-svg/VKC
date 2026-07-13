@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Shield, RefreshCw, Truck, Sparkles } from "lucide-react";
+import { ArrowRight, Shield, RefreshCw, Truck, Sparkles, Facebook } from "lucide-react";
 import { getThemeSettings } from "@/lib/theme/server";
 import { getFeaturedProducts } from "@/lib/db/products";
 import { db } from "@/lib/db";
@@ -8,6 +8,8 @@ import HeroSlider from "@/components/home/HeroSlider";
 import { PopupBanner } from "@/components/home/PopupBanner";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { PromoBanner } from "@/components/home/PromoBanner";
+import { getActiveGalleryItems } from "@/lib/db/gallery";
+import { EventGallery } from "@/components/events/EventGallery";
 
 export const dynamic = "force-dynamic";
 
@@ -70,9 +72,9 @@ const trustBadges = [
 
 export default async function HomePage() {
   const now = new Date();
-  const [, featuredProducts, dbSlides, activePopup, latestBlogs, homepageCatSetting, activeBanners] = await Promise.all([
+  const [, featuredProducts, dbSlides, activePopup, latestBlogs, homepageCatSetting, activeBanners, galleryItems, facebookSetting] = await Promise.all([
     getThemeSettings(),
-    getFeaturedProducts(8),
+    getFeaturedProducts(4),
     db.heroSlide.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }).catch(() => []),
     Promise.resolve().then(() => db.popup.findFirst({
       where: {
@@ -99,7 +101,13 @@ export default async function HomePage() {
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }).catch(() => []),
+    getActiveGalleryItems(20).catch(() => []),
+    db.siteSetting.findUnique({ where: { key: "social_facebook" } }).catch(() => null),
   ]);
+
+  const facebookUrl = facebookSetting?.value || null;
+  const galleryPhotos = galleryItems.filter((g) => g.type !== "VIDEO").slice(0, 8);
+  const galleryVideos = galleryItems.filter((g) => g.type === "VIDEO").slice(0, 8);
 
   const heroSlides = dbSlides.length > 0 ? dbSlides : FALLBACK_SLIDES;
 
@@ -125,6 +133,13 @@ export default async function HomePage() {
   return (
     <>
       <PopupBanner popup={activePopup} />
+
+      {/* ── WELCOME STRIP ─────────────────────────────────────────────────────── */}
+      <div className="py-2.5 text-center px-4" style={{ background: "var(--color-primary)" }}>
+        <p className="text-xs sm:text-sm font-body tracking-wide" style={{ color: "white" }}>
+          Welcome to Vijaylakshmi Sarees — thank you for visiting. Every weave here is chosen with care, just for you.
+        </p>
+      </div>
 
       {/* ── HERO SLIDER ──────────────────────────────────────────────────────── */}
       <HeroSlider slides={heroSlides} />
@@ -373,12 +388,88 @@ export default async function HomePage() {
                     ))}
                     <h3 className="text-sm font-semibold font-body line-clamp-2 mb-2" style={{ color: "var(--color-text-primary)" }}>{blog.title}</h3>
                     {blog.excerpt && (
-                      <p className="text-xs font-body line-clamp-2" style={{ color: "var(--color-text-muted)" }}>{blog.excerpt}</p>
+                      <p className="text-xs font-body line-clamp-2 mb-3" style={{ color: "var(--color-text-muted)" }}>{blog.excerpt}</p>
                     )}
+                    <span className="inline-flex items-center gap-1 text-xs font-body font-semibold group-hover:gap-1.5 transition-all"
+                      style={{ color: "var(--color-primary)" }}>
+                      Read More <ArrowRight className="h-3 w-3" />
+                    </span>
                   </div>
                 </Link>
               ))}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── GALLERY PREVIEW (photos, single-row slider) ──────────────────────── */}
+      {galleryPhotos.length > 0 && (
+        <section className="py-16 lg:py-20" style={{ background: "var(--color-cream)" }}>
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-10">
+              <div className="space-y-2">
+                <span className="text-xs font-semibold tracking-[0.18em] uppercase"
+                  style={{ fontFamily: "var(--font-body)", color: "var(--color-gold)" }}>
+                  Behind the Weave
+                </span>
+                <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)" }}>
+                  Gallery
+                </h2>
+              </div>
+              <Link href="/gallery" className="text-sm font-medium font-body flex items-center gap-1.5 hover:gap-2.5 transition-all"
+                style={{ color: "var(--color-primary)" }}>
+                View All <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <EventGallery media={galleryPhotos} layout="slider" />
+          </div>
+        </section>
+      )}
+
+      {/* ── VIDEOS ────────────────────────────────────────────────────────────── */}
+      {galleryVideos.length > 0 && (
+        <section className="py-16 lg:py-20" style={{ background: "var(--color-ivory)" }}>
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-10">
+              <div className="space-y-2">
+                <span className="text-xs font-semibold tracking-[0.18em] uppercase"
+                  style={{ fontFamily: "var(--font-body)", color: "var(--color-gold)" }}>
+                  Watch
+                </span>
+                <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)" }}>
+                  Videos
+                </h2>
+              </div>
+              <Link href="/gallery" className="text-sm font-medium font-body flex items-center gap-1.5 hover:gap-2.5 transition-all"
+                style={{ color: "var(--color-primary)" }}>
+                View All <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <EventGallery media={galleryVideos} />
+          </div>
+        </section>
+      )}
+
+      {/* ── FOLLOW US ON FACEBOOK ────────────────────────────────────────────── */}
+      {facebookUrl && (
+        <section className="py-10" style={{ background: "var(--color-primary)" }}>
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.12)" }}>
+              <Facebook className="h-6 w-6" style={{ color: "white" }} />
+            </div>
+            <div>
+              <p style={{ fontFamily: "var(--font-heading)", fontSize: "1.25rem", color: "white" }}>Follow us on Facebook</p>
+              <p className="text-sm font-body" style={{ color: "rgba(255,255,255,0.75)" }}>New arrivals, festive offers, and behind-the-scenes — right in your feed.</p>
+            </div>
+            <a
+              href={facebookUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-body font-semibold transition-opacity hover:opacity-90"
+              style={{ background: "white", color: "var(--color-primary)" }}
+            >
+              Follow Us
+            </a>
           </div>
         </section>
       )}

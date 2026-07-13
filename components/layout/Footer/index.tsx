@@ -247,9 +247,9 @@ export function Footer({
 
           {/* Policy links */}
           <div className="flex items-center gap-4">
-            {["Privacy", "Terms", "Sitemap"].map((item) => (
-              <Link key={item} href="#" className="footer-link text-[11px] font-body">
-                {item}
+            {[{ label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" }].map((item) => (
+              <Link key={item.label} href={item.href} className="footer-link text-[11px] font-body">
+                {item.label}
               </Link>
             ))}
           </div>

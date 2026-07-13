@@ -20,6 +20,7 @@ export interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
+  color?: string;
   isFeatured?: boolean;
   search?: string;
   sort?: "newest" | "price-asc" | "price-desc" | "popular";
@@ -30,7 +31,7 @@ export interface ProductFilters {
 export async function getProducts(filters: ProductFilters = {}) {
   const {
     categorySlug, attributeFilters,
-    minPrice, maxPrice, inStock, isFeatured, search,
+    minPrice, maxPrice, inStock, color, isFeatured, search,
     sort = "newest", page = 1, limit = 24,
   } = filters;
 
@@ -55,13 +56,14 @@ export async function getProducts(filters: ProductFilters = {}) {
       { tags: { has: search } },
     ];
   }
-  if (minPrice !== undefined || maxPrice !== undefined || inStock) {
+  if (minPrice !== undefined || maxPrice !== undefined || inStock || color) {
     where.variants = {
       some: {
         isActive: true,
         ...(minPrice !== undefined && { salePrice: { gte: minPrice } }),
         ...(maxPrice !== undefined && { salePrice: { lte: maxPrice } }),
         ...(inStock && { stockQty: { gt: 0 } }),
+        ...(color && { colorHex: color }),
       },
     };
   }
@@ -92,6 +94,24 @@ export async function getProducts(filters: ProductFilters = {}) {
   ]);
 
   return { products: products.map(mapProduct), total, page, limit };
+}
+
+export interface ColorSwatch {
+  hex: string;
+  name: string;
+}
+
+/** Distinct colors across active variants, one swatch per hex (first color name seen wins). */
+export async function getAvailableColors(): Promise<ColorSwatch[]> {
+  const variants = await db.productVariant.findMany({
+    where: { isActive: true, product: { isActive: true } },
+    select: { colorHex: true, colorName: true },
+    distinct: ["colorHex"],
+    orderBy: { colorName: "asc" },
+  });
+  return variants
+    .filter((v) => v.colorHex)
+    .map((v) => ({ hex: v.colorHex, name: v.colorName }));
 }
 
 export async function getProductBySlug(slug: string): Promise<ProductData | null> {

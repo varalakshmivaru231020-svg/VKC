@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X, ChevronDown, Check, ArrowUpDown } from "lucide-react";
-import ShopFilters, { type FilterAttribute } from "./ShopFilters";
+import ShopFilters, { type FilterAttribute, type ColorSwatch } from "./ShopFilters";
 
 interface Props {
   total: number;
@@ -11,12 +11,13 @@ interface Props {
   currentSort: string;
   activeFilters: string[];
   attributes: FilterAttribute[];
+  colors?: ColorSwatch[];
   current: Record<string, string | undefined>;
 }
 
 export default function ShopHeader({
   total, sortOptions, currentSort, activeFilters,
-  attributes, current,
+  attributes, colors = [], current,
 }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -265,7 +266,7 @@ export default function ShopHeader({
 
             {/* Scrollable filter body */}
             <div className="flex-1 overflow-y-auto px-5 pt-4">
-              <ShopFilters attributes={attributes} current={current} />
+              <ShopFilters attributes={attributes} colors={colors} current={current} />
             </div>
 
             {/* Sticky footer: CLOSE | APPLY FILTERS */}
