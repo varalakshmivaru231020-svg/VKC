@@ -74,7 +74,7 @@ export default async function HomePage() {
   const now = new Date();
   const [, featuredProducts, dbSlides, activePopup, latestBlogs, homepageCatSetting, activeBanners, galleryItems, facebookSetting, facebookVideos] = await Promise.all([
     getThemeSettings(),
-    getFeaturedProducts(4),
+    getFeaturedProducts(4).catch(() => []),
     db.heroSlide.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }).catch(() => []),
     Promise.resolve().then(() => db.popup.findFirst({
       where: {
