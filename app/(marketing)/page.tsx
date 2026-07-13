@@ -72,7 +72,7 @@ const trustBadges = [
 
 export default async function HomePage() {
   const now = new Date();
-  const [, featuredProducts, dbSlides, activePopup, latestBlogs, homepageCatSetting, activeBanners, galleryItems, facebookSetting] = await Promise.all([
+  const [, featuredProducts, dbSlides, activePopup, latestBlogs, homepageCatSetting, activeBanners, galleryItems, facebookSetting, facebookVideos] = await Promise.all([
     getThemeSettings(),
     getFeaturedProducts(4),
     db.heroSlide.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }).catch(() => []),
@@ -103,10 +103,15 @@ export default async function HomePage() {
     }).catch(() => []),
     getActiveGalleryItems(20).catch(() => []),
     db.siteSetting.findUnique({ where: { key: "social_facebook" } }).catch(() => null),
+    db.galleryItem.findMany({
+      where: { type: "FACEBOOK", isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      take: 8,
+    }).catch(() => []),
   ]);
 
   const facebookUrl = facebookSetting?.value || null;
-  const galleryPhotos = galleryItems.filter((g) => g.type !== "VIDEO").slice(0, 8);
+  const galleryPhotos = galleryItems.filter((g) => g.type !== "VIDEO" && g.type !== "FACEBOOK").slice(0, 8);
   const galleryVideos = galleryItems.filter((g) => g.type === "VIDEO").slice(0, 8);
 
   const heroSlides = dbSlides.length > 0 ? dbSlides : FALLBACK_SLIDES;
@@ -471,6 +476,11 @@ export default async function HomePage() {
               Follow Us
             </a>
           </div>
+          {facebookVideos.length > 0 && (
+            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+              <EventGallery media={facebookVideos} />
+            </div>
+          )}
         </section>
       )}
 

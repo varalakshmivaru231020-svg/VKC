@@ -19,6 +19,9 @@ interface Props {
   mediaType: "IMAGE" | "VIDEO";
   title: string;
   description: string;
+  /** DB `type` value to filter/save under — defaults to `mediaType`. Lets a distinct
+   *  gallery (e.g. "FACEBOOK") reuse the VIDEO upload/embed UI under its own tag. */
+  dbType?: string;
 }
 
 function Thumbnail({ item }: { item: MediaItemRow }) {
@@ -40,7 +43,7 @@ function Thumbnail({ item }: { item: MediaItemRow }) {
   return <video src={item.url} className="w-full h-full object-cover" muted />;
 }
 
-export default function MediaLibraryClient({ items: initial, mediaType, title, description }: Props) {
+export default function MediaLibraryClient({ items: initial, mediaType, title, description, dbType }: Props) {
   const [items, setItems] = useState(initial);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ url: "", caption: "" });
@@ -49,10 +52,11 @@ export default function MediaLibraryClient({ items: initial, mediaType, title, d
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const isImage = mediaType === "IMAGE";
+  const type = dbType ?? mediaType;
   const urlWarning = !isImage && form.url.trim() && !parseVideoUrl(form.url) && !isDirectVideoFile(form.url);
 
   const refresh = async () => {
-    const res = await fetch(`/api/admin/gallery?type=${mediaType}`);
+    const res = await fetch(`/api/admin/gallery?type=${type}`);
     if (res.ok) setItems(await res.json());
   };
 
@@ -72,7 +76,7 @@ export default function MediaLibraryClient({ items: initial, mediaType, title, d
     try {
       const res = await fetch("/api/admin/gallery", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, type: mediaType }),
+        body: JSON.stringify({ ...form, type }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error ?? "Failed"); }
       await refresh();
