@@ -207,6 +207,7 @@ model User {
   wishlist         WishlistItem[]
   reviews          Review[]
   wallet           Wallet?
+  videoBookings    VideoBooking[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -704,6 +705,8 @@ model GalleryItem {
 
 model VideoBooking {
   id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
   name          String   @db.VarChar(150)
   phone         String   @db.VarChar(20)
   email         String?  @db.VarChar(200)
@@ -714,6 +717,7 @@ model VideoBooking {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@index([userId])
   @@map("video_bookings")
 }
 

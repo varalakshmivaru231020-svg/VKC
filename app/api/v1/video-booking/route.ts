@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -7,6 +8,8 @@ export const dynamic = "force-dynamic";
  * POST { name, phone, email?, preferredDate, preferredTime, notes? }
  * Public — creates a Video Shopping appointment request, viewable in
  * Admin → Video Bookings. Store staff follow up by phone/WhatsApp.
+ * When the requester is logged in, the booking is linked to their account
+ * so they can track its status under Account -> Video Bookings.
  */
 export async function POST(req: Request) {
   const { name, phone, email, preferredDate, preferredTime, notes } = await req.json().catch(() => ({}));
@@ -20,8 +23,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid date" }, { status: 400 });
   }
 
+  const session = await auth();
+
   const booking = await db.videoBooking.create({
     data: {
+      userId: session?.user?.id ?? null,
       name: String(name).slice(0, 150),
       phone: String(phone).slice(0, 20),
       email: email ? String(email).slice(0, 200) : null,
