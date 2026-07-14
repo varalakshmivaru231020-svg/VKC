@@ -100,7 +100,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       />
       <CartSidebar />
       <QuickViewModal />
-      <VideoShoppingModal whatsappNumber={siteSettings["whatsapp_number"]} />
+      <VideoShoppingModal />
       <LoginModal />
       <Suspense><LoginTrigger /></Suspense>
       <MobileBottomNav />

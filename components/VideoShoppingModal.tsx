@@ -21,15 +21,14 @@ const EMPTY_FORM = { name: "", phone: "", email: "", preferredDate: "", preferre
  * unmounted the modal the instant it opened, since the drawer's own close
  * handler tore down the whole subtree it was nested in.
  */
-export function VideoShoppingModal({ whatsappNumber }: { whatsappNumber?: string }) {
+export function VideoShoppingModal() {
   const { videoShoppingOpen: open, closeVideoShopping } = useUIStore();
-  const number = whatsappNumber?.replace(/\D/g, "");
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
 
-  if (!open || !number) return null;
+  if (!open) return null;
 
   const close = () => {
     closeVideoShopping();
@@ -46,29 +45,21 @@ export function VideoShoppingModal({ whatsappNumber }: { whatsappNumber?: string
 
     setSubmitting(true);
     try {
-      await fetch("/api/v1/video-booking", {
+      const res = await fetch("/api/v1/video-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-    } catch {
-      // Non-fatal — still let them send the WhatsApp message even if saving failed.
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Could not submit your request. Please try again.");
+      }
+      setDone(true);
+    } catch (err: any) {
+      setError(err.message || "Could not submit your request. Please try again.");
     } finally {
       setSubmitting(false);
     }
-
-    const lines = [
-      "🎥 Video Shopping Appointment Request",
-      `Name: ${form.name}`,
-      `Phone: ${form.phone}`,
-      form.email && `Email: ${form.email}`,
-      `Preferred Date: ${form.preferredDate}`,
-      `Preferred Time: ${form.preferredTime}`,
-      form.notes && `Notes: ${form.notes}`,
-    ].filter(Boolean);
-
-    window.open(`https://wa.me/${number}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank", "noopener,noreferrer");
-    setDone(true);
   };
 
   return (
@@ -103,10 +94,10 @@ export function VideoShoppingModal({ whatsappNumber }: { whatsappNumber?: string
                 <Check className="h-7 w-7" style={{ color: "var(--color-success)" }} />
               </div>
               <p style={{ fontFamily: "var(--font-heading)", fontSize: "1.25rem", color: "var(--color-text-primary)" }}>
-                Request Sent!
+                Request Received!
               </p>
               <p className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>
-                Send the WhatsApp message that just opened and we'll confirm your video shopping slot.
+                Our team will review your request and contact you shortly to confirm your video shopping slot.
               </p>
               <button onClick={close} className="mt-2 h-10 px-6 rounded-lg text-sm font-body font-semibold" style={{ background: "var(--color-primary)", color: "white" }}>
                 Done
@@ -115,7 +106,7 @@ export function VideoShoppingModal({ whatsappNumber }: { whatsappNumber?: string
           ) : (
             <form onSubmit={submit} className="p-5 space-y-3">
               <p className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>
-                See our sarees live over a video call with our team — tell us when works for you. We'll open WhatsApp with your details ready to send.
+                See our sarees live over a video call with our team — tell us when works for you and we'll get in touch to confirm.
               </p>
               <input
                 type="text" placeholder="Your Name" value={form.name}
@@ -166,7 +157,7 @@ export function VideoShoppingModal({ whatsappNumber }: { whatsappNumber?: string
                 className="w-full h-11 rounded-lg text-sm font-body font-semibold transition-opacity disabled:opacity-60"
                 style={{ background: "var(--color-primary)", color: "white" }}
               >
-                {submitting ? "Sending…" : "Send via WhatsApp"}
+                {submitting ? "Submitting…" : "Submit"}
               </button>
               {/* Safe area spacer for mobile */}
               <div className="sm:hidden h-1" />

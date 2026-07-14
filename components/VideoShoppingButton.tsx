@@ -7,7 +7,6 @@ import { useUIStore } from "@/lib/store/ui";
 interface VideoShoppingButtonProps {
   className?: string;
   onTrigger?: () => void;
-  whatsappNumber?: string;
 }
 
 /**
@@ -15,9 +14,8 @@ interface VideoShoppingButtonProps {
  * the marketing layout level so it isn't tied to wherever this button lives
  * (e.g. inside the mobile nav drawer, which unmounts on its own close).
  */
-export function VideoShoppingButton({ className = "", onTrigger, whatsappNumber }: VideoShoppingButtonProps) {
+export function VideoShoppingButton({ className = "", onTrigger }: VideoShoppingButtonProps) {
   const openVideoShopping = useUIStore((s) => s.openVideoShopping);
-  if (!whatsappNumber?.replace(/\D/g, "")) return null;
 
   return (
     <button

@@ -132,7 +132,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                     <Icon className="h-4.5 w-4.5" />
                   </a>
                 ))}
-                <VideoShoppingButton whatsappNumber={whatsappNumber} className="hidden lg:inline-flex ml-1 h-9 px-3 text-xs" />
+                <VideoShoppingButton className="hidden lg:inline-flex ml-1 h-9 px-3 text-xs" />
               </div>
 
               {/* Center — logo */}
@@ -396,7 +396,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
 
               {/* Video Shopping CTA */}
               <div className="px-3 pt-3">
-                <VideoShoppingButton className="w-full justify-center" onTrigger={() => setMobileOpen(false)} whatsappNumber={whatsappNumber} />
+                <VideoShoppingButton className="w-full justify-center" onTrigger={() => setMobileOpen(false)} />
               </div>
 
               {/* Nav items — scrollable */}
