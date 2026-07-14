@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { X, Heart, ShoppingBag, ArrowRight, Check, Minus, Plus, Star } from "lucide-react";
 import { useUIStore } from "@/lib/store/ui";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
@@ -13,6 +14,8 @@ export function QuickViewModal() {
   const { quickViewProduct, closeQuickView } = useUIStore();
   const { addItem } = useCartStore();
   const { toggle, isWishlisted } = useWishlistStore();
+  const pathname = usePathname();
+  const navigatingAway = useRef(false);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariantData | null>(null);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -34,6 +37,17 @@ export function QuickViewModal() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [closeQuickView]);
+
+  // "View Full Details" only closes the modal once the destination route has
+  // actually mounted — closing on a click-time timer instead let the overlay
+  // disappear before the new page was ready, flashing whatever page sat
+  // behind the modal (the grid, or the homepage) before the redirect landed.
+  useEffect(() => {
+    if (navigatingAway.current) {
+      navigatingAway.current = false;
+      closeQuickView();
+    }
+  }, [pathname, closeQuickView]);
 
   if (!quickViewProduct || !selectedVariant) return null;
 
@@ -293,7 +307,7 @@ export function QuickViewModal() {
             {/* View full details */}
             <Link
               href={`/shop/${p.slug}`}
-              onClick={() => setTimeout(closeQuickView, 0)}
+              onClick={() => { navigatingAway.current = true; }}
               className="flex items-center gap-1.5 text-sm font-body font-medium transition-colors hover:gap-2.5 mt-auto"
               style={{ color: "var(--color-primary)" }}
             >
