@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { X, Heart, ShoppingBag, ArrowRight, Check, Minus, Plus, Star } from "lucide-react";
 import { useUIStore } from "@/lib/store/ui";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
@@ -15,6 +15,7 @@ export function QuickViewModal() {
   const { addItem } = useCartStore();
   const { toggle, isWishlisted } = useWishlistStore();
   const pathname = usePathname();
+  const router = useRouter();
   const navigatingAway = useRef(false);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariantData | null>(null);
   const [qty, setQty] = useState(1);
@@ -26,11 +27,16 @@ export function QuickViewModal() {
       setQty(1);
       setAdded(false);
       document.body.style.overflow = "hidden";
+      // Kick off the detail page fetch the instant Quick View opens, rather
+      // than waiting on the "View Full Details" link's own viewport-based
+      // prefetch — that link only exists once the modal is already mounted,
+      // so a fast click can otherwise beat the passive prefetch to the punch.
+      router.prefetch(`/shop/${quickViewProduct.slug}`);
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [quickViewProduct]);
+  }, [quickViewProduct, router]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeQuickView(); };
