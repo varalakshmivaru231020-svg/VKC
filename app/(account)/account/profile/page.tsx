@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Check, ChevronDown, ChevronUp, Phone } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -17,8 +17,8 @@ function formatDisplayDate(isoDate: string): string {
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }
 
-function DisplayField({ label, value, placeholder = "Not set" }: {
-  label: string; value: string; placeholder?: string;
+function DisplayField({ label, value, placeholder = "Not set", onClick }: {
+  label: string; value: string; placeholder?: string; onClick?: () => void;
 }) {
   return (
     <div className="space-y-1">
@@ -29,12 +29,16 @@ function DisplayField({ label, value, placeholder = "Not set" }: {
         {label}
       </p>
       <div
-        className="h-11 px-4 border rounded-sm flex items-center text-sm font-body"
+        onClick={onClick}
+        className="h-11 px-4 border rounded-sm flex items-center text-sm font-body transition-colors"
         style={{
           borderColor: "var(--color-parchment)",
           background: "var(--color-ivory)",
           color: value ? "var(--color-text-primary)" : "var(--color-text-disabled)",
+          cursor: onClick ? "pointer" : "default",
         }}
+        onMouseEnter={(e) => { if (onClick) e.currentTarget.style.borderColor = "var(--color-primary)"; }}
+        onMouseLeave={(e) => { if (onClick) e.currentTarget.style.borderColor = "var(--color-parchment)"; }}
       >
         {value || placeholder}
       </div>
@@ -42,17 +46,27 @@ function DisplayField({ label, value, placeholder = "Not set" }: {
   );
 }
 
-function EditInput({ label, value, onChange, type = "text", placeholder, max, min }: {
+function EditInput({ label, value, onChange, type = "text", placeholder, max, min, autoOpen }: {
   label: string; value: string; onChange: (v: string) => void;
-  type?: string; placeholder?: string; max?: string; min?: string;
+  type?: string; placeholder?: string; max?: string; min?: string; autoOpen?: boolean;
 }) {
   const isDate = type === "date";
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (autoOpen && isDate) {
+      (ref.current as (HTMLInputElement & { showPicker?: () => void }) | null)?.showPicker?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpen]);
+
   return (
     <div className="space-y-1.5">
       <label className="block text-sm font-body font-medium" style={{ color: "var(--color-text-primary)" }}>
         {label}
       </label>
       <input
+        ref={ref}
         type={type}
         value={value}
         max={max}
@@ -181,6 +195,14 @@ export default function ProfilePage() {
   // Edit modes
   const [editPersonal, setEditPersonal] = useState(false);
   const [editEmail, setEditEmail]       = useState(false);
+  const [autoOpenField, setAutoOpenField] = useState<"dob" | "anniversary" | null>(null);
+
+  const editPersonalWithField = (field: "dob" | "anniversary") => {
+    setPersonalDraft({ ...personal });
+    setEditPersonal(true);
+    setAutoOpenField(field);
+    setGlobalError("");
+  };
 
   // Saving states
   const [savingPersonal, setSavingPersonal] = useState(false);
@@ -292,6 +314,7 @@ export default function ProfilePage() {
                 max={todayISO()}
                 value={personalDraft.dob}
                 onChange={(v) => setPersonalDraft((p) => ({ ...p, dob: v }))}
+                autoOpen={autoOpenField === "dob"}
               />
               <EditInput
                 label="Anniversary"
@@ -299,6 +322,7 @@ export default function ProfilePage() {
                 max={todayISO()}
                 value={personalDraft.anniversary}
                 onChange={(v) => setPersonalDraft((p) => ({ ...p, anniversary: v }))}
+                autoOpen={autoOpenField === "anniversary"}
               />
             </div>
             <EditInput
@@ -316,8 +340,8 @@ export default function ProfilePage() {
               <DisplayField label="Last Name"  value={personal.lastName} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <DisplayField label="Date of Birth" value={formatDisplayDate(personal.dob)} />
-              <DisplayField label="Anniversary"   value={formatDisplayDate(personal.anniversary)} />
+              <DisplayField label="Date of Birth" value={formatDisplayDate(personal.dob)} onClick={() => editPersonalWithField("dob")} />
+              <DisplayField label="Anniversary"   value={formatDisplayDate(personal.anniversary)} onClick={() => editPersonalWithField("anniversary")} />
             </div>
             <DisplayField label="Mother Tongue" value={personal.motherTongue} />
           </div>
