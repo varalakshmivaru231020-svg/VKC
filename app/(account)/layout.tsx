@@ -4,6 +4,7 @@ import { getThemeSettings } from "@/lib/theme/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { SidebarNav, MobileTabBar } from "@/components/account/SidebarNav";
+import { GuestSidebar } from "@/components/account/GuestSidebar";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -27,6 +28,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
   ]);
 
   const user = session?.user;
+  const isLoggedIn = !!session;
 
   const displayName  = user?.name && user.name !== user.phone ? user.name : null;
   const displayPhone = user?.phone ? user.phone.replace(/^\+91/, "") : null;
@@ -59,56 +61,64 @@ export default async function AccountLayout({ children }: { children: React.Reac
             overflowY: "auto",
           }}
         >
-          {/* User card */}
-          <div
-            className="relative overflow-hidden px-5 pt-7 pb-6"
-            style={{ background: "var(--color-primary)" }}
-          >
-            {/* Decorative rings */}
-            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full" style={{ background: "rgba(255,255,255,0.04)" }} />
+          {isLoggedIn ? (
+            <>
+              {/* User card */}
+              <div
+                className="relative overflow-hidden px-5 pt-7 pb-6"
+                style={{ background: "var(--color-primary)" }}
+              >
+                {/* Decorative rings */}
+                <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />
+                <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full" style={{ background: "rgba(255,255,255,0.04)" }} />
 
-            {/* Avatar */}
-            <div
-              className="relative w-14 h-14 rounded-full flex items-center justify-center mb-4 text-xl font-bold shrink-0"
-              style={{
-                background: "rgba(255,255,255,0.18)",
-                color: "white",
-                fontFamily: "var(--font-heading)",
-                border: "2px solid rgba(255,255,255,0.3)",
-              }}
-            >
-              {initials}
-            </div>
+                {/* Avatar */}
+                <div
+                  className="relative w-14 h-14 rounded-full flex items-center justify-center mb-4 text-xl font-bold shrink-0"
+                  style={{
+                    background: "rgba(255,255,255,0.18)",
+                    color: "white",
+                    fontFamily: "var(--font-heading)",
+                    border: "2px solid rgba(255,255,255,0.3)",
+                  }}
+                >
+                  {initials}
+                </div>
 
-            <p
-              className="text-[10px] font-body font-semibold uppercase tracking-[0.14em] mb-0.5"
-              style={{ color: "rgba(255,255,255,0.55)" }}
-            >
-              Hello,
-            </p>
-            <p className="text-base font-semibold text-white truncate" style={{ fontFamily: "var(--font-heading)" }}>
-              {displayName ?? "My Account"}
-            </p>
-            {displayPhone && (
-              <p className="text-xs font-body mt-0.5" style={{ color: "rgba(255,255,255,0.65)" }}>
-                +91 {displayPhone}
-              </p>
-            )}
-          </div>
+                <p
+                  className="text-[10px] font-body font-semibold uppercase tracking-[0.14em] mb-0.5"
+                  style={{ color: "rgba(255,255,255,0.55)" }}
+                >
+                  Hello,
+                </p>
+                <p className="text-base font-semibold text-white truncate" style={{ fontFamily: "var(--font-heading)" }}>
+                  {displayName ?? "My Account"}
+                </p>
+                {displayPhone && (
+                  <p className="text-xs font-body mt-0.5" style={{ color: "rgba(255,255,255,0.65)" }}>
+                    +91 {displayPhone}
+                  </p>
+                )}
+              </div>
 
-          {/* Navigation */}
-          <div className="flex-1 flex flex-col overflow-y-auto">
-            <SidebarNav />
-          </div>
+              {/* Navigation */}
+              <div className="flex-1 flex flex-col overflow-y-auto">
+                <SidebarNav />
+              </div>
+            </>
+          ) : (
+            <GuestSidebar />
+          )}
         </aside>
 
         {/* ── Main content ── */}
         <div className="flex-1 min-w-0 flex flex-col">
-          {/* Mobile tab bar */}
-          <div className="lg:hidden">
-            <MobileTabBar />
-          </div>
+          {/* Mobile tab bar — only meaningful once there's more than one reachable page */}
+          {isLoggedIn && (
+            <div className="lg:hidden">
+              <MobileTabBar />
+            </div>
+          )}
 
           {/* Page content */}
           <main className="flex-1">

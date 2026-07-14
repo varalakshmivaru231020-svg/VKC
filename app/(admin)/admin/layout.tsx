@@ -86,6 +86,7 @@ const navGroups: NavGroupDef[] = [
       { href: "/admin/saree-stories",   label: "Saree Stories",   icon: Layers },
       { href: "/admin/gallery",         label: "Gallery",         icon: Image },
       { href: "/admin/videos",          label: "Videos",          icon: Video },
+      { href: "/admin/video-bookings",  label: "Video Bookings",  icon: Video },
       { href: "/admin/facebook-videos", label: "Facebook Videos", icon: Facebook },
       { href: "/admin/pages",           label: "CMS Pages",       icon: FileText },
       { href: "/admin/events",          label: "Events",          icon: Star },

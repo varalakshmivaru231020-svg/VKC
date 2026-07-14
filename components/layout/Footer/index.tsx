@@ -79,16 +79,16 @@ export function Footer({
           style={{ border: "60px solid var(--color-gold)" }} />
 
         <div className="relative max-w-xl mx-auto text-center space-y-3">
-          <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "var(--color-gold)" }}>
+          <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "#FFFFFF" }}>
             Stay in the Loop
           </span>
           <p
             className="text-3xl"
-            style={{ fontFamily: "var(--font-heading)", fontWeight: "var(--weight-heading)", color: "var(--color-gold-light)" }}
+            style={{ fontFamily: "var(--font-heading)", fontWeight: "var(--weight-heading)", color: "#FFFFFF" }}
           >
             Stories from the Loom
           </p>
-          <p className="text-sm font-body" style={{ color: "rgba(251,248,243,0.65)" }}>
+          <p className="text-sm font-body" style={{ color: "#FFFFFF" }}>
             New arrivals, exclusive offers, and weaving stories — straight to your inbox.
           </p>
           <NewsletterForm />

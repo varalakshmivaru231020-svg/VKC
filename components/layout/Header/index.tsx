@@ -161,26 +161,20 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                 <button onClick={() => setSearchOpen(true)} className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Search">
                   <Search className="h-5 w-5" />
                 </button>
-                {/* Wishlist — hidden on mobile */}
-                {isLoggedIn ? (
-                  <Link href="/account/wishlist" className={cn(iconBtnCls, "hidden sm:flex")} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
-                    <Heart className="h-5 w-5" />
-                    <AnimatePresence>
-                      {mounted && wishlistCount > 0 && (
-                        <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                          transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                          className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center rounded-full text-white text-[9px] font-bold"
-                          style={{ background: "var(--color-primary)" }}>
-                          {wishlistCount > 9 ? "9+" : wishlistCount}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </Link>
-                ) : (
-                  <button onClick={() => openLoginModal()} className={cn(iconBtnCls, "hidden sm:flex")} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
-                    <Heart className="h-5 w-5" />
-                  </button>
-                )}
+                {/* Wishlist — hidden on mobile; works for guests, stored client-side */}
+                <Link href="/account/wishlist" className={cn(iconBtnCls, "hidden sm:flex")} style={iconBtnStyle} {...iconHover} aria-label="Wishlist">
+                  <Heart className="h-5 w-5" />
+                  <AnimatePresence>
+                    {mounted && wishlistCount > 0 && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                        className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center rounded-full text-white text-[9px] font-bold"
+                        style={{ background: "var(--color-primary)" }}>
+                        {wishlistCount > 9 ? "9+" : wishlistCount}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
                 <button onClick={openCart} className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Cart">
                   <ShoppingBag className="h-5 w-5" />
                   <AnimatePresence>
@@ -377,12 +371,26 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                     </Link>
                   </>
                 ) : (
-                  <button onClick={() => { setMobileOpen(false); openLoginModal(); }}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all w-full text-left"
-                    style={{ background: "var(--color-primary-50)", color: "var(--color-primary)", borderRadius: "8px" }}>
-                    <User className="h-4 w-4 shrink-0" />
-                    Sign In / Create Account
-                  </button>
+                  <>
+                    <button onClick={() => { setMobileOpen(false); openLoginModal(); }}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all w-full text-left"
+                      style={{ background: "var(--color-primary-50)", color: "var(--color-primary)", borderRadius: "8px" }}>
+                      <User className="h-4 w-4 shrink-0" />
+                      Sign In / Create Account
+                    </button>
+                    <Link href="/account/wishlist" onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all"
+                      style={{ color: "var(--color-text-primary)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-primary)"; e.currentTarget.style.background = "transparent"; }}>
+                      <Heart className="h-4 w-4 shrink-0" />
+                      Wishlist
+                      {mounted && wishlistCount > 0 && (
+                        <span className="ml-auto h-5 min-w-[20px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold text-white"
+                          style={{ background: "var(--color-primary)" }}>{wishlistCount}</span>
+                      )}
+                    </Link>
+                  </>
                 )}
               </div>
 

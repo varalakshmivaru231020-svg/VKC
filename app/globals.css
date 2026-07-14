@@ -344,3 +344,41 @@
 .animate-ping-slow   { animation: ping-slow 1.8s cubic-bezier(0, 0, 0.2, 1) infinite; }
 .animate-ping-slow-2 { animation: ping-slow 2.2s cubic-bezier(0, 0, 0.2, 1) 0.4s infinite; }
 .animate-fade-up     { animation: fade-up 0.5s ease-out both; opacity: 0; }
+
+/* ── Native date inputs: the default calendar icon is barely visible against
+   a light background — tint it, size it up, and make the whole field open
+   the picker on click, not just the tiny icon ──────────────────────────── */
+input[type="date"] {
+  color-scheme: light;
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 4px;
+  border-radius: 4px;
+  filter: grayscale(1) brightness(0.35);
+  transition: opacity 0.15s ease;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* ── Product card quick-actions / quick-add: hover doesn't exist on touch, so
+   keep them visible (not translated away) on coarse-pointer devices ─────── */
+@media (hover: none) {
+  .quick-actions-cluster, .quick-add-pill {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── Respect reduced-motion preference site-wide ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

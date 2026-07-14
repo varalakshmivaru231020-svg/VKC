@@ -6,6 +6,10 @@ import { useSession } from "next-auth/react";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function formatDisplayDate(isoDate: string): string {
   if (!isoDate) return "";
   const d = new Date(isoDate + "T00:00:00");
@@ -38,10 +42,11 @@ function DisplayField({ label, value, placeholder = "Not set" }: {
   );
 }
 
-function EditInput({ label, value, onChange, type = "text", placeholder }: {
+function EditInput({ label, value, onChange, type = "text", placeholder, max, min }: {
   label: string; value: string; onChange: (v: string) => void;
-  type?: string; placeholder?: string;
+  type?: string; placeholder?: string; max?: string; min?: string;
 }) {
+  const isDate = type === "date";
   return (
     <div className="space-y-1.5">
       <label className="block text-sm font-body font-medium" style={{ color: "var(--color-text-primary)" }}>
@@ -50,6 +55,8 @@ function EditInput({ label, value, onChange, type = "text", placeholder }: {
       <input
         type={type}
         value={value}
+        max={max}
+        min={min}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full h-11 px-4 border rounded-sm text-sm font-body focus:outline-none transition-all"
@@ -61,6 +68,10 @@ function EditInput({ label, value, onChange, type = "text", placeholder }: {
         onBlur={(e) => {
           e.currentTarget.style.borderColor = "var(--color-parchment)";
           e.currentTarget.style.boxShadow = "none";
+        }}
+        onClick={(e) => {
+          // Open the native calendar on any click, not just the small icon.
+          if (isDate) (e.currentTarget as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
         }}
       />
     </div>
@@ -278,12 +289,14 @@ export default function ProfilePage() {
               <EditInput
                 label="Date of Birth"
                 type="date"
+                max={todayISO()}
                 value={personalDraft.dob}
                 onChange={(v) => setPersonalDraft((p) => ({ ...p, dob: v }))}
               />
               <EditInput
                 label="Anniversary"
                 type="date"
+                max={todayISO()}
                 value={personalDraft.anniversary}
                 onChange={(v) => setPersonalDraft((p) => ({ ...p, anniversary: v }))}
               />

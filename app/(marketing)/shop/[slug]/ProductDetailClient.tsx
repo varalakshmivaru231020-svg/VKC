@@ -162,7 +162,8 @@ export default function ProductDetailClient({ product, careInstructions, deliver
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 lg:items-start">
 
         {/* ── LEFT: Sticky image panel ── */}
-        <div className="lg:sticky lg:top-24 lg:self-start">
+        {/* top-36 (144px) clears the full sticky header (88px top bar + 44px nav bar) with a gap, so it never sits under the nav */}
+        <div className="lg:sticky lg:top-36 lg:self-start">
           {/* Desktop: side-by-side thumbnails | Mobile: main image then thumbnails below */}
           <div className="flex gap-3 lg:flex-row flex-col-reverse">
 
@@ -456,7 +457,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                 </button>
               </div>
 
-              <Button variant="gold" className="w-full h-11" asChild>
+              <Button variant="buyNow" className="w-full h-11" asChild>
                 <a href="/checkout">Buy Now</a>
               </Button>
             </div>
@@ -556,7 +557,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
             <ShoppingBag className="h-4 w-4 mr-1.5 shrink-0" />
             {addedToCart ? "Added!" : "Add to Bag"}
           </Button>
-          <Button className="flex-1 h-12 min-w-0 whitespace-nowrap" asChild>
+          <Button variant="buyNow" className="flex-1 h-12 min-w-0 whitespace-nowrap" asChild>
             <a href="/checkout">Buy Now</a>
           </Button>
         </div>

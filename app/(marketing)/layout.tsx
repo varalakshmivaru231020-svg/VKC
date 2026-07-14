@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { QuickViewModal } from "@/components/product/QuickViewModal";
+import { VideoShoppingModal } from "@/components/VideoShoppingModal";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { LoginTrigger } from "@/components/auth/LoginTrigger";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -99,6 +100,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       />
       <CartSidebar />
       <QuickViewModal />
+      <VideoShoppingModal whatsappNumber={siteSettings["whatsapp_number"]} />
       <LoginModal />
       <Suspense><LoginTrigger /></Suspense>
       <MobileBottomNav />

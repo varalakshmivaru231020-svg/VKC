@@ -456,7 +456,10 @@ export default async function HomePage() {
       )}
 
       {/* ── FOLLOW US ON FACEBOOK ────────────────────────────────────────────── */}
-      {facebookUrl && (
+      {/* Videos added via Admin → Facebook Videos should still show even if the
+          Facebook page URL (Admin → Settings → Social Links) hasn't been set yet —
+          only the "Follow Us" button itself needs that URL. */}
+      {(facebookUrl || facebookVideos.length > 0) && (
         <section className="py-10" style={{ background: "var(--color-primary)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left">
             <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.12)" }}>
@@ -466,15 +469,17 @@ export default async function HomePage() {
               <p style={{ fontFamily: "var(--font-heading)", fontSize: "1.25rem", color: "white" }}>Follow us on Facebook</p>
               <p className="text-sm font-body" style={{ color: "rgba(255,255,255,0.75)" }}>New arrivals, festive offers, and behind-the-scenes — right in your feed.</p>
             </div>
-            <a
-              href={facebookUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-body font-semibold transition-opacity hover:opacity-90"
-              style={{ background: "white", color: "var(--color-primary)" }}
-            >
-              Follow Us
-            </a>
+            {facebookUrl && (
+              <a
+                href={facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-body font-semibold transition-opacity hover:opacity-90"
+                style={{ background: "white", color: "var(--color-primary)" }}
+              >
+                Follow Us
+              </a>
+            )}
           </div>
           {facebookVideos.length > 0 && (
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mt-8">

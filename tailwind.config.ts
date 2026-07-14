@@ -110,6 +110,7 @@ const config: Config = {
         spring: "cubic-bezier(0.34,1.56,0.64,1)",
         "ease-in-soft": "cubic-bezier(0.4,0,1,1)",
         "ease-out-soft": "cubic-bezier(0.0,0,0.2,1)",
+        premium: "cubic-bezier(0.22,1,0.36,1)",
       },
       keyframes: {
         "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
@@ -124,6 +125,19 @@ const config: Config = {
           from: { opacity: "0", transform: "translateY(-6px)" },
           to:   { opacity: "1", transform: "translateY(0)" },
         },
+        shine: {
+          "0%":   { transform: "translateX(-150%) skewX(-20deg)", opacity: "0" },
+          "15%":  { opacity: "0.7" },
+          "100%": { transform: "translateX(150%) skewX(-20deg)", opacity: "0" },
+        },
+        "pulse-soft": {
+          "0%, 100%": { transform: "scale(1)", opacity: "1" },
+          "50%":      { transform: "scale(1.06)", opacity: "0.85" },
+        },
+        ripple: {
+          "0%":   { transform: "scale(0)", opacity: "0.45" },
+          "100%": { transform: "scale(2.8)", opacity: "0" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.25s ease-out",
@@ -135,6 +149,9 @@ const config: Config = {
         shimmer: "shimmer 1.5s infinite linear",
         "scale-in": "scale-in 0.2s ease-out",
         "spin-slow": "spin-slow 2s linear infinite",
+        shine: "shine 1.1s cubic-bezier(0.22,1,0.36,1)",
+        "pulse-soft": "pulse-soft 2.8s cubic-bezier(0.4,0,0.6,1) infinite",
+        ripple: "ripple 0.6s cubic-bezier(0.22,1,0.36,1) forwards",
       },
       backgroundImage: {
         shimmer: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)",

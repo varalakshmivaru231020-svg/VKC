@@ -24,6 +24,20 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const items: SyncItem[] = Array.isArray(body?.items) ? body.items : [];
 
+  const candidates = items.filter((i) => i.variantId && i.productId && i.quantity > 0);
+
+  // A cart can carry a variant that's since been deleted/discontinued — drop
+  // those rather than let one stale entry fail the whole sync.
+  const existingVariantIds = candidates.length > 0
+    ? new Set(
+        (await db.productVariant.findMany({
+          where: { id: { in: candidates.map((i) => i.variantId) } },
+          select: { id: true },
+        })).map((v) => v.id)
+      )
+    : new Set<string>();
+  const validItems = candidates.filter((i) => existingVariantIds.has(i.variantId));
+
   await db.$transaction(async (tx) => {
     const cart = await tx.cart.upsert({
       where:  { userId },
@@ -33,16 +47,14 @@ export async function POST(req: NextRequest) {
 
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
 
-    if (items.length > 0) {
+    if (validItems.length > 0) {
       await tx.cartItem.createMany({
-        data: items
-          .filter((i) => i.variantId && i.productId && i.quantity > 0)
-          .map((i) => ({
-            cartId:    cart.id,
-            productId: i.productId,
-            variantId: i.variantId,
-            quantity:  i.quantity,
-          })),
+        data: validItems.map((i) => ({
+          cartId:    cart.id,
+          productId: i.productId,
+          variantId: i.variantId,
+          quantity:  i.quantity,
+        })),
       });
     }
   });

@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
-import { Search, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Search, X, ChevronDown, Check } from "lucide-react";
 
 interface Props {
   regions: string[];
@@ -18,7 +17,80 @@ const SORT_OPTIONS = [
   { label: "Name: Z → A", value: "name-desc" },
 ];
 
-export default function SareeStoriesFilters({ regions, fabrics, categories, current }: Props) {
+function Dropdown({
+  label, value, valueLabel, options, onSelect, panelClassName = "w-64",
+}: {
+  label: string;
+  value: string | undefined;
+  valueLabel?: string;
+  options: { label: string; value: string }[];
+  onSelect: (v: string | null) => void;
+  panelClassName?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const buttonLabel = value ? (valueLabel ?? value) : label;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-2 h-9 max-w-[220px] px-3.5 rounded-lg text-sm font-body font-medium border transition-all"
+        style={{
+          borderColor: value ? "var(--color-primary)" : open ? "var(--color-primary)" : "var(--color-parchment)",
+          color: value ? "var(--color-primary)" : "var(--color-text-secondary)",
+          background: value ? "var(--color-primary-50)" : "white",
+          boxShadow: open ? "0 0 0 3px var(--color-primary-50)" : "none",
+        }}
+      >
+        <span className="truncate">{buttonLabel}</span>
+        <ChevronDown
+          className="h-3.5 w-3.5 shrink-0 transition-transform duration-200"
+          style={{ color: "var(--color-text-muted)", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+        />
+      </button>
+
+      {open && (
+        <div
+          className={`absolute right-0 mt-1.5 ${panelClassName} max-h-80 overflow-y-auto rounded-xl border shadow-md z-30 animate-scale-in`}
+          style={{ background: "white", borderColor: "var(--color-parchment)" }}
+        >
+          {value && (
+            <button
+              onClick={() => { onSelect(null); setOpen(false); }}
+              className="w-full flex items-center gap-1.5 px-4 py-2.5 text-sm font-body text-left border-b transition-colors hover:bg-cream"
+              style={{ color: "var(--color-error)", borderColor: "var(--color-parchment)" }}
+            >
+              <X className="h-3.5 w-3.5 shrink-0" /> Clear {label}
+            </button>
+          )}
+          {options.map((o) => (
+            <button
+              key={o.value}
+              onClick={() => { onSelect(o.value); setOpen(false); }}
+              className="w-full flex items-start justify-between gap-2 px-4 py-2.5 text-sm font-body text-left transition-colors hover:bg-primary-50"
+              style={{ color: o.value === value ? "var(--color-primary)" : "var(--color-text-secondary)" }}
+            >
+              <span className="leading-snug">{o.label}</span>
+              {o.value === value && <Check className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "var(--color-primary)" }} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function SareeStoriesFilters({ regions, fabrics, current }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
   const [q, setQ] = useState(current.q ?? "");
@@ -32,73 +104,52 @@ export default function SareeStoriesFilters({ regions, fabrics, categories, curr
   }, [router, sp]);
 
   const hasFilters = Object.entries(current).some(([k, v]) => v && !["sort", "page"].includes(k));
-
-  const Chip = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
-    <button onClick={onClick}
-      className={cn("px-3 py-1.5 rounded-full text-xs font-body font-medium border transition-all",
-        active ? "border-primary text-primary bg-primary-50" : "border-parchment text-text-secondary hover:border-primary/40")}>
-      {label}
-    </button>
-  );
+  const sortLabel = SORT_OPTIONS.find((o) => o.value === (current.sort ?? "newest"))?.label ?? "Sort";
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={(e) => { e.preventDefault(); update("q", q || null); }} className="relative">
+    <div className="flex items-center justify-between gap-4 flex-wrap">
+      <form onSubmit={(e) => { e.preventDefault(); update("q", q || null); }} className="relative flex-1 min-w-[220px] max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--color-text-muted)" }} />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search saree stories…"
-          className="w-full h-10 pl-9 pr-3 text-sm font-body border rounded-lg focus:outline-none"
+          className="w-full h-9 pl-9 pr-3 text-sm font-body border rounded-lg focus:outline-none"
           style={{ borderColor: "var(--color-parchment)", background: "var(--color-ivory)" }} />
       </form>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold font-body" style={{ color: "var(--color-text-primary)" }}>Filters</p>
+      <div className="flex items-center gap-2.5 flex-wrap">
         {hasFilters && (
-          <button onClick={() => router.push("/saree-stories")} className="text-[11px] font-body font-medium hover:underline" style={{ color: "var(--color-error)" }}>
+          <button onClick={() => { setQ(""); router.push("/saree-stories"); }} className="text-[11px] font-body font-medium hover:underline shrink-0" style={{ color: "var(--color-error)" }}>
             Clear all
           </button>
         )}
-      </div>
 
-      {categories.length > 0 && (
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] font-body mb-2.5" style={{ color: "var(--color-text-primary)" }}>Category</p>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <Chip key={c.id} label={c.name} active={current.category === c.slug} onClick={() => update("category", current.category === c.slug ? null : c.slug)} />
-            ))}
-          </div>
-        </div>
-      )}
+        {regions.length > 0 && (
+          <Dropdown
+            label="Region"
+            value={current.region}
+            options={regions.map((r) => ({ label: r, value: r }))}
+            onSelect={(v) => update("region", v)}
+            panelClassName="w-80"
+          />
+        )}
 
-      {regions.length > 0 && (
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] font-body mb-2.5" style={{ color: "var(--color-text-primary)" }}>Region</p>
-          <div className="flex flex-wrap gap-2">
-            {regions.map((r) => (
-              <Chip key={r} label={r} active={current.region === r} onClick={() => update("region", current.region === r ? null : r)} />
-            ))}
-          </div>
-        </div>
-      )}
+        {fabrics.length > 0 && (
+          <Dropdown
+            label="Fabric"
+            value={current.fabric}
+            options={fabrics.map((f) => ({ label: f, value: f }))}
+            onSelect={(v) => update("fabric", v)}
+            panelClassName="w-56"
+          />
+        )}
 
-      {fabrics.length > 0 && (
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] font-body mb-2.5" style={{ color: "var(--color-text-primary)" }}>Fabric</p>
-          <div className="flex flex-wrap gap-2">
-            {fabrics.map((f) => (
-              <Chip key={f} label={f} active={current.fabric === f} onClick={() => update("fabric", current.fabric === f ? null : f)} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] font-body mb-2.5" style={{ color: "var(--color-text-primary)" }}>Sort By</p>
-        <select value={current.sort ?? "newest"} onChange={(e) => update("sort", e.target.value)}
-          className="w-full h-9 px-3 text-sm font-body border rounded-lg focus:outline-none"
-          style={{ borderColor: "var(--color-parchment)", background: "var(--color-ivory)" }}>
-          {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
+        <Dropdown
+          label="Sort"
+          value={current.sort ?? "newest"}
+          valueLabel={sortLabel}
+          options={SORT_OPTIONS}
+          onSelect={(v) => update("sort", v)}
+          panelClassName="w-56"
+        />
       </div>
     </div>
   );

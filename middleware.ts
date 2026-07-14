@@ -23,7 +23,8 @@ export default auth((req) => {
   }
 
   // ── Account routes require login — show popup instead of login page ───────
-  if (pathname.startsWith("/account")) {
+  // Wishlist is exempt: it's stored client-side (no userId), so guests can use it freely.
+  if (pathname.startsWith("/account") && pathname !== "/account/wishlist") {
     if (!loggedIn) {
       const url = new URL("/", req.url);
       url.searchParams.set("openLogin", "1");

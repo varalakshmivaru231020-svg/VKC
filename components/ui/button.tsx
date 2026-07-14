@@ -5,7 +5,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "outline" | "gold" | "destructive" | "link";
+  variant?: "primary" | "secondary" | "ghost" | "outline" | "gold" | "buyNow" | "destructive" | "link";
   size?: "xs" | "sm" | "md" | "lg" | "xl" | "icon";
   asChild?: boolean;
   loading?: boolean;
@@ -22,6 +22,8 @@ const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
     "bg-transparent border border-primary text-primary hover:bg-primary hover:text-text-inverse active:scale-[0.98]",
   gold:
     "bg-gold text-[#1C1410] hover:bg-gold-dark active:scale-[0.98] shadow-sm hover:shadow-md",
+  buyNow:
+    "bg-white text-black border border-black hover:bg-black hover:text-white active:scale-[0.98] shadow-sm hover:shadow-md transition-colors duration-300",
   destructive:
     "bg-error text-white hover:bg-red-700 active:scale-[0.98]",
   link:

@@ -138,6 +138,18 @@ export async function POST(req: NextRequest) {
           { status: 500 }
         );
       }
+    } else if (process.env.NODE_ENV === "production") {
+      // Never silently fall back to local disk in production — those files
+      // won't survive a redeploy/restart, so the admin would see a fake
+      // "success" for an upload that later 404s on the live site.
+      console.error("[Upload] ✗ CLOUDINARY_* env vars not set in production — refusing local-disk fallback.");
+      return NextResponse.json(
+        {
+          error: "Image storage is not configured",
+          details: "CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET must be set in the production environment. Contact the site admin.",
+        },
+        { status: 500 }
+      );
     } else {
       await mkdir(UPLOADS_DIR, { recursive: true });
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}.webp`;

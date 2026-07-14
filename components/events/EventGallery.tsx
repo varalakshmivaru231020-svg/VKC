@@ -12,6 +12,9 @@ interface Media {
   caption: string | null;
 }
 
+// Facebook gallery items reuse the video embed/player under their own "FACEBOOK" db type.
+const isVideoType = (type: string) => type === "VIDEO" || type === "FACEBOOK";
+
 function VideoThumb({ url }: { url: string }) {
   const parsed = parseVideoUrl(url);
   return (
@@ -79,7 +82,7 @@ export function EventGallery({ media, layout = "grid" }: { media: Media[]; layou
               : "relative aspect-square rounded-xl overflow-hidden group"}
             style={layout === "slider" ? { background: "var(--color-cream)", width: "min(45vw, 220px)" } : { background: "var(--color-cream)" }}
           >
-            {m.type === "VIDEO" ? (
+            {isVideoType(m.type) ? (
               <VideoThumb url={m.url} />
             ) : (
               <SmartImage src={m.url} alt={m.caption ?? "Event photo"} fill objectFit="cover" className="group-hover:scale-105 transition-transform duration-300" />
@@ -104,7 +107,7 @@ export function EventGallery({ media, layout = "grid" }: { media: Media[]; layou
             </>
           )}
           <div className="max-w-4xl w-full max-h-[85vh] flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
-            {media[active].type === "VIDEO" ? (
+            {isVideoType(media[active].type) ? (
               <VideoPlayer url={media[active].url} />
             ) : (
               <img src={media[active].url} alt={media[active].caption ?? "Event photo"} className="max-h-[75vh] max-w-full rounded-lg object-contain" />
