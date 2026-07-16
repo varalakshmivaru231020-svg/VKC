@@ -228,8 +228,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                   </Link>
                   {cat.children.length > 0 && (
                     <div
-                      className="absolute left-0 top-full hidden group-hover:block min-w-[200px] py-2 rounded-b-lg shadow-lg border-t-0 border z-10"
-                      style={{ background: "var(--color-ivory)", borderColor: "var(--color-parchment)" }}
+                      className="absolute left-0 top-full hidden group-hover:block min-w-[200px] py-2 z-10"
                     >
                       {cat.children.map((child) => (
                         <Link

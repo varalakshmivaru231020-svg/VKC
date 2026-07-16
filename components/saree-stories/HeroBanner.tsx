@@ -13,7 +13,7 @@ interface HeroBannerProps {
 
 export function HeroBanner({ title, subtitle, imageUrl, exploreRef }: HeroBannerProps) {
   return (
-    <div className="relative w-full h-[70vh] min-h-[600px] max-h-[800px] flex flex-col items-center justify-center overflow-hidden bg-[#2B2118]">
+    <div className="relative w-full h-[70vh] min-h-[540px] max-h-[740px] flex flex-col items-center justify-center overflow-hidden bg-[#2B2118]">
       {/* Background Image or Premium Fallback */}
       {imageUrl ? (
         <div className="absolute inset-0 z-0">
