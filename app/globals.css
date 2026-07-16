@@ -257,9 +257,9 @@
 
   /* Footer social icon circles */
   .social-icon:hover {
-    background: var(--color-primary) !important;
-    border-color: var(--color-primary) !important;
-    color: white !important;
+    border-color: var(--color-gold) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
   }
 
   /* Footer contact items */

@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Search, Heart, ShoppingBag, User, Menu, X, ChevronDown,
-  Instagram, Facebook, Youtube, LogOut,
+  LogOut,
 } from "lucide-react";
+import { InstagramIcon, FacebookIcon, YouTubeIcon } from "@/components/ui/SocialIcons";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -67,10 +68,10 @@ interface HeaderProps {
 
 export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook, youtube, navCategories = [], whatsappNumber }: HeaderProps) {
   const socialLinks = [
-    { Icon: Instagram, href: instagram, label: "Instagram" },
-    { Icon: Facebook,  href: facebook,  label: "Facebook" },
-    { Icon: Youtube,   href: youtube,   label: "YouTube" },
-  ].filter((s): s is { Icon: typeof Instagram; href: string; label: string } => Boolean(s.href));
+    { Icon: InstagramIcon, href: instagram, label: "Instagram" },
+    { Icon: FacebookIcon,  href: facebook,  label: "Facebook" },
+    { Icon: YouTubeIcon,   href: youtube,   label: "YouTube" },
+  ].filter((s): s is { Icon: typeof InstagramIcon; href: string; label: string } => Boolean(s.href));
   const pathname = usePathname();
   const [scrolled, setScrolled]     = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -125,11 +126,11 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                 {/* Social links — desktop only */}
                 {socialLinks.map(({ Icon, href, label }) => (
                   <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                    className="hidden lg:flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150"
-                    style={{ color: "var(--color-text-muted)" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-muted)"; e.currentTarget.style.background = "transparent"; }}>
-                    <Icon className="h-4.5 w-4.5" />
+                    className="hidden lg:flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200 hover:scale-110"
+                    style={{ background: "transparent" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-primary-50)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+                    <Icon className="h-5 w-5" />
                   </a>
                 ))}
                 <VideoShoppingButton className="hidden lg:inline-flex ml-1 h-9 px-3 text-xs" />
@@ -479,9 +480,9 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                 <div className="flex items-center gap-3">
                   {socialLinks.map(({ Icon, href, label }) => (
                     <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                      className="h-8 w-8 flex items-center justify-center rounded-lg"
-                      style={{ color: "var(--color-text-muted)", background: "var(--color-cream)" }}>
-                      <Icon className="h-4 w-4" />
+                      className="h-8 w-8 flex items-center justify-center rounded-lg transition-transform duration-200 hover:scale-110"
+                      style={{ background: "var(--color-cream)" }}>
+                      <Icon className="h-4.5 w-4.5" />
                     </a>
                   ))}
                 </div>

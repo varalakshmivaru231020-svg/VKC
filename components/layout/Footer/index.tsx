@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Instagram, Facebook, Youtube, Mail, Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
+import { InstagramIcon, FacebookIcon, YouTubeIcon } from "@/components/ui/SocialIcons";
 import { NewsletterForm } from "./NewsletterForm";
 
 type FooterLink = { label: string; href: string };
@@ -136,9 +137,9 @@ export function Footer({
             {/* Social */}
             <div className="flex gap-2.5">
               {[
-                { Icon: Instagram, href: instagram, label: "Instagram" },
-                { Icon: Facebook,  href: facebook,  label: "Facebook" },
-                { Icon: Youtube,   href: youtube,   label: "YouTube" },
+                { Icon: InstagramIcon, href: instagram, label: "Instagram" },
+                { Icon: FacebookIcon,  href: facebook,  label: "Facebook" },
+                { Icon: YouTubeIcon,   href: youtube,   label: "YouTube" },
               ].filter(s => s.href).map(({ Icon, href, label }) => (
                 <a
                   key={label}
@@ -146,10 +147,10 @@ export function Footer({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="social-icon h-9 w-9 flex items-center justify-center rounded-full border transition-all duration-200"
-                  style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-muted)" }}
+                  className="social-icon h-9 w-9 flex items-center justify-center rounded-full border transition-all duration-200 hover:scale-110"
+                  style={{ borderColor: "var(--color-parchment)", background: "white" }}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4.5 w-4.5" />
                 </a>
               ))}
             </div>
