@@ -31,7 +31,7 @@ export default async function NewArrivalsPage() {
         </p>
         {result.total > 0 && (
           <p className="text-sm font-body mt-2" style={{ color: "var(--color-text-disabled)" }}>
-            {result.total} sarees
+            {result.total} products
           </p>
         )}
       </div>

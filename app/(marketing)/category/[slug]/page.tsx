@@ -153,7 +153,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                 </p>
               )}
               <p className="mt-4 text-xs font-body" style={{ color: bannerImg ? "rgba(255,255,255,0.6)" : "var(--color-text-disabled)" }}>
-                {result.total} sarees
+                {result.total} products
               </p>
             </div>
           </div>

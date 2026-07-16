@@ -64,7 +64,7 @@ export default function ShopHeader({
         <div className="flex items-center gap-2.5 flex-wrap">
           <p className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>
             <span className="font-semibold" style={{ color: "var(--color-text-primary)" }}>{total.toLocaleString("en-IN")}</span>
-            {" "}sarees
+            {" "}products
           </p>
           {activeFilters.map((f) => (
             <span

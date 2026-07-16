@@ -126,7 +126,7 @@ export default async function ShopPage({ searchParams }: Props) {
                 All Sarees
               </h1>
               <p className="text-body-sm mt-2 font-body" style={{ color: bannerImg ? "rgba(255,255,255,0.8)" : "var(--color-text-muted)" }}>
-                {result.total > 0 ? `${result.total} sarees curated for you` : "Handwoven from across India"}
+                {result.total > 0 ? `${result.total} products curated for you` : "Handwoven from across India"}
               </p>
             </div>
           </div>

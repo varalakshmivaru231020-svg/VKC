@@ -51,8 +51,8 @@ export default async function EventsPage() {
                       {ev.description}
                     </p>
                   )}
-                  <p className="text-xs font-body mt-3" style={{ color: "var(--color-gold)" }}>
-                    {ev.media.length} {ev.media.length === 1 ? "item" : "items"} · View Gallery
+                  <p className="text-label mt-3" style={{ color: "var(--color-gold)" }}>
+                    View Gallery
                   </p>
                 </div>
               </Link>

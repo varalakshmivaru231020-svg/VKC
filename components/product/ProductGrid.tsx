@@ -29,10 +29,10 @@ export function ProductGrid({ products, loading }: Props) {
       <div className="text-center py-24 space-y-4">
         <div className="text-6xl">🪡</div>
         <p className="text-h4 font-heading" style={{ color: "var(--color-text-primary)" }}>
-          No sarees found
+          No products found
         </p>
         <p className="text-body-sm font-body" style={{ color: "var(--color-text-muted)" }}>
-          Try adjusting your filters or browse all sarees
+          Try adjusting your filters or browse all products
         </p>
       </div>
     );
