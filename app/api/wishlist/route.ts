@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
 
   const mapped = products.map((p) => ({
     ...p,
+    gstPercent: Number(p.gstPercent),
     variants: p.variants.map((v) => ({
       ...v,
       costPrice: Number(v.costPrice),

@@ -30,6 +30,7 @@ interface Order {
   subtotal: string | number;
   discountAmount: string | number;
   shippingAmount: string | number;
+  taxAmount?: string | number;
   totalAmount: string | number;
   walletAmountUsed?: string | number;
   shippingAddress: any;
@@ -520,7 +521,7 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
         );
         const isDone = effectiveStatus === "REFUNDED" || ["RETURN_APPROVED", "EXCHANGE_APPROVED"].includes(order.status);
         const message =
-          effectiveStatus === "REQUESTED"        ? "Return request submitted — we'll arrange a courier shortly" :
+          effectiveStatus === "REQUESTED"        ? "We're sorry for the inconvenience — your return request has been submitted. Our team will review your case and update you shortly." :
           effectiveStatus === "PICKUP_ASSIGNED"  ? "Courier assigned — they'll be in touch to schedule pickup" :
           effectiveStatus === "PICKUP_COMPLETED" ? "Picked up — your parcel is on the way to our warehouse" :
           effectiveStatus === "DELIVERED"        ? "Returned to warehouse — refund will be processed shortly" :
@@ -748,6 +749,11 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
                   {fmt(order.totalAmount)}
                 </span>
               </div>
+              {Number(order.taxAmount ?? 0) > 0 && (
+                <p className="text-[11px] font-body pt-1" style={{ color: "var(--color-text-muted)" }}>
+                  Includes {fmt(order.taxAmount!)} GST
+                </p>
+              )}
             </div>
             {order.paymentMethod && (
               <p className="text-xs font-body mt-3 pt-3 border-t capitalize" style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-muted)" }}>

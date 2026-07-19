@@ -382,6 +382,11 @@ export default function CheckoutPage() {
   const sub      = subtotal();
   const discount = coupon?.discount ?? 0;
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
+  const gstAmount = items.reduce((s, i) => {
+    const rate = i.gstPercent ?? 5;
+    const lineTotal = i.salePrice * i.quantity;
+    return s + (lineTotal - lineTotal / (1 + rate / 100));
+  }, 0);
 
   const shippingCost = (() => {
     if (effectiveIntl) return 0; // International: no charge at checkout
@@ -1261,7 +1266,7 @@ export default function CheckoutPage() {
                     {finalTotal === 0 ? "Fully paid from wallet — no payment needed" : `${formatINR(walletDeduction)} from wallet + ${formatINR(finalTotal)} via ${payment === "cashfree" ? "Cashfree" : payment === "icici-pg" ? "ICICI UPI / Pay" : payment === "icici" ? "ICICI Eazypay" : "COD"}`}
                   </p>
                 )}
-                <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>Inclusive of all taxes</p>
+                <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>Includes {formatINR(gstAmount)} GST</p>
               </div>
               <div className="px-5 pb-5 pt-1">
                 <div className="p-3 rounded-lg" style={{ background: "var(--color-ivory)" }}>

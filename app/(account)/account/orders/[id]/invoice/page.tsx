@@ -223,6 +223,12 @@ export default async function CustomerInvoicePage({ params }: { params: { id: st
               <span>Grand Total</span>
               <span style={{ color: "#8B1A2E" }}>{formatINR(Number(order.totalAmount))}</span>
             </div>
+            {Number(order.taxAmount) > 0 && (
+              <div className="totals-row">
+                <span>(GST included)</span>
+                <span>{formatINR(Number(order.taxAmount))}</span>
+              </div>
+            )}
             <p className="gst-note">* Inclusive of all applicable taxes (GST){storeGST ? ` · GSTIN: ${storeGST}` : ""}</p>
           </div>
         </div>

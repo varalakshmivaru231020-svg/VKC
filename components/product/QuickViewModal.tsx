@@ -79,6 +79,7 @@ export function QuickViewModal() {
       originalPrice: v.originalPrice,
       quantity: qty,
       stockQty: v.stockQty,
+      gstPercent: p.gstPercent,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);

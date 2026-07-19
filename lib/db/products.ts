@@ -5,6 +5,7 @@ function mapProduct(p: any): ProductData {
   return {
     ...p,
     costPrice: undefined,
+    gstPercent: Number(p.gstPercent),
     variants: p.variants?.map((v: any) => ({
       ...v,
       costPrice: Number(v.costPrice),

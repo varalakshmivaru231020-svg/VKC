@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ShoppingBag, Heart, Check, Truck, RefreshCw, Shield, ChevronDown, ChevronUp, Play } from "lucide-react";
+import { ShoppingBag, Heart, Check, Truck, RefreshCw, Shield, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/utils";
 import { formatINR, discountPercent, savedAmount } from "@/lib/utils/format";
@@ -43,6 +43,10 @@ export default function ProductDetailClient({ product, careInstructions, deliver
   const saved = savedAmount(selectedVariant.originalPrice, selectedVariant.salePrice);
   const available = selectedVariant.stockQty - selectedVariant.reservedQty;
 
+  const gstRate = product.gstPercent ?? 5;
+  const gstAmount = selectedVariant.salePrice - selectedVariant.salePrice / (1 + gstRate / 100);
+  const gstLabel = gstRate % 1 === 0 ? gstRate.toFixed(0) : gstRate.toFixed(2);
+
   const handleVariantChange = (v: ProductVariantData) => {
     setSelectedVariant(v);
     setActiveImage(0);
@@ -66,9 +70,16 @@ export default function ProductDetailClient({ product, careInstructions, deliver
       originalPrice: selectedVariant.originalPrice,
       quantity: qty,
       stockQty: selectedVariant.stockQty,
+      gstPercent: product.gstPercent,
     });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 3000);
+  };
+
+  const goToImage = (dir: 1 | -1) => {
+    if (images.length < 2) return;
+    setShowVideo(false);
+    setActiveImage((prev) => (prev + dir + images.length) % images.length);
   };
 
   const checkPincode = () => {
@@ -255,6 +266,26 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                     </div>
                   )}
 
+                  {/* Prev / next arrows */}
+                  {images.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); goToImage(-1); }}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full flex items-center justify-center shadow-sm bg-white/90 hover:bg-white transition-all z-10"
+                        aria-label="Previous image"
+                      >
+                        <ChevronLeft className="h-5 w-5" style={{ color: "var(--color-text-secondary)" }} />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); goToImage(1); }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full flex items-center justify-center shadow-sm bg-white/90 hover:bg-white transition-all z-10"
+                        aria-label="Next image"
+                      >
+                        <ChevronRight className="h-5 w-5" style={{ color: "var(--color-text-secondary)" }} />
+                      </button>
+                    </>
+                  )}
+
                   {/* Zoom hint badge */}
                   {!zoomed && images[activeImage]?.url && (
                     <div className="absolute bottom-3 right-3 px-2 py-1 rounded text-[10px] font-body font-medium"
@@ -335,7 +366,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
               </p>
             )}
             <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
-              Inclusive of all taxes · Free shipping on this product — Domestic orders only
+              Inclusive of {gstLabel}% GST ({formatINR(gstAmount)}) · Free shipping on this product — Domestic orders only
             </p>
           </div>
 

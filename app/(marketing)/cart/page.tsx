@@ -62,6 +62,11 @@ export default function CartPage() {
   const discountAmt = couponApplied ? couponApplied.discount : 0;
   const afterDiscount = sub - discountAmt;
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
+  const gstAmount = items.reduce((s, i) => {
+    const rate = i.gstPercent ?? 5;
+    const lineTotal = i.salePrice * i.quantity;
+    return s + (lineTotal - lineTotal / (1 + rate / 100));
+  }, 0);
 
   const domesticShippingCost = afterDiscount >= shippingConfig.freeShippingThreshold
     ? 0
@@ -395,7 +400,7 @@ export default function CartPage() {
                     {formatINR(total)}
                   </span>
                 </div>
-                <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>Inclusive of all taxes</p>
+                <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>Includes {formatINR(gstAmount)} GST</p>
               </div>
 
               <Button

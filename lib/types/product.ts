@@ -43,6 +43,7 @@ export interface ProductData {
   regionOfOrigin?: string | null;
   sareeLengthCm: number;
   careInstructions?: string | null;
+  gstPercent: number;
   weightGm?: number | null;
   videoUrl?: string | null;
   isActive: boolean;
@@ -66,6 +67,7 @@ export interface CartItem {
   originalPrice: number;
   quantity: number;
   stockQty: number;
+  gstPercent: number;
 }
 
 export interface OrderData {

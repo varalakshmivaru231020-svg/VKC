@@ -61,6 +61,7 @@ model Product {
   blouseLengthCm  Int?
   sareeLengthCm   Int              @default(560)
   careInstructions String?         @db.Text
+  gstPercent      Decimal          @default(5) @db.Decimal(4, 2)
   weightGm        Int?
   isActive        Boolean          @default(true)
   isFeatured      Boolean          @default(false)

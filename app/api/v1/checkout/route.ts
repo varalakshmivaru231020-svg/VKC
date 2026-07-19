@@ -56,6 +56,20 @@ export async function POST(req: Request) {
   }
 
   const subtotal     = items.reduce((s, i) => s + i.salePrice * i.quantity, 0);
+
+  // GST is informational — prices are tax-inclusive, so it's a breakup within
+  // the total (not added on top). Rate comes from the DB, keyed by variant → product.
+  const variantProducts = await db.productVariant.findMany({
+    where: { id: { in: items.map((i) => i.variantId) } },
+    select: { id: true, product: { select: { gstPercent: true } } },
+  });
+  const gstRateByVariant = new Map(variantProducts.map((v) => [v.id, Number(v.product.gstPercent)]));
+  const taxAmount = items.reduce((s, i) => {
+    const rate = gstRateByVariant.get(i.variantId) ?? 5;
+    const lineTotal = i.salePrice * i.quantity;
+    return s + (lineTotal - lineTotal / (1 + rate / 100));
+  }, 0);
+
   const grossTotal   = Math.max(0, subtotal + (shippingAmount ?? 0) - (discountAmount ?? 0));
   const walletUsed   = Math.max(0, Math.min(Number(walletAmount ?? 0), grossTotal));
   const finalTotal   = Math.max(0, grossTotal - walletUsed);
@@ -82,7 +96,7 @@ export async function POST(req: Request) {
     subtotal,
     discountAmount:  discountAmount ?? 0,
     shippingAmount:  shippingAmount ?? 0,
-    taxAmount:       0,
+    taxAmount,
     totalAmount:     finalTotal,
     walletAmountUsed: walletUsed,
     couponCode:      couponCode || null,

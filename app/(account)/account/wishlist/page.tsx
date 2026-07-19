@@ -54,6 +54,7 @@ export default function WishlistPage() {
       originalPrice: variant.originalPrice,
       quantity: 1,
       stockQty: variant.stockQty,
+      gstPercent: product.gstPercent,
     });
     toggle(variant.id);   // remove from wishlist
     openCart();

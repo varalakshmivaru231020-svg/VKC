@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -14,6 +14,36 @@ import {
   Video, Facebook,
 } from "lucide-react";
 
+// ── Sidebar counts hook ───────────────────────────────────────────────────────
+interface SidebarCounts {
+  pendingOrders?: number;
+  customers?: number;
+  pendingVideoBookings?: number;
+}
+
+function useSidebarCounts() {
+  const [counts, setCounts] = useState<SidebarCounts>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchCounts() {
+      try {
+        const res = await fetch("/api/admin/sidebar-counts");
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setCounts(data);
+        }
+      } catch { /* silent */ }
+    }
+    fetchCounts();
+    // Refresh every 60s
+    const interval = setInterval(fetchCounts, 60_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  return counts;
+}
+
 // ── Sub-item type ─────────────────────────────────────────────────────────────
 interface NavSubItem { href: string; label: string }
 interface NavItemDef {
@@ -22,6 +52,8 @@ interface NavItemDef {
   icon: React.ElementType;
   exact?: boolean;
   children?: NavSubItem[];
+  countKey?: keyof SidebarCounts;       // maps to a count field
+  badgeVariant?: "default" | "warning"; // warning = pending items
 }
 interface NavGroupDef { title: string; items: NavItemDef[] }
 
@@ -39,6 +71,8 @@ const navGroups: NavGroupDef[] = [
         href: "/admin/orders",
         label: "Orders",
         icon: ShoppingCart,
+        countKey: "pendingOrders",
+        badgeVariant: "warning",
         children: [
           { href: "/admin/orders",                    label: "All Orders" },
           { href: "/admin/orders?status=PENDING",     label: "Pending" },
@@ -51,7 +85,7 @@ const navGroups: NavGroupDef[] = [
         ],
       },
       { href: "/admin/shipments", label: "Shipments",  icon: Truck },
-      { href: "/admin/customers", label: "Customers",  icon: Users },
+      { href: "/admin/customers", label: "Customers",  icon: Users,  countKey: "customers" },
       { href: "/admin/reviews",   label: "Reviews",    icon: Star },
     ],
   },
@@ -86,7 +120,7 @@ const navGroups: NavGroupDef[] = [
       { href: "/admin/saree-stories",   label: "Saree Stories",   icon: Layers },
       { href: "/admin/gallery",         label: "Gallery",         icon: Image },
       { href: "/admin/videos",          label: "Videos",          icon: Video },
-      { href: "/admin/video-bookings",  label: "Video Bookings",  icon: Video },
+      { href: "/admin/video-bookings",  label: "Video Bookings",  icon: Video, countKey: "pendingVideoBookings", badgeVariant: "warning" },
       { href: "/admin/facebook-videos", label: "Facebook Videos", icon: Facebook },
       { href: "/admin/pages",           label: "CMS Pages",       icon: FileText },
       { href: "/admin/events",          label: "Events",          icon: Star },
@@ -108,12 +142,30 @@ const navGroups: NavGroupDef[] = [
   },
 ];
 
+// ── Count Badge ───────────────────────────────────────────────────────────────
+function CountBadge({ count, variant = "default" }: { count?: number; variant?: "default" | "warning" }) {
+  if (!count || count <= 0) return null;
+  const display = count > 999 ? "999+" : String(count);
+  const colors = variant === "warning"
+    ? { bg: "#FEF3C7", text: "#92400E" }
+    : { bg: "#F3F4F6", text: "#6B7280" };
+  return (
+    <span
+      className="inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full text-[10px] font-bold font-body leading-none"
+      style={{ background: colors.bg, color: colors.text }}
+    >
+      {display}
+    </span>
+  );
+}
+
 // ── NavItem (supports collapsible sub-menu) ───────────────────────────────────
-function NavItem({ href, label, icon: Icon, exact, children }: NavItemDef) {
+function NavItem({ href, label, icon: Icon, exact, children, countKey, badgeVariant, counts }: NavItemDef & { counts: SidebarCounts }) {
   const pathname = usePathname();
   const active = exact ? pathname === href : pathname.startsWith(href) && href !== "/admin";
   const hasChildren = !!children?.length;
   const [open, setOpen] = useState(() => pathname.startsWith(href) && href !== "/admin");
+  const badgeCount = countKey ? counts[countKey] : undefined;
 
   return (
     <div>
@@ -134,6 +186,7 @@ function NavItem({ href, label, icon: Icon, exact, children }: NavItemDef) {
           )}
           <Icon className="h-4 w-4 shrink-0" style={{ color: active ? "var(--color-primary)" : "inherit" }} />
           <span className="flex-1 font-body">{label}</span>
+          <CountBadge count={badgeCount} variant={badgeVariant} />
         </Link>
         {hasChildren && (
           <button
@@ -181,6 +234,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const userName  = session?.user?.name ?? "Admin";
   const initials  = userName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
   const isStaff   = (session?.user as any)?.role === "STAFF";
+  const counts    = useSidebarCounts();
 
   // For STAFF: only show Operations group with allowed items
   const visibleGroups = isStaff
@@ -232,7 +286,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </p>
               <div className="space-y-0.5">
                 {group.items.map((item) => (
-                  <NavItem key={item.href} {...item} />
+                  <NavItem key={item.href} {...item} counts={counts} />
                 ))}
               </div>
             </div>

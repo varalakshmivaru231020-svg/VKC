@@ -67,6 +67,7 @@ export function ProductCard({ product, className, index = 0 }: Props) {
       originalPrice: firstVariant.originalPrice,
       quantity: 1,
       stockQty: firstVariant.stockQty,
+      gstPercent: product.gstPercent,
     });
     setShowRipple(true);
     setTimeout(() => setShowRipple(false), 650);

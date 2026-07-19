@@ -424,7 +424,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               </div>
               {Number(order.taxAmount) > 0 && (
                 <div className="flex justify-between">
-                  <span style={{ color: "var(--color-text-secondary)" }}>Tax</span>
+                  <span style={{ color: "var(--color-text-secondary)" }}>GST (included in price)</span>
                   <span>{formatINR(Number(order.taxAmount))}</span>
                 </div>
               )}

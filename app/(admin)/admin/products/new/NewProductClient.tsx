@@ -204,6 +204,8 @@ export default function NewProductClient() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [shortDesc, setShortDesc] = useState("");
+  const [careInstructions, setCareInstructions] = useState("");
+  const [gstPercent, setGstPercent] = useState("5");
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<Array<{ id: string; name: string; parentId?: string | null }>>([]);
   const [isFeatured, setIsFeatured] = useState(false);
@@ -284,7 +286,8 @@ export default function NewProductClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name, description, shortDesc, isFeatured, isActive, videoUrl,
+          name, description, shortDesc, careInstructions, isFeatured, isActive, videoUrl,
+          gstPercent: gstPercent === "" ? 5 : Number(gstPercent),
           categoryId: categoryId || null,
           productAttributes: Object.entries(attrValues)
             .filter(([, vals]) => vals.length > 0)
@@ -492,6 +495,49 @@ export default function NewProductClient() {
             className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleVideoUpload(f); }}
           />
+        </div>
+      </SectionCard>
+
+      {/* Care Instructions */}
+      <SectionCard title="Care Instructions">
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>
+            Product-specific Care Instructions <span className="font-normal" style={{ color: "#9CA3AF" }}>(optional)</span>
+          </label>
+          <textarea
+            value={careInstructions}
+            onChange={(e) => setCareInstructions(e.target.value)}
+            rows={4}
+            placeholder="Dry clean recommended. Store in a cool, dry place. Avoid direct sunlight. Handle embellishments with care."
+            className="w-full px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none resize-y"
+            style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }}
+          />
+          <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>
+            Shown on this product's page. Leave blank to fall back to the store-wide default set in Settings → Product Page.
+          </p>
+        </div>
+      </SectionCard>
+
+      {/* GST */}
+      <SectionCard title="GST (Tax)">
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>
+            GST Rate (%)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={28}
+            step={0.01}
+            value={gstPercent}
+            onChange={(e) => setGstPercent(e.target.value)}
+            placeholder="5"
+            className="w-full max-w-[160px] px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none"
+            style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }}
+          />
+          <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>
+            Applied to this product's price (which is treated as GST-inclusive) and shown on the product page, cart and checkout GST breakup.
+          </p>
         </div>
       </SectionCard>
 
