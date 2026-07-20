@@ -206,6 +206,7 @@ export default function NewProductClient() {
   const [shortDesc, setShortDesc] = useState("");
   const [careInstructions, setCareInstructions] = useState("");
   const [gstPercent, setGstPercent] = useState("5");
+  const [sareeLengthM, setSareeLengthM] = useState("5.6");
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<Array<{ id: string; name: string; parentId?: string | null }>>([]);
   const [isFeatured, setIsFeatured] = useState(false);
@@ -288,6 +289,7 @@ export default function NewProductClient() {
         body: JSON.stringify({
           name, description, shortDesc, careInstructions, isFeatured, isActive, videoUrl,
           gstPercent: gstPercent === "" ? 5 : Number(gstPercent),
+          sareeLengthCm: Math.round((sareeLengthM === "" ? 5.6 : Number(sareeLengthM)) * 100),
           categoryId: categoryId || null,
           productAttributes: Object.entries(attrValues)
             .filter(([, vals]) => vals.length > 0)
@@ -442,6 +444,28 @@ export default function NewProductClient() {
               })}
             </div>
           )}
+        </div>
+      </SectionCard>
+
+      {/* Specifications */}
+      <SectionCard title="Specifications">
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>
+            Saree Length (m)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={0.1}
+            value={sareeLengthM}
+            onChange={(e) => setSareeLengthM(e.target.value)}
+            placeholder="5.6"
+            className="w-full max-w-[160px] px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none"
+            style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }}
+          />
+          <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>
+            Shown in Product Details on the product page. Defaults to 5.6m if left blank.
+          </p>
         </div>
       </SectionCard>
 

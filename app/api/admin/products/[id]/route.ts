@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const {
       name, description, shortDesc, fabric, weaveType, regionOfOrigin,
       occasions, isFeatured, isActive, videoUrl, variants, productAttributes,
-      categoryId, careInstructions, gstPercent,
+      categoryId, careInstructions, gstPercent, sareeLengthCm,
     } = body;
 
     if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -44,6 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         categoryId: categoryId !== undefined ? (categoryId || null) : undefined,
         careInstructions: careInstructions !== undefined ? (careInstructions || null) : undefined,
         gstPercent: gstPercent !== undefined && gstPercent !== null && gstPercent !== "" ? parseFloat(gstPercent) : undefined,
+        sareeLengthCm: sareeLengthCm !== undefined && sareeLengthCm !== null && sareeLengthCm !== "" ? parseInt(sareeLengthCm) : undefined,
         isFeatured: isFeatured ?? false,
         isActive: isActive ?? true,
         videoUrl: videoUrl !== undefined ? (videoUrl || null) : undefined,

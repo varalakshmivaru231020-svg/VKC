@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const {
       name, description, shortDesc, fabric, weaveType, regionOfOrigin,
       occasions, isFeatured, isActive, videoUrl, variants, productAttributes,
-      categoryId, careInstructions, gstPercent,
+      categoryId, careInstructions, gstPercent, sareeLengthCm,
     } = body;
 
     if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
         categoryId: categoryId || null,
         careInstructions: careInstructions || null,
         gstPercent: gstPercent !== undefined && gstPercent !== null && gstPercent !== "" ? parseFloat(gstPercent) : 5,
+        sareeLengthCm: sareeLengthCm !== undefined && sareeLengthCm !== null && sareeLengthCm !== "" ? parseInt(sareeLengthCm) : 560,
         isFeatured: isFeatured ?? false,
         isActive: isActive ?? true,
         videoUrl: videoUrl || null,

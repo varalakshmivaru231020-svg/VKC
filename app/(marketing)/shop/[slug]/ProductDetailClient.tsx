@@ -366,7 +366,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
               </p>
             )}
             <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
-              Inclusive of {gstLabel}% GST ({formatINR(gstAmount)}) · Free shipping on this product — Domestic orders only
+              Inclusive of {gstLabel}% GST ({formatINR(gstAmount)})
             </p>
           </div>
 
