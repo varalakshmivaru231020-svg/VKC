@@ -319,6 +319,7 @@ export default function EditProductClient({ product }: Props) {
       });
       if (!res.ok) throw new Error(await res.text());
       router.push("/admin/products");
+      router.refresh();
     } catch (err: any) {
       alert("Error saving: " + err.message);
     } finally {

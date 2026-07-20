@@ -3,6 +3,7 @@ import { Plus, Search, Package, Edit2, Eye } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatINR } from "@/lib/utils/format";
 import { DeleteProductButton } from "./DeleteProductButton";
+import { SmartImage } from "@/components/ui/SmartImage";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Products — Admin" };
@@ -39,7 +40,10 @@ export default async function AdminProductsPage({
         category: { select: { id: true, name: true } },
         variants: {
           where: { isActive: true },
-          select: { id: true, colorName: true, colorHex: true, salePrice: true, originalPrice: true, stockQty: true, sareeCode: true },
+          select: {
+            id: true, colorName: true, colorHex: true, salePrice: true, originalPrice: true, stockQty: true, sareeCode: true,
+            images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
+          },
           orderBy: { sortOrder: "asc" },
         },
         _count: { select: { variants: true } },
@@ -181,9 +185,16 @@ export default async function AdminProductsPage({
                     {/* Product */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: "#E5E7EB" }}>
+                          <SmartImage
+                            src={product.variants[0]?.images[0]?.url}
+                            alt={product.name}
+                            objectFit="cover"
+                          />
+                        </div>
                         <div className="flex gap-0.5 shrink-0">
                           {product.variants.slice(0, 5).map((v) => (
-                            <div key={v.id} className="w-3 h-10 rounded-sm" style={{ background: String(v.colorHex) }} />
+                            <div key={v.id} className="w-2 h-10 rounded-sm" style={{ background: String(v.colorHex) }} />
                           ))}
                         </div>
                         <div className="min-w-0">
