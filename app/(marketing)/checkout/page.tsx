@@ -310,7 +310,7 @@ function AddressCard({ addr, selected, onSelect, onEdit }: { addr: SavedAddress;
 // ─── Main checkout page ───────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
-  const { items, subtotal, clearCart } = useCartStore();
+  const { items: allItems, removeItems } = useCartStore();
   const {
     coupon, setCoupon, removeCoupon: removeCouponFromStore,
     clearCheckoutMeta,
@@ -323,6 +323,15 @@ export default function CheckoutPage() {
   const [address, setAddress]                 = useState<AddressForm>(emptyAddress);
   const [errors, setErrors]                   = useState<Partial<AddressForm>>({});
   const [showPhoneVerify, setShowPhoneVerify] = useState(false);
+
+  // Pre-Booking — a mixed cart never checks out as one order (see
+  // PRE_BOOKING_PLAN.md §2.3), so this page only ever operates on the slice
+  // of the cart matching ?type=. Same page, same steps, filtered items.
+  const bookingType: "standard" | "prebooking" = searchParams.get("type") === "prebooking" ? "prebooking" : "standard";
+  const isPreBooking = bookingType === "prebooking";
+  const items = allItems.filter((i) => (isPreBooking ? !!i.isPreBooking : !i.isPreBooking));
+  const [preBookingConsent, setPreBookingConsent] = useState(false);
+  const preBookingEtaLabel = items.find((i) => i.preBookingEtaLabel)?.preBookingEtaLabel ?? null;
 
   // Logged-in: saved addresses
   const [savedAddresses, setSavedAddresses]       = useState<SavedAddress[]>([]);
@@ -357,8 +366,10 @@ export default function CheckoutPage() {
   useEffect(() => {
     fetch("/api/payment-config", { cache: "no-store" }).then(r => r.json()).then(d => {
       setPaymentCfg(d);
-      // auto-select first enabled method; "" means none available
-      if (d.razorpay) setPayment("netbanking");
+      if (isPreBooking) {
+        // Pre-booking is Razorpay-only for now — never fall back to another gateway or COD.
+        setPayment(d.razorpay ? "netbanking" : "");
+      } else if (d.razorpay) setPayment("netbanking");
       else if (d.cashfree) setPayment("cashfree");
       else if (d.iciciPg) setPayment("icici-pg");
       else if (d.icici) setPayment("icici");
@@ -366,7 +377,7 @@ export default function CheckoutPage() {
       else setPayment("");
       setPaymentCfgLoaded(true);
     }).catch(() => { setPaymentCfgLoaded(true); });
-  }, []);
+  }, [isPreBooking]);
 
 
   // International shipping — derived from ?intl=1 URL param set by cart page
@@ -379,8 +390,8 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, [status]);
 
-  const sub      = subtotal();
-  const discount = coupon?.discount ?? 0;
+  const sub      = items.reduce((s, i) => s + i.salePrice * i.quantity, 0);
+  const discount = isPreBooking ? 0 : (coupon?.discount ?? 0);
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
   const gstAmount = items.reduce((s, i) => {
     const rate = i.gstPercent ?? 5;
@@ -504,6 +515,8 @@ export default function CheckoutPage() {
 
   const placeOrder = async () => {
     if (!payment) return;
+    if (isPreBooking && payment !== "netbanking") return; // defense-in-depth — UI never offers other methods
+    if (isPreBooking && !preBookingConsent) return;
     setPlacing(true);
     try {
       const orderPayload = {
@@ -539,7 +552,7 @@ export default function CheckoutPage() {
           document.head.appendChild(s);
         });
 
-        clearCart();
+        removeItems(items.map((i) => i.variantId));
         clearCheckoutMeta();
 
         const cashfree = (window as any).Cashfree({
@@ -568,12 +581,18 @@ export default function CheckoutPage() {
 
       // ── Razorpay modal (Net Banking) ──────────────────────────────
       if (payment === "netbanking") {
-        const res = await fetch("/api/web/checkout/razorpay", {
+        const checkoutPath = isPreBooking ? "/api/web/checkout/pre-booking/razorpay" : "/api/web/checkout/razorpay";
+        const verifyPath   = isPreBooking ? "/api/web/checkout/pre-booking/razorpay/verify" : "/api/web/checkout/razorpay/verify";
+
+        const res = await fetch(checkoutPath, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderPayload),
         });
         const data = await res.json();
-        if (!res.ok) { setPlacing(false); return; }
+        if (!res.ok) {
+          if (isPreBooking) alert(data.error || "Could not start pre-booking checkout. Please try again.");
+          setPlacing(false); return;
+        }
 
         // Load Razorpay script
         await new Promise<void>((resolve, reject) => {
@@ -594,7 +613,7 @@ export default function CheckoutPage() {
           prefill:     { name: data.customerName, contact: data.customerPhone },
           method:      "netbanking",
           handler: async (resp: any) => {
-            const v = await fetch("/api/web/checkout/razorpay/verify", {
+            const v = await fetch(verifyPath, {
               method: "POST", headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 orderId:           data.orderId,
@@ -605,7 +624,7 @@ export default function CheckoutPage() {
             });
             const vData = await v.json();
             if (vData.success) {
-              clearCart(); clearCheckoutMeta();
+              removeItems(items.map((i) => i.variantId)); clearCheckoutMeta();
               setPlacedOrderNumber(vData.orderNumber);
               setOrdered(true); router.refresh();
             }
@@ -643,7 +662,7 @@ export default function CheckoutPage() {
 
         if (!popup) return; // popup blocked — form submitted to _self (navigates away)
 
-        clearCart(); clearCheckoutMeta();
+        removeItems(items.map((i) => i.variantId)); clearCheckoutMeta();
 
         // Listen for popup to post result back
         const handleMsg = (e: MessageEvent) => {
@@ -684,7 +703,7 @@ export default function CheckoutPage() {
           setPlacing(false);
           return;
         }
-        clearCart(); clearCheckoutMeta();
+        removeItems(items.map((i) => i.variantId)); clearCheckoutMeta();
         window.location.href = data.redirectUrl;
         return;
       }
@@ -697,7 +716,7 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok) { setPlacing(false); return; }
-      clearCart();
+      removeItems(items.map((i) => i.variantId));
       clearCheckoutMeta();
       setPlacedOrderNumber(data.order.orderNumber);
       setOrdered(true);
@@ -712,8 +731,10 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--color-ivory)" }}>
         <div className="text-center space-y-4">
-          <p style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", color: "var(--color-text-primary)" }}>Your cart is empty</p>
-          <Button asChild><Link href="/shop">Browse Sarees</Link></Button>
+          <p style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", color: "var(--color-text-primary)" }}>
+            {isPreBooking ? "No pre-booked items in your cart" : "Your cart is empty"}
+          </p>
+          <Button asChild><Link href="/cart">Back to Cart</Link></Button>
         </div>
       </div>
     );
@@ -735,11 +756,11 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] mb-1.5 animate-fade-up" style={{ color: "var(--color-success)", animationDelay: "0.15s" }}>
-          Confirmed
+        <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] mb-1.5 animate-fade-up" style={{ color: isPreBooking ? "var(--color-gold-dark)" : "var(--color-success)", animationDelay: "0.15s" }}>
+          {isPreBooking ? "Pre-Booked" : "Confirmed"}
         </p>
         <h2 className="mb-2 animate-fade-up" style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.6rem, 5vw, 2.5rem)", color: "var(--color-text-primary)", animationDelay: "0.2s" }}>
-          Thank You for Your Order!
+          {isPreBooking ? "Your Pre-Booking is Confirmed!" : "Thank You for Your Order!"}
         </h2>
         {placedOrderNumber && (
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-3 animate-fade-up"
@@ -749,7 +770,9 @@ export default function CheckoutPage() {
           </div>
         )}
         <p className="text-sm font-body mb-2 max-w-md animate-fade-up" style={{ color: "var(--color-text-muted)", animationDelay: "0.35s" }}>
-          We've received your order and will email you once it ships. Estimated delivery: <span className="font-semibold" style={{ color: "var(--color-text-secondary)" }}>4–7 business days</span>.
+          {isPreBooking
+            ? <>We'll begin procuring your item and keep you updated. {preBookingEtaLabel ? <><span className="font-semibold" style={{ color: "var(--color-text-secondary)" }}>{preBookingEtaLabel}</span>.</> : null}</>
+            : <>We've received your order and will email you once it ships. Estimated delivery: <span className="font-semibold" style={{ color: "var(--color-text-secondary)" }}>4–7 business days</span>.</>}
         </p>
         <p className="text-sm font-body mb-7 max-w-md animate-fade-up" style={{ color: "var(--color-text-muted)", animationDelay: "0.4s" }}>
           From our family of weavers to your home — thank you for choosing Vijaylakshmi Sarees.
@@ -974,7 +997,9 @@ export default function CheckoutPage() {
                       <span className="h-5 w-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                     </div>
                   ) : (() => {
-                    const methods = [
+                    const methods = isPreBooking
+                      ? (paymentCfg.razorpay ? [{ value: "netbanking", label: "Pay via Razorpay", desc: "UPI, Cards, Net Banking, Wallets" }] : [])
+                      : [
                       ...(paymentCfg.razorpay ? [{ value: "netbanking", label: "Pay via Razorpay",   desc: "UPI, Cards, Net Banking, Wallets" }] : []),
                       ...(paymentCfg.cashfree ? [{ value: "cashfree",   label: "Pay via Cashfree",   desc: "UPI, Cards, Net Banking, Wallets" }] : []),
                       ...(paymentCfg.iciciPg  ? [{ value: "icici-pg",   label: "ICICI UPI / Pay",    desc: "UPI, Cards, Net Banking — lower fees, instant credit" }] : []),
@@ -986,7 +1011,7 @@ export default function CheckoutPage() {
                       <div className="flex items-start gap-3 p-4 rounded-lg border text-sm font-body"
                         style={{ background: "#FEF9C3", borderColor: "#FCD34D", color: "#92400E" }}>
                         <Info className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#D97706" }} />
-                        <p>No payment methods are currently available. Please contact us to complete your order.</p>
+                        <p>{isPreBooking ? "Pre-booked items can currently only be paid for via Razorpay, and it isn't configured yet. Please contact us to complete your order." : "No payment methods are currently available. Please contact us to complete your order."}</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -1084,9 +1109,42 @@ export default function CheckoutPage() {
                       ))}
                     </div>
 
+                    {/* Pre-Booking summary + consent */}
+                    {isPreBooking && (
+                      <div className="rounded-lg p-4 space-y-2.5" style={{ background: "var(--color-gold-light)" }}>
+                        <p className="text-sm font-body font-semibold flex items-center gap-1.5" style={{ color: "var(--color-gold-dark)" }}>
+                          ✦ Pre-Booking Order
+                        </p>
+                        {preBookingEtaLabel && (
+                          <p className="text-xs font-body" style={{ color: "var(--color-text-secondary)" }}>{preBookingEtaLabel}</p>
+                        )}
+                        <label
+                          className="flex items-start gap-2.5 cursor-pointer select-none pt-1"
+                          onClick={() => setPreBookingConsent((v) => !v)}
+                        >
+                          <div
+                            className="relative w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all"
+                            style={{
+                              borderColor: preBookingConsent ? "var(--color-gold-dark)" : "var(--color-parchment)",
+                              background: preBookingConsent ? "var(--color-gold-dark)" : "white",
+                            }}
+                          >
+                            {preBookingConsent && (
+                              <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none">
+                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            )}
+                          </div>
+                          <span className="text-xs font-body" style={{ color: "var(--color-text-secondary)" }}>
+                            I understand this is a pre-booked item{preBookingEtaLabel ? `, expected ${preBookingEtaLabel.toLowerCase()}` : ""}, and it ships separately from any other items I've ordered.
+                          </span>
+                        </label>
+                      </div>
+                    )}
+
                     {/* Place order */}
                     <div className="pt-2 space-y-3">
-                      <Button size="xl" className="w-full" loading={placing} disabled={!payment} onClick={placeOrder}>
+                      <Button size="xl" className="w-full" loading={placing} disabled={!payment || (isPreBooking && !preBookingConsent)} onClick={placeOrder}>
                         {!placing && <Check className="mr-2 h-5 w-5" />}
                         {finalTotal === 0 ? "Place Order · Pay from Wallet" : `Place Order · ${formatINR(finalTotal)}`}
                       </Button>
@@ -1122,15 +1180,17 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                 </div>
-                {/* Coupon */}
-                <div className="pb-1">
-                  <CouponPicker
-                    subtotal={sub}
-                    applied={coupon}
-                    onApply={setCoupon}
-                    onRemove={removeCoupon}
-                  />
-                </div>
+                {/* Coupon — not available on pre-booking checkouts in this release */}
+                {!isPreBooking && (
+                  <div className="pb-1">
+                    <CouponPicker
+                      subtotal={sub}
+                      applied={coupon}
+                      onApply={setCoupon}
+                      onRemove={removeCoupon}
+                    />
+                  </div>
+                )}
 
                 {/* Wallet */}
                 {walletBalance > 0 && (

@@ -46,6 +46,13 @@ interface ProductData {
   isFeatured: boolean;
   isActive: boolean;
   videoUrl: string | null;
+  preBookingMode?: "OFF" | "AUTO_ON_OUT_OF_STOCK" | "ALWAYS_ON";
+  preBookingEtaMinDays?: number | null;
+  preBookingEtaMaxDays?: number | null;
+  preBookingMaxQtyPerOrder?: number | null;
+  preBookingMaxTotalQty?: number | null;
+  preBookingDisclaimer?: string | null;
+  preBookingReturnsAllowed?: boolean;
   productAttributes?: { attributeId: string; values: string[] }[];
   variants: {
     id: string;
@@ -214,6 +221,13 @@ export default function EditProductClient({ product }: Props) {
   const [categories, setCategories] = useState<Array<{ id: string; name: string; parentId?: string | null }>>([]);
   const [isFeatured, setIsFeatured] = useState(product.isFeatured);
   const [isActive, setIsActive] = useState(product.isActive);
+  const [preBookingMode, setPreBookingMode] = useState<"OFF" | "AUTO_ON_OUT_OF_STOCK" | "ALWAYS_ON">(product.preBookingMode ?? "OFF");
+  const [preBookingEtaMinDays, setPreBookingEtaMinDays] = useState(product.preBookingEtaMinDays != null ? String(product.preBookingEtaMinDays) : "");
+  const [preBookingEtaMaxDays, setPreBookingEtaMaxDays] = useState(product.preBookingEtaMaxDays != null ? String(product.preBookingEtaMaxDays) : "");
+  const [preBookingMaxQtyPerOrder, setPreBookingMaxQtyPerOrder] = useState(product.preBookingMaxQtyPerOrder != null ? String(product.preBookingMaxQtyPerOrder) : "");
+  const [preBookingMaxTotalQty, setPreBookingMaxTotalQty] = useState(product.preBookingMaxTotalQty != null ? String(product.preBookingMaxTotalQty) : "");
+  const [preBookingDisclaimer, setPreBookingDisclaimer] = useState(product.preBookingDisclaimer ?? "");
+  const [preBookingReturnsAllowed, setPreBookingReturnsAllowed] = useState(product.preBookingReturnsAllowed ?? true);
   const [videoUrl, setVideoUrl] = useState(product.videoUrl ?? "");
   const [videoUploading, setVideoUploading] = useState(false);
   const [videoError, setVideoError] = useState("");
@@ -301,6 +315,9 @@ export default function EditProductClient({ product }: Props) {
     if (variants.some((v) => !v.colorName || !v.salePrice)) {
       alert("Each variant needs a colour name and sale price"); return;
     }
+    if (preBookingEtaMinDays && preBookingEtaMaxDays && Number(preBookingEtaMinDays) > Number(preBookingEtaMaxDays)) {
+      alert("Pre-Booking: maximum ETA days must be greater than or equal to minimum"); return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/admin/products/${product.id}`, {
@@ -311,6 +328,13 @@ export default function EditProductClient({ product }: Props) {
           gstPercent: gstPercent === "" ? 5 : Number(gstPercent),
           sareeLengthCm: Math.round((sareeLengthM === "" ? 5.6 : Number(sareeLengthM)) * 100),
           categoryId: categoryId || null,
+          preBookingMode,
+          preBookingEtaMinDays: preBookingEtaMinDays === "" ? null : Number(preBookingEtaMinDays),
+          preBookingEtaMaxDays: preBookingEtaMaxDays === "" ? null : Number(preBookingEtaMaxDays),
+          preBookingMaxQtyPerOrder: preBookingMaxQtyPerOrder === "" ? null : Number(preBookingMaxQtyPerOrder),
+          preBookingMaxTotalQty: preBookingMaxTotalQty === "" ? null : Number(preBookingMaxTotalQty),
+          preBookingDisclaimer: preBookingDisclaimer.trim() || null,
+          preBookingReturnsAllowed,
           productAttributes: Object.entries(attrValues)
             .filter(([, vals]) => vals.length > 0)
             .map(([attributeId, values]) => ({ attributeId, values })),
@@ -461,6 +485,82 @@ export default function EditProductClient({ product }: Props) {
                 );
               })}
             </div>
+          )}
+        </div>
+      </SectionCard>
+
+      {/* Pre-Booking */}
+      <SectionCard title="Pre-Booking">
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium font-body mb-2" style={{ color: "#374151" }}>Mode</label>
+            <div className="flex flex-wrap gap-4">
+              {([
+                ["OFF", "Off"],
+                ["AUTO_ON_OUT_OF_STOCK", "Auto — when out of stock"],
+                ["ALWAYS_ON", "Always on"],
+              ] as const).map(([value, label]) => (
+                <label key={value} className="flex items-center gap-2 cursor-pointer select-none">
+                  <div onClick={() => setPreBookingMode(value)}
+                    className="relative w-10 h-6 rounded-full transition-all cursor-pointer shrink-0"
+                    style={{ background: preBookingMode === value ? "var(--color-primary)" : "#D1D5DB" }}>
+                    <div className="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all"
+                      style={{ left: preBookingMode === value ? "calc(100% - 18px)" : "2px" }} />
+                  </div>
+                  <span className="text-sm font-body" style={{ color: "#374151" }}>{label}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs font-body mt-2" style={{ color: "#9CA3AF" }}>
+              Auto shows a "Pre-Book Now" option in place of "Out of Stock" once a colour's stock reaches zero. Always on lets customers pre-book regardless of stock — for made-to-order or upcoming items.
+            </p>
+          </div>
+
+          {preBookingMode !== "OFF" && (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>ETA — min days</label>
+                  <input type="number" min={0} value={preBookingEtaMinDays} onChange={(e) => setPreBookingEtaMinDays(e.target.value)}
+                    placeholder="15" className="w-full h-9 px-3 border rounded-lg text-sm font-body focus:outline-none"
+                    style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>ETA — max days</label>
+                  <input type="number" min={0} value={preBookingEtaMaxDays} onChange={(e) => setPreBookingEtaMaxDays(e.target.value)}
+                    placeholder="25" className="w-full h-9 px-3 border rounded-lg text-sm font-body focus:outline-none"
+                    style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Max qty per order</label>
+                  <input type="number" min={1} value={preBookingMaxQtyPerOrder} onChange={(e) => setPreBookingMaxQtyPerOrder(e.target.value)}
+                    placeholder="Unlimited" className="w-full h-9 px-3 border rounded-lg text-sm font-body focus:outline-none"
+                    style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Max total capacity</label>
+                  <input type="number" min={1} value={preBookingMaxTotalQty} onChange={(e) => setPreBookingMaxTotalQty(e.target.value)}
+                    placeholder="Unlimited" className="w-full h-9 px-3 border rounded-lg text-sm font-body focus:outline-none"
+                    style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} />
+                </div>
+              </div>
+              <p className="text-xs font-body -mt-2" style={{ color: "#9CA3AF" }}>
+                Max total capacity caps how many units of this colour can be pre-booked in total — leave blank for unlimited.
+              </p>
+
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>
+                  Customer-facing disclaimer <span className="font-normal" style={{ color: "#9CA3AF" }}>(optional)</span>
+                </label>
+                <textarea value={preBookingDisclaimer} onChange={(e) => setPreBookingDisclaimer(e.target.value)}
+                  rows={2} placeholder="e.g. Handwoven to order by our Kanchipuram weaver partners."
+                  className="w-full px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none resize-y"
+                  style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} />
+                <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>Shown on the product page next to the Pre-Book button.</p>
+              </div>
+
+              <Toggle value={preBookingReturnsAllowed} onChange={setPreBookingReturnsAllowed} label="Returns allowed after delivery" />
+            </>
           )}
         </div>
       </SectionCard>

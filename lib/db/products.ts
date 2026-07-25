@@ -1,16 +1,20 @@
 import { db } from "@/lib/db";
 import type { ProductData } from "@/lib/types/product";
+import { isPreBookingAvailable, preBookingRemainingSlots, preBookingEtaLabel } from "@/lib/utils/prebooking";
 
 function mapProduct(p: any): ProductData {
   return {
     ...p,
     costPrice: undefined,
     gstPercent: Number(p.gstPercent),
+    preBookingEtaLabel: preBookingEtaLabel(p),
     variants: p.variants?.map((v: any) => ({
       ...v,
       costPrice: Number(v.costPrice),
       salePrice: Number(v.salePrice),
       originalPrice: Number(v.originalPrice),
+      preBookingAvailable: isPreBookingAvailable(p, v),
+      preBookingRemainingSlots: preBookingRemainingSlots(p, v),
     })) ?? [],
   };
 }

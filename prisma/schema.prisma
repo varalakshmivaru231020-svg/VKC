@@ -75,6 +75,15 @@ model Product {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
+  // ── Pre-Booking ──────────────────────────────────────────────────────────
+  preBookingMode           PreBookingMode @default(OFF)
+  preBookingEtaMinDays     Int?
+  preBookingEtaMaxDays     Int?
+  preBookingMaxQtyPerOrder Int?
+  preBookingMaxTotalQty    Int?
+  preBookingDisclaimer     String?        @db.VarChar(500)
+  preBookingReturnsAllowed Boolean        @default(true)
+
   @@index([categoryId, isActive, createdAt(sort: Desc)])
   @@map("products")
 }
@@ -122,6 +131,7 @@ model ProductVariant {
   originalPrice Decimal        @db.Decimal(10, 2)
   stockQty      Int            @default(0)
   reservedQty   Int            @default(0)
+  preBookedQty  Int            @default(0)
   isActive      Boolean        @default(true)
   sortOrder     Int            @default(0)
   images        ProductImage[]
@@ -299,7 +309,18 @@ model Order {
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
+  // ── Pre-Booking ──────────────────────────────────────────────────────────
+  // A PRE_BOOKING order only ever contains pre-booked line items — carts are
+  // split at checkout so standard and pre-booked items never share an order
+  // (this schema has no multi-shipment support, so a mixed order couldn't
+  // ship its in-stock item without waiting on procurement of the other).
+  orderType                    OrderType @default(STANDARD)
+  preBookingEtaDate            DateTime?
+  preBookingDisclaimerSnap     String?   @db.VarChar(500)
+  preBookingReturnsAllowedSnap Boolean   @default(true)
+
   @@index([userId, status, createdAt(sort: Desc)])
+  @@index([orderType, createdAt(sort: Desc)])
   @@map("orders")
 }
 
@@ -417,6 +438,17 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   PARTIALLY_REFUNDED
+}
+
+enum OrderType {
+  STANDARD
+  PRE_BOOKING
+}
+
+enum PreBookingMode {
+  OFF
+  AUTO_ON_OUT_OF_STOCK
+  ALWAYS_ON
 }
 
 // ─── CART ─────────────────────────────────────────────────────────────────────

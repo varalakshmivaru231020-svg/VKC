@@ -43,6 +43,12 @@ export default function ProductDetailClient({ product, careInstructions, deliver
   const saved = savedAmount(selectedVariant.originalPrice, selectedVariant.salePrice);
   const available = selectedVariant.stockQty - selectedVariant.reservedQty;
 
+  const preBookingCap = Math.min(
+    product.preBookingMaxQtyPerOrder ?? Infinity,
+    selectedVariant.preBookingRemainingSlots ?? Infinity
+  );
+  const preBookingSlotsFull = selectedVariant.preBookingAvailable && preBookingCap <= 0;
+
   const gstRate = product.gstPercent ?? 5;
   const gstAmount = selectedVariant.salePrice - selectedVariant.salePrice / (1 + gstRate / 100);
   const gstLabel = gstRate % 1 === 0 ? gstRate.toFixed(0) : gstRate.toFixed(2);
@@ -71,6 +77,30 @@ export default function ProductDetailClient({ product, careInstructions, deliver
       quantity: qty,
       stockQty: selectedVariant.stockQty,
       gstPercent: product.gstPercent,
+    });
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 3000);
+  };
+
+  const handlePreBookNow = () => {
+    const primaryImg = selectedVariant.images.find((i) => i.isPrimary) ?? selectedVariant.images[0];
+    addItem({
+      id: `${product.id}-${selectedVariant.id}`,
+      productId: product.id,
+      variantId: selectedVariant.id,
+      productName: product.name,
+      variantColor: selectedVariant.colorName,
+      colorHex: selectedVariant.colorHex,
+      sareeCode: selectedVariant.sareeCode,
+      imageUrl: primaryImg?.url,
+      salePrice: selectedVariant.salePrice,
+      originalPrice: selectedVariant.originalPrice,
+      quantity: qty,
+      stockQty: selectedVariant.stockQty,
+      gstPercent: product.gstPercent,
+      isPreBooking: true,
+      preBookingEtaLabel: product.preBookingEtaLabel ?? null,
+      preBookingCap: selectedVariant.preBookingRemainingSlots,
     });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 3000);
@@ -428,7 +458,12 @@ export default function ProductDetailClient({ product, careInstructions, deliver
 
           {/* Stock */}
           <div>
-            {available <= 0 ? (
+            {available <= 0 && selectedVariant.preBookingAvailable ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-body font-bold uppercase tracking-wide"
+                style={{ background: "var(--color-gold-light)", color: "var(--color-gold-dark)" }}>
+                ✦ Pre-Booking
+              </span>
+            ) : available <= 0 ? (
               <p className="text-sm font-body font-semibold" style={{ color: "var(--color-error)" }}>Out of Stock</p>
             ) : available <= 3 ? (
               <p className="text-sm font-body font-semibold" style={{ color: "var(--color-warning)" }}>
@@ -442,7 +477,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
           </div>
 
           {/* Qty + Add to cart */}
-          {available > 0 && (
+          {available > 0 ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex items-center border rounded-sm overflow-hidden shrink-0"
@@ -492,7 +527,69 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                 <a href="/checkout">Buy Now</a>
               </Button>
             </div>
-          )}
+          ) : selectedVariant.preBookingAvailable ? (
+            <div className="space-y-3 p-4 rounded-sm" style={{ background: "var(--color-gold-light)", opacity: preBookingSlotsFull ? 0.7 : 1 }}>
+              {(product.preBookingEtaLabel || product.preBookingDisclaimer) && (
+                <div className="space-y-1">
+                  {product.preBookingEtaLabel && (
+                    <p className="text-sm font-body font-semibold" style={{ color: "var(--color-gold-dark)" }}>
+                      {product.preBookingEtaLabel}
+                    </p>
+                  )}
+                  {product.preBookingDisclaimer && (
+                    <p className="text-xs font-body" style={{ color: "var(--color-text-secondary)" }}>
+                      {product.preBookingDisclaimer}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {preBookingSlotsFull ? (
+                <p className="text-sm font-body font-semibold" style={{ color: "var(--color-error)" }}>
+                  Pre-Booking slots full for this colour
+                </p>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center border rounded-sm overflow-hidden shrink-0"
+                    style={{ borderColor: "var(--color-parchment)", background: "white" }}>
+                    <button
+                      onClick={() => setQty(Math.max(1, qty - 1))}
+                      className="h-11 w-10 sm:w-11 flex items-center justify-center text-lg font-body transition-colors hover:bg-cream"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
+                      −
+                    </button>
+                    <span className="h-11 w-10 sm:w-12 flex items-center justify-center text-sm font-body font-medium border-x"
+                      style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-primary)" }}>
+                      {qty}
+                    </span>
+                    <button
+                      onClick={() => setQty(Math.min(preBookingCap, qty + 1))}
+                      className="h-11 w-10 sm:w-11 flex items-center justify-center text-lg font-body transition-colors hover:bg-cream"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <Button
+                    className={cn("flex-1 h-11 min-w-0 transition-all whitespace-nowrap", addedToCart && "bg-success hover:bg-success")}
+                    style={{ background: addedToCart ? undefined : "var(--color-gold-dark)" }}
+                    onClick={handlePreBookNow}
+                  >
+                    <ShoppingBag className="h-4 w-4 mr-1.5 shrink-0" />
+                    {addedToCart ? "Added!" : "Pre-Book Now"}
+                  </Button>
+                </div>
+              )}
+
+              {Number.isFinite(preBookingCap) && !preBookingSlotsFull && (
+                <p className="text-xs font-body" style={{ color: "var(--color-text-secondary)" }}>
+                  Only {preBookingCap} pre-booking slot{preBookingCap === 1 ? "" : "s"} left in this colour.
+                </p>
+              )}
+            </div>
+          ) : null}
 
           {/* Delivery check */}
           <div className="p-4 rounded-sm space-y-2" style={{ background: "var(--color-cream)", border: "1px solid var(--color-parchment)" }}>

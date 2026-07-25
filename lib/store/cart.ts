@@ -8,6 +8,7 @@ interface CartStore {
   items: CartItem[];
   addItem: (item: CartItem) => void;
   removeItem: (variantId: string) => void;
+  removeItems: (variantIds: string[]) => void;
   updateQty: (variantId: string, qty: number) => void;
   clearCart: () => void;
   totalItems: () => number;
@@ -21,12 +22,13 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (newItem) => {
         set((state) => {
+          const cap = newItem.isPreBooking ? (newItem.preBookingCap ?? Infinity) : newItem.stockQty;
           const existing = state.items.find((i) => i.variantId === newItem.variantId);
           if (existing) {
             return {
               items: state.items.map((i) =>
                 i.variantId === newItem.variantId
-                  ? { ...i, quantity: Math.min(i.quantity + newItem.quantity, i.stockQty) }
+                  ? { ...i, quantity: Math.min(i.quantity + newItem.quantity, cap) }
                   : i
               ),
             };
@@ -39,15 +41,25 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({ items: state.items.filter((i) => i.variantId !== variantId) }));
       },
 
+      // Used after a split checkout completes — clears only the purchased
+      // items, leaving any other-type items still sitting in the cart
+      // untouched (clearCart() would wrongly wipe both sections at once).
+      removeItems: (variantIds) => {
+        const ids = new Set(variantIds);
+        set((state) => ({ items: state.items.filter((i) => !ids.has(i.variantId)) }));
+      },
+
       updateQty: (variantId, qty) => {
         if (qty <= 0) {
           get().removeItem(variantId);
           return;
         }
         set((state) => ({
-          items: state.items.map((i) =>
-            i.variantId === variantId ? { ...i, quantity: Math.min(qty, i.stockQty) } : i
-          ),
+          items: state.items.map((i) => {
+            if (i.variantId !== variantId) return i;
+            const cap = i.isPreBooking ? (i.preBookingCap ?? Infinity) : i.stockQty;
+            return { ...i, quantity: Math.min(qty, cap) };
+          }),
         }));
       },
 

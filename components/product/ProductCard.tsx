@@ -40,6 +40,8 @@ export function ProductCard({ product, className, index = 0 }: Props) {
   const lowestPrice = Math.min(...product.variants.map((v) => v.salePrice));
   const multiPrice = product.variants.some((v) => v.salePrice !== firstVariant.salePrice);
   const outOfStock = product.variants.every((v) => v.stockQty <= 0);
+  const preBookable = outOfStock && product.variants.some((v) => v.preBookingAvailable);
+  const soldOut = outOfStock && !preBookable;
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -132,7 +134,13 @@ export function ProductCard({ product, className, index = 0 }: Props) {
                 {pct}% Off
               </span>
             )}
-            {outOfStock && (
+            {preBookable && (
+              <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm"
+                style={{ background: "var(--color-gold-light)", color: "var(--color-gold-dark)" }}>
+                ✦ Pre-Book
+              </span>
+            )}
+            {soldOut && (
               <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm"
                 style={{ background: "rgba(0,0,0,0.6)", color: "white" }}>
                 Sold Out
