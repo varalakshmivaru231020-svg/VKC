@@ -44,6 +44,12 @@ export default function ProductDetailClient({ product, careInstructions, deliver
   const pct = discountPercent(selectedVariant.originalPrice, selectedVariant.salePrice);
   const saved = savedAmount(selectedVariant.originalPrice, selectedVariant.salePrice);
   const available = selectedVariant.stockQty - selectedVariant.reservedQty;
+  // When pre-booking is off for this product, the qty stepper can't go past
+  // what's actually in stock. When it's on (Auto or Always On), let the
+  // customer ask for more than what's available — the shortfall is offered
+  // as a pre-booking choice at checkout instead of being silently capped
+  // here (see cart page + PreBookingShortfallModal).
+  const standardQtyCap = product.preBookingMode === "OFF" ? available : (product.preBookingMaxQtyPerOrder ?? 999);
 
   const preBookingCap = Math.min(
     product.preBookingMaxQtyPerOrder ?? Infinity,
@@ -78,6 +84,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
       originalPrice: selectedVariant.originalPrice,
       quantity: qty,
       stockQty: selectedVariant.stockQty,
+      qtyCap: standardQtyCap,
       gstPercent: product.gstPercent,
     });
     setAddedToCart(true);
@@ -501,7 +508,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                     {qty}
                   </span>
                   <button
-                    onClick={() => setQty(Math.min(available, qty + 1))}
+                    onClick={() => setQty(Math.min(standardQtyCap, qty + 1))}
                     className="h-11 w-10 sm:w-11 flex items-center justify-center text-lg font-body transition-colors hover:bg-cream"
                     style={{ color: "var(--color-text-secondary)" }}
                   >

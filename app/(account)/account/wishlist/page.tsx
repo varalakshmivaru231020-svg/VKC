@@ -54,6 +54,9 @@ export default function WishlistPage() {
       originalPrice: variant.originalPrice,
       quantity: 1,
       stockQty: variant.stockQty,
+      qtyCap: product.preBookingMode === "OFF"
+        ? variant.stockQty - variant.reservedQty
+        : (product.preBookingMaxQtyPerOrder ?? 999),
       gstPercent: product.gstPercent,
     });
     toggle(variant.id);   // remove from wishlist

@@ -27,7 +27,7 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (newItem) => {
         set((state) => {
-          const cap = newItem.isPreBooking ? (newItem.preBookingCap ?? Infinity) : newItem.stockQty;
+          const cap = newItem.isPreBooking ? (newItem.preBookingCap ?? Infinity) : (newItem.qtyCap ?? newItem.stockQty);
           const existing = state.items.find((i) => i.variantId === newItem.variantId);
           if (existing) {
             return {
@@ -62,7 +62,7 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({
           items: state.items.map((i) => {
             if (i.variantId !== variantId) return i;
-            const cap = i.isPreBooking ? (i.preBookingCap ?? Infinity) : i.stockQty;
+            const cap = i.isPreBooking ? (i.preBookingCap ?? Infinity) : (i.qtyCap ?? i.stockQty);
             return { ...i, quantity: Math.min(qty, cap) };
           }),
         }));

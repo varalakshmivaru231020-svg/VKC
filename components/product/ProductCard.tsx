@@ -69,6 +69,9 @@ export function ProductCard({ product, className, index = 0 }: Props) {
       originalPrice: firstVariant.originalPrice,
       quantity: 1,
       stockQty: firstVariant.stockQty,
+      qtyCap: product.preBookingMode === "OFF"
+        ? firstVariant.stockQty - firstVariant.reservedQty
+        : (product.preBookingMaxQtyPerOrder ?? 999),
       gstPercent: product.gstPercent,
     });
     setShowRipple(true);

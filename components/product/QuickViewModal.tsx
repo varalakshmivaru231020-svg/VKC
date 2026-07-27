@@ -64,6 +64,8 @@ export function QuickViewModal() {
   const pct = discountPercent(v.originalPrice, v.salePrice);
   const wishlisted = isWishlisted(v.id);
   const outOfStock = v.stockQty <= 0;
+  const available = v.stockQty - v.reservedQty;
+  const standardQtyCap = p.preBookingMode === "OFF" ? available : (p.preBookingMaxQtyPerOrder ?? 999);
 
   const handleAddToCart = () => {
     addItem({
@@ -79,6 +81,7 @@ export function QuickViewModal() {
       originalPrice: v.originalPrice,
       quantity: qty,
       stockQty: v.stockQty,
+      qtyCap: standardQtyCap,
       gstPercent: p.gstPercent,
     });
     setAdded(true);
@@ -271,9 +274,9 @@ export function QuickViewModal() {
                   style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-primary)" }}>
                   {qty}
                 </span>
-                <button onClick={() => setQty(Math.min(v.stockQty, qty + 1))}
+                <button onClick={() => setQty(Math.min(standardQtyCap, qty + 1))}
                   className="h-11 w-10 flex items-center justify-center transition-colors hover:bg-cream"
-                  disabled={qty >= v.stockQty}>
+                  disabled={qty >= standardQtyCap}>
                   <Plus className="h-4 w-4" style={{ color: "var(--color-text-muted)" }} />
                 </button>
               </div>

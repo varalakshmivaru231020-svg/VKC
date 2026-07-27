@@ -180,7 +180,7 @@ export function CartSidebar() {
                           </span>
                           <button onClick={() => updateQty(item.variantId, item.quantity + 1)}
                             className="h-7 w-7 flex items-center justify-center transition-colors hover:bg-cream"
-                            disabled={item.quantity >= item.stockQty}>
+                            disabled={item.quantity >= (item.qtyCap ?? item.stockQty)}>
                             <Plus className="h-3 w-3" style={{ color: "var(--color-text-muted)" }} />
                           </button>
                         </div>

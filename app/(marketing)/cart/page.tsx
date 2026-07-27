@@ -275,7 +275,7 @@ export default function CartPage() {
                         </span>
                         <button onClick={() => updateQty(item.variantId, item.quantity + 1)}
                           className="h-8 w-8 flex items-center justify-center transition-colors hover:bg-cream"
-                          disabled={item.quantity >= item.stockQty}>
+                          disabled={item.quantity >= (item.qtyCap ?? item.stockQty)}>
                           <Plus className="h-3.5 w-3.5" style={{ color: "var(--color-text-muted)" }} />
                         </button>
                       </div>

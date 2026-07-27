@@ -82,6 +82,12 @@ export interface CartItem {
   quantity: number;
   stockQty: number;
   gstPercent: number;
+  // The ceiling the qty stepper enforces. Equal to stockQty for products
+  // with pre-booking off (can't sell more than what exists); higher when
+  // the product allows pre-booking, so a customer CAN request more than
+  // current stock — the shortfall is offered as a pre-booking choice at
+  // checkout (see cart page) rather than being silently capped here.
+  qtyCap?: number;
   // ── Pre-Booking ──────────────────────────────────────────────────────────
   // Snapshotted at add-to-cart time. isPreBooking splits the cart/checkout
   // flow (see cart page + checkout page) — a cart never checks out a mix of
