@@ -9,7 +9,7 @@ import { useUIStore } from "@/lib/store/ui";
 function OtpBoxes({ value, onChange, idPrefix }: { value: string; onChange: (v: string) => void; idPrefix: string }) {
   return (
     <div className="flex gap-1.5 sm:gap-2 justify-center">
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 4 }).map((_, i) => (
         <input
           key={i}
           id={`${idPrefix}-${i}`}
@@ -21,9 +21,9 @@ function OtpBoxes({ value, onChange, idPrefix }: { value: string; onChange: (v: 
             const ch = e.target.value.replace(/\D/g, "").slice(-1);
             const arr = value.split("");
             arr[i] = ch;
-            const next = arr.join("").slice(0, 6);
+            const next = arr.join("").slice(0, 4);
             onChange(next);
-            if (ch && i < 5) document.getElementById(`${idPrefix}-${i + 1}`)?.focus();
+            if (ch && i < 3) document.getElementById(`${idPrefix}-${i + 1}`)?.focus();
           }}
           onKeyDown={(e) => {
             if (e.key === "Backspace" && !value[i] && i > 0) {
@@ -107,7 +107,7 @@ export function LoginModal() {
   };
 
   const verifyOtp = async () => {
-    if (otp.length < 6) { setError("Enter the 6-digit OTP"); return; }
+    if (otp.length < 4) { setError("Enter the 4-digit OTP"); return; }
     setError(""); setLoading(true);
     try {
       const result = await signIn("phone-otp", {
@@ -242,14 +242,14 @@ export function LoginModal() {
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium font-body text-center" style={{ color: "var(--color-text-primary)" }}>
-                  Enter 6-digit OTP
+                  Enter 4-digit OTP
                 </label>
                 <OtpBoxes value={otp} onChange={setOtp} idPrefix="modal-otp" />
               </div>
 
               <button
                 onClick={verifyOtp}
-                disabled={loading || otp.length < 6}
+                disabled={loading || otp.length < 4}
                 className="w-full h-12 flex items-center justify-center gap-2 rounded-lg text-sm font-semibold font-body transition-all disabled:opacity-50 whitespace-nowrap"
                 style={{ background: "var(--color-primary)", color: "white" }}
               >

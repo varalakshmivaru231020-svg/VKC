@@ -78,15 +78,15 @@ function Field({ label, value, onChange, placeholder, error, type = "text", disa
 function OtpBoxes({ value, onChange, idPrefix }: { value: string; onChange: (v: string) => void; idPrefix: string }) {
   return (
     <div className="flex gap-1.5 sm:gap-2 justify-center">
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 4 }).map((_, i) => (
         <input
           key={i} id={`${idPrefix}-${i}`} type="text" inputMode="numeric" maxLength={1}
           value={value[i] ?? ""}
           onChange={(e) => {
             const ch = e.target.value.replace(/\D/g, "").slice(-1);
             const arr = value.split(""); arr[i] = ch;
-            onChange(arr.join("").slice(0, 6));
-            if (ch && i < 5) document.getElementById(`${idPrefix}-${i + 1}`)?.focus();
+            onChange(arr.join("").slice(0, 4));
+            if (ch && i < 3) document.getElementById(`${idPrefix}-${i + 1}`)?.focus();
           }}
           onKeyDown={(e) => {
             if (e.key === "Backspace" && !value[i] && i > 0) {
@@ -139,7 +139,7 @@ function PhoneVerifyModal({ phone, onVerified, onClose }: {
   useEffect(() => { sendOtp(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const verify = async () => {
-    if (otp.length < 6) { setError("Enter the 6-digit OTP"); return; }
+    if (otp.length < 4) { setError("Enter the 4-digit OTP"); return; }
     setError(""); setLoading(true);
     try {
       // signIn creates account if phone is new, or logs in existing user — silent either way
@@ -194,7 +194,7 @@ function PhoneVerifyModal({ phone, onVerified, onClose }: {
 
           <button
             onClick={verify}
-            disabled={loading || otp.length < 6 || sending}
+            disabled={loading || otp.length < 4 || sending}
             className="w-full h-12 flex items-center justify-center gap-2 rounded-lg text-sm font-semibold font-body transition-all disabled:opacity-50"
             style={{ background: "var(--color-primary)", color: "white" }}
           >

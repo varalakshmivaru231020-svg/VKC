@@ -10,7 +10,7 @@ import { PhoneInput } from "@/components/ui/PhoneInput";
 function OtpInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div className="flex gap-2 justify-center">
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 4 }).map((_, i) => (
         <input
           key={i}
           id={`otp-${i}`}
@@ -22,9 +22,9 @@ function OtpInput({ value, onChange }: { value: string; onChange: (v: string) =>
             const ch = e.target.value.replace(/\D/g, "").slice(-1);
             const arr = value.split("");
             arr[i] = ch;
-            const next = arr.join("").slice(0, 6);
+            const next = arr.join("").slice(0, 4);
             onChange(next);
-            if (ch && i < 5) document.getElementById(`otp-${i + 1}`)?.focus();
+            if (ch && i < 3) document.getElementById(`otp-${i + 1}`)?.focus();
           }}
           onKeyDown={(e) => {
             if (e.key === "Backspace" && !value[i] && i > 0) {
@@ -90,7 +90,7 @@ function LoginForm() {
   };
 
   const verifyOtp = async () => {
-    if (otp.length < 6) { setError("Enter the 6-digit OTP"); return; }
+    if (otp.length < 4) { setError("Enter the 4-digit OTP"); return; }
     setError("");
     setLoading(true);
     try {
@@ -177,7 +177,7 @@ function LoginForm() {
             <OtpInput value={otp} onChange={setOtp} />
             <button
               onClick={verifyOtp}
-              disabled={loading || otp.length < 6}
+              disabled={loading || otp.length < 4}
               className="w-full h-12 flex items-center justify-center gap-2 rounded-lg text-sm font-semibold font-body transition-all disabled:opacity-50"
               style={{ background: "var(--color-primary)", color: "white" }}
             >

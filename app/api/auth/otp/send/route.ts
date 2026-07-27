@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { sendOtpViaMSG91 } from "@/lib/api/msg91";
 
 function generateOTP(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(Math.floor(1000 + Math.random() * 9000));
 }
 
 function normalisePhone(raw: string): string {

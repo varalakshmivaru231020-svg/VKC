@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
     await db.otpCode.updateMany({ where: { phone: normalised, used: false }, data: { used: true } });
 
-    const code = USE_FIXED_OTP ? "123456" : String(Math.floor(100000 + Math.random() * 900000));
+    const code = USE_FIXED_OTP ? "1234" : String(Math.floor(1000 + Math.random() * 9000));
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     await db.otpCode.create({ data: { phone: normalised, code, expiresAt } });
