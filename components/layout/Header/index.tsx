@@ -228,20 +228,25 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                   </Link>
                   {cat.children.length > 0 && (
                     <div
-                      className="absolute left-0 top-full hidden group-hover:block min-w-[200px] py-2 z-10"
+                      className="absolute left-0 top-full pt-2 hidden group-hover:block min-w-[220px] z-10"
                     >
-                      {cat.children.map((child) => (
-                        <Link
-                          key={child.id}
-                          href={`/category/${child.slug}`}
-                          className="block px-4 py-2 text-[13px] font-body whitespace-nowrap transition-colors"
-                          style={{ color: isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
-                          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-primary-50)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)"; e.currentTarget.style.background = "transparent"; }}
-                        >
-                          {child.name}
-                        </Link>
-                      ))}
+                      <div
+                        className="rounded-lg overflow-hidden py-1.5"
+                        style={{ background: "white", boxShadow: "0 10px 30px rgba(0,0,0,0.12)" }}
+                      >
+                        {cat.children.map((child) => (
+                          <Link
+                            key={child.id}
+                            href={`/category/${child.slug}`}
+                            className="block px-[18px] py-3.5 text-[15px] font-medium font-body whitespace-nowrap transition-colors duration-300"
+                            style={{ color: isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-cream)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)"; e.currentTarget.style.background = "transparent"; }}
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
