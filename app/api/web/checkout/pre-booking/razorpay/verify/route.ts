@@ -34,7 +34,12 @@ export async function POST(req: NextRequest) {
     // an abandoned/failed payment attempt doesn't permanently eat capacity.
     await db.$transaction(async (tx) => {
       for (const item of order.items) {
-        await releasePreBookingSlot(tx, item.variantId, item.quantity);
+        // Only the shortfall (qty beyond what was in stock at booking time)
+        // ever consumed pre-booking capacity — release exactly that, not the
+        // full line quantity, or this would over-release into other orders'
+        // reserved slots.
+        const shortfall = Math.max(0, item.quantity - (item.availableAtBooking ?? 0));
+        if (shortfall > 0) await releasePreBookingSlot(tx, item.variantId, shortfall);
       }
       await tx.order.update({ where: { id: order.id }, data: { paymentStatus: "FAILED" } });
     });

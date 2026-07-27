@@ -315,6 +315,7 @@ model Order {
   // (this schema has no multi-shipment support, so a mixed order couldn't
   // ship its in-stock item without waiting on procurement of the other).
   orderType                    OrderType @default(STANDARD)
+  preBookingStatus             PreBookingStatus?  // set on creation for PRE_BOOKING orders; null for STANDARD
   preBookingEtaDate            DateTime?
   preBookingDisclaimerSnap     String?   @db.VarChar(500)
   preBookingReturnsAllowedSnap Boolean   @default(true)
@@ -335,6 +336,11 @@ model OrderItem {
   variantColor String         @db.VarChar(100)
   sareeCode    String?        @db.VarChar(50)
   quantity     Int
+  // Snapshot of live-available stock (stockQty - reservedQty) for this variant
+  // at the moment a PRE_BOOKING order was created. Null for STANDARD orders.
+  // quantity - availableAtBooking = how many units are actually being
+  // pre-booked (manufactured), vs. shipped from existing stock immediately.
+  availableAtBooking Int?
   unitPrice    Decimal        @db.Decimal(10, 2)
   totalPrice   Decimal        @db.Decimal(10, 2)
   imageUrl     String?        @db.VarChar(500)
@@ -438,6 +444,17 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   PARTIALLY_REFUNDED
+}
+
+enum PreBookingStatus {
+  PENDING_APPROVAL   // order placed, admin hasn't reviewed yet
+  ACCEPTED           // admin accepted the booking
+  WAITING_FOR_STOCK  // accepted, procurement/restock in progress
+  STOCK_AVAILABLE    // the pre-booked stock has arrived
+  PROCESSING         // handed off to normal fulfillment
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }
 
 enum OrderType {

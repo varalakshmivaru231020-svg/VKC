@@ -10,6 +10,11 @@ interface CartStore {
   removeItem: (variantId: string) => void;
   removeItems: (variantIds: string[]) => void;
   updateQty: (variantId: string, qty: number) => void;
+  // Checkout-time shortfall flow: customer wants more than what's in stock.
+  // Converts the item to a pre-booking line (full requested qty carries over
+  // unchanged) so it flows through the existing cart-split/pre-booking
+  // checkout machinery instead of silently overselling stock.
+  convertToPreBooking: (variantId: string, etaLabel: string | null) => void;
   clearCart: () => void;
   totalItems: () => number;
   subtotal: () => number;
@@ -60,6 +65,16 @@ export const useCartStore = create<CartStore>()(
             const cap = i.isPreBooking ? (i.preBookingCap ?? Infinity) : i.stockQty;
             return { ...i, quantity: Math.min(qty, cap) };
           }),
+        }));
+      },
+
+      convertToPreBooking: (variantId, etaLabel) => {
+        set((state) => ({
+          items: state.items.map((i) =>
+            i.variantId === variantId
+              ? { ...i, isPreBooking: true, preBookingCap: null, preBookingEtaLabel: etaLabel }
+              : i
+          ),
         }));
       },
 

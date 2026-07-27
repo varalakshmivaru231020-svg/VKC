@@ -11,7 +11,7 @@ import {
   ChevronRight, Store, Truck, BookOpen, FileText,
   Megaphone, Globe, Star, Heart,
   ChevronDown, ChevronUp, Layers, Shield, Boxes,
-  Video, Facebook,
+  Video, Facebook, PackageSearch,
 } from "lucide-react";
 
 // ── Sidebar counts hook ───────────────────────────────────────────────────────
@@ -19,6 +19,7 @@ interface SidebarCounts {
   pendingOrders?: number;
   customers?: number;
   pendingVideoBookings?: number;
+  pendingPreBookings?: number;
 }
 
 function useSidebarCounts() {
@@ -59,7 +60,7 @@ interface NavGroupDef { title: string; items: NavItemDef[] }
 
 // Hrefs accessible to STAFF role
 const STAFF_ALLOWED = new Set([
-  "/admin/orders", "/admin/shipments", "/admin/customers", "/admin/reviews",
+  "/admin/orders", "/admin/pre-bookings", "/admin/shipments", "/admin/customers", "/admin/reviews",
 ]);
 
 const navGroups: NavGroupDef[] = [
@@ -83,6 +84,13 @@ const navGroups: NavGroupDef[] = [
           { href: "/admin/orders?status=CANCELLED",   label: "Cancelled" },
           { href: "/admin/orders?status=RETURN_REQUESTED", label: "Returns" },
         ],
+      },
+      {
+        href: "/admin/pre-bookings",
+        label: "Pre-Booking Orders",
+        icon: PackageSearch,
+        countKey: "pendingPreBookings",
+        badgeVariant: "warning",
       },
       { href: "/admin/shipments", label: "Shipments",  icon: Truck },
       { href: "/admin/customers", label: "Customers",  icon: Users,  countKey: "customers" },

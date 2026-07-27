@@ -48,6 +48,22 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Live stock snapshot per variant — an item may be a "shortfall" pre-booking
+  // (customer wants more than what's currently in stock, e.g. 10 wanted, 3
+  // available → 7 actually pre-booked) rather than the whole qty being
+  // manufactured-to-order. Recorded on the OrderItem for admin visibility;
+  // only the shortfall portion consumes pre-booking capacity below.
+  const variants = await db.productVariant.findMany({
+    where: { id: { in: items.map((i: any) => i.variantId) } },
+    select: { id: true, stockQty: true, reservedQty: true },
+  });
+  const variantById = Object.fromEntries(variants.map((v) => [v.id, v]));
+  const availableAtBookingByVariant: Record<string, number> = {};
+  for (const item of items) {
+    const v = variantById[item.variantId];
+    availableAtBookingByVariant[item.variantId] = v ? Math.max(0, v.stockQty - v.reservedQty) : 0;
+  }
+
   const subtotal   = items.reduce((s: number, i: any) => s + i.salePrice * i.quantity, 0);
   const gross      = Math.max(0, subtotal + shippingAmount - discountAmount);
   const walletUsed = Math.max(0, Math.min(Number(walletAmount), gross));
@@ -73,6 +89,7 @@ export async function POST(req: NextRequest) {
     variantColor: item.variantColor,
     sareeCode:    item.sareeCode ?? null,
     quantity:     item.quantity,
+    availableAtBooking: availableAtBookingByVariant[item.variantId] ?? 0,
     unitPrice:    item.salePrice,
     totalPrice:   item.salePrice * item.quantity,
     imageUrl:     item.imageUrl ?? null,
@@ -82,7 +99,11 @@ export async function POST(req: NextRequest) {
   try {
     order = await db.$transaction(async (tx) => {
       for (const item of items) {
-        await reservePreBookingSlot(tx, item.variantId, item.quantity);
+        const available = availableAtBookingByVariant[item.variantId] ?? 0;
+        const shortfall  = Math.max(0, item.quantity - available);
+        if (shortfall > 0) {
+          await reservePreBookingSlot(tx, item.variantId, shortfall, { allowPartialShortfall: true });
+        }
       }
       return tx.order.create({
         data: {
@@ -101,6 +122,7 @@ export async function POST(req: NextRequest) {
           couponCode:      couponCode || null,
           shippingAddress: address,
           billingAddress:  address,
+          preBookingStatus: "PENDING_APPROVAL",
           preBookingEtaDate,
           preBookingDisclaimerSnap: disclaimers.join(" ") || null,
           preBookingReturnsAllowedSnap: returnsAllowed,

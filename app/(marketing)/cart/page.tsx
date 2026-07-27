@@ -8,6 +8,7 @@ import {
   Globe, Truck, Heart, Info,
 } from "lucide-react";
 import { CouponPicker } from "@/components/cart/CouponPicker";
+import { PreBookingShortfallModal, type ShortfallEntry } from "@/components/cart/PreBookingShortfallModal";
 import { useSession } from "next-auth/react";
 import { useCartStore, useWishlistStore, useCheckoutMetaStore } from "@/lib/store/cart";
 import { useUIStore } from "@/lib/store/ui";
@@ -21,7 +22,7 @@ interface ShippingConfig {
 }
 
 export default function CartPage() {
-  const { items, removeItem, updateQty, subtotal } = useCartStore();
+  const { items, removeItem, updateQty, convertToPreBooking, subtotal } = useCartStore();
   const { toggle: wishlistToggle, isWishlisted } = useWishlistStore();
   const { coupon: couponApplied, setCoupon, removeCoupon } = useCheckoutMetaStore();
   const { openLoginModal } = useUIStore();
@@ -84,19 +85,75 @@ export default function CartPage() {
   // International = no shipping charge shown at cart stage
   const total = afterDiscount + (isInternational ? 0 : domesticShippingCost);
 
+  const [shortfallEntries, setShortfallEntries] = useState<ShortfallEntry[] | null>(null);
+  const [checkingStock, setCheckingStock] = useState(false);
+
+  const goToCheckout = () => {
+    const items = useCartStore.getState().items;
+    const stillMixed = items.some((i) => !i.isPreBooking) && items.some((i) => i.isPreBooking);
+    const stillPreBookingOnly = items.length > 0 && items.every((i) => i.isPreBooking);
+    if (!stillMixed && stillPreBookingOnly) {
+      router.push("/checkout?type=prebooking");
+      return;
+    }
+    router.push(isInternational ? "/checkout?intl=1" : "/checkout");
+  };
+
   const handleCheckout = () => {
-    const proceed = () => {
-      if (!isMixedCart && preBookingItems.length > 0) {
-        router.push("/checkout?type=prebooking");
-        return;
+    const proceed = async () => {
+      // Re-check live stock for standard (non-pre-booking) items right
+      // before checkout — cart quantities are snapshotted at add-time and
+      // can go stale, and today's checkout otherwise creates the order
+      // regardless of actual stock. Only surface the pre-booking split
+      // when there's an actual shortfall.
+      const standardItems = items.filter((i) => !i.isPreBooking);
+      if (standardItems.length === 0) { goToCheckout(); return; }
+
+      setCheckingStock(true);
+      try {
+        const res = await fetch("/api/web/cart/check-stock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: standardItems.map((i) => ({ variantId: i.variantId, quantity: i.quantity })) }),
+        });
+        const data = await res.json();
+        const results: { variantId: string; available: number; shortfall: number; preBookingEligible: boolean; preBookingEtaLabel: string | null }[] = data.results ?? [];
+        const shortfalls = results.filter((r) => r.shortfall > 0);
+
+        if (shortfalls.length === 0) { goToCheckout(); return; }
+
+        setShortfallEntries(
+          shortfalls.map((r) => ({
+            item: standardItems.find((i) => i.variantId === r.variantId)!,
+            available: r.available,
+            preBookingEligible: r.preBookingEligible,
+            preBookingEtaLabel: r.preBookingEtaLabel,
+            resolved: false,
+          }))
+        );
+      } catch {
+        // If the stock check itself fails, don't block checkout on it —
+        // fall back to today's behaviour rather than stranding the customer.
+        goToCheckout();
+      } finally {
+        setCheckingStock(false);
       }
-      router.push(isInternational ? "/checkout?intl=1" : "/checkout");
     };
     if (!session) {
       openLoginModal(proceed);
     } else {
       proceed();
     }
+  };
+
+  const resolveBuyAvailable = (variantId: string, available: number) => {
+    updateQty(variantId, available);
+    setShortfallEntries((prev) => prev?.map((e) => e.item.variantId === variantId ? { ...e, resolved: true } : e) ?? null);
+  };
+
+  const resolvePreBook = (variantId: string, etaLabel: string | null) => {
+    convertToPreBooking(variantId, etaLabel);
+    setShortfallEntries((prev) => prev?.map((e) => e.item.variantId === variantId ? { ...e, resolved: true } : e) ?? null);
   };
 
   const handlePreBookingCheckout = () => {
@@ -430,6 +487,7 @@ export default function CartPage() {
               <Button
                 className="w-full mt-5 h-12"
                 onClick={handleCheckout}
+                loading={checkingStock}
               >
                 Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -554,6 +612,16 @@ export default function CartPage() {
         </div>
         )}
       </div>
+
+      {shortfallEntries && (
+        <PreBookingShortfallModal
+          entries={shortfallEntries}
+          onBuyAvailable={resolveBuyAvailable}
+          onPreBook={resolvePreBook}
+          onContinue={() => { setShortfallEntries(null); goToCheckout(); }}
+          onClose={() => setShortfallEntries(null)}
+        />
+      )}
     </div>
   );
 }

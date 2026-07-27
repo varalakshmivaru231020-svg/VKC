@@ -11,7 +11,12 @@ export class PreBookingSlotError extends Error {
   }
 }
 
-export async function reservePreBookingSlot(tx: any, variantId: string, qty: number) {
+export async function reservePreBookingSlot(
+  tx: any,
+  variantId: string,
+  qty: number,
+  opts: { allowPartialShortfall?: boolean } = {}
+) {
   const variant = await tx.productVariant.findUnique({
     where: { id: variantId },
     select: {
@@ -24,9 +29,14 @@ export async function reservePreBookingSlot(tx: any, variantId: string, qty: num
   if (!variant) throw new PreBookingSlotError("Item not found");
 
   const mode = variant.product.preBookingMode;
+  // Normal trigger: the whole variant is out of stock (or always-on). Partial
+  // trigger (checkout shortfall — customer wants more than what's in stock):
+  // eligible as soon as the product allows pre-booking at all, since the
+  // caller has already confirmed requested qty > available stock — this
+  // function only reserves the shortfall portion, not the full order qty.
   const eligible =
     mode === "ALWAYS_ON" ||
-    (mode === "AUTO_ON_OUT_OF_STOCK" && variant.stockQty - variant.reservedQty <= 0);
+    (mode === "AUTO_ON_OUT_OF_STOCK" && (opts.allowPartialShortfall || variant.stockQty - variant.reservedQty <= 0));
   if (!eligible) throw new PreBookingSlotError("This item is not available for pre-booking");
 
   const cap = variant.product.preBookingMaxTotalQty;

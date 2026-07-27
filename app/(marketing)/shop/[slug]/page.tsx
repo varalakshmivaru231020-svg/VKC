@@ -29,9 +29,9 @@ export default async function ProductDetailPage({ params }: Props) {
   let deliveryInstructions = "• Free shipping on this product – Domestic orders only\n• Standard delivery: 4–7 business days\n• Express delivery available at checkout\n• Easy 15-day returns on unworn items with tags intact\n• Exchange available for different colour of same product";
 
   try {
-    [product, related] = await Promise.all([
-      getProductBySlug(params.slug),
-      getProductBySlug(params.slug).then(p => p ? getRelatedProducts(p.id, p.category?.id, 4) : []),
+    product = await getProductBySlug(params.slug);
+    [related] = await Promise.all([
+      product ? getRelatedProducts(product.id, product.category?.id, 4) : Promise.resolve([]),
     ]);
     const settingsRows = await db.siteSetting.findMany({ where: { key: { in: ["care_instructions", "delivery_instructions"] } } });
     const settings = Object.fromEntries(settingsRows.map(r => [r.key, r.value]));
