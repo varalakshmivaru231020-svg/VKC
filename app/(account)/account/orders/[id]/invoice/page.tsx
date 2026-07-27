@@ -127,7 +127,7 @@ export default async function CustomerInvoicePage({ params }: { params: { id: st
             {storeLogo && (
               <img src={storeLogo} alt={storeName} style={{ maxHeight: 56, maxWidth: 160, objectFit: "contain", marginBottom: 10, display: "block", marginLeft: "auto" }} />
             )}
-            <div className="invoice-label">Tax Invoice</div>
+            <div className="invoice-label">{storeGST ? "Tax Invoice" : "Invoice"}</div>
             <div className="invoice-no">#{order.orderNumber}</div>
             <p>Date: {fmtDate(order.createdAt)}</p>
             {order.deliveredAt && <p>Delivered: {fmtDate(order.deliveredAt)}</p>}

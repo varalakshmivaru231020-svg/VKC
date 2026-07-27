@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { ShoppingBag, Heart, Check, Truck, RefreshCw, Shield, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
 
   const { addItem, items } = useCartStore();
   const { toggle, isWishlisted } = useWishlistStore();
+  const router = useRouter();
 
   const images = selectedVariant.images.length > 0
     ? selectedVariant.images
@@ -80,6 +82,11 @@ export default function ProductDetailClient({ product, careInstructions, deliver
     });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 3000);
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart();
+    router.push("/checkout");
   };
 
   const handlePreBookNow = () => {
@@ -523,8 +530,8 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                 </button>
               </div>
 
-              <Button variant="buyNow" className="w-full h-11" asChild>
-                <a href="/checkout">Buy Now</a>
+              <Button variant="buyNow" className="w-full h-11" onClick={handleBuyNow}>
+                Buy Now
               </Button>
             </div>
           ) : selectedVariant.preBookingAvailable ? (
@@ -685,8 +692,8 @@ export default function ProductDetailClient({ product, careInstructions, deliver
             <ShoppingBag className="h-4 w-4 mr-1.5 shrink-0" />
             {addedToCart ? "Added!" : "Add to Bag"}
           </Button>
-          <Button variant="buyNow" className="flex-1 h-12 min-w-0 whitespace-nowrap" asChild>
-            <a href="/checkout">Buy Now</a>
+          <Button variant="buyNow" className="flex-1 h-12 min-w-0 whitespace-nowrap" onClick={handleBuyNow}>
+            Buy Now
           </Button>
         </div>
       )}

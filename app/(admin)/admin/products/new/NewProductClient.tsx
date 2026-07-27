@@ -285,8 +285,8 @@ export default function NewProductClient() {
 
   const handleSave = async () => {
     if (!name.trim()) { alert("Product name is required"); return; }
-    if (variants.some((v) => !v.colorName || !v.salePrice)) {
-      alert("Each variant needs a colour name and sale price"); return;
+    if (variants.some((v) => !v.salePrice)) {
+      alert("Each variant needs a sale price"); return;
     }
     if (preBookingEtaMinDays && preBookingEtaMaxDays && Number(preBookingEtaMinDays) > Number(preBookingEtaMaxDays)) {
       alert("Pre-Booking: maximum ETA days must be greater than or equal to minimum"); return;
@@ -686,7 +686,7 @@ export default function NewProductClient() {
                 {/* Fields grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Colour Name *</label>
+                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Colour Name</label>
                     <input value={v.colorName} onChange={(e) => updateVariant(i, "colorName", e.target.value)}
                       placeholder="e.g. Ruby Red"
                       className="w-full h-9 px-3 border rounded-lg text-sm font-body focus:outline-none transition-all"
