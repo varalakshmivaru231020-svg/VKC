@@ -3,6 +3,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { auth } from "@/auth";
+import { isCloudinaryConfigured, uploadBufferToCloudinary } from "@/lib/cloudinary";
 
 const UPLOADS_DIR    = path.join(process.cwd(), "public", "uploads", "reviews");
 const MAX_INPUT_SIZE = 15 * 1024 * 1024;
@@ -40,6 +41,22 @@ export async function POST(req: NextRequest) {
     })
     .webp({ quality: WEBP_QUALITY })
     .toBuffer();
+
+  // Cloudinary is preferred — `next start` only recognizes public/ files that
+  // existed when the process last booted, so anything written to local disk
+  // while the server is running 404s until the next restart (same issue
+  // already fixed for product images in app/api/admin/upload).
+  if (isCloudinaryConfigured()) {
+    const result = await uploadBufferToCloudinary(outputBuffer, { folder: "vijaylakshmi/reviews" });
+    return NextResponse.json({ url: result.secure_url });
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Image storage is not configured. Contact the site admin." },
+      { status: 500 }
+    );
+  }
 
   await mkdir(UPLOADS_DIR, { recursive: true });
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}.webp`;
