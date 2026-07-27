@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { parseISTDateTimeLocal } from "@/lib/utils/format";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,8 +18,8 @@ export async function POST(req: NextRequest) {
         minOrderAmount: minOrderAmount ? parseFloat(minOrderAmount) : null,
         maxDiscount: maxDiscount ? parseFloat(maxDiscount) : null,
         usageLimit: usageLimit ? parseInt(usageLimit) : null,
-        startsAt: startsAt ? new Date(startsAt) : null,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        startsAt: parseISTDateTimeLocal(startsAt),
+        expiresAt: parseISTDateTimeLocal(expiresAt),
         isActive: isActive ?? true,
       },
     });

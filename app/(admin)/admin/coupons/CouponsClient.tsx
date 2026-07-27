@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Ticket, Plus, Pencil, Trash2, X, Save, Loader2 } from "lucide-react";
-import { formatINR } from "@/lib/utils/format";
+import { formatINR, toISTDateTimeLocal } from "@/lib/utils/format";
 
 interface Coupon {
   id: string;
@@ -30,11 +30,6 @@ const emptyForm = () => ({
 
 interface Props { coupons: Coupon[] }
 
-function toDateInput(d: string | null) {
-  if (!d) return "";
-  return new Date(d).toISOString().slice(0, 16);
-}
-
 export default function CouponsClient({ coupons: initial }: Props) {
   const router = useRouter();
   const [coupons, setCoupons] = useState(initial);
@@ -53,7 +48,7 @@ export default function CouponsClient({ coupons: initial }: Props) {
       minOrderAmount: c.minOrderAmount ? String(c.minOrderAmount) : "",
       maxDiscount: c.maxDiscount ? String(c.maxDiscount) : "",
       usageLimit: c.usageLimit ? String(c.usageLimit) : "",
-      startsAt: toDateInput(c.startsAt), expiresAt: toDateInput(c.expiresAt),
+      startsAt: toISTDateTimeLocal(c.startsAt), expiresAt: toISTDateTimeLocal(c.expiresAt),
       isActive: c.isActive,
     });
     setEditTarget(c);
