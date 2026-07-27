@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Phone, Mail, Calendar, Clock } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Phone, Mail, Calendar, Clock, Search } from "lucide-react";
 
 interface Booking {
   id: string;
@@ -21,6 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function VideoBookingsClient({ bookings: initial }: { bookings: Booking[] }) {
   const [bookings, setBookings] = useState(initial);
+  const [search, setSearch] = useState("");
 
   const updateStatus = async (id: string, status: string) => {
     const res = await fetch(`/api/admin/video-bookings/${id}`, {
@@ -29,17 +30,38 @@ export default function VideoBookingsClient({ bookings: initial }: { bookings: B
     if (res.ok) setBookings((b) => b.map((x) => (x.id === id ? { ...x, status } : x)));
   };
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return bookings;
+    return bookings.filter((b) => b.name.toLowerCase().includes(q) || b.phone.toLowerCase().includes(q));
+  }, [bookings, search]);
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">
         Video Shopping Bookings
-        <span className="text-base font-normal text-gray-400 ml-2">({bookings.length})</span>
+        <span className="text-base font-normal text-gray-400 ml-2">({filtered.length})</span>
       </h1>
-      <p className="text-sm text-gray-500 mb-6">Appointment requests from the "Video Shopping" button — call to confirm and share the video-call link.</p>
+      <p className="text-sm text-gray-500 mb-4">Appointment requests from the "Video Shopping" button — call to confirm and share the video-call link.</p>
+
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name or mobile number..."
+          className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+        />
+      </div>
 
       <div className="space-y-3">
-        {bookings.length === 0 && <p className="text-sm text-gray-400 py-8 text-center">No bookings yet.</p>}
-        {bookings.map((b) => (
+        {filtered.length === 0 && (
+          <p className="text-sm text-gray-400 py-8 text-center">
+            {bookings.length === 0 ? "No bookings yet." : "No bookings match your search."}
+          </p>
+        )}
+        {filtered.map((b) => (
           <div key={b.id} className="p-4 rounded-xl border border-gray-200 bg-white">
             <div className="flex items-start justify-between gap-3 mb-2">
               <div>
