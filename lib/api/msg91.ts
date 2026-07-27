@@ -20,7 +20,8 @@ async function getMsg91Config(): Promise<Msg91Config | null> {
 }
 
 /**
- * Send OTP via MSG91.
+ * Send OTP via MSG91's dedicated OTP API (not the Flow API — OTP-type DLT
+ * templates only auto-substitute their placeholder through this endpoint).
  * Returns true on success, false if not configured or on error.
  */
 export async function sendOtpViaMSG91(phone: string, otp: string): Promise<boolean> {
@@ -33,22 +34,17 @@ export async function sendOtpViaMSG91(phone: string, otp: string): Promise<boole
   // MSG91 expects mobile without leading +
   const mobile = phone.replace(/^\+/, "");
 
-  const payload = {
+  const params = new URLSearchParams({
+    authkey: cfg.authKey,
     template_id: cfg.templateId,
-    sender: cfg.senderId,
-    short_url: "0",
-    mobiles: mobile,
-    OTP: otp,
-  };
+    mobile,
+    otp,
+  });
+  if (cfg.senderId) params.set("sender", cfg.senderId);
 
   try {
-    const res = await fetch("https://api.msg91.com/api/v5/flow/", {
+    const res = await fetch(`https://control.msg91.com/api/v5/otp?${params.toString()}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        authkey: cfg.authKey,
-      },
-      body: JSON.stringify(payload),
     });
 
     const text = await res.text();
