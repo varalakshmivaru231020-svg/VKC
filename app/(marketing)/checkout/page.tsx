@@ -391,7 +391,7 @@ export default function CheckoutPage() {
   }, [status]);
 
   const sub      = items.reduce((s, i) => s + i.salePrice * i.quantity, 0);
-  const discount = isPreBooking ? 0 : (coupon?.discount ?? 0);
+  const discount = coupon?.discount ?? 0;
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
   const gstAmount = items.reduce((s, i) => {
     const rate = i.gstPercent ?? 5;
@@ -1180,17 +1180,14 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                 </div>
-                {/* Coupon — not available on pre-booking checkouts in this release */}
-                {!isPreBooking && (
-                  <div className="pb-1">
-                    <CouponPicker
-                      subtotal={sub}
-                      applied={coupon}
-                      onApply={setCoupon}
-                      onRemove={removeCoupon}
-                    />
-                  </div>
-                )}
+                <div className="pb-1">
+                  <CouponPicker
+                    subtotal={sub}
+                    applied={coupon}
+                    onApply={setCoupon}
+                    onRemove={removeCoupon}
+                  />
+                </div>
 
                 {/* Wallet */}
                 {walletBalance > 0 && (
