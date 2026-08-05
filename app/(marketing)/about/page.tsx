@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Heart, Users, MapPin, Award } from "lucide-react";
+import { ArrowRight, Heart, ShieldCheck, Sparkles, Globe2, Phone, MessageCircle, FileText, Building2 } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { db } from "@/lib/db";
 import { PromoBanner } from "@/components/home/PromoBanner";
@@ -8,54 +8,57 @@ import { PromoBanner } from "@/components/home/PromoBanner";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Our Story — Vijaylakshmi Sarees",
-  description: "Discover the heritage behind Vijaylakshmi Sarees — six decades of celebrating India's master weavers.",
+  title: "About Us — Anjali's Vijaylakshmi Sarees",
+  description: "For over a decade, Anjali's Vijaylakshmi Sarees has curated exquisite sarees blending India's rich textile traditions with contemporary sophistication.",
 };
 
 const values = [
   {
     icon: Heart,
-    title: "Crafted with Love",
-    desc: "Every saree is chosen by hand — not by algorithm. We visit looms, meet weavers, and only carry what moves us.",
+    title: "Heritage & Craftsmanship",
+    desc: "From intricate Aari work to exclusive handcrafted designs, every saree reflects our passion for perfection and India's rich textile traditions.",
   },
   {
-    icon: Users,
-    title: "Weaver First",
-    desc: "We pay weavers directly at fair prices. No middlemen. No exploitation. The artisan who made your saree is paid what they deserve.",
+    icon: ShieldCheck,
+    title: "Trust & Authenticity",
+    desc: "Our journey has been built on trust, authenticity, and an unwavering commitment to quality — earning the love of customers across India and around the world.",
   },
   {
-    icon: MapPin,
-    title: "Rooted in India",
-    desc: "From Kanchipuram to Varanasi, Patan to Bhubaneswar — we work with master weavers across 15 states.",
+    icon: Sparkles,
+    title: "Premium Quality",
+    desc: "Premium fabrics, refined finishes, and meticulous attention to detail — because every drape should tell a story of grace and enduring beauty.",
   },
   {
-    icon: Award,
-    title: "Uncompromising Quality",
-    desc: "Each saree passes a 12-point quality check before it reaches you. We reject over 30% of what we see at the loom.",
+    icon: Globe2,
+    title: "Accessible to Every Woman",
+    desc: "Through exhibitions, online live sales, and our digital presence, we continue to make exceptional sarees accessible to every woman, everywhere.",
   },
-];
-
-const milestones = [
-  { year: "1968", event: "Founded in Chennai by Vijaylakshmi Subramaniam — a single shop, a passion for silk." },
-  { year: "1985", event: "Expanded to source directly from Kanjivaram weavers, cutting out traders entirely." },
-  { year: "2003", event: "Opened buyer visits to loom clusters — customers could meet the weavers who made their sarees." },
-  { year: "2018", event: "Launched the Weaver Welfare Fund — providing healthcare and education support to artisan families." },
-  { year: "2024", event: "Went online, bringing 2,000+ heritage sarees to customers across India and the world." },
 ];
 
 export default async function AboutPage() {
   const now = new Date();
-  const aboutBanners = await db.banner.findMany({
-    where: {
-      isActive: true,
-      position: "about_banner",
-      OR: [{ startsAt: null }, { startsAt: { lte: now } }],
-      AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
-    },
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-  }).catch(() => []);
+  const [aboutBanners, settingRows] = await Promise.all([
+    db.banner.findMany({
+      where: {
+        isActive: true,
+        position: "about_banner",
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    }).catch(() => []),
+    db.siteSetting.findMany({
+      where: { key: { in: ["store_phone", "whatsapp_number", "store_gst"] } },
+    }).catch(() => []),
+  ]);
 
   const heroBannerUrl = aboutBanners[0]?.imageUrl ?? null;
+
+  const s: Record<string, string> = {};
+  settingRows.forEach((r) => { s[r.key] = r.value; });
+  const phone     = s.store_phone     || "+91 98323 99399";
+  const whatsapp  = s.whatsapp_number || "919832399399";
+  const gst       = s.store_gst       || "29AAVFV5771G1ZA";
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
@@ -82,7 +85,7 @@ export default async function AboutPage() {
                 className="text-xs font-semibold tracking-[0.18em] uppercase font-body"
                 style={{ color: "var(--color-gold)" }}
               >
-                Est. 1968
+                Over a Decade of Trust
               </span>
             </div>
             <h1
@@ -94,7 +97,7 @@ export default async function AboutPage() {
                 color: heroBannerUrl ? "white" : "var(--color-text-primary)",
               }}
             >
-              More Than a Saree.<br />A Living Tradition.
+              Where Tradition<br />Meets Luxury.
             </h1>
             <p
               className="mt-6 max-w-xl"
@@ -105,9 +108,8 @@ export default async function AboutPage() {
                 color: heroBannerUrl ? "rgba(255,255,255,0.85)" : "var(--color-text-secondary)",
               }}
             >
-              For over five decades, Vijaylakshmi Sarees has been a bridge between India's
-              most gifted weavers and the women who cherish their art. We don't just sell
-              sarees — we carry stories.
+              At Anjali's Vijaylakshmi Sarees, every saree is a celebration of heritage,
+              elegance, and timeless craftsmanship.
             </p>
           </div>
         </div>
@@ -131,7 +133,7 @@ export default async function AboutPage() {
             <div className="relative aspect-[4/5] rounded-2xl overflow-hidden">
               <SmartImage
                 src="/uploads/Vijaylakshmi.png"
-                alt="Vijaylakshmi Sarees — Born from a Love of Weaves"
+                alt="Anjali's Vijaylakshmi Sarees — Handcrafted Elegance"
                 fill
                 objectFit="cover"
                 objectPosition="center top"
@@ -140,10 +142,10 @@ export default async function AboutPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-6 left-6 space-y-0.5">
                 <p className="text-[11px] font-body uppercase tracking-widest text-white/70">
-                  Kanchipuram, Tamil Nadu
+                  Handcrafted Elegance
                 </p>
                 <p className="text-sm font-body text-white/80">
-                  A master weaver at work — 1974
+                  Every drape tells a story
                 </p>
               </div>
             </div>
@@ -159,47 +161,29 @@ export default async function AboutPage() {
                     color: "var(--color-text-primary)",
                   }}
                 >
-                  Born from a Love of Weaves
+                  About Us
                 </h2>
                 <div className="space-y-4" style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-body)", fontSize: "var(--text-body)", lineHeight: "var(--leading-body)" }}>
                   <p>
-                    In 1968, Vijaylakshmi Subramaniam opened a small shop in Chennai's
-                    T. Nagar with a single mission: to bring the finest handwoven sarees
-                    directly from the weaver's hands to the woman who wears them.
+                    At Anjali's Vijaylakshmi Sarees, every saree is a celebration of heritage,
+                    elegance, and timeless craftsmanship. For over a decade, we have been
+                    curating exquisite collections that beautifully blend India's rich
+                    textile traditions with contemporary sophistication.
                   </p>
                   <p>
-                    What began as one woman's passion became a movement. By the 1980s, we
-                    were travelling to loom clusters across South India, building
-                    relationships with master craftsmen whose families had woven silk
-                    for generations.
+                    From intricate Aari work and exclusive handcrafted designs to premium
+                    fabrics and refined finishes, each creation reflects our passion for
+                    perfection. Our journey has been built on trust, authenticity, and an
+                    unwavering commitment to quality, earning the love of customers across
+                    India and around the world.
                   </p>
                   <p>
-                    Today, we work with over 50 weaver families across 15 states — from the
-                    silk looms of Kanchipuram to the brocade workshops of Varanasi, from the
-                    double-ikat ateliers of Patan to the sambalpuri villages of Odisha.
+                    Through exhibitions, online live sales, and our digital presence, we
+                    continue to make exceptional sarees accessible to every woman. More than
+                    a brand, Anjali's Vijaylakshmi Sarees is a destination where tradition
+                    meets luxury, and every drape tells a story of grace, confidence and
+                    enduring beauty.
                   </p>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t" style={{ borderColor: "var(--color-parchment)" }}>
-                <div className="grid grid-cols-3 gap-6">
-                  {[
-                    { value: "55+", label: "Years of heritage" },
-                    { value: "50+", label: "Weaver families" },
-                    { value: "2k+", label: "Sarees catalogued" },
-                  ].map(({ value, label }) => (
-                    <div key={label}>
-                      <p
-                        className="text-3xl font-medium"
-                        style={{ fontFamily: "var(--font-heading)", color: "var(--color-primary)" }}
-                      >
-                        {value}
-                      </p>
-                      <p className="text-xs font-body mt-1" style={{ color: "var(--color-text-muted)" }}>
-                        {label}
-                      </p>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
@@ -257,11 +241,15 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* ── TIMELINE ── */}
+      {/* ── CONTACT & REGISTERED OFFICES ── */}
       <section className="py-20" style={{ background: "var(--color-ivory)" }}>
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
+            <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "var(--color-gold)" }}>
+              Reach Us
+            </span>
             <h2
+              className="mt-3"
               style={{
                 fontFamily: "var(--font-heading)",
                 fontSize: "var(--text-h2)",
@@ -269,41 +257,79 @@ export default async function AboutPage() {
                 color: "var(--color-text-primary)",
               }}
             >
-              Our Journey
+              Contact &amp; Registered Offices
             </h2>
           </div>
-          <div className="max-w-2xl mx-auto">
-            <div className="relative">
-              {/* Vertical line */}
-              <div
-                className="absolute left-[72px] top-2 bottom-2 w-px"
-                style={{ background: "var(--color-parchment)" }}
-              />
-              <div className="space-y-10">
-                {milestones.map(({ year, event }, i) => (
-                  <div key={year} className="flex items-start gap-8">
-                    <div className="shrink-0 w-16 text-right">
-                      <span
-                        className="text-sm font-bold font-body"
-                        style={{ color: "var(--color-primary)" }}
-                      >
-                        {year}
-                      </span>
-                    </div>
-                    {/* Dot */}
-                    <div
-                      className="shrink-0 w-3 h-3 rounded-full mt-1 relative z-10"
-                      style={{
-                        background: "var(--color-primary)",
-                        boxShadow: "0 0 0 4px var(--color-ivory), 0 0 0 5px var(--color-parchment)",
-                      }}
-                    />
-                    <p className="text-sm font-body leading-relaxed pt-0.5" style={{ color: "var(--color-text-secondary)" }}>
-                      {event}
-                    </p>
-                  </div>
-                ))}
+
+          {/* Contact + GST strip */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
+            <a
+              href={`tel:${phone.replace(/\s/g, "")}`}
+              className="flex items-center gap-2.5 px-5 py-3 rounded-xl border text-sm font-body font-semibold transition-all hover:shadow-sm"
+              style={{ background: "white", borderColor: "var(--color-parchment)", color: "var(--color-text-primary)" }}
+            >
+              <Phone className="h-4 w-4" style={{ color: "var(--color-primary)" }} />
+              {phone}
+            </a>
+            <a
+              href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener"
+              className="flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-body font-semibold transition-all hover:shadow-md"
+              style={{ background: "#25D366", color: "white" }}
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp: {phone}
+            </a>
+            <div
+              className="flex items-center gap-2.5 px-5 py-3 rounded-xl border text-sm font-body font-semibold"
+              style={{ background: "white", borderColor: "var(--color-parchment)", color: "var(--color-text-primary)" }}
+            >
+              <FileText className="h-4 w-4" style={{ color: "var(--color-primary)" }} />
+              GST: {gst}
+            </div>
+          </div>
+
+          {/* Offices */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="rounded-2xl p-7" style={{ background: "white", border: "1px solid var(--color-parchment)" }}>
+              <div className="flex items-center gap-2.5 mb-4">
+                <Building2 className="h-4.5 w-4.5" style={{ color: "var(--color-primary)" }} />
+                <h3 className="text-sm font-semibold font-body uppercase tracking-wide" style={{ color: "var(--color-text-primary)" }}>
+                  Registered Office
+                </h3>
               </div>
+              <p className="text-sm font-body leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+                VL Group<br />
+                36/11, CHB Colony<br />
+                Street No. 04<br />
+                Vellur Road<br />
+                Tiruchengode – 637211<br />
+                Namakkal Dt., Tamil Nadu
+              </p>
+              <p className="text-xs font-body mt-3" style={{ color: "var(--color-text-muted)" }}>
+                Contact: 8904410112
+              </p>
+            </div>
+
+            <div className="rounded-2xl p-7" style={{ background: "white", border: "1px solid var(--color-parchment)" }}>
+              <div className="flex items-center gap-2.5 mb-4">
+                <Building2 className="h-4.5 w-4.5" style={{ color: "var(--color-primary)" }} />
+                <h3 className="text-sm font-semibold font-body uppercase tracking-wide" style={{ color: "var(--color-text-primary)" }}>
+                  Karnataka Office
+                </h3>
+              </div>
+              <p className="text-sm font-body leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+                Anjali's Vijaylakshmi Sarees — VL Group<br />
+                D. No. 4/397/A1 to 4/397/A8<br />
+                Chantar Gram Panchayat<br />
+                Brahmavar Hebri Road<br />
+                Chantar, Udupi<br />
+                Brahmavar – 576213, Karnataka
+              </p>
+              <p className="text-xs font-body mt-3" style={{ color: "var(--color-text-muted)" }}>
+                Contact: 8904410112
+              </p>
             </div>
           </div>
         </div>
@@ -330,7 +356,7 @@ export default async function AboutPage() {
             style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-body-xl)", color: "var(--color-text-secondary)" }}
           >
             Browse our collection and find the saree that speaks to you — woven with
-            skill, intention, and fifty years of love.
+            skill, intention, and a decade of passion.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Link
