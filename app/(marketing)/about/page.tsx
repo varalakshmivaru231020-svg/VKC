@@ -292,45 +292,79 @@ export default async function AboutPage() {
 
           {/* Offices */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div className="rounded-2xl p-7" style={{ background: "white", border: "1px solid var(--color-parchment)" }}>
-              <div className="flex items-center gap-2.5 mb-4">
-                <Building2 className="h-4.5 w-4.5" style={{ color: "var(--color-primary)" }} />
-                <h3 className="text-sm font-semibold font-body uppercase tracking-wide" style={{ color: "var(--color-text-primary)" }}>
-                  Registered Office
-                </h3>
+            {[
+              {
+                label: "Registered Office",
+                name: null as string | null,
+                lines: [
+                  "VL Group",
+                  "36/11, CHB Colony",
+                  "Street No. 04",
+                  "Vellur Road",
+                  "Tiruchengode – 637211",
+                  "Namakkal Dt., Tamil Nadu",
+                ],
+              },
+              {
+                label: "Karnataka Office",
+                name: "Anjali's Vijaylakshmi Sarees — VL Group",
+                lines: [
+                  "D. No. 4/397/A1 to 4/397/A8",
+                  "Chantar Gram Panchayat",
+                  "Brahmavar Hebri Road",
+                  "Chantar, Udupi",
+                  "Brahmavar – 576213, Karnataka",
+                ],
+              },
+            ].map((office) => (
+              <div
+                key={office.label}
+                className="group relative rounded-2xl p-7 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                style={{ background: "white", border: "1px solid var(--color-parchment)" }}
+              >
+                {/* Gold top accent */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-1"
+                  style={{ background: "linear-gradient(90deg, var(--color-gold), var(--color-gold-light))" }}
+                />
+                <div className="flex items-center gap-3 mb-5">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:bg-primary"
+                    style={{ background: "var(--color-primary-50)" }}
+                  >
+                    <Building2
+                      className="h-4.5 w-4.5 transition-colors duration-300 group-hover:text-white"
+                      style={{ color: "var(--color-primary)" }}
+                    />
+                  </div>
+                  <h3
+                    className="text-xs font-semibold font-body uppercase tracking-[0.14em]"
+                    style={{ color: "var(--color-gold-dark, var(--color-primary))" }}
+                  >
+                    {office.label}
+                  </h3>
+                </div>
+                {office.name && (
+                  <p className="text-sm font-semibold font-body mb-2" style={{ color: "var(--color-text-primary)" }}>
+                    {office.name}
+                  </p>
+                )}
+                <address className="text-sm font-body leading-relaxed not-italic" style={{ color: "var(--color-text-secondary)" }}>
+                  {office.lines.map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i < office.lines.length - 1 && <br />}
+                    </span>
+                  ))}
+                </address>
+                <div className="mt-4 pt-4 flex items-center gap-2" style={{ borderTop: "1px solid var(--color-parchment)" }}>
+                  <Phone className="h-3.5 w-3.5" style={{ color: "var(--color-gold)" }} />
+                  <span className="text-xs font-body font-medium" style={{ color: "var(--color-text-muted)" }}>
+                    8904410112
+                  </span>
+                </div>
               </div>
-              <p className="text-sm font-body leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                VL Group<br />
-                36/11, CHB Colony<br />
-                Street No. 04<br />
-                Vellur Road<br />
-                Tiruchengode – 637211<br />
-                Namakkal Dt., Tamil Nadu
-              </p>
-              <p className="text-xs font-body mt-3" style={{ color: "var(--color-text-muted)" }}>
-                Contact: 8904410112
-              </p>
-            </div>
-
-            <div className="rounded-2xl p-7" style={{ background: "white", border: "1px solid var(--color-parchment)" }}>
-              <div className="flex items-center gap-2.5 mb-4">
-                <Building2 className="h-4.5 w-4.5" style={{ color: "var(--color-primary)" }} />
-                <h3 className="text-sm font-semibold font-body uppercase tracking-wide" style={{ color: "var(--color-text-primary)" }}>
-                  Karnataka Office
-                </h3>
-              </div>
-              <p className="text-sm font-body leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                Anjali's Vijaylakshmi Sarees — VL Group<br />
-                D. No. 4/397/A1 to 4/397/A8<br />
-                Chantar Gram Panchayat<br />
-                Brahmavar Hebri Road<br />
-                Chantar, Udupi<br />
-                Brahmavar – 576213, Karnataka
-              </p>
-              <p className="text-xs font-body mt-3" style={{ color: "var(--color-text-muted)" }}>
-                Contact: 8904410112
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>

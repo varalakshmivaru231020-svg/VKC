@@ -19,6 +19,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Prevent browsers from auto-linkifying phone numbers / addresses in plain text (e.g. office address blocks) */}
+        <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
         {/* Google Fonts — loaded dynamically based on admin font selection */}
         {fontsUrl && (
           <>
