@@ -29,7 +29,7 @@ export default function ContactClient({
   mapsUrl,
 }: Props) {
   const info = [
-    { icon: Phone, label: "Phone", value: phone, sub: "Mon – Sat, 9 AM – 7 PM IST", href: `tel:${phone.replace(/\s/g, "")}` },
+    { icon: Phone, label: "Phone", value: phone, sub: hoursWeekday, href: `tel:${phone.replace(/\s/g, "")}` },
     { icon: Mail,  label: "Email", value: email, sub: "We reply within 24 hours",    href: `mailto:${email}` },
     { icon: MapPin,label: "Store", value: address, sub: city,                         href: mapsUrl },
     { icon: Clock, label: "Hours", value: hoursWeekday, sub: hoursWeekend },

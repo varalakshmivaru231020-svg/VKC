@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 const messages = [
-  "Free shipping on all orders above ₹2,999",
+  "Free shipping all over India",
   "15-day no-questions-asked returns",
   "New Arrivals: Kanjivaram 2026 — Shop Now",
   "50+ weaver families · 15 states · one curated store",

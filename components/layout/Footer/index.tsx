@@ -132,7 +132,7 @@ export function Footer({
               <div className="mt-2 h-0.5 w-12" style={{ background: "linear-gradient(90deg, var(--color-gold), transparent)" }} />
             </div>
             <p className="text-sm leading-relaxed max-w-[240px] font-body" style={{ color: "var(--color-text-muted)" }}>
-              {tagline} Celebrating India's master weavers since 1968.
+              {tagline}
             </p>
             {/* Social */}
             <div className="flex gap-2.5">

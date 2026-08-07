@@ -14,6 +14,13 @@ export function CartSidebar() {
   const { items: rawItems, removeItem, updateQty, subtotal, totalItems } = useCartStore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [shippingConfig, setShippingConfig] = useState({
+    freeShippingThreshold: 2999, firstSareeRate: 100, additionalSareeRate: 50,
+  });
+
+  useEffect(() => {
+    fetch("/api/shipping-config").then(r => r.json()).then(d => setShippingConfig(d)).catch(() => {});
+  }, []);
 
   const handleCheckout = () => {
     closeCart();
@@ -41,9 +48,11 @@ export function CartSidebar() {
 
   const items = mounted ? rawItems : [];
   const sub = mounted ? subtotal() : 0;
-  const shipping = sub >= 2999 ? 0 : 99;
-  const total = sub + shipping;
   const count = mounted ? totalItems() : 0;
+  const shipping = sub >= shippingConfig.freeShippingThreshold
+    ? 0
+    : shippingConfig.firstSareeRate + Math.max(0, count - 1) * shippingConfig.additionalSareeRate;
+  const total = sub + shipping;
 
   return (
     <>
@@ -191,13 +200,13 @@ export function CartSidebar() {
               })}
 
               {/* Free shipping bar */}
-              {sub < 2999 && (
+              {shippingConfig.freeShippingThreshold > 0 && sub < shippingConfig.freeShippingThreshold && (
                 <div className="p-3 rounded-md text-center" style={{ background: "var(--color-primary-50)", border: "1px dashed var(--color-primary)" }}>
                   <p className="text-xs font-body font-medium" style={{ color: "var(--color-primary)" }}>
-                    Add <strong>{formatINR(2999 - sub)}</strong> more for free shipping!
+                    Add <strong>{formatINR(shippingConfig.freeShippingThreshold - sub)}</strong> more for free shipping!
                   </p>
                   <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-parchment)" }}>
-                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, (sub / 2999) * 100)}%`, background: "var(--color-primary)" }} />
+                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, (sub / shippingConfig.freeShippingThreshold) * 100)}%`, background: "var(--color-primary)" }} />
                   </div>
                 </div>
               )}

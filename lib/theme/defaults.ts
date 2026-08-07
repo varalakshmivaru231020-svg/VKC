@@ -64,7 +64,7 @@ export const DEFAULT_THEME: ThemeSettings = {
   // ── General ───────────────────────────────────────────
   "site.name":                "Vijaylakshmi Sarees",
   "site.tagline":             "Timeless Weaves. Modern Souls.",
-  "site.announcement":        "Free shipping on orders above ₹2,999 · New Arrivals: Kanjivaram Collection",
+  "site.announcement":        "Free shipping all over India · New Arrivals: Kanjivaram Collection",
   "site.announcement.active": "true",
   "site.currency.symbol":     "₹",
   "site.currency.code":       "INR",

@@ -65,7 +65,7 @@ const FALLBACK_SLIDES = [
 
 const trustBadges = [
   { Icon: Sparkles, title: "Authentic Weaves", desc: "Handpicked from master weavers across India" },
-  { Icon: Truck,    title: "Free Shipping",    desc: "On all orders above ₹2,999" },
+  { Icon: Truck,    title: "Free Shipping",    desc: "All over India" },
   { Icon: RefreshCw,title: "15-Day Returns",   desc: "No questions asked return policy" },
   { Icon: Shield,   title: "Secure Payment",   desc: "100% safe & encrypted checkout" },
 ];
