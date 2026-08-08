@@ -327,9 +327,11 @@ export default async function HomePage() {
                   color: "var(--color-text-secondary)",
                 }}
               >
-                Every Vijaylakshmi saree carries the fingerprints of master weavers who have honed
-                their craft across generations. We work directly with artisans from 15 states,
-                ensuring fair wages and preserving dying weave traditions.
+                Every Vijaylakshmi saree carries the artistry of master weavers whose skills have
+                been passed down through generations. We work closely with skilled artisans, helping
+                preserve India&apos;s rich and time-honoured weaving traditions. Each saree is more than
+                a piece of fabric&mdash;it is a celebration of craftsmanship, heritage, and the hands
+                that bring it to life.
               </p>
               <div className="gold-divider" />
               <p
