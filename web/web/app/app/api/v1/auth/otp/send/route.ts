@@ -11,7 +11,9 @@ function normalisePhone(raw: string): string {
   return "+" + digits;
 }
 
-const USE_FIXED_OTP = process.env.MOBILE_USE_FIXED_OTP === "false" ? false : true;
+// Dev-only. Production never uses a fixed OTP — see app/api/v1/auth/otp/send/route.ts
+const USE_FIXED_OTP =
+  process.env.NODE_ENV !== "production" && process.env.MOBILE_USE_FIXED_OTP !== "false";
 
 export async function POST(req: Request) {
   try {

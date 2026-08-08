@@ -11,7 +11,19 @@ function normalisePhone(raw: string): string {
   return "+" + digits;
 }
 
-const USE_FIXED_OTP = process.env.MOBILE_USE_FIXED_OTP === "false" ? false : true;
+/**
+ * Fixed-OTP is a LOCAL DEVELOPMENT convenience only.
+ *
+ * This used to default to `true` whenever MOBILE_USE_FIXED_OTP wasn't the exact
+ * string "false", which meant production shipped with it on: the mobile app's
+ * OTP was the literal "1234", `sendOtpViaMSG91` was never called, and the
+ * route still answered `{success: true}` — so the app reported "OTP sent" while
+ * no SMS was ever attempted, and any caller could sign into any account with
+ * 1234. Production is now excluded structurally, so a missing or mistyped env
+ * var can't reopen that hole.
+ */
+const USE_FIXED_OTP =
+  process.env.NODE_ENV !== "production" && process.env.MOBILE_USE_FIXED_OTP !== "false";
 
 export async function POST(req: Request) {
   try {
@@ -29,11 +41,15 @@ export async function POST(req: Request) {
 
     await db.otpCode.create({ data: { phone: normalised, code, expiresAt } });
 
+    // Awaited, exactly as /api/auth/otp/send does it: the response then tells
+    // the truth about whether the SMS actually went out, instead of reporting
+    // success for a send that had not been attempted yet (or at all).
+    let sent = false;
     if (!USE_FIXED_OTP) {
-      // Send real OTP via MSG91 — fire-and-forget, don't block the response
-      sendOtpViaMSG91(normalised, code).catch((e) =>
-        console.error("[v1/otp/send] MSG91 error:", e)
-      );
+      sent = await sendOtpViaMSG91(normalised, code).catch((e) => {
+        console.error("[v1/otp/send] MSG91 error:", e);
+        return false;
+      });
     } else {
       console.log(`[v1/otp/send] DEV mode — ${normalised} → ${code}`);
     }
@@ -46,7 +62,10 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       isNew: !existing,
-      ...(process.env.NODE_ENV !== "production" && USE_FIXED_OTP ? { devCode: code } : {}),
+      // Same fallback the website route uses: when MSG91 isn't configured there
+      // is no SMS to wait for, so hand the code back rather than stranding the
+      // caller. In production with MSG91 configured this is never reached.
+      ...(USE_FIXED_OTP || !sent ? { otp: code } : {}),
     });
   } catch (err) {
     console.error("[v1/auth/otp/send]", err);
