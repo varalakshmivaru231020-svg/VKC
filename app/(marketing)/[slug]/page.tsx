@@ -24,7 +24,7 @@ export default async function DynamicPage({ params }: { params: { slug: string }
       </h1>
       <div
         className="prose prose-sm max-w-none font-body"
-        style={{ color: "var(--color-text-secondary)", lineHeight: "1.8" }}
+        style={{ color: "var(--color-text-secondary)", lineHeight: "1.8", textAlign: "justify", textJustify: "inter-word" }}
         dangerouslySetInnerHTML={{ __html: page.content }}
       />
       <p className="text-xs font-body mt-10" style={{ color: "var(--color-text-disabled)" }}>
