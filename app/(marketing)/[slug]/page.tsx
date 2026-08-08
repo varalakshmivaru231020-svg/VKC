@@ -5,14 +5,24 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 /**
- * Some CMS pages store bullet points as literal "•" characters inside a
- * paragraph, so they render as one run-on block. Break each inline bullet onto
- * its own line so the points read as a list. Pages that already use proper
- * <ul>/<li> markup contain no literal "•" and are left untouched.
+ * Some CMS pages store list items inline as literal markers — a bullet, a
+ * lettered "(a)"/"a)", a roman "(iv)"/"iv)", or a number "(1)"/"1)" — inside a
+ * single paragraph, so they render as one run-on block. Break each inline
+ * marker onto its own line so the points read as a list. Markers are only split
+ * when they follow whitespace or a sentence separator, so real parentheticals
+ * like "product(s)" or "(Speed Post)" are left alone. Pages that already use
+ * proper <ul>/<li> markup are unaffected.
  */
 function formatCmsContent(html: string): string {
+  // A list marker: a single letter (a, A), a roman numeral (ii, iv, viii),
+  // or a number up to 3 digits (1, 12).
+  const MARKER = "[A-Za-z]|[IVXLCDMivxlcdm]{2,6}|\\d{1,3}";
+  const before = "([\\s>;:])[ \\t\\u00A0]*";
+  const after = "[ \\t\\u00A0]+";
   return html
-    .replace(/[ \t ]*[•·]\s*/g, "<br />• ")
+    .replace(/[ \t ]*[•·●▪‣◦*]\s*/g, "<br />• ")
+    .replace(new RegExp(`${before}\\((${MARKER})\\)${after}`, "g"), "$1<br />($2) ")
+    .replace(new RegExp(`${before}(${MARKER})\\)${after}`, "g"), "$1<br />$2) ")
     .replace(/(<(?:p|li|div|h[1-6])[^>]*>)\s*<br\s*\/?>/gi, "$1");
 }
 
