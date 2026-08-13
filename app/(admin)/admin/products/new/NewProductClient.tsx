@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2, Save, Upload, X, Loader2, Video } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
-import { uploadImageFile } from "@/lib/utils/upload";
+import { uploadImageFile, MAX_VIDEO_UPLOAD_BYTES, MAX_VIDEO_UPLOAD_LABEL } from "@/lib/utils/upload";
 
 interface VariantImage {
   url: string;
@@ -266,7 +266,7 @@ export default function NewProductClient() {
 
   const handleVideoUpload = async (file: File) => {
     if (!file.type.startsWith("video/")) { setVideoError("Only video files allowed"); return; }
-    if (file.size > 100 * 1024 * 1024) { setVideoError("Video too large (max 100MB)"); return; }
+    if (file.size > MAX_VIDEO_UPLOAD_BYTES) { setVideoError(`Video too large (max ${MAX_VIDEO_UPLOAD_LABEL})`); return; }
     setVideoUploading(true);
     setVideoError("");
     const form = new FormData();
@@ -566,7 +566,7 @@ export default function NewProductClient() {
       <SectionCard title="Product Video">
         <div className="space-y-3">
           <p className="text-xs font-body" style={{ color: "#6B7280" }}>
-            Upload a draping or showcase video for this product. Shown on the product detail page. MP4, WebM or MOV · Max 100MB
+            Upload a draping or showcase video for this product. Shown on the product detail page. MP4, WebM or MOV · Max {MAX_VIDEO_UPLOAD_LABEL}
           </p>
 
           {videoUrl ? (

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { Readable } from "stream";
 import { isCloudinaryConfigured, uploadVideoBufferToCloudinary } from "@/lib/cloudinary";
+import { MAX_VIDEO_UPLOAD_BYTES, MAX_VIDEO_UPLOAD_LABEL } from "@/lib/utils/upload";
 
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads", "videos");
-const MAX_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_SIZE = MAX_VIDEO_UPLOAD_BYTES;
 const ALLOWED = ["video/mp4", "video/webm", "video/quicktime"];
 
 export async function POST(req: NextRequest) {
@@ -16,13 +18,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "File too large (max 100MB)" }, { status: 400 });
+      return NextResponse.json({ error: `File too large (max ${MAX_VIDEO_UPLOAD_LABEL})` }, { status: 400 });
     }
     if (!ALLOWED.includes(file.type)) {
       return NextResponse.json({ error: "Only MP4, WebM, MOV allowed" }, { status: 400 });
     }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
 
     // Cloudinary is preferred — local disk writes don't survive on most hosting
     // platforms (and even where they do, static file serving can be misconfigured),
@@ -31,14 +31,21 @@ export async function POST(req: NextRequest) {
     // configured (e.g. a bare local dev checkout without credentials).
     if (isCloudinaryConfigured()) {
       try {
-        const result = await uploadVideoBufferToCloudinary(buffer, { folder: "vijaylakshmi/videos" });
+        // Piped rather than buffered: `Buffer.from(await file.arrayBuffer())`
+        // would hold a second full copy of the file in memory, and at the sizes
+        // this route now accepts that doubling is what turns a slow upload into
+        // an out-of-memory kill on the server.
+        const result = await uploadVideoBufferToCloudinary(
+          Readable.fromWeb(file.stream() as any),
+          { folder: "vijaylakshmi/videos" }
+        );
         return NextResponse.json({ url: result.secure_url });
       } catch (uploadErr: any) {
         console.error("[Upload Video] ✗ Cloudinary upload failed:", uploadErr.message ?? uploadErr);
         return NextResponse.json(
           {
             error: "Failed to upload video",
-            details: `Cloudinary upload error: ${uploadErr.message ?? "unknown error"}. Contact support if this persists.`,
+            details: `Cloudinary upload error: ${uploadErr.message ?? "unknown error"}. Note Cloudinary enforces its own per-plan cap on video file size (100MB on the free tier) separately from this app's ${MAX_VIDEO_UPLOAD_LABEL} limit.`,
           },
           { status: 500 }
         );
@@ -59,6 +66,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const buffer = Buffer.from(await file.arrayBuffer());
     await mkdir(UPLOADS_DIR, { recursive: true });
     const ext = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4";
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;

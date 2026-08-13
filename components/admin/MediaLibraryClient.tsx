@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Eye, EyeOff, Loader2, X, Save, AlertCircle } from "lucide-react";
-import { uploadImageFile, uploadVideoFile } from "@/lib/utils/upload";
+import { uploadImageFile, uploadVideoFile, MAX_VIDEO_UPLOAD_BYTES, MAX_VIDEO_UPLOAD_LABEL } from "@/lib/utils/upload";
 import { parseVideoUrl, isDirectVideoFile } from "@/lib/utils/video";
 
 interface MediaItemRow {
@@ -63,6 +63,18 @@ export default function MediaLibraryClient({ items: initial, mediaType, title, d
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Checked here as well as server-side: otherwise the browser spends the
+    // entire upload pushing a file that was always going to be rejected, and an
+    // over-limit body is refused by nginx with HTML the client can't parse — so
+    // the admin sees "invalid response" instead of the actual reason.
+    if (!isImage && file.size > MAX_VIDEO_UPLOAD_BYTES) {
+      alert(
+        `This video is ${(file.size / 1024 / 1024).toFixed(0)}MB — the maximum is ${MAX_VIDEO_UPLOAD_LABEL}. ` +
+        `Export it at a smaller size, or paste a YouTube/Facebook link in the "Or Video URL" box instead.`
+      );
+      e.target.value = "";
+      return;
+    }
     setUploading(true);
     const result = isImage ? await uploadImageFile(file) : await uploadVideoFile(file);
     setUploading(false);
@@ -157,7 +169,7 @@ export default function MediaLibraryClient({ items: initial, mediaType, title, d
                   Upload {isImage ? "Image" : "Video"}
                 </label>
                 <input type="file" accept={isImage ? "image/*" : "video/mp4,video/webm,video/quicktime"} onChange={handleUpload} className="text-sm" />
-                {!isImage && <p className="text-xs text-gray-400 mt-1">MP4, WebM, or MOV — up to 100MB.</p>}
+                {!isImage && <p className="text-xs text-gray-400 mt-1">MP4, WebM, or MOV — up to {MAX_VIDEO_UPLOAD_LABEL}.</p>}
                 {uploading && <p className="text-xs text-gray-400 mt-1">Uploading…</p>}
               </div>
               {!isImage && (

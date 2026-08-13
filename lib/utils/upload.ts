@@ -1,3 +1,14 @@
+/** Max video upload size, shared by the API route and every admin screen that
+ *  offers a video picker. One source of truth so the UI can never advertise a
+ *  ceiling the server won't honour.
+ *
+ *  MUST stay <= `client_max_body_size` in the nginx vhost
+ *  (`/etc/nginx/sites-enabled/vijaylakshmisarees.com.conf`). If nginx is lower,
+ *  it rejects the request itself with an HTML 413 that never reaches this app,
+ *  and the admin just sees "invalid response". */
+export const MAX_VIDEO_UPLOAD_BYTES = 1000 * 1024 * 1024;
+export const MAX_VIDEO_UPLOAD_LABEL = "1000MB";
+
 export interface UploadMeta {
   originalSize: number;
   outputSize: number;
