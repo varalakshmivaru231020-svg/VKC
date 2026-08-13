@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Plus, Pencil, Trash2, Eye, EyeOff, X, Save, Image as ImageIcon, Video, Loader2, Upload, AlertCircle } from "lucide-react";
-import { uploadImageFile } from "@/lib/utils/upload";
+import { uploadImageFile, uploadVideoFile, MAX_VIDEO_UPLOAD_BYTES, MAX_VIDEO_UPLOAD_LABEL } from "@/lib/utils/upload";
 
 interface EventMedia {
   id: string;
@@ -124,11 +124,25 @@ export default function EventsClient({ events: initial }: { events: EventRow[] }
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const isVideo = mediaForm.type === "VIDEO";
+    // Checked before the request goes out: an over-limit body is refused by
+    // nginx with HTML the client can't parse, so otherwise the admin waits out
+    // a long upload only to get "invalid response" instead of the real reason.
+    if (isVideo && file.size > MAX_VIDEO_UPLOAD_BYTES) {
+      alert(
+        `This video is ${(file.size / 1024 / 1024).toFixed(0)}MB — the maximum is ${MAX_VIDEO_UPLOAD_LABEL}. ` +
+        `Export it at a smaller size, or paste a YouTube/Facebook link instead.`
+      );
+      e.target.value = "";
+      return;
+    }
     setMediaUploading(true);
-    const result = await uploadImageFile(file);
+    const result = isVideo ? await uploadVideoFile(file) : await uploadImageFile(file);
     setMediaUploading(false);
     if (!result.ok) { alert(`${result.error} — ${result.details}`); return; }
-    setMediaForm((f) => ({ ...f, type: "IMAGE", url: result.url }));
+    // Keep whichever type is selected — the picker is type-aware now, so
+    // forcing IMAGE here would mislabel an uploaded video.
+    setMediaForm((f) => ({ ...f, url: result.url }));
   };
 
   const addMedia = async () => {
@@ -283,19 +297,29 @@ export default function EventsClient({ events: initial }: { events: EventRow[] }
                       <option value="IMAGE">Image</option>
                       <option value="VIDEO">Video</option>
                     </select>
-                    {mediaForm.type === "IMAGE" && (
-                      <label className="shrink-0 px-3 rounded-lg text-xs font-medium border border-gray-200 flex items-center gap-1.5 cursor-pointer hover:bg-gray-50">
-                        {mediaUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                        Choose file
-                        <input type="file" accept="image/*" className="hidden" onChange={handleMediaUpload} />
-                      </label>
-                    )}
+                    <label className="shrink-0 px-3 rounded-lg text-xs font-medium border border-gray-200 flex items-center gap-1.5 cursor-pointer hover:bg-gray-50">
+                      {mediaUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                      {mediaUploading ? "Uploading…" : "Choose file"}
+                      <input
+                        type="file"
+                        accept={mediaForm.type === "IMAGE" ? "image/*" : "video/mp4,video/webm,video/quicktime"}
+                        className="hidden"
+                        onChange={handleMediaUpload}
+                      />
+                    </label>
                     <input value={mediaForm.url} onChange={(e) => setMediaForm((f) => ({ ...f, url: e.target.value }))}
-                      placeholder={mediaForm.type === "IMAGE" ? "or paste an image URL" : "Video URL (YouTube, Vimeo, etc.)"} className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs" />
-                    <button onClick={addMedia} disabled={addingMedia} className="px-3 rounded-lg text-xs font-semibold text-white shrink-0" style={{ background: "var(--color-primary)" }}>
+                      placeholder={mediaForm.type === "IMAGE" ? "or paste an image URL" : "or paste a YouTube / Facebook / Vimeo link"} className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs" />
+                    {/* Disabled mid-upload too: the URL is only filled in once the
+                        upload resolves, so an early click just alerts "provide a URL". */}
+                    <button onClick={addMedia} disabled={addingMedia || mediaUploading} className="px-3 rounded-lg text-xs font-semibold text-white shrink-0 disabled:opacity-50" style={{ background: "var(--color-primary)" }}>
                       {addingMedia ? "…" : "Add"}
                     </button>
                   </div>
+                  {mediaForm.type === "VIDEO" && (
+                    <p className="text-[11px] text-gray-400 mt-1.5">
+                      MP4, WebM or MOV — up to {MAX_VIDEO_UPLOAD_LABEL}. For longer videos paste a YouTube or Facebook link instead: no size limit, and it loads faster for customers.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
