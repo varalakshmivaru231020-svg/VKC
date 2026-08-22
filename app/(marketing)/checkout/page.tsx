@@ -532,18 +532,6 @@ export default function CheckoutPage() {
     if (isPreBooking && payment !== "netbanking") return; // defense-in-depth — UI never offers other methods
     if (isPreBooking && !preBookingConsent) return;
 
-    // ICICI popup is opt-in via ?pgpopup=1 while we establish whether its
-    // hosted page will render outside a top-level tab. Customers without the
-    // flag keep the redirect, which is known to work. Opened synchronously
-    // here because a window opened after an await is blocked as a popup, and
-    // deliberately with NO window name — payment pages commonly keep their own
-    // state in window.name, which is the likeliest reason the earlier attempt
-    // loaded the document but never painted.
-    const pgPopup =
-      payment === "icici-pg" && iciciPopupOptIn()
-        ? window.open("", "", "width=820,height=880,scrollbars=yes,resizable=yes")
-        : null;
-
     setPlacing(true);
     try {
       const orderPayload = {
@@ -731,19 +719,25 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!res.ok) {
-          pgPopup?.close();
           alert(data.error || "Payment setup failed. Please try again.");
           setPlacing(false);
           return;
         }
+
+        // Opened directly on the gateway URL rather than as about:blank that is
+        // then redirected: a window navigated from about:blank carries a
+        // different document context and referrer, and the earlier attempt
+        // loaded ICICI's document but never painted it. If the browser blocks
+        // the popup we fall back to the redirect, which always works.
+        const pgPopup = iciciPopupOptIn()
+          ? window.open(data.redirectUrl, "_blank", "width=820,height=880,scrollbars=yes,resizable=yes")
+          : null;
 
         if (!pgPopup || pgPopup.closed) {
           removeItems(items.map((i) => i.variantId)); clearCheckoutMeta();
           window.location.href = data.redirectUrl;
           return;
         }
-
-        pgPopup.location.href = data.redirectUrl;
 
         const handlePgMsg = (e: MessageEvent) => {
           if (e.origin !== window.location.origin) return;
