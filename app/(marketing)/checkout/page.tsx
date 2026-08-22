@@ -309,6 +309,20 @@ function AddressCard({ addr, selected, onSelect, onEdit }: { addr: SavedAddress;
 
 // ─── Main checkout page ───────────────────────────────────────────────────────
 
+
+// Opt-in switch for the ICICI popup trial: ?pgpopup=1 turns it on for this tab
+// and is remembered, ?pgpopup=0 turns it back off. Everyone else gets the
+// redirect, which is the flow known to work.
+function iciciPopupOptIn(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const q = new URLSearchParams(window.location.search).get("pgpopup");
+    if (q === "1") { localStorage.setItem("vl_pgpopup", "1"); return true; }
+    if (q === "0") { localStorage.removeItem("vl_pgpopup"); return false; }
+    return localStorage.getItem("vl_pgpopup") === "1";
+  } catch { return false; }
+}
+
 export default function CheckoutPage() {
   const { items: allItems, removeItems } = useCartStore();
   const {
@@ -518,6 +532,18 @@ export default function CheckoutPage() {
     if (isPreBooking && payment !== "netbanking") return; // defense-in-depth — UI never offers other methods
     if (isPreBooking && !preBookingConsent) return;
 
+    // ICICI popup is opt-in via ?pgpopup=1 while we establish whether its
+    // hosted page will render outside a top-level tab. Customers without the
+    // flag keep the redirect, which is known to work. Opened synchronously
+    // here because a window opened after an await is blocked as a popup, and
+    // deliberately with NO window name — payment pages commonly keep their own
+    // state in window.name, which is the likeliest reason the earlier attempt
+    // loaded the document but never painted.
+    const pgPopup =
+      payment === "icici-pg" && iciciPopupOptIn()
+        ? window.open("", "", "width=820,height=880,scrollbars=yes,resizable=yes")
+        : null;
+
     setPlacing(true);
     try {
       const orderPayload = {
@@ -692,12 +718,12 @@ export default function CheckoutPage() {
         return;
       }
 
-      // ── ICICI PG Direct — UPI, Cards, Net Banking (hosted redirect) ─
-      // This gateway only works as a full top-level navigation. Its page sends
-      // `frame-ancestors 'self'` so it cannot be iframed, and in a popup the
-      // document loads (the title appears) but the body never renders. Both
-      // were tried; neither is usable. Razorpay is the gateway to reach for if
-      // an on-site checkout is wanted — its SDK renders an in-page modal.
+      // ── ICICI PG Direct — UPI, Cards, Net Banking ───────────────────
+      // Default is a full-page redirect: this gateway cannot be iframed (it
+      // sends `frame-ancestors 'self'`), so Razorpay-style in-page checkout is
+      // not achievable with it. The ?pgpopup=1 opt-in keeps the store open
+      // behind a popup instead, and is being trialled without exposing
+      // customers to it.
       if (payment === "icici-pg") {
         const res = await fetch("/api/web/checkout/icici-pg", {
           method: "POST", headers: { "Content-Type": "application/json" },
@@ -705,12 +731,46 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!res.ok) {
+          pgPopup?.close();
           alert(data.error || "Payment setup failed. Please try again.");
           setPlacing(false);
           return;
         }
-        removeItems(items.map((i) => i.variantId)); clearCheckoutMeta();
-        window.location.href = data.redirectUrl;
+
+        if (!pgPopup || pgPopup.closed) {
+          removeItems(items.map((i) => i.variantId)); clearCheckoutMeta();
+          window.location.href = data.redirectUrl;
+          return;
+        }
+
+        pgPopup.location.href = data.redirectUrl;
+
+        const handlePgMsg = (e: MessageEvent) => {
+          if (e.origin !== window.location.origin) return;
+          if (e.data?.type !== "icici_payment_complete") return;
+          window.removeEventListener("message", handlePgMsg);
+          clearInterval(pgTimer);
+          if (e.data.status === "success") {
+            removeItems(items.map((i) => i.variantId));
+            clearCheckoutMeta();
+            setPlacedOrderNumber(e.data.orderNumber || data.orderNumber);
+            setOrdered(true);
+            router.refresh();
+          } else {
+            setPlacing(false);
+          }
+        };
+        window.addEventListener("message", handlePgMsg);
+
+        // If the popup will not render, closing it must hand the customer back
+        // a usable checkout rather than a spinner that never resolves.
+        const pgTimer = setInterval(() => {
+          if (pgPopup.closed) {
+            clearInterval(pgTimer);
+            window.removeEventListener("message", handlePgMsg);
+            setPlacing(false);
+          }
+        }, 600);
         return;
       }
 
