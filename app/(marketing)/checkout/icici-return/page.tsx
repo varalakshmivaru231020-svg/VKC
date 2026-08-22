@@ -1,27 +1,46 @@
 "use client";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 // Landing point after an ICICI payment (both Eazypay and PG Direct).
-// The gateway is opened in a popup so the customer never leaves the store, so
-// the common case here is: post the result to the checkout tab and close.
-// If the popup was blocked the gateway took over the whole tab instead, and
-// there is no opener — then this navigates on to the right page itself.
-export default function IciciReturnPage() {
+// Normally the gateway took over the whole tab, so this just forwards on to the
+// right page. If it was opened as a popup instead, it posts the result to the
+// checkout tab and closes.
+//
+// useSearchParams() must sit inside a Suspense boundary — outside one it
+// returns null during prerender and `.get()` throws, which is exactly what
+// happened when this page started receiving real ICICI returns.
+
+function Spinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--color-ivory)" }}>
+      <div className="text-center space-y-3">
+        <span className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin inline-block" />
+        <p className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>Processing payment…</p>
+      </div>
+    </div>
+  );
+}
+
+function IciciReturnInner() {
   const params = useSearchParams();
-  const status = params.get("status");
-  const order  = params.get("order");
+  const status = params?.get("status") ?? null;
+  const order  = params?.get("order")  ?? null;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    if (window.opener && !window.opener.closed) {
-      window.opener.postMessage(
-        { type: "icici_payment_complete", status, orderNumber: order },
-        window.location.origin,
-      );
-      window.close();
-      return;
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(
+          { type: "icici_payment_complete", status, orderNumber: order },
+          window.location.origin,
+        );
+        window.close();
+        return;
+      }
+    } catch {
+      // Cross-origin or already-closed opener — fall through to redirecting.
     }
 
     if (status === "success") {
@@ -35,14 +54,15 @@ export default function IciciReturnPage() {
       });
       window.location.href = `/checkout?${qs.toString()}`;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [status, order]);
 
+  return <Spinner />;
+}
+
+export default function IciciReturnPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--color-ivory)" }}>
-      <div className="text-center space-y-3">
-        <span className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin inline-block" />
-        <p className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>Processing payment…</p>
-      </div>
-    </div>
+    <Suspense fallback={<Spinner />}>
+      <IciciReturnInner />
+    </Suspense>
   );
 }
