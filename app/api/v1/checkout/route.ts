@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { decrementStock, StockError } from "@/lib/stock/adjustStock";
 import { isUnauthorized, requireMobileUser } from "@/lib/api/mobile-auth";
 import { getRazorpayClient } from "@/lib/api/razorpay";
 import { createCashfreeOrder } from "@/lib/api/cashfree";
@@ -108,29 +109,42 @@ export async function POST(req: Request) {
 
   let order: { id: string; orderNumber: string; totalAmount: any };
 
-  if (walletUsed > 0) {
+  try {
+    // Stock moves in the same transaction as the order so a shortfall rolls
+    // the order back instead of leaving one that cannot be fulfilled.
     order = await db.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId: u.id } });
-      if (!wallet || Number(wallet.balance) < walletUsed) throw new Error("Insufficient wallet balance");
-      const newBalance = Number(wallet.balance) - walletUsed;
-      await tx.wallet.update({ where: { userId: u.id }, data: { balance: newBalance } });
-      const ord = await tx.order.create({
+      await decrementStock(tx, itemsData.map((i: any) => ({
+        variantId: i.variantId, quantity: i.quantity, productName: i.productName,
+      })));
+
+      if (walletUsed > 0) {
+        const wallet = await tx.wallet.findUnique({ where: { userId: u.id } });
+        if (!wallet || Number(wallet.balance) < walletUsed) throw new Error("Insufficient wallet balance");
+        const newBalance = Number(wallet.balance) - walletUsed;
+        await tx.wallet.update({ where: { userId: u.id }, data: { balance: newBalance } });
+        const ord = await tx.order.create({
+          data: orderBase,
+          select: { id: true, orderNumber: true, totalAmount: true },
+        });
+        await tx.walletTransaction.create({
+          data: {
+            walletId: wallet.id, type: "DEBIT", amount: walletUsed, balance: newBalance,
+            reason: `Order #${ord.orderNumber}`, orderId: ord.id,
+          },
+        });
+        return ord;
+      }
+
+      return tx.order.create({
         data: orderBase,
         select: { id: true, orderNumber: true, totalAmount: true },
       });
-      await tx.walletTransaction.create({
-        data: {
-          walletId: wallet.id, type: "DEBIT", amount: walletUsed, balance: newBalance,
-          reason: `Order #${ord.orderNumber}`, orderId: ord.id,
-        },
-      });
-      return ord;
     });
-  } else {
-    order = await db.order.create({
-      data: orderBase,
-      select: { id: true, orderNumber: true, totalAmount: true },
-    });
+  } catch (e) {
+    if (e instanceof StockError) {
+      return NextResponse.json({ error: e.message }, { status: 409 });
+    }
+    throw e;
   }
 
   if (couponCode) {

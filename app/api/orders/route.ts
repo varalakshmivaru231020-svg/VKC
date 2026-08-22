@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { decrementStock, StockError } from "@/lib/stock/adjustStock";
 
 function generateOrderNumber(): string {
   const ts  = Date.now().toString(36).toUpperCase();
@@ -91,37 +92,50 @@ export async function POST(req: NextRequest) {
     items:           { create: itemsData },
   };
 
+  const stockLines = itemsData.map((i: any) => ({
+    variantId: i.variantId, quantity: i.quantity, productName: i.productName,
+  }));
+
   let order: { id: string; orderNumber: string };
 
-  if (walletUsed > 0 && userId) {
-    // Deduct wallet in same transaction as order creation
-    const result = await db.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId } });
-      if (!wallet || Number(wallet.balance) < walletUsed) {
-        throw new Error("Insufficient wallet balance");
+  try {
+    // Stock comes out in the same transaction as the order so a shortfall
+    // rolls the whole thing back instead of leaving an unfulfillable order.
+    order = await db.$transaction(async (tx) => {
+      await decrementStock(tx, stockLines);
+
+      if (walletUsed > 0 && userId) {
+        const wallet = await tx.wallet.findUnique({ where: { userId } });
+        if (!wallet || Number(wallet.balance) < walletUsed) {
+          throw new Error("Insufficient wallet balance");
+        }
+        const newBalance = Number(wallet.balance) - walletUsed;
+
+        await tx.wallet.update({ where: { userId }, data: { balance: newBalance } });
+
+        const ord = await tx.order.create({ data: orderBase, select: { id: true, orderNumber: true } });
+
+        await tx.walletTransaction.create({
+          data: {
+            walletId: wallet.id,
+            type:     "DEBIT",
+            amount:   walletUsed,
+            balance:  newBalance,
+            reason:   `Order #${ord.orderNumber}`,
+            orderId:  ord.id,
+          },
+        });
+
+        return ord;
       }
-      const newBalance = Number(wallet.balance) - walletUsed;
 
-      await tx.wallet.update({ where: { userId }, data: { balance: newBalance } });
-
-      const ord = await tx.order.create({ data: orderBase, select: { id: true, orderNumber: true } });
-
-      await tx.walletTransaction.create({
-        data: {
-          walletId: wallet.id,
-          type:     "DEBIT",
-          amount:   walletUsed,
-          balance:  newBalance,
-          reason:   `Order #${ord.orderNumber}`,
-          orderId:  ord.id,
-        },
-      });
-
-      return ord;
+      return tx.order.create({ data: orderBase, select: { id: true, orderNumber: true } });
     });
-    order = result;
-  } else {
-    order = await db.order.create({ data: orderBase, select: { id: true, orderNumber: true } });
+  } catch (e) {
+    if (e instanceof StockError) {
+      return NextResponse.json({ error: e.message }, { status: 409 });
+    }
+    throw e;
   }
 
   // Increment coupon usage

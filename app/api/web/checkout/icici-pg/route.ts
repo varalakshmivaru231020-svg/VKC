@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { decrementStock, restoreStock, StockError } from "@/lib/stock/adjustStock";
 import {
   loadIciciPgConfig,
   missingIciciPgFields,
@@ -80,27 +81,43 @@ export async function POST(req: NextRequest) {
     imageUrl:     item.imageUrl ?? null,
   }));
 
-  // ── Create order in PENDING state ───────────────────────────────────────────
-  const order = await db.order.create({
-    data: {
-      orderNumber,
-      userId,
-      status:           "PENDING",
-      paymentStatus:    "PENDING",
-      paymentMethod:    "icici_pg",
-      subtotal,
-      discountAmount:   discountAmount ?? 0,
-      shippingAmount:   shippingAmount ?? 0,
-      taxAmount:        0,
-      totalAmount:      finalTotal,
-      walletAmountUsed: walletUsed,
-      couponCode:       couponCode || null,
-      shippingAddress:  address,
-      billingAddress:   address,
-      items:            { create: itemsData },
-    },
-    select: { id: true, orderNumber: true },
-  });
+  // ── Create order in PENDING state, holding stock ────────────────────────────
+  // Stock is taken now rather than on payment success, so two people cannot be
+  // sent to the gateway for the same last unit. An abandoned payment holds it
+  // until the order is cancelled, which puts it back.
+  let order: { id: string; orderNumber: string };
+  try {
+    order = await db.$transaction(async (tx) => {
+      await decrementStock(tx, itemsData.map((i: any) => ({
+        variantId: i.variantId, quantity: i.quantity, productName: i.productName,
+      })));
+      return tx.order.create({
+        data: {
+          orderNumber,
+          userId,
+          status:           "PENDING",
+          paymentStatus:    "PENDING",
+          paymentMethod:    "icici_pg",
+          subtotal,
+          discountAmount:   discountAmount ?? 0,
+          shippingAmount:   shippingAmount ?? 0,
+          taxAmount:        0,
+          totalAmount:      finalTotal,
+          walletAmountUsed: walletUsed,
+          couponCode:       couponCode || null,
+          shippingAddress:  address,
+          billingAddress:   address,
+          items:            { create: itemsData },
+        },
+        select: { id: true, orderNumber: true },
+      });
+    });
+  } catch (e) {
+    if (e instanceof StockError) {
+      return NextResponse.json({ error: e.message }, { status: 409 });
+    }
+    throw e;
+  }
 
   if (couponCode) {
     await db.coupon.updateMany({
@@ -108,6 +125,13 @@ export async function POST(req: NextRequest) {
       data:  { usedCount: { increment: 1 } },
     }).catch(() => {});
   }
+
+  // The order never reached the gateway, so the stock it was holding goes
+  // straight back rather than waiting for someone to cancel it by hand.
+  const releaseHeldStock = () =>
+    db.$transaction((tx) =>
+      restoreStock(tx, itemsData.map((i: any) => ({ variantId: i.variantId, quantity: i.quantity }))),
+    ).catch(() => {});
 
   // ── Build & call initiateSale ───────────────────────────────────────────────
   const merchantTxnNo = generateMerchantTxnNo();
@@ -131,6 +155,7 @@ export async function POST(req: NextRequest) {
       where: { id: order.id },
       data:  { paymentStatus: "FAILED", status: "CANCELLED" },
     }).catch(() => {});
+    await releaseHeldStock();
     return NextResponse.json({ error: "Payment gateway unreachable", details: err?.message }, { status: 502 });
   }
 
@@ -140,6 +165,7 @@ export async function POST(req: NextRequest) {
       where: { id: order.id },
       data:  { paymentStatus: "FAILED", status: "CANCELLED" },
     }).catch(() => {});
+    await releaseHeldStock();
     return NextResponse.json({
       error: response.respDescription ?? "Gateway rejected the payment request",
     }, { status: 502 });

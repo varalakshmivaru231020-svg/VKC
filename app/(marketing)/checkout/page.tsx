@@ -517,6 +517,14 @@ export default function CheckoutPage() {
     if (!payment) return;
     if (isPreBooking && payment !== "netbanking") return; // defense-in-depth — UI never offers other methods
     if (isPreBooking && !preBookingConsent) return;
+
+    // Opened here, synchronously inside the click handler, because a window
+    // opened after an await is treated as an unsolicited popup and blocked.
+    // It sits on about:blank until the gateway hands us a URL below.
+    const pgPopup = payment === "icici-pg"
+      ? window.open("", "icici_pg_payment", "width=760,height=820,scrollbars=yes,resizable=yes")
+      : null;
+
     setPlacing(true);
     try {
       const orderPayload = {
@@ -691,7 +699,11 @@ export default function CheckoutPage() {
         return;
       }
 
-      // ── ICICI PG Direct — UPI, Cards, Net Banking (hosted redirect) ─
+      // ── ICICI PG Direct — UPI, Cards, Net Banking (popup window) ────
+      // ICICI's payment page sends `frame-ancestors 'self'`, so it cannot be
+      // embedded in an iframe. A popup is the closest we can get to keeping
+      // the customer on the store: this tab stays on checkout throughout and
+      // switches to the confirmation as soon as the popup reports back.
       if (payment === "icici-pg") {
         const res = await fetch("/api/web/checkout/icici-pg", {
           method: "POST", headers: { "Content-Type": "application/json" },
@@ -699,12 +711,49 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!res.ok) {
+          pgPopup?.close();
           alert(data.error || "Payment setup failed. Please try again.");
           setPlacing(false);
           return;
         }
-        removeItems(items.map((i) => i.variantId)); clearCheckoutMeta();
-        window.location.href = data.redirectUrl;
+
+        if (!pgPopup || pgPopup.closed) {
+          // Popup was blocked — fall back to taking over the tab so the
+          // customer can still pay rather than hitting a dead end. The cart is
+          // emptied here because this tab is about to be replaced.
+          removeItems(items.map((i) => i.variantId)); clearCheckoutMeta();
+          window.location.href = data.redirectUrl;
+          return;
+        }
+        // Cart is deliberately NOT cleared yet — the customer is still on this
+        // page, and if they abandon the payment their cart should survive.
+        pgPopup.location.href = data.redirectUrl;
+
+        const handleMsg = (e: MessageEvent) => {
+          if (e.origin !== window.location.origin) return;
+          if (e.data?.type !== "icici_payment_complete") return;
+          window.removeEventListener("message", handleMsg);
+          clearInterval(pollTimer);
+          if (e.data.status === "success") {
+            removeItems(items.map((i) => i.variantId));
+            clearCheckoutMeta();
+            setPlacedOrderNumber(e.data.orderNumber || data.orderNumber);
+            setOrdered(true);
+            router.refresh();
+          } else {
+            setPlacing(false);
+          }
+        };
+        window.addEventListener("message", handleMsg);
+
+        // Fallback: customer closed the payment window without finishing.
+        const pollTimer = setInterval(() => {
+          if (pgPopup.closed) {
+            clearInterval(pollTimer);
+            window.removeEventListener("message", handleMsg);
+            setPlacing(false);
+          }
+        }, 600);
         return;
       }
 
@@ -722,12 +771,18 @@ export default function CheckoutPage() {
       setOrdered(true);
       router.refresh();
     } catch {
+      // Never strand an about:blank payment window if we failed before
+      // handing it a gateway URL.
+      pgPopup?.close();
       setPlacing(false);
     }
   };
 
   // ── Empty cart ──────────────────────────────────────────────────────────────
-  if (items.length === 0 && !ordered) {
+  // `placing` guards the hand-off to a payment gateway: the gateway flows empty
+  // the cart before sending the customer onward, and without this the checkout
+  // repaints as "Your cart is empty" for a moment before the browser navigates.
+  if (items.length === 0 && !ordered && !placing) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--color-ivory)" }}>
         <div className="text-center space-y-4">

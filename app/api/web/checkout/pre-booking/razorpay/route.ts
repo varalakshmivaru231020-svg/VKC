@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getRazorpayClient } from "@/lib/api/razorpay";
 import { reservePreBookingSlot, PreBookingSlotError } from "@/lib/prebooking/reserveSlots";
+import { decrementStock, StockError } from "@/lib/stock/adjustStock";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +106,15 @@ export async function POST(req: NextRequest) {
           await reservePreBookingSlot(tx, item.variantId, shortfall, { allowPartialShortfall: true });
         }
       }
+
+      // Slots above cover the manufactured shortfall; the rest of the order
+      // ships from stock now and has to come off stockQty like any other sale.
+      await decrementStock(tx, items.map((item: any) => ({
+        variantId:          item.variantId,
+        quantity:           item.quantity,
+        availableAtBooking: availableAtBookingByVariant[item.variantId] ?? 0,
+        productName:        item.productName,
+      })));
       return tx.order.create({
         data: {
           orderNumber,
@@ -132,7 +142,7 @@ export async function POST(req: NextRequest) {
       });
     });
   } catch (err: any) {
-    if (err instanceof PreBookingSlotError) {
+    if (err instanceof PreBookingSlotError || err instanceof StockError) {
       return NextResponse.json({ error: err.message }, { status: 409 });
     }
     console.error("Pre-booking order create error:", err);

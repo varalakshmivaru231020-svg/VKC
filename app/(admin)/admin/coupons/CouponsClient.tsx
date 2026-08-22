@@ -22,6 +22,38 @@ interface Coupon {
 
 type CouponType = "PERCENTAGE" | "FIXED" | "FREE_SHIPPING";
 
+/**
+ * Real storefront status of a coupon. The isActive toggle alone is not enough:
+ * the storefront also hides coupons that have not started, have expired, or
+ * have used up their allowance, so a green "Active" badge on any of those was
+ * telling admins the code was live when customers could not see it.
+ * Mirrors the filter in app/api/coupons + app/api/v1/coupons.
+ */
+function couponStatus(c: Coupon): { label: string; bg: string; fg: string; dot: string; hint: string } {
+  const now = new Date();
+  const starts  = c.startsAt  ? new Date(c.startsAt)  : null;
+  const expires = c.expiresAt ? new Date(c.expiresAt) : null;
+
+  if (!c.isActive)
+    return { label: "Inactive", bg: "#F3F4F6", fg: "#6B7280", dot: "#9CA3AF",
+             hint: "Turned off — customers cannot use this code." };
+
+  if (expires && expires < now)
+    return { label: "Expired", bg: "#FEE2E2", fg: "#991B1B", dot: "#DC2626",
+             hint: `Expired on ${expires.toLocaleString("en-IN")}.` };
+
+  if (c.usageLimit !== null && c.usedCount >= c.usageLimit)
+    return { label: "Used up", bg: "#FEF3C7", fg: "#92400E", dot: "#D97706",
+             hint: `Usage limit of ${c.usageLimit} reached.` };
+
+  if (starts && starts > now)
+    return { label: "Scheduled", bg: "#DBEAFE", fg: "#1E40AF", dot: "#2563EB",
+             hint: `Hidden from customers until ${starts.toLocaleString("en-IN")}.` };
+
+  return { label: "Active", bg: "#D1FAE5", fg: "#065F46", dot: "#059669",
+           hint: "Live — customers can see and apply this code." };
+}
+
 const emptyForm = () => ({
   code: "", type: "PERCENTAGE" as CouponType, value: "",
   minOrderAmount: "", maxDiscount: "", usageLimit: "",
@@ -127,7 +159,7 @@ export default function CouponsClient({ coupons: initial }: Props) {
             <table className="w-full">
               <thead>
                 <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
-                  {["Code", "Type", "Discount", "Min Order", "Max Discount", "Used", "Expires", "Status", ""].map((h) => (
+                  {["Code", "Type", "Discount", "Min Order", "Max Discount", "Used", "Validity", "Status", ""].map((h) => (
                     <th key={h} className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest font-body" style={{ color: "#9CA3AF" }}>{h}</th>
                   ))}
                 </tr>
@@ -158,14 +190,24 @@ export default function CouponsClient({ coupons: initial }: Props) {
                       {c.usageLimit && <span style={{ color: "#9CA3AF" }}> / {c.usageLimit}</span>}
                     </td>
                     <td className="px-5 py-3.5 text-xs font-body" style={{ color: "#6B7280" }}>
+                      {c.startsAt && new Date(c.startsAt) > new Date() && (
+                        <div style={{ color: "#1D4ED8" }}>
+                          from {new Date(c.startsAt).toLocaleDateString("en-IN")}
+                        </div>
+                      )}
                       {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString("en-IN") : "No expiry"}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold font-body rounded-full"
-                        style={{ background: c.isActive ? "#D1FAE5" : "#F3F4F6", color: c.isActive ? "#065F46" : "#6B7280" }}>
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: c.isActive ? "#059669" : "#9CA3AF" }} />
-                        {c.isActive ? "Active" : "Inactive"}
-                      </span>
+                      {(() => {
+                        const s = couponStatus(c);
+                        return (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold font-body rounded-full"
+                            style={{ background: s.bg, color: s.fg }} title={s.hint}>
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: s.dot }} />
+                            {s.label}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1.5">
@@ -278,6 +320,20 @@ export default function CouponsClient({ coupons: initial }: Props) {
                     className={inputCls} style={inputStyle} {...focusStyle} />
                 </div>
               </div>
+
+              {/* A future "Starts At" hides the code from customers entirely, which
+                  is easy to set by accident and hard to diagnose from the storefront. */}
+              {form.startsAt && new Date(form.startsAt) > new Date() && (
+                <div className="flex items-start gap-2.5 p-3 rounded-lg text-xs font-body"
+                  style={{ background: "#DBEAFE", color: "#1E40AF" }}>
+                  <span className="mt-px">ℹ</span>
+                  <p>
+                    Customers <strong>will not see this coupon</strong> until{" "}
+                    {new Date(form.startsAt).toLocaleString("en-IN")}. Clear “Starts At” to make it
+                    available immediately.
+                  </p>
+                </div>
+              )}
 
               {/* Active */}
               <label className="flex items-center gap-3 cursor-pointer">

@@ -28,12 +28,18 @@ async function handle(payload: Record<string, string>) {
     order = await db.order.findUnique({ where: { id: orderInternalId } }).catch(() => null);
   }
 
+  // Always hand back to the in-site bridge page rather than a final destination:
+  // when the gateway was opened in a popup it posts the result to the checkout
+  // tab and closes itself, and when it wasn't it redirects on as normal.
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+  const bridge = (params: Record<string, string>) =>
+    `${baseUrl}/checkout/icici-return?${new URLSearchParams(params).toString()}`;
+
   if (!order || !ok) {
     console.error("[icici-pg/return] verification failed", {
       hashOk: ok, orderFound: !!order, merchantTxnNo, responseCode,
     });
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "";
-    return NextResponse.redirect(`${baseUrl}/checkout?error=verify_failed`, { status: 303 });
+    return NextResponse.redirect(bridge({ status: "failed", reason: "verify_failed" }), { status: 303 });
   }
 
   // Update order status
@@ -52,12 +58,11 @@ async function handle(payload: Record<string, string>) {
     },
   }).catch((e) => { console.error("[icici-pg/return] order update failed:", e); });
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "";
-  const dest = status === "SUCCESS"
-    ? `${baseUrl}/account/orders?paid=${encodeURIComponent(order.orderNumber)}`
-    : `${baseUrl}/checkout?error=${encodeURIComponent(status.toLowerCase())}&order=${encodeURIComponent(order.orderNumber)}`;
-
-  return NextResponse.redirect(dest, { status: 303 });
+  return NextResponse.redirect(bridge({
+    status: status.toLowerCase(),          // success | failed | pending
+    order:  order.orderNumber,
+    ...(responseCode ? { code: responseCode } : {}),
+  }), { status: 303 });
 }
 
 export async function POST(req: NextRequest) {

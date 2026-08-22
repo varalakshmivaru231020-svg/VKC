@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { decrementStock, StockError } from "@/lib/stock/adjustStock";
 import { getRazorpayClient } from "@/lib/api/razorpay";
 
 export const dynamic = "force-dynamic";
@@ -48,26 +49,41 @@ export async function POST(req: NextRequest) {
     imageUrl:     item.imageUrl ?? null,
   }));
 
-  const order = await db.order.create({
-    data: {
-      orderNumber,
-      userId,
-      status:          "PENDING",
-      paymentStatus:   "PENDING",
-      paymentMethod,
-      subtotal,
-      discountAmount:  discountAmount ?? 0,
-      shippingAmount:  shippingAmount ?? 0,
-      taxAmount:       0,
-      totalAmount:     finalTotal,
-      walletAmountUsed: walletUsed,
-      couponCode:      couponCode || null,
-      shippingAddress: address,
-      billingAddress:  address,
-      items:           { create: itemsData },
-    },
-    select: { id: true, orderNumber: true },
-  });
+  // Stock is taken in the same transaction as the order so a shortfall rolls
+  // the order back, and so two checkouts cannot both claim the last unit.
+  let order: { id: string; orderNumber: string };
+  try {
+    order = await db.$transaction(async (tx) => {
+      await decrementStock(tx, itemsData.map((i: any) => ({
+        variantId: i.variantId, quantity: i.quantity, productName: i.productName,
+      })));
+      return tx.order.create({
+        data: {
+          orderNumber,
+          userId,
+          status:          "PENDING",
+          paymentStatus:   "PENDING",
+          paymentMethod,
+          subtotal,
+          discountAmount:  discountAmount ?? 0,
+          shippingAmount:  shippingAmount ?? 0,
+          taxAmount:       0,
+          totalAmount:     finalTotal,
+          walletAmountUsed: walletUsed,
+          couponCode:      couponCode || null,
+          shippingAddress: address,
+          billingAddress:  address,
+          items:           { create: itemsData },
+        },
+        select: { id: true, orderNumber: true },
+      });
+    });
+  } catch (e) {
+    if (e instanceof StockError) {
+      return NextResponse.json({ error: e.message }, { status: 409 });
+    }
+    throw e;
+  }
 
   if (couponCode) {
     await db.coupon.updateMany({
