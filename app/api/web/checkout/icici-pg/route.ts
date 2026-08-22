@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import {
   loadIciciPgConfig,
+  missingIciciPgFields,
   buildInitiateSaleRequest,
   callInitiateSale,
   generateMerchantTxnNo,
@@ -43,8 +44,18 @@ export async function POST(req: NextRequest) {
   }
 
   const cfg = await loadIciciPgConfig();
-  if (!cfg.enabled || !cfg.merchantId || !cfg.secretKey || !cfg.returnUrl) {
-    return NextResponse.json({ error: "ICICI PG not configured" }, { status: 503 });
+  const missing = missingIciciPgFields(cfg);
+  if (!cfg.enabled || missing.length) {
+    console.error(
+      "[icici-pg] refusing to start a sale —",
+      cfg.enabled
+        ? `missing settings: ${missing.join(", ")} (Admin → Settings → Payments → ICICI PG Direct)`
+        : "the ICICI PG toggle is off in Admin → Settings → Payments",
+    );
+    return NextResponse.json(
+      { error: "ICICI payments are unavailable right now. Please choose another payment method." },
+      { status: 503 },
+    );
   }
 
   // ── Amount calc ─────────────────────────────────────────────────────────────
@@ -131,7 +142,6 @@ export async function POST(req: NextRequest) {
     }).catch(() => {});
     return NextResponse.json({
       error: response.respDescription ?? "Gateway rejected the payment request",
-      response,
     }, { status: 502 });
   }
 

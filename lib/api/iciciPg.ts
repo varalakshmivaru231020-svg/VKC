@@ -24,6 +24,7 @@ function randomShort(): string {
 
 export interface IciciPgConfig {
   enabled:              boolean;
+  testMode:             boolean; // true → UAT hosts, false → live hosts
   baseUrl:              string;  // .../tsp/pg/api/v2 (UAT) or .../pg/api/v2 (Live)
   commandUrl:           string;  // .../tsp/pg/api/command
   settlementDetailsUrl: string;  // .../tsp/pg/api/settlementDetails
@@ -32,6 +33,39 @@ export interface IciciPgConfig {
   secretKey:            string;  // HMAC key
   returnUrl:            string;  // public, browser-facing — points to our verify endpoint
   allowedPaymentModes:  string;  // CSV: CARD, NB, WALLET, UPI ('' = all)
+}
+
+// UAT sits behind the /tsp/ prefix; per the API doc comment at the top of this
+// file, live does not.
+//
+// UNVERIFIED against ICICI's own docs, and the repo disagrees with itself: the
+// old .env.example said live was just "pgpayuat" → "pgpay" with /tsp/ intact.
+// Confirm the live root against the onboarding pack before switching off Test
+// Mode — if it turns out to keep /tsp/, either fix LIVE_API_ROOT here or set the
+// Base/Command URL overrides in Admin → Settings → Payments, which win over these.
+const UAT_API_ROOT  = "https://pgpayuat.icicibank.com/tsp/pg/api";
+const LIVE_API_ROOT = "https://pgpay.icicibank.com/pg/api";
+
+// The URL trio for a given mode. Used both as runtime defaults and by the admin
+// UI so an operator can see which host a save will actually transact against.
+export function iciciPgDefaultUrls(testMode: boolean): {
+  baseUrl: string; commandUrl: string; settlementDetailsUrl: string;
+} {
+  const root = testMode ? UAT_API_ROOT : LIVE_API_ROOT;
+  return {
+    baseUrl:              `${root}/v2`,
+    commandUrl:           `${root}/command`,
+    settlementDetailsUrl: `${root}/settlementDetails`,
+  };
+}
+
+// The path ICICI must be told to redirect the customer back to.
+export const ICICI_PG_RETURN_PATH = "/api/web/checkout/icici-pg/return";
+
+function isTruthy(v: string | undefined | null): boolean {
+  if (!v) return false;
+  const s = v.trim().toLowerCase();
+  return s === "1" || s === "true" || s === "yes" || s === "on";
 }
 
 let _cached: { value: IciciPgConfig; expiresAt: number } | null = null;
@@ -43,28 +77,47 @@ export async function loadIciciPgConfig(): Promise<IciciPgConfig> {
   if (_cached && _cached.expiresAt > Date.now()) return _cached.value;
 
   const keys = [
-    "icici_pg_enabled", "icici_pg_base_url", "icici_pg_command_url", "icici_pg_settlement_details_url",
-    "icici_pg_merchant_id", "icici_pg_aggregator_id", "icici_pg_key", "icici_pg_return_url",
-    "icici_pg_allowed_modes",
+    "icici_pg_enabled", "icici_pg_test_mode", "icici_pg_base_url", "icici_pg_command_url",
+    "icici_pg_settlement_details_url", "icici_pg_merchant_id", "icici_pg_aggregator_id",
+    "icici_pg_key", "icici_pg_return_url", "icici_pg_allowed_modes",
   ];
   const rows = await db.siteSetting.findMany({ where: { key: { in: keys } } }).catch(() => []);
-  const s = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  const s = Object.fromEntries(rows.map((r) => [r.key, r.value])) as Record<string, string | undefined>;
+
+  // Default to UAT — a missing or blank value must never silently point at live.
+  const testModeSetting = s.icici_pg_test_mode?.trim() || process.env.ICICI_PG_TEST_MODE?.trim() || "";
+  const testMode = testModeSetting === "" ? true : isTruthy(testModeSetting);
+  const urls = iciciPgDefaultUrls(testMode);
+
+  // Return URL is derivable from our own origin — only needs setting to override.
+  const siteOrigin = (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/+$/, "");
+  const derivedReturnUrl = siteOrigin ? `${siteOrigin}${ICICI_PG_RETURN_PATH}` : "";
 
   const cfg: IciciPgConfig = {
-    enabled:              (s.icici_pg_enabled            || process.env.ICICI_PG_ENABLED) === "1" ||
-                          (s.icici_pg_enabled            === "true"),
-    baseUrl:              s.icici_pg_base_url            || process.env.ICICI_PG_BASE_URL              || "https://pgpayuat.icicibank.com/tsp/pg/api/v2",
-    commandUrl:           s.icici_pg_command_url         || process.env.ICICI_PG_COMMAND_URL           || "https://pgpayuat.icicibank.com/tsp/pg/api/command",
-    settlementDetailsUrl: s.icici_pg_settlement_details_url || process.env.ICICI_PG_SETTLEMENT_DETAILS_URL || "https://pgpayuat.icicibank.com/tsp/pg/api/settlementDetails",
+    enabled:              isTruthy(s.icici_pg_enabled?.trim() || process.env.ICICI_PG_ENABLED),
+    testMode,
+    baseUrl:              s.icici_pg_base_url            || process.env.ICICI_PG_BASE_URL              || urls.baseUrl,
+    commandUrl:           s.icici_pg_command_url         || process.env.ICICI_PG_COMMAND_URL           || urls.commandUrl,
+    settlementDetailsUrl: s.icici_pg_settlement_details_url || process.env.ICICI_PG_SETTLEMENT_DETAILS_URL || urls.settlementDetailsUrl,
     merchantId:           s.icici_pg_merchant_id         || process.env.ICICI_PG_MERCHANT_ID           || "",
     aggregatorId:         s.icici_pg_aggregator_id       || process.env.ICICI_PG_AGGREGATOR_ID         || "",
     secretKey:            s.icici_pg_key                 || process.env.ICICI_PG_KEY                   || "",
-    returnUrl:            s.icici_pg_return_url          || process.env.ICICI_PG_RETURN_URL            || "",
+    returnUrl:            s.icici_pg_return_url          || process.env.ICICI_PG_RETURN_URL            || derivedReturnUrl,
     allowedPaymentModes:  s.icici_pg_allowed_modes       || process.env.ICICI_PG_ALLOWED_MODES         || "",
   };
 
   _cached = { value: cfg, expiresAt: Date.now() + CACHE_TTL_MS };
   return cfg;
+}
+
+// Human-readable list of the credentials still needed before a sale can start.
+// Empty array = ready to transact.
+export function missingIciciPgFields(cfg: IciciPgConfig): string[] {
+  const missing: string[] = [];
+  if (!cfg.merchantId) missing.push("Merchant ID");
+  if (!cfg.secretKey)  missing.push("Secret Key (HMAC)");
+  if (!cfg.returnUrl)  missing.push("Return URL");
+  return missing;
 }
 
 // Sort keys alphabetically, concat values, HMAC-SHA256, hex-encoded.
@@ -80,10 +133,13 @@ export function buildSecureHash(payload: Record<string, unknown>, key: string): 
 }
 
 export function verifySecureHash(payload: Record<string, unknown>, key: string, claimed?: string): boolean {
-  if (!claimed) return false;
+  if (!claimed || !key) return false;
+  // Buffer.from(..., "hex") silently truncates on the first invalid pair, which
+  // would make timingSafeEqual throw on a malformed callback. Reject up front.
+  if (!/^[0-9a-fA-F]+$/.test(claimed)) return false;
   const expected = buildSecureHash(payload, key);
   if (expected.length !== claimed.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(claimed, "hex"));
+  return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(claimed.toLowerCase(), "hex"));
 }
 
 // ≤ 20 chars. 'pg' + base36 ms-time + 6-char rnd.
@@ -277,5 +333,5 @@ export async function callStatusCheck(cfg: IciciPgConfig, merchantTxnNo: string)
 
 export async function isIciciPgEnabled(): Promise<boolean> {
   const cfg = await loadIciciPgConfig();
-  return cfg.enabled && !!cfg.merchantId && !!cfg.secretKey && !!cfg.returnUrl;
+  return cfg.enabled && missingIciciPgFields(cfg).length === 0;
 }

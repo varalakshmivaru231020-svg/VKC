@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { invalidateIciciPgConfigCache } from "@/lib/api/iciciPg";
 
 export async function GET() {
   const session = await auth();
@@ -27,6 +28,10 @@ export async function POST(req: NextRequest) {
       })
     )
   );
+
+  // The gateway config is cached in-process for 30s; drop it so a save takes
+  // effect on the very next checkout instead of up to half a minute later.
+  invalidateIciciPgConfigCache();
 
   return NextResponse.json({ ok: true });
 }

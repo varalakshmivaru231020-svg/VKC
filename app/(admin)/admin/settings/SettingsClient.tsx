@@ -1294,6 +1294,22 @@ function PaymentsTab() {
     );
   }
 
+  /* ICICI PG readiness — mirrors missingIciciPgFields() in lib/api/iciciPg.ts.
+     Without this the toggle can be ON with blank credentials, and the customer
+     only finds out at "Place Order". */
+  const iciciPgTest    = form.icici_pg_test_mode === "true";
+  const iciciPgApiRoot = iciciPgTest
+    ? "https://pgpayuat.icicibank.com/tsp/pg/api"
+    : "https://pgpay.icicibank.com/pg/api";
+  const siteOrigin        = (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/+$/, "");
+  const autoIciciReturnUrl = siteOrigin ? `${siteOrigin}/api/web/checkout/icici-pg/return` : "";
+  const effectiveIciciReturnUrl = form.icici_pg_return_url.trim() || autoIciciReturnUrl;
+  const iciciPgMissing = [
+    !form.icici_pg_merchant_id.trim() && "Merchant ID",
+    !form.icici_pg_key.trim()         && "Secret Key (HMAC)",
+    !effectiveIciciReturnUrl          && "Return URL",
+  ].filter(Boolean) as string[];
+
   return (
     <div className="space-y-5">
 
@@ -1368,6 +1384,28 @@ function PaymentsTab() {
           <div className="pt-1 border-t" style={{ borderColor: "#F3F4F6" }}>
             <Toggle k="icici_pg_test_mode" label="Test Mode (UAT — pgpayuat URLs)" />
           </div>
+
+          {form.icici_pg_enabled === "true" && iciciPgMissing.length > 0 && (
+            <div className="rounded-lg px-3 py-2.5 text-xs font-body"
+              style={{ background: "#FEF2F2", border: "1px solid #FECACA", color: "#991B1B" }}>
+              <strong>Enabled but not usable.</strong> Still missing: {iciciPgMissing.join(", ")}.
+              Until these are filled in, ICICI is hidden from checkout so customers
+              aren&apos;t sent down a dead end.
+            </div>
+          )}
+          {form.icici_pg_enabled === "true" && iciciPgMissing.length === 0 && (
+            <div className="rounded-lg px-3 py-2.5 text-xs font-body"
+              style={{ background: iciciPgTest ? "#FFFBEB" : "#ECFDF5",
+                       border: `1px solid ${iciciPgTest ? "#FDE68A" : "#A7F3D0"}`,
+                       color:  iciciPgTest ? "#92400E" : "#065F46" }}>
+              Live at checkout. Transacting against{" "}
+              <code className="px-1 rounded" style={{ background: "rgba(0,0,0,0.05)" }}>
+                {form.icici_pg_base_url.trim() || `${iciciPgApiRoot}/v2`}
+              </code>
+              {iciciPgTest && " — no real money moves in Test Mode."}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Merchant ID</label>
@@ -1392,22 +1430,31 @@ function PaymentsTab() {
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Return URL (public, customer redirects here)</label>
             <input value={form.icici_pg_return_url}
               onChange={e => setForm(f => ({ ...f, icici_pg_return_url: e.target.value }))}
-              placeholder="https://yoursite.com/api/web/checkout/icici-pg/return" className={inputCls} style={inputStyle} {...focusProps} />
+              placeholder={autoIciciReturnUrl || "https://yoursite.com/api/web/checkout/icici-pg/return"}
+              className={inputCls} style={inputStyle} {...focusProps} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>
+              {autoIciciReturnUrl
+                ? <>Leave blank to use <code className="bg-gray-100 px-1 rounded">{autoIciciReturnUrl}</code>. This exact URL must also be registered in the ICICI merchant dashboard.</>
+                : <>Required — NEXT_PUBLIC_BASE_URL is not set, so it cannot be derived automatically.</>}
+            </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Base URL (override)</label>
               <input value={form.icici_pg_base_url}
                 onChange={e => setForm(f => ({ ...f, icici_pg_base_url: e.target.value }))}
-                placeholder="Auto if blank — UAT: pgpayuat..." className={inputCls} style={inputStyle} {...focusProps} />
+                placeholder={`${iciciPgApiRoot}/v2`} className={inputCls} style={inputStyle} {...focusProps} />
             </div>
             <div className="space-y-1.5">
               <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Command URL (override)</label>
               <input value={form.icici_pg_command_url}
                 onChange={e => setForm(f => ({ ...f, icici_pg_command_url: e.target.value }))}
-                placeholder="Auto if blank" className={inputCls} style={inputStyle} {...focusProps} />
+                placeholder={`${iciciPgApiRoot}/command`} className={inputCls} style={inputStyle} {...focusProps} />
             </div>
           </div>
+          <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>
+            Both follow the Test Mode toggle when left blank — only fill these in if ICICI gave you different endpoints.
+          </p>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Allowed Payment Modes (optional CSV)</label>
             <input value={form.icici_pg_allowed_modes}
