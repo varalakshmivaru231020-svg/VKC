@@ -35,14 +35,11 @@ export interface IciciPgConfig {
   allowedPaymentModes:  string;  // CSV: CARD, NB, WALLET, UPI ('' = all)
 }
 
-// UAT sits behind the /tsp/ prefix; per the API doc comment at the top of this
-// file, live does not.
-//
-// UNVERIFIED against ICICI's own docs, and the repo disagrees with itself: the
-// old .env.example said live was just "pgpayuat" → "pgpay" with /tsp/ intact.
-// Confirm the live root against the onboarding pack before switching off Test
-// Mode — if it turns out to keep /tsp/, either fix LIVE_API_ROOT here or set the
-// Base/Command URL overrides in Admin → Settings → Payments, which win over these.
+// UAT sits behind the /tsp/ prefix, live does not. Probed 2026-08-22 from the
+// production host: pgpay.icicibank.com resolves to ICICI's prod NLB in
+// ap-south-1, /pg/api/v2/initiateSale answers, and the /tsp/ variant 404s.
+// (An older .env.example comment claimed live kept /tsp/ — it does not.)
+// Both are overridable from Admin → Settings → Payments, which wins over these.
 const UAT_API_ROOT  = "https://pgpayuat.icicibank.com/tsp/pg/api";
 const LIVE_API_ROOT = "https://pgpay.icicibank.com/pg/api";
 
