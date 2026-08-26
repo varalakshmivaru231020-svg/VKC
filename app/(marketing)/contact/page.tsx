@@ -25,15 +25,19 @@ export default async function ContactPage() {
   rows.forEach((r) => { s[r.key] = r.value; });
 
   return (
+    // No placeholder fallbacks here on purpose. These previously defaulted to a
+    // sample phone number and a Chennai address that belong to no one — real
+    // visitors were shown contact details that would never reach the store.
+    // Anything not set in Admin → Settings is simply not displayed.
     <ContactClient
-      phone={s.store_phone || "+91 98765 43210"}
-      email={s.store_email || "care@vijaylakshmi.in"}
-      address={s.store_address || "45, Usman Road, T. Nagar"}
-      city={s.store_city || "Chennai, Tamil Nadu 600017"}
-      hoursWeekday={s.store_hours_weekday || "Mon – Sat: 9 AM – 8 PM"}
-      hoursWeekend={s.store_hours_weekend || "Sunday: 10 AM – 6 PM"}
-      whatsappNumber={s.whatsapp_number || "919876543210"}
-      mapsUrl={s.store_maps_url || "https://maps.google.com"}
+      phone={s.store_phone ?? ""}
+      email={s.store_email ?? ""}
+      address={s.store_address ?? ""}
+      city={s.store_city ?? ""}
+      hoursWeekday={s.store_hours_weekday ?? ""}
+      hoursWeekend={s.store_hours_weekend ?? ""}
+      whatsappNumber={s.whatsapp_number ?? ""}
+      mapsUrl={s.store_maps_url ?? ""}
     />
   );
 }

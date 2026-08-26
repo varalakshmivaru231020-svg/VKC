@@ -53,8 +53,10 @@ export function Footer({
   siteName = "Vijaylakshmi Sarees",
   tagline = "Timeless Weaves. Modern Souls.",
   logoUrl,
-  phone = "+91 98765 43210",
-  email = "care@vijaylakshmi.in",
+  // No sample phone/email defaults — an unset value must render nothing rather
+  // than send customers to a number and inbox that are not the store's.
+  phone = "",
+  email = "",
   whatsappNumber,
   instagram,
   facebook,

@@ -28,12 +28,14 @@ export default function ContactClient({
   whatsappNumber,
   mapsUrl,
 }: Props) {
+  // Only show a card when the detail is actually configured — an empty card is
+  // better than one inviting customers to call a number that isn't the store's.
   const info = [
-    { icon: Phone, label: "Phone", value: phone, sub: hoursWeekday, href: `tel:${phone.replace(/\s/g, "")}` },
-    { icon: Mail,  label: "Email", value: email, sub: "We reply within 24 hours",    href: `mailto:${email}` },
-    { icon: MapPin,label: "Store", value: address, sub: city,                         href: mapsUrl },
+    { icon: Phone, label: "Phone", value: phone, sub: hoursWeekday, href: phone ? `tel:${phone.replace(/\s/g, "")}` : undefined },
+    { icon: Mail,  label: "Email", value: email, sub: "We reply within 24 hours", href: email ? `mailto:${email}` : undefined },
+    { icon: MapPin,label: "Store", value: address, sub: city, href: mapsUrl || undefined },
     { icon: Clock, label: "Hours", value: hoursWeekday, sub: hoursWeekend },
-  ];
+  ].filter((c) => c.value);
   const [form, setForm] = useState({ name: "", email: "", phone: "", topic: "", message: "" });
   const [status, setStatus] = useState<Status>("idle");
 
@@ -142,17 +144,20 @@ export default function ContactClient({
               })}
             </div>
 
-            {/* WhatsApp quick link */}
-            <a
-              href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noopener"
-              className="flex items-center gap-3 px-5 py-3.5 rounded-xl text-sm font-semibold font-body transition-all hover:shadow-md hover:-translate-y-0.5"
-              style={{ background: "#25D366", color: "white" }}
-            >
-              <MessageSquare className="h-4.5 w-4.5" />
-              Chat on WhatsApp
-            </a>
+            {/* WhatsApp quick link — hidden until a real number is configured,
+                so the button never opens a chat with someone else's number. */}
+            {whatsappNumber && (
+              <a
+                href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener"
+                className="flex items-center gap-3 px-5 py-3.5 rounded-xl text-sm font-semibold font-body transition-all hover:shadow-md hover:-translate-y-0.5"
+                style={{ background: "#25D366", color: "white" }}
+              >
+                <MessageSquare className="h-4.5 w-4.5" />
+                Chat on WhatsApp
+              </a>
+            )}
           </div>
 
           {/* ── Form ── */}
