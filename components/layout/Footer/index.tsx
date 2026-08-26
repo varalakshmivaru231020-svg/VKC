@@ -32,7 +32,10 @@ const DEFAULT_ACCOUNT_LINKS: FooterLink[] = [
   { label: "Saved Addresses", href: "/account/addresses" },
 ];
 
-const paymentMethods = ["Visa", "Mastercard", "UPI", "NetBanking", "EMI", "COD"];
+// Hardcoded badges — keep this list honest about what checkout actually
+// accepts. COD was removed because cod_enabled is off in Settings, so the
+// footer was advertising a method customers could not choose.
+const paymentMethods = ["Visa", "Mastercard", "UPI", "NetBanking", "EMI"];
 
 interface FooterProps {
   siteName?: string;
