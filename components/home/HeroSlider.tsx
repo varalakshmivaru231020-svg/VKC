@@ -16,6 +16,7 @@ interface Slide {
   bgColor: string;
   imageBg: string;
   imageUrl?: string | null;
+  mobileImageUrl?: string | null;
   videoUrl?: string | null;
 }
 
@@ -88,7 +89,21 @@ export default function HeroSlider({ slides }: Props) {
                 className="absolute inset-0 w-full h-full object-cover"
               />
             ) : sl.imageUrl && (
-              <SmartImage src={sl.imageUrl} alt={sl.tag} fill objectFit="cover" objectPosition="center" />
+              // Two <picture>-less layers rather than a media query on one
+              // image: SmartImage handles its own loading state, so swapping
+              // src between breakpoints would re-trigger it. Only one is ever
+              // visible. Falls back to the desktop image when no mobile art is
+              // set, which is why the mobile layer is conditional.
+              <>
+                <div className={sl.mobileImageUrl ? "hidden md:block" : "block"}>
+                  <SmartImage src={sl.imageUrl} alt={sl.tag} fill objectFit="cover" objectPosition="center" />
+                </div>
+                {sl.mobileImageUrl && (
+                  <div className="block md:hidden">
+                    <SmartImage src={sl.mobileImageUrl} alt={sl.tag} fill objectFit="cover" objectPosition="center" />
+                  </div>
+                )}
+              </>
             )}
           </div>
 

@@ -17,6 +17,7 @@ interface HeroSlide {
   bgColor: string;
   imageBg: string;
   imageUrl: string | null;
+  mobileImageUrl: string | null;
   videoUrl: string | null;
   sortOrder: number;
   isActive: boolean;
@@ -26,7 +27,7 @@ const emptyForm = () => ({
   tag: "", heading: "", subtext: "",
   ctaLabel: "Explore Collection", ctaHref: "/shop",
   ctaSecLabel: "", ctaSecHref: "",
-  bgColor: "#F2EBE0", imageBg: "", imageUrl: "", videoUrl: "",
+  bgColor: "#F2EBE0", imageBg: "", imageUrl: "", mobileImageUrl: "", videoUrl: "",
   sortOrder: "0", isActive: true,
 });
 
@@ -41,6 +42,11 @@ export default function HeroSlidesClient({ slides: initial }: { slides: HeroSlid
   const [uploading, setUploading]     = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  // Mobile art is uploaded separately so a landscape desktop hero can have a
+  // portrait counterpart rather than being cropped down to a phone screen.
+  const [mobilePreview, setMobilePreview]   = useState<string | null>(null);
+  const [mobileUploading, setMobileUploading] = useState(false);
+  const mobileFileRef = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof ReturnType<typeof emptyForm>) => (v: any) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -48,6 +54,7 @@ export default function HeroSlidesClient({ slides: initial }: { slides: HeroSlid
   const openAdd = () => {
     setForm(emptyForm());
     setPreview(null);
+    setMobilePreview(null);
     setEditTarget(null);
     setModal("add");
   };
@@ -57,10 +64,12 @@ export default function HeroSlidesClient({ slides: initial }: { slides: HeroSlid
       tag: s.tag, heading: s.heading, subtext: s.subtext,
       ctaLabel: s.ctaLabel, ctaHref: s.ctaHref,
       ctaSecLabel: s.ctaSecLabel ?? "", ctaSecHref: s.ctaSecHref ?? "",
-      bgColor: s.bgColor, imageBg: s.imageBg, imageUrl: s.imageUrl ?? "", videoUrl: s.videoUrl ?? "",
+      bgColor: s.bgColor, imageBg: s.imageBg, imageUrl: s.imageUrl ?? "",
+      mobileImageUrl: s.mobileImageUrl ?? "", videoUrl: s.videoUrl ?? "",
       sortOrder: String(s.sortOrder), isActive: s.isActive,
     });
     setPreview(s.imageUrl ?? null);
+    setMobilePreview(s.mobileImageUrl ?? null);
     setEditTarget(s);
     setModal("edit");
   };
@@ -75,6 +84,18 @@ export default function HeroSlidesClient({ slides: initial }: { slides: HeroSlid
     setUploading(false);
     if (!result.ok) { setUploadError(`${result.error} — ${result.details}`); setPreview(null); return; }
     set("imageUrl")(result.url); setPreview(result.url);
+  };
+
+  const handleMobileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setMobilePreview(URL.createObjectURL(file));
+    setMobileUploading(true);
+    const result = await uploadImageFile(file);
+    setMobileUploading(false);
+    if (!result.ok) { setUploadError(`${result.error} — ${result.details}`); setMobilePreview(null); return; }
+    set("mobileImageUrl")(result.url); setMobilePreview(result.url);
   };
 
   const handleSave = async () => {
@@ -210,7 +231,7 @@ export default function HeroSlidesClient({ slides: initial }: { slides: HeroSlid
             <div className="p-6 space-y-5">
               {/* Image upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Slide Image *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Desktop Image *</label>
                 <div
                   onClick={() => fileRef.current?.click()}
                   className="relative cursor-pointer border-2 border-dashed border-gray-200 rounded-xl overflow-hidden transition-colors hover:border-primary"
@@ -235,6 +256,34 @@ export default function HeroSlidesClient({ slides: initial }: { slides: HeroSlid
                 )}
                 <p className="text-xs text-gray-400 mt-1">Auto-converted to WebP · Or enter a URL below</p>
                 <input value={form.imageUrl} onChange={(e) => { set("imageUrl")(e.target.value); setPreview(e.target.value || null); }}
+                  className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                  placeholder="https://..." />
+              </div>
+
+              {/* Mobile image — optional; falls back to the desktop image */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Image (optional)</label>
+                <div
+                  onClick={() => mobileFileRef.current?.click()}
+                  className="relative cursor-pointer border-2 border-dashed border-gray-200 rounded-xl overflow-hidden transition-colors hover:border-primary"
+                  style={{ height: 180 }}>
+                  {mobilePreview
+                    ? <img src={mobilePreview} alt="mobile preview" className="w-full h-full object-contain bg-gray-50" />
+                    : <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-400">
+                        <Upload className="h-8 w-8" />
+                        <span className="text-sm">Click to upload a portrait image</span>
+                      </div>}
+                  {mobileUploading && (
+                    <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin" style={{ color: "var(--color-primary)" }} />
+                    </div>
+                  )}
+                </div>
+                <input ref={mobileFileRef} type="file" accept="image/*" className="hidden" onChange={handleMobileUpload} />
+                <p className="text-xs text-gray-400 mt-1">
+                  Shown on phones instead of the desktop image. Leave empty to reuse the desktop one.
+                </p>
+                <input value={form.mobileImageUrl} onChange={(e) => { set("mobileImageUrl")(e.target.value); setMobilePreview(e.target.value || null); }}
                   className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                   placeholder="https://..." />
               </div>

@@ -39,6 +39,13 @@ export interface AboutContent {
   offices: AboutOffice[];
   ctaHeading: string;
   ctaText: string;
+  // The "Our Heritage" block on the home page — same brand story, so it is
+  // managed alongside the About page rather than in a separate tab.
+  homeEyebrow: string;
+  homeHeading: string;   // newlines render as line breaks
+  homeBody: string;
+  homeQuote: string;
+  homeCtaLabel: string;
 }
 
 /** Icon names the values cards may use. Anything else falls back to Heart. */
@@ -107,6 +114,13 @@ export const ABOUT_DEFAULTS: AboutContent = {
   ctaHeading: "Wear a Story",
   ctaText:
     "Browse our collection and find the saree that speaks to you — woven with skill, intention, and a decade of passion.",
+  homeEyebrow: "Our Heritage",
+  homeHeading: "Woven With\nGenerations of Love",
+  homeBody:
+    "Every Vijaylakshmi saree carries the artistry of master weavers whose skills have been passed down through generations. We work closely with skilled artisans, helping preserve India's rich and time-honoured weaving traditions. Each saree is more than a piece of fabric — it is a celebration of craftsmanship, heritage, and the hands that bring it to life.",
+  homeQuote:
+    "When you buy a Vijaylakshmi saree, you are not just wearing fabric — you are wearing someone's story.",
+  homeCtaLabel: "Read Our Story",
 };
 
 /** Setting key for each simple text field. */
@@ -122,6 +136,11 @@ export const ABOUT_TEXT_KEYS = {
   officesHeading: "about_offices_heading",
   ctaHeading:     "about_cta_heading",
   ctaText:        "about_cta_text",
+  homeEyebrow:    "about_home_eyebrow",
+  homeHeading:    "about_home_heading",
+  homeBody:       "about_home_body",
+  homeQuote:      "about_home_quote",
+  homeCtaLabel:   "about_home_cta_label",
 } as const;
 
 export const ABOUT_VALUES_KEY  = "about_values_json";
@@ -166,6 +185,11 @@ export async function getAboutContent(): Promise<AboutContent> {
     officesHeading: text("officesHeading"),
     ctaHeading:     text("ctaHeading"),
     ctaText:        text("ctaText"),
+    homeEyebrow:    text("homeEyebrow"),
+    homeHeading:    text("homeHeading"),
+    homeBody:       text("homeBody"),
+    homeQuote:      text("homeQuote"),
+    homeCtaLabel:   text("homeCtaLabel"),
     values: parseJson<AboutValue[]>(
       s[ABOUT_VALUES_KEY], ABOUT_DEFAULTS.values,
       (v) => Array.isArray(v) && v.every((x) => x && typeof x.title === "string"),

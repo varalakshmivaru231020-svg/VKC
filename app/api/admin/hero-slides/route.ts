@@ -12,7 +12,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tag, heading, subtext, ctaLabel, ctaHref, ctaSecLabel, ctaSecHref, bgColor, imageBg, imageUrl, videoUrl, sortOrder, isActive } = await req.json();
+    const { tag, heading, subtext, ctaLabel, ctaHref, ctaSecLabel, ctaSecHref, bgColor, imageBg, imageUrl, mobileImageUrl, videoUrl, sortOrder, isActive } = await req.json();
     if (!imageUrl?.trim()) return NextResponse.json({ error: "Image is required" }, { status: 400 });
     const slide = await db.heroSlide.create({
       data: {
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
         bgColor: bgColor?.trim() || "#F2EBE0",
         imageBg: imageBg?.trim() || "",
         imageUrl: imageUrl?.trim() || null,
+        mobileImageUrl: mobileImageUrl?.trim() || null,
         videoUrl: videoUrl?.trim() || null,
         sortOrder: parseInt(sortOrder) || 0,
         isActive: isActive ?? true,

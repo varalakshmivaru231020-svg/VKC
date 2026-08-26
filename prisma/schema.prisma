@@ -695,6 +695,10 @@ model HeroSlide {
   bgColor      String   @db.VarChar(50)  @default("#F2EBE0")
   imageBg      String   @db.VarChar(500) @default("")
   imageUrl     String?  @db.VarChar(500)
+  // Separate portrait crop for phones. A landscape hero scaled down to a narrow
+  // screen loses its subject; the slider uses this below the md breakpoint and
+  // falls back to imageUrl when it is not set.
+  mobileImageUrl String? @db.VarChar(500)
   videoUrl     String?  @db.VarChar(500)
   sortOrder    Int      @default(0)
   isActive     Boolean  @default(true)

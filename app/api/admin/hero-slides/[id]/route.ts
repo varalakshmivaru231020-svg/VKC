@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { tag, heading, subtext, ctaLabel, ctaHref, ctaSecLabel, ctaSecHref, bgColor, imageBg, imageUrl, videoUrl, sortOrder, isActive } = await req.json();
+    const { tag, heading, subtext, ctaLabel, ctaHref, ctaSecLabel, ctaSecHref, bgColor, imageBg, imageUrl, mobileImageUrl, videoUrl, sortOrder, isActive } = await req.json();
     const slide = await db.heroSlide.update({
       where: { id: params.id },
       data: {
@@ -17,6 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         bgColor: bgColor?.trim() || "#F2EBE0",
         imageBg: imageBg?.trim() || "",
         imageUrl: imageUrl?.trim() || null,
+        mobileImageUrl: mobileImageUrl?.trim() || null,
         videoUrl: videoUrl?.trim() || null,
         sortOrder: parseInt(sortOrder) || 0,
         isActive: isActive ?? true,
