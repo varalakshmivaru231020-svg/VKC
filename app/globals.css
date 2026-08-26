@@ -396,8 +396,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
       in narrow columns, which is where it looks worst on mobile.
 
    Scoped to .marketing-layout so the admin panel is unaffected. */
-.marketing-layout p:not([class*="text-center"]):not([class*="text-right"]):not([class*="text-left"]) {
+.marketing-layout p {
   text-align: justify;
   text-justify: inter-word;
   hyphens: auto;
 }
+
+/* Explicit alignment always wins — whether the utility sits on the paragraph
+   or on an ancestor. The first version only checked the paragraph's own
+   classes, so blocks centred by their wrapper (the welcome strip, trust
+   badges, empty states) were silently justified instead of centred. */
+.marketing-layout [class*="text-center"] p,
+.marketing-layout p[class*="text-center"] { text-align: center; }
+.marketing-layout [class*="text-right"] p,
+.marketing-layout p[class*="text-right"]  { text-align: right; }
+.marketing-layout [class*="text-left"] p,
+.marketing-layout p[class*="text-left"]   { text-align: left; }

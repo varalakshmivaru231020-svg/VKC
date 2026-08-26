@@ -11,6 +11,8 @@ import { PageTransition } from "@/components/layout/PageTransition";
 import { WhatsAppFloatButton } from "@/components/layout/WhatsAppFloatButton";
 import { StoreSyncProvider } from "@/components/sync/StoreSyncProvider";
 import { getThemeSettings } from "@/lib/theme/server";
+import { getMaintenance } from "@/lib/settings/maintenance";
+import { MaintenanceScreen } from "@/components/layout/MaintenanceScreen";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +71,20 @@ export default async function MarketingLayout({ children }: { children: React.Re
   ]);
 
   const navCategories = buildNavCategories(categories, siteSettings["header_nav"]);
+
+  // Maintenance mode covers the storefront only. /admin lives outside this
+  // layout, so switching it on never locks the owner out of the toggle.
+  const maintenance = await getMaintenance();
+  if (maintenance.enabled) {
+    return (
+      <MaintenanceScreen
+        title={maintenance.title}
+        message={maintenance.message}
+        siteName={siteSettings["store_name"] || settings["site.name"]}
+        logoUrl={siteSettings["store_logo"] || null}
+      />
+    );
+  }
 
   return (
     <div className="marketing-layout">

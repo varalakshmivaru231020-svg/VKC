@@ -38,7 +38,7 @@ const tabs: { id: TabId; label: string; icon: React.ElementType; desc: string }[
   { id: "payments",     label: "Payment Gateway",   icon: CreditCard,    desc: "Razorpay, COD & keys" },
   { id: "sms",          label: "SMS / WhatsApp",    icon: MessageSquare, desc: "Twilio, MSG91, WA API" },
   { id: "analytics",    label: "Analytics & SEO",   icon: BarChart2,     desc: "GA4, Tag Manager, meta" },
-  { id: "notifications",label: "Notifications",     icon: Bell,          desc: "Announcement bar" },
+  { id: "notifications",label: "Notifications",     icon: Bell,          desc: "Announcement bar & maintenance" },
   { id: "roles",        label: "Roles & Users",     icon: Users,         desc: "Manage admin users" },
 ];
 
@@ -2123,7 +2123,10 @@ function AnalyticsTab() {
 function NotificationsTab() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ announcement: "", announcementActive: "true" });
+  const [form, setForm] = useState({
+    announcement: "", announcementActive: "true",
+    maintenanceEnabled: "false", maintenanceTitle: "", maintenanceMessage: "",
+  });
 
   useEffect(() => {
     fetch("/api/admin/settings").then(r => r.json()).then(({ settings }) => {
@@ -2131,6 +2134,10 @@ function NotificationsTab() {
       setForm({
         announcement: settings.announcement_text ?? "Free shipping on orders above ₹2,999 · New Arrivals: Kanjivaram Collection",
         announcementActive: settings.announcement_active ?? "true",
+        maintenanceEnabled: settings.maintenance_enabled ?? "false",
+        maintenanceTitle: settings.maintenance_title ?? "We'll be back shortly",
+        maintenanceMessage: settings.maintenance_message ??
+          "Our store is undergoing scheduled maintenance. Please check back in a little while — thank you for your patience.",
       });
     });
   }, []);
@@ -2139,12 +2146,19 @@ function NotificationsTab() {
     setLoading(true);
     await fetch("/api/admin/settings", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ announcement_text: form.announcement, announcement_active: form.announcementActive }),
+      body: JSON.stringify({
+        announcement_text: form.announcement,
+        announcement_active: form.announcementActive,
+        maintenance_enabled: form.maintenanceEnabled,
+        maintenance_title: form.maintenanceTitle,
+        maintenance_message: form.maintenanceMessage,
+      }),
     });
     setLoading(false); setSaved(true); setTimeout(() => setSaved(false), 2500);
   };
 
   const active = form.announcementActive === "true";
+  const maintOn = form.maintenanceEnabled === "true";
 
   return (
     <div className="space-y-5">
@@ -2168,6 +2182,45 @@ function NotificationsTab() {
           <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Use · to separate rotating messages.</p>
         </div>
       </SectionCard>
+      <SectionCard title="Maintenance Mode" icon={Bell}
+        action={
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div onClick={() => setForm(f => ({ ...f, maintenanceEnabled: maintOn ? "false" : "true" }))}
+              className="relative w-10 h-6 rounded-full transition-all cursor-pointer"
+              style={{ background: maintOn ? "#DC2626" : "#D1D5DB" }}>
+              <div className="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all"
+                style={{ left: maintOn ? "calc(100% - 18px)" : "2px" }} />
+            </div>
+            <span className="text-xs font-body font-medium" style={{ color: maintOn ? "#DC2626" : "#6B7280" }}>
+              {maintOn ? "Site is OFFLINE" : "Site is live"}
+            </span>
+          </label>
+        }>
+        <div className="space-y-4">
+          <div className="p-3 rounded-lg text-xs font-body border"
+            style={maintOn
+              ? { background: "#FEF2F2", borderColor: "#FECACA", color: "#991B1B" }
+              : { background: "#F9FAFB", borderColor: "#E5E7EB", color: "#6B7280" }}>
+            {maintOn
+              ? "Customers currently see the holding page below instead of the store — nobody can browse or order. The admin panel stays accessible so you can switch this back off."
+              : "Turn this on to replace the storefront with a holding page while you work. The admin panel is never blocked."}
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Heading</label>
+            <input value={form.maintenanceTitle} onChange={e => setForm(f => ({ ...f, maintenanceTitle: e.target.value }))}
+              className={inputCls} style={inputStyle} {...focusProps} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Reason shown to visitors</label>
+            <textarea value={form.maintenanceMessage} onChange={e => setForm(f => ({ ...f, maintenanceMessage: e.target.value }))}
+              rows={4}
+              className="w-full px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none resize-y"
+              style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} {...focusProps} />
+            <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>Line breaks are preserved.</p>
+          </div>
+        </div>
+      </SectionCard>
+
       <div className="flex justify-end"><SaveButton saved={saved} loading={loading} onClick={handleSave} /></div>
     </div>
   );
