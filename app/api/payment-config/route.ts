@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isIciciPgEnabled } from "@/lib/api/iciciPg";
+import { getReturnsDays } from "@/lib/settings/returns";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,9 @@ export async function GET() {
     icici:    s.icici_enabled === "true",   // legacy Eazypay
     iciciPg,                                // PG Direct (new)
     cod:      (s.cod_enabled  ?? "true") === "true",
+    // Checkout renders the returns promise; served here so it cannot drift from
+    // the number the home page and invoice quote.
+    returnsDays: await getReturnsDays(),
   });
   res.headers.set("Cache-Control", "no-store");
   return res;

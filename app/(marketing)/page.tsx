@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Shield, RefreshCw, Truck, Sparkles, Facebook } from "lucide-react";
 import { getThemeSettings } from "@/lib/theme/server";
+import { getReturnsDays } from "@/lib/settings/returns";
 import { getFeaturedProducts } from "@/lib/db/products";
 import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -63,10 +64,12 @@ const FALLBACK_SLIDES = [
   },
 ];
 
-const trustBadges = [
+// Returns window comes from the `returns_days` setting so this badge, checkout
+// and the invoice always quote the same number.
+const buildTrustBadges = (returnsDays: number) => [
   { Icon: Sparkles, title: "Authentic Weaves", desc: "Handpicked from master weavers across India" },
   { Icon: Truck,    title: "Free Shipping",    desc: "All over India" },
-  { Icon: RefreshCw,title: "15-Day Returns",   desc: "No questions asked return policy" },
+  { Icon: RefreshCw,title: `${returnsDays}-Day Returns`, desc: "No questions asked return policy" },
   { Icon: Shield,   title: "Secure Payment",   desc: "100% safe & encrypted checkout" },
 ];
 
@@ -109,6 +112,9 @@ export default async function HomePage() {
       take: 8,
     }).catch(() => []),
   ]);
+
+  const returnsDays = await getReturnsDays();
+  const trustBadges = buildTrustBadges(returnsDays);
 
   const facebookUrl = facebookSetting?.value || null;
   const galleryPhotos = galleryItems.filter((g) => g.type !== "VIDEO" && g.type !== "FACEBOOK").slice(0, 8);

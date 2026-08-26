@@ -379,7 +379,7 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [ordered, setOrdered]         = useState(false);
   const [placedOrderNumber, setPlacedOrderNumber] = useState("");
-  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: false, cashfree: false, icici: false, iciciPg: false, cod: false });
+  const [paymentCfg, setPaymentCfg]   = useState({ razorpay: false, cashfree: false, icici: false, iciciPg: false, cod: false, returnsDays: 7 });
   const [paymentCfgLoaded, setPaymentCfgLoaded] = useState(false);
 
   useEffect(() => {
@@ -1395,7 +1395,7 @@ export default function CheckoutPage() {
               </div>
               <div className="px-5 pb-5 pt-1">
                 <div className="p-3 rounded-lg" style={{ background: "var(--color-ivory)" }}>
-                  {["100% genuine handwoven sarees", "Easy 7-day returns", "Secure payment gateway"].map((t) => (
+                  {["100% genuine handwoven sarees", `Easy ${paymentCfg.returnsDays}-day returns`, "Secure payment gateway"].map((t) => (
                     <div key={t} className="flex items-center gap-2 py-1">
                       <Check className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--color-success)" }} />
                       <span className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>{t}</span>

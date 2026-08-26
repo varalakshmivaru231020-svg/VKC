@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { formatINR } from "@/lib/utils/format";
+import { getReturnsDays } from "@/lib/settings/returns";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +88,7 @@ export default async function CustomerInvoicePage({ params }: { params: { id: st
   if (!order) notFound();
   if (order.userId !== session.user.id) notFound();
 
+  const returnsDays   = await getReturnsDays();
   const addr          = order.shippingAddress as any;
   const storeName     = settings["store_name"]     || "Vijaylakshmi Sarees";
   const storePhone    = settings["store_phone"]    || "";
@@ -243,7 +245,7 @@ export default async function CustomerInvoicePage({ params }: { params: { id: st
           <div>
             <p className="footer-lbl">Terms &amp; Conditions</p>
             <p>• Goods once sold are not returnable unless defective.</p>
-            <p>• Returns accepted within 7 days of delivery in original condition.</p>
+            <p>• Returns accepted within {returnsDays} days of delivery in original condition.</p>
             <p>• This is a computer-generated invoice and does not require a signature.</p>
           </div>
           <div>
