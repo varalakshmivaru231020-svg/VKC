@@ -310,12 +310,17 @@ function AddressCard({ addr, selected, onSelect, onEdit }: { addr: SavedAddress;
 // ─── Main checkout page ───────────────────────────────────────────────────────
 
 
-// Opt-in switch for the ICICI popup trial: ?pgpopup=1 turns it on for this tab
-// and is remembered, ?pgpopup=0 turns it back off. Everyone else gets the
-// redirect, which is the flow known to work.
+// Whether ICICI opens in a popup instead of taking over the tab.
+//   - on localhost: always on, so the popup can be worked on and tested
+//     without customers on the live site ever seeing it
+//   - in production: off unless ?pgpopup=1 opts this browser in
+//     (?pgpopup=0 opts back out)
 function iciciPopupOptIn(): boolean {
   if (typeof window === "undefined") return false;
   try {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") return true;
+
     const q = new URLSearchParams(window.location.search).get("pgpopup");
     if (q === "1") { localStorage.setItem("vl_pgpopup", "1"); return true; }
     if (q === "0") { localStorage.removeItem("vl_pgpopup"); return false; }

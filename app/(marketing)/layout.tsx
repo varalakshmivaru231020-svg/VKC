@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { QuickViewModal } from "@/components/product/QuickViewModal";
 import { VideoShoppingModal } from "@/components/VideoShoppingModal";
@@ -73,7 +72,6 @@ export default async function MarketingLayout({ children }: { children: React.Re
 
   return (
     <div className="marketing-layout">
-      <AnnouncementBar />
       <Header
         siteName={settings["site.name"]}
         logoUrl={siteSettings["store_logo"] || null}
