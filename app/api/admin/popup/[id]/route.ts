@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { parseISTDateTimeLocal } from "@/lib/utils/format";
 
 async function adminOnly() {
   const s = await auth();
@@ -16,8 +17,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl }),
       ...(body.linkUrl !== undefined && { linkUrl: body.linkUrl || null }),
       ...(body.isActive !== undefined && { isActive: body.isActive }),
-      ...(body.startsAt !== undefined && { startsAt: body.startsAt ? new Date(body.startsAt) : null }),
-      ...(body.endsAt !== undefined && { endsAt: body.endsAt ? new Date(body.endsAt) : null }),
+      ...(body.startsAt !== undefined && { startsAt: parseISTDateTimeLocal(body.startsAt) }),
+      ...(body.endsAt !== undefined && { endsAt: parseISTDateTimeLocal(body.endsAt) }),
     },
   });
   return NextResponse.json(popup);

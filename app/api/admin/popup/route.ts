@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { parseISTDateTimeLocal } from "@/lib/utils/format";
 
 async function adminOnly() {
   const s = await auth();
@@ -23,8 +24,12 @@ export async function POST(req: NextRequest) {
       imageUrl,
       linkUrl: linkUrl || null,
       isActive: isActive !== false,
-      startsAt: startsAt ? new Date(startsAt) : null,
-      endsAt: endsAt ? new Date(endsAt) : null,
+      // The form sends a bare datetime-local string with no timezone, which
+      // `new Date()` reads as server time — and this server runs UTC. An admin
+      // in India scheduling 5:53 PM got 5:53 PM UTC, i.e. 11:23 PM their time,
+      // so popups appeared 5.5 hours late. Coupons already used this helper.
+      startsAt: parseISTDateTimeLocal(startsAt),
+      endsAt: parseISTDateTimeLocal(endsAt),
     },
   });
   return NextResponse.json(popup);

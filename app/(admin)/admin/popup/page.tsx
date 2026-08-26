@@ -1,9 +1,20 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, X, Save, Loader2, ImageIcon, Upload, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Plus, Trash2, X, Save, Loader2, ImageIcon, Upload, Eye, EyeOff, AlertCircle, Pencil } from "lucide-react";
 import { uploadImageFile } from "@/lib/utils/upload";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { toISTDateTimeLocal } from "@/lib/utils/format";
+
+/** Dates are stored UTC; admins think in IST. Show both date and time — a
+ *  date alone hides schedules like "17:53 to 18:00", which is a 7-minute
+ *  window that looks identical to an all-day one in the list. */
+const fmtIST = (v: string | null) =>
+  v ? new Date(v).toLocaleString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata",
+      })
+    : null;
 
 interface PopupItem {
   id: string;
@@ -26,6 +37,7 @@ export default function PopupPage() {
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -46,18 +58,44 @@ export default function PopupPage() {
     set("imageUrl")(result.url);
   };
 
+  const openAdd = () => {
+    setEditingId(null);
+    setForm(emptyForm());
+    setUploadError(null);
+    setModal(true);
+  };
+
+  const openEdit = (p: PopupItem) => {
+    setEditingId(p.id);
+    setForm({
+      imageUrl: p.imageUrl,
+      linkUrl: p.linkUrl ?? "",
+      isActive: p.isActive,
+      // Stored UTC -> the IST value the datetime-local input expects, so the
+      // admin sees back exactly the time they typed.
+      startsAt: toISTDateTimeLocal(p.startsAt),
+      endsAt: toISTDateTimeLocal(p.endsAt),
+    });
+    setUploadError(null);
+    setModal(true);
+  };
+
   const handleSave = async () => {
     if (!form.imageUrl.trim()) { alert("Image required"); return; }
     setSaving(true);
-    const res = await fetch("/api/admin/popup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    const res = await fetch(
+      editingId ? `/api/admin/popup/${editingId}` : "/api/admin/popup",
+      {
+        method: editingId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      },
+    );
     if (res.ok) {
       const saved = await res.json();
-      setPopups((p) => [saved, ...p]);
+      setPopups((p) => editingId ? p.map((x) => (x.id === editingId ? saved : x)) : [saved, ...p]);
       setModal(false);
+      setEditingId(null);
       setForm(emptyForm());
     } else { const d = await res.json(); alert(d.error ?? "Failed"); }
     setSaving(false);
@@ -86,7 +124,7 @@ export default function PopupPage() {
           <h1 className="text-2xl font-semibold font-body" style={{ color: "#111827" }}>Popup Manager</h1>
           <p className="text-sm font-body text-gray-500 mt-0.5">Show promotional popups to website visitors</p>
         </div>
-        <button onClick={() => { setForm(emptyForm()); setUploadError(null); setModal(true); }}
+        <button onClick={openAdd}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold font-body text-white"
           style={{ background: "var(--color-primary)" }}>
           <Plus className="h-4 w-4" /> Add Popup
@@ -115,9 +153,22 @@ export default function PopupPage() {
               </div>
               <div className="p-4">
                 {popup.linkUrl && <p className="text-xs font-body text-gray-500 truncate mb-2">→ {popup.linkUrl}</p>}
-                {popup.startsAt && <p className="text-xs font-body text-gray-400">From: {new Date(popup.startsAt).toLocaleDateString("en-IN")}</p>}
-                {popup.endsAt && <p className="text-xs font-body text-gray-400">Until: {new Date(popup.endsAt).toLocaleDateString("en-IN")}</p>}
+                {popup.startsAt && <p className="text-xs font-body text-gray-400">From: {fmtIST(popup.startsAt)}</p>}
+                {popup.endsAt && <p className="text-xs font-body text-gray-400">Until: {fmtIST(popup.endsAt)}</p>}
+                {popup.isActive && popup.endsAt && new Date(popup.endsAt) < new Date() && (
+                  <p className="text-xs font-body mt-1.5 font-medium" style={{ color: "#B45309" }}>
+                    Not showing — the end time has passed.
+                  </p>
+                )}
+                {popup.isActive && popup.startsAt && new Date(popup.startsAt) > new Date() && (
+                  <p className="text-xs font-body mt-1.5 font-medium" style={{ color: "#1D4ED8" }}>
+                    Not showing yet — starts later.
+                  </p>
+                )}
                 <div className="flex items-center gap-2 mt-3">
+                  <button onClick={() => openEdit(popup)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium font-body hover:bg-gray-50 transition-colors" style={{ borderColor: "#E5E7EB", color: "#374151" }}>
+                    <Pencil className="h-3.5 w-3.5" /> Edit
+                  </button>
                   <button onClick={() => toggleActive(popup)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium font-body hover:bg-gray-50 transition-colors" style={{ borderColor: "#E5E7EB", color: "#374151" }}>
                     {popup.isActive ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                     {popup.isActive ? "Deactivate" : "Activate"}
@@ -146,8 +197,8 @@ export default function PopupPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
           <div className="w-full max-w-md rounded-xl shadow-2xl" style={{ background: "white" }}>
             <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "#E5E7EB" }}>
-              <h2 className="text-base font-semibold font-body" style={{ color: "#111827" }}>Add Popup</h2>
-              <button onClick={() => setModal(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="h-4 w-4 text-gray-500" /></button>
+              <h2 className="text-base font-semibold font-body" style={{ color: "#111827" }}>{editingId ? "Edit Popup" : "Add Popup"}</h2>
+              <button onClick={() => { setModal(false); setEditingId(null); }} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="h-4 w-4 text-gray-500" /></button>
             </div>
             <div className="p-5 space-y-4">
               <div>
@@ -196,7 +247,7 @@ export default function PopupPage() {
               </label>
             </div>
             <div className="flex justify-end gap-3 px-5 pb-5">
-              <button onClick={() => setModal(false)} className="px-4 py-2 rounded-lg text-sm font-body text-gray-600 hover:bg-gray-100 transition-colors">Cancel</button>
+              <button onClick={() => { setModal(false); setEditingId(null); }} className="px-4 py-2 rounded-lg text-sm font-body text-gray-600 hover:bg-gray-100 transition-colors">Cancel</button>
               <button onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold font-body text-white disabled:opacity-60"
                 style={{ background: "var(--color-primary)" }}>
