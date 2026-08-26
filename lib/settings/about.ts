@@ -31,6 +31,9 @@ export interface AboutContent {
   heroSubtitle: string;
   storyHeading: string;
   storyBody: string;      // blank line between paragraphs
+  storyImage: string;
+  storyCaptionTop: string;
+  storyCaptionBottom: string;
   valuesEyebrow: string;
   valuesHeading: string;
   values: AboutValue[];
@@ -62,6 +65,9 @@ export const ABOUT_DEFAULTS: AboutContent = {
     "From intricate Aari work and exclusive handcrafted designs to premium fabrics and refined finishes, each creation reflects our passion for perfection. Our journey has been built on trust, authenticity, and an unwavering commitment to quality, earning the love of customers across India and around the world.",
     "Through exhibitions, online live sales, and our digital presence, we continue to make exceptional sarees accessible to every woman. More than a brand, Anjali's Vijaylakshmi Sarees is a destination where tradition meets luxury, and every drape tells a story of grace, confidence and enduring beauty.",
   ].join("\n\n"),
+  storyImage: "/uploads/Vijaylakshmi.png",
+  storyCaptionTop: "Handcrafted Elegance",
+  storyCaptionBottom: "Every drape tells a story",
   valuesEyebrow: "What We Stand For",
   valuesHeading: "Our Values",
   values: [
@@ -130,6 +136,9 @@ export const ABOUT_TEXT_KEYS = {
   heroSubtitle:   "about_hero_subtitle",
   storyHeading:   "about_story_heading",
   storyBody:      "about_story_body",
+  storyImage:     "about_story_image",
+  storyCaptionTop:    "about_story_caption_top",
+  storyCaptionBottom: "about_story_caption_bottom",
   valuesEyebrow:  "about_values_eyebrow",
   valuesHeading:  "about_values_heading",
   officesEyebrow: "about_offices_eyebrow",
@@ -179,6 +188,9 @@ export async function getAboutContent(): Promise<AboutContent> {
     heroSubtitle:   text("heroSubtitle"),
     storyHeading:   text("storyHeading"),
     storyBody:      text("storyBody"),
+    storyImage:     text("storyImage"),
+    storyCaptionTop:    text("storyCaptionTop"),
+    storyCaptionBottom: text("storyCaptionBottom"),
     valuesEyebrow:  text("valuesEyebrow"),
     valuesHeading:  text("valuesHeading"),
     officesEyebrow: text("officesEyebrow"),

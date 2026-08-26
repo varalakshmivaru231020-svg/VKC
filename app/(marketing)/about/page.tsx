@@ -117,8 +117,8 @@ export default async function AboutPage() {
             {/* Story image */}
             <div className="relative aspect-[4/5] max-w-[360px] mx-auto lg:mx-0 lg:col-span-2 rounded-2xl overflow-hidden">
               <SmartImage
-                src="/uploads/Vijaylakshmi.png"
-                alt="Anjali's Vijaylakshmi Sarees — Handcrafted Elegance"
+                src={about.storyImage}
+                alt={about.storyCaptionTop}
                 fill
                 objectFit="cover"
                 objectPosition="center top"
@@ -127,10 +127,10 @@ export default async function AboutPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-6 left-6 space-y-0.5">
                 <p className="text-[11px] font-body uppercase tracking-widest text-white/70">
-                  Handcrafted Elegance
+                  {about.storyCaptionTop}
                 </p>
                 <p className="text-sm font-body text-white/80">
-                  Every drape tells a story
+                  {about.storyCaptionBottom}
                 </p>
               </div>
             </div>

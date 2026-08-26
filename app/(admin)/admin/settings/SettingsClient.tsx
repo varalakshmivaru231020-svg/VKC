@@ -746,7 +746,8 @@ function AboutPageTab() {
     setLoading(true);
     const keys = [
       "about_hero_eyebrow", "about_hero_title", "about_hero_subtitle",
-      "about_story_heading", "about_story_body",
+      "about_story_heading", "about_story_body", "about_story_image",
+      "about_story_caption_top", "about_story_caption_bottom",
       "about_values_eyebrow", "about_values_heading",
       "about_offices_eyebrow", "about_offices_heading",
       "about_cta_heading", "about_cta_text",
@@ -806,6 +807,16 @@ function AboutPageTab() {
             <textarea value={f.about_story_body ?? ""} onChange={(e) => put("about_story_body")(e.target.value)} rows={10}
               className={taStyle} style={taBase} {...focusProps} />
             <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>Leave a blank line between paragraphs.</p>
+          </div>
+          <Field label="Story Image URL" k="about_story_image"
+            hint="The portrait beside the story text. Upload it under Banners or Gallery first, then paste its URL here." />
+          {f.about_story_image && (
+            <img src={f.about_story_image} alt="story preview"
+              className="rounded-xl border object-cover" style={{ borderColor: "#E5E7EB", width: 140, height: 175 }} />
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Image Caption — top line" k="about_story_caption_top" />
+            <Field label="Image Caption — bottom line" k="about_story_caption_bottom" />
           </div>
         </div>
       </SectionCard>
