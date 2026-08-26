@@ -15,9 +15,10 @@ interface Props {
   product: ProductData;
   careInstructions: string;
   deliveryInstructions: string;
+  returnsDays: number;
 }
 
-export default function ProductDetailClient({ product, careInstructions, deliveryInstructions }: Props) {
+export default function ProductDetailClient({ product, careInstructions, deliveryInstructions, returnsDays }: Props) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariantData>(product.variants[0]);
   const [qty, setQty] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
@@ -634,7 +635,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
             )}
             <div className="flex gap-4 pt-1">
               {[
-                { Icon: RefreshCw, text: "15-day returns" },
+                { Icon: RefreshCw, text: `${returnsDays}-day returns` },
                 { Icon: Shield, text: "Secure payment" },
               ].map(({ Icon, text }) => (
                 <span key={text} className="text-[11px] font-body flex items-center gap-1" style={{ color: "var(--color-text-muted)" }}>

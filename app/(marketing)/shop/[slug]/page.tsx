@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug, getRelatedProducts } from "@/lib/db/products";
 import { db } from "@/lib/db";
+import { getReturnsDays } from "@/lib/settings/returns";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import ProductDetailClient from "./ProductDetailClient";
 import type { ProductData } from "@/lib/types/product";
@@ -26,7 +27,10 @@ export default async function ProductDetailPage({ params }: Props) {
   let product: ProductData | null = null;
   let related: ProductData[] = [];
   let careInstructions = "";
-  let deliveryInstructions = "• Free shipping on this product – Domestic orders only\n• Standard delivery: 4–7 business days\n• Express delivery available at checkout\n• Easy 15-day returns on unworn items with tags intact\n• Exchange available for different colour of same product";
+  // Returns window comes from the `returns_days` setting so this page cannot
+  // quote a different figure to the home page, checkout and invoice.
+  const returnsDays = await getReturnsDays();
+  let deliveryInstructions = `• Free shipping on this product – Domestic orders only\n• Standard delivery: 4–7 business days\n• Express delivery available at checkout\n• Easy ${returnsDays}-day returns on unworn items with tags intact\n• Exchange available for different colour of same product`;
 
   try {
     product = await getProductBySlug(params.slug);
@@ -63,7 +67,7 @@ export default async function ProductDetailPage({ params }: Props) {
       </div>
 
       {/* Product detail */}
-      <ProductDetailClient product={product} careInstructions={careInstructions} deliveryInstructions={deliveryInstructions} />
+      <ProductDetailClient product={product} careInstructions={careInstructions} deliveryInstructions={deliveryInstructions} returnsDays={returnsDays} />
 
       {/* Related products */}
       {related.length > 0 && (
