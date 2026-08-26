@@ -51,8 +51,19 @@ function VideoPlayer({ url }: { url: string }) {
   return <video src={url} controls autoPlay className="max-h-[75vh] max-w-full rounded-lg" />;
 }
 
-export function EventGallery({ media, layout = "grid" }: { media: Media[]; layout?: "grid" | "slider" }) {
+export function EventGallery({
+  media,
+  layout = "grid",
+  // Event photos stay square; reels-style vertical clips (e.g. the Facebook
+  // videos on the home page) pass "9/16" so they are not cropped to a square.
+  aspect = "square",
+}: {
+  media: Media[];
+  layout?: "grid" | "slider";
+  aspect?: "square" | "9/16";
+}) {
   const [active, setActive] = useState<number | null>(null);
+  const aspectClass = aspect === "9/16" ? "aspect-[9/16]" : "aspect-square";
 
   if (!media.length) {
     return (
@@ -71,15 +82,19 @@ export function EventGallery({ media, layout = "grid" }: { media: Media[]; layou
     <>
       <div className={layout === "slider"
         ? "flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x"
-        : "grid grid-cols-2 sm:grid-cols-3 gap-3"}
+        : aspect === "9/16"
+          // Portrait tiles are ~1.8x taller than wide, so a 3-column desktop
+          // grid would make each one enormous. Narrow them instead.
+          ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+          : "grid grid-cols-2 sm:grid-cols-3 gap-3"}
       >
         {media.map((m, i) => (
           <button
             key={m.id}
             onClick={() => openAt(i)}
             className={layout === "slider"
-              ? "relative shrink-0 snap-start aspect-square rounded-xl overflow-hidden group"
-              : "relative aspect-square rounded-xl overflow-hidden group"}
+              ? `relative shrink-0 snap-start ${aspectClass} rounded-xl overflow-hidden group`
+              : `relative ${aspectClass} rounded-xl overflow-hidden group`}
             style={layout === "slider" ? { background: "var(--color-cream)", width: "min(45vw, 220px)" } : { background: "var(--color-cream)" }}
           >
             {isVideoType(m.type) ? (

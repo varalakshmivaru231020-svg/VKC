@@ -485,7 +485,10 @@ export default async function HomePage() {
           </div>
           {facebookVideos.length > 0 && (
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-              <EventGallery media={facebookVideos} />
+              {/* Vertical reels-style clips — 9:16 so they show full frame
+                  instead of being cropped square. More columns than the event
+                  grid, since portrait tiles are much taller. */}
+              <EventGallery media={facebookVideos} aspect="9/16" />
             </div>
           )}
         </section>
