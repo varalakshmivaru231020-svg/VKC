@@ -122,14 +122,14 @@ export function QuickViewModal() {
           >
             <div className="absolute inset-0 sm:min-h-[380px]">
               {primaryImage ? (
-                // "contain" so the whole saree is visible — "cover" cropped the
-                // borders and pallu, which is exactly what a shopper is trying
-                // to see in quick view. The tinted panel behind fills any gap.
+                // "cover" fills the panel edge to edge. Product images are
+                // uploaded 1:1, so there is nothing meaningful to crop —
+                // "contain" would only letterbox them against the tinted panel.
                 <SmartImage
                   src={primaryImage.url}
                   alt={primaryImage.altText ?? p.name}
                   fill
-                  objectFit="contain"
+                  objectFit="cover"
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
