@@ -297,9 +297,11 @@ export default async function HomePage() {
               className="aspect-[4/5] rounded-md overflow-hidden relative"
               style={{ background: "linear-gradient(135deg, var(--color-cream), var(--color-parchment))" }}
             >
+              {/* Same image as the About page's story portrait — one setting
+                  drives both, so updating it in admin changes them together. */}
               <SmartImage
-                src="/uploads/Vijaylakshmi.png"
-                alt="Vijaylakshmi Sarees — Our Heritage"
+                src={about.storyImage}
+                alt={about.homeEyebrow}
                 fill
                 objectFit="cover"
                 objectPosition="center"

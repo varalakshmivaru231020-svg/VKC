@@ -724,8 +724,22 @@ function AboutPageTab() {
   const [f, setF] = useState<Record<string, string>>({});
   const [values, setValues] = useState<AboutValueRow[]>([]);
   const [offices, setOffices] = useState<AboutOfficeRow[]>([]);
+  const storyFileRef = useRef<HTMLInputElement>(null);
+  const [storyUploading, setStoryUploading] = useState(false);
+  const [storyUploadError, setStoryUploadError] = useState<string | null>(null);
 
   const put = (k: string) => (v: string) => setF((p) => ({ ...p, [k]: v }));
+
+  const handleStoryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setStoryUploadError(null);
+    setStoryUploading(true);
+    const result = await uploadImageFile(file);
+    setStoryUploading(false);
+    if (!result.ok) { setStoryUploadError(`${result.error} — ${result.details}`); return; }
+    put("about_story_image")(result.url);
+  };
 
   useEffect(() => {
     fetch("/api/admin/settings").then((r) => r.json()).then(({ settings }) => {
@@ -808,12 +822,40 @@ function AboutPageTab() {
               className={taStyle} style={taBase} {...focusProps} />
             <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>Leave a blank line between paragraphs.</p>
           </div>
-          <Field label="Story Image URL" k="about_story_image"
-            hint="The portrait beside the story text. Upload it under Banners or Gallery first, then paste its URL here." />
-          {f.about_story_image && (
-            <img src={f.about_story_image} alt="story preview"
-              className="rounded-xl border object-cover" style={{ borderColor: "#E5E7EB", width: 140, height: 175 }} />
-          )}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Story Image</label>
+            <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>
+              Used both beside the story text on About Us and in the “Our Heritage” block on the home page.
+            </p>
+            <div className="flex items-start gap-4">
+              <div
+                onClick={() => storyFileRef.current?.click()}
+                className="relative cursor-pointer rounded-xl border-2 border-dashed overflow-hidden shrink-0 flex items-center justify-center"
+                style={{ borderColor: "#E5E7EB", width: 140, height: 175, background: "#FAFAFA" }}>
+                {f.about_story_image
+                  ? <img src={f.about_story_image} alt="story preview" className="w-full h-full object-cover" />
+                  : <span className="text-xs font-body text-center px-2" style={{ color: "#9CA3AF" }}>Click to select an image</span>}
+                {storyUploading && (
+                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                    <span className="text-xs font-body" style={{ color: "#374151" }}>Uploading…</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <button onClick={() => storyFileRef.current?.click()}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium font-body" style={{ borderColor: "#E5E7EB", color: "#374151" }}>
+                  {f.about_story_image ? "Change image" : "Select image"}
+                </button>
+                <input value={f.about_story_image ?? ""} onChange={(e) => put("about_story_image")(e.target.value)}
+                  placeholder="…or paste an image URL"
+                  className={inputCls} style={inputStyle} {...focusProps} />
+                {storyUploadError && (
+                  <p className="text-xs font-body" style={{ color: "#DC2626" }}>{storyUploadError}</p>
+                )}
+              </div>
+            </div>
+            <input ref={storyFileRef} type="file" accept="image/*" className="hidden" onChange={handleStoryUpload} />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Image Caption — top line" k="about_story_caption_top" />
             <Field label="Image Caption — bottom line" k="about_story_caption_bottom" />
