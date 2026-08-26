@@ -382,3 +382,22 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Justified body copy across the storefront ─────────────────────────────
+   Applies to paragraphs only — headings, buttons, labels and badges keep the
+   alignment they were designed with.
+
+   Two deliberate details:
+   1. Paragraphs carrying an explicit alignment utility are excluded. A bare
+      `.marketing-layout p` rule outranks Tailwind's `.text-center` on
+      specificity, so without this it would silently un-centre things like the
+      welcome strip and empty-state text.
+   2. hyphens/inter-word soften the gaps ("rivers") that justification opens up
+      in narrow columns, which is where it looks worst on mobile.
+
+   Scoped to .marketing-layout so the admin panel is unaffected. */
+.marketing-layout p:not([class*="text-center"]):not([class*="text-right"]):not([class*="text-left"]) {
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+}
