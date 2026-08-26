@@ -18,7 +18,7 @@ import { CSS } from "@dnd-kit/utilities";
 interface Props { options: ProductOptions }
 
 type TabId =
-  | "general" | "navigation" | "homepage" | "footer" | "options" | "attributes" | "productpage" | "shipping" | "zones"
+  | "general" | "navigation" | "homepage" | "about" | "footer" | "options" | "attributes" | "productpage" | "shipping" | "zones"
   | "social" | "payments" | "sms" | "analytics"
   | "returns" | "notifications" | "roles";
 
@@ -26,6 +26,7 @@ const tabs: { id: TabId; label: string; icon: React.ElementType; desc: string }[
   { id: "general",       label: "General",         icon: Globe,         desc: "Store name, logo & contact" },
   { id: "navigation",    label: "Header Nav",       icon: Navigation,    desc: "Header menu & category order" },
   { id: "homepage",      label: "Homepage",         icon: LayoutGrid,    desc: "Shop by Category section" },
+  { id: "about",         label: "About Page",       icon: Globe,         desc: "About Us & home heritage block" },
   { id: "footer",        label: "Footer Links",     icon: List,          desc: "Shop, Help & Account footer links" },
   { id: "options",       label: "Product Options",  icon: Tag,           desc: "Fabrics, weaves, regions" },
   { id: "attributes",   label: "Attributes",       icon: Sliders,       desc: "Dynamic product attributes" },
@@ -701,6 +702,223 @@ function AttributesTab() {
         )}
       </SectionCard>
       <p className="text-xs font-body text-right" style={{ color: "#9CA3AF" }}>Each attribute has its own Save button. Changes are not auto-saved.</p>
+    </div>
+  );
+}
+
+/* ─────────────── ABOUT PAGE ───────────────
+   Drives both the About Us page and the "Our Heritage" block on the home page.
+   Everything here was hardcoded until now, so an office address needed a
+   developer. Repeating blocks (values cards, offices) are stored as JSON in a
+   single setting each, edited through the small repeaters below rather than by
+   hand-writing JSON. */
+
+const ABOUT_ICON_CHOICES = ["Heart", "ShieldCheck", "Sparkles", "Globe2"];
+
+interface AboutValueRow { icon: string; title: string; desc: string }
+interface AboutOfficeRow { label: string; name: string | null; lines: string[] }
+
+function AboutPageTab() {
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [f, setF] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<AboutValueRow[]>([]);
+  const [offices, setOffices] = useState<AboutOfficeRow[]>([]);
+
+  const put = (k: string) => (v: string) => setF((p) => ({ ...p, [k]: v }));
+
+  useEffect(() => {
+    fetch("/api/admin/settings").then((r) => r.json()).then(({ settings }) => {
+      if (!settings) return;
+      setF(settings);
+      try {
+        const v = JSON.parse(settings.about_values_json || "[]");
+        if (Array.isArray(v)) setValues(v);
+      } catch { /* keep empty; the page falls back to its defaults */ }
+      try {
+        const o = JSON.parse(settings.about_offices_json || "[]");
+        if (Array.isArray(o)) setOffices(o);
+      } catch { /* same */ }
+    });
+  }, []);
+
+  const handleSave = async () => {
+    setLoading(true);
+    const keys = [
+      "about_hero_eyebrow", "about_hero_title", "about_hero_subtitle",
+      "about_story_heading", "about_story_body",
+      "about_values_eyebrow", "about_values_heading",
+      "about_offices_eyebrow", "about_offices_heading",
+      "about_cta_heading", "about_cta_text",
+      "about_home_eyebrow", "about_home_heading", "about_home_body",
+      "about_home_quote", "about_home_cta_label",
+    ];
+    const payload: Record<string, string> = {};
+    keys.forEach((k) => { payload[k] = f[k] ?? ""; });
+    payload.about_values_json  = JSON.stringify(values);
+    payload.about_offices_json = JSON.stringify(offices);
+
+    await fetch("/api/admin/settings", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    setLoading(false); setSaved(true); setTimeout(() => setSaved(false), 2500);
+  };
+
+  const taStyle = "w-full px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none resize-y";
+  const taBase = { borderColor: "#E5E7EB", background: "white", color: "#111827" };
+  const Field = ({ label, k, hint }: { label: string; k: string; hint?: string }) => (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>{label}</label>
+      <input value={f[k] ?? ""} onChange={(e) => put(k)(e.target.value)} className={inputCls} style={inputStyle} {...focusProps} />
+      {hint && <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>{hint}</p>}
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div className="p-4 rounded-xl text-sm font-body border" style={{ background: "#EFF6FF", borderColor: "#BFDBFE", color: "#1E40AF" }}>
+        Leave any field empty to keep the built-in wording for it.
+      </div>
+
+      <SectionCard title="About Page — Hero" icon={Globe}>
+        <div className="space-y-4">
+          <Field label="Eyebrow" k="about_hero_eyebrow" />
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Title</label>
+            <textarea value={f.about_hero_title ?? ""} onChange={(e) => put("about_hero_title")(e.target.value)} rows={2}
+              className={taStyle} style={taBase} {...focusProps} />
+            <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>Press Enter for a line break.</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Subtitle</label>
+            <textarea value={f.about_hero_subtitle ?? ""} onChange={(e) => put("about_hero_subtitle")(e.target.value)} rows={2}
+              className={taStyle} style={taBase} {...focusProps} />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="About Page — Story" icon={Globe}>
+        <div className="space-y-4">
+          <Field label="Heading" k="about_story_heading" />
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Body</label>
+            <textarea value={f.about_story_body ?? ""} onChange={(e) => put("about_story_body")(e.target.value)} rows={10}
+              className={taStyle} style={taBase} {...focusProps} />
+            <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>Leave a blank line between paragraphs.</p>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="About Page — Values" icon={Globe} action={
+        <button onClick={() => setValues((v) => [...v, { icon: "Heart", title: "", desc: "" }])}
+          className="text-xs font-semibold font-body px-3 py-1.5 rounded-lg border" style={{ borderColor: "#E5E7EB", color: "#374151" }}>
+          + Add card
+        </button>
+      }>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Eyebrow" k="about_values_eyebrow" />
+            <Field label="Heading" k="about_values_heading" />
+          </div>
+          {values.map((row, i) => (
+            <div key={i} className="p-4 rounded-xl border space-y-3" style={{ borderColor: "#E5E7EB", background: "#FAFAFA" }}>
+              <div className="flex items-center gap-3">
+                <select value={row.icon}
+                  onChange={(e) => setValues((v) => v.map((x, j) => j === i ? { ...x, icon: e.target.value } : x))}
+                  className={inputCls} style={{ ...inputStyle, width: 160 }}>
+                  {ABOUT_ICON_CHOICES.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
+                </select>
+                <input value={row.title} placeholder="Title"
+                  onChange={(e) => setValues((v) => v.map((x, j) => j === i ? { ...x, title: e.target.value } : x))}
+                  className={inputCls} style={inputStyle} {...focusProps} />
+                <button onClick={() => setValues((v) => v.filter((_, j) => j !== i))}
+                  className="shrink-0 px-3 py-2 rounded-lg border text-xs font-medium" style={{ borderColor: "#FECACA", color: "#DC2626" }}>
+                  Remove
+                </button>
+              </div>
+              <textarea value={row.desc} rows={2} placeholder="Description"
+                onChange={(e) => setValues((v) => v.map((x, j) => j === i ? { ...x, desc: e.target.value } : x))}
+                className={taStyle} style={taBase} {...focusProps} />
+            </div>
+          ))}
+          {values.length === 0 && (
+            <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>No cards added — the page will show its built-in four.</p>
+          )}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="About Page — Offices" icon={Globe} action={
+        <button onClick={() => setOffices((o) => [...o, { label: "", name: null, lines: [] }])}
+          className="text-xs font-semibold font-body px-3 py-1.5 rounded-lg border" style={{ borderColor: "#E5E7EB", color: "#374151" }}>
+          + Add office
+        </button>
+      }>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Eyebrow" k="about_offices_eyebrow" />
+            <Field label="Heading" k="about_offices_heading" />
+          </div>
+          {offices.map((row, i) => (
+            <div key={i} className="p-4 rounded-xl border space-y-3" style={{ borderColor: "#E5E7EB", background: "#FAFAFA" }}>
+              <div className="flex items-center gap-3">
+                <input value={row.label} placeholder="Label, e.g. Registered Office"
+                  onChange={(e) => setOffices((o) => o.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
+                  className={inputCls} style={inputStyle} {...focusProps} />
+                <button onClick={() => setOffices((o) => o.filter((_, j) => j !== i))}
+                  className="shrink-0 px-3 py-2 rounded-lg border text-xs font-medium" style={{ borderColor: "#FECACA", color: "#DC2626" }}>
+                  Remove
+                </button>
+              </div>
+              <input value={row.name ?? ""} placeholder="Business name (optional)"
+                onChange={(e) => setOffices((o) => o.map((x, j) => j === i ? { ...x, name: e.target.value || null } : x))}
+                className={inputCls} style={inputStyle} {...focusProps} />
+              <textarea value={row.lines.join("\n")} rows={5} placeholder="Address — one line per row"
+                onChange={(e) => setOffices((o) => o.map((x, j) => j === i ? { ...x, lines: e.target.value.split("\n") } : x))}
+                className={taStyle} style={taBase} {...focusProps} />
+            </div>
+          ))}
+          {offices.length === 0 && (
+            <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>No offices added — the page will show its built-in two.</p>
+          )}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="About Page — Closing Call to Action" icon={Globe}>
+        <div className="space-y-4">
+          <Field label="Heading" k="about_cta_heading" />
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Text</label>
+            <textarea value={f.about_cta_text ?? ""} onChange={(e) => put("about_cta_text")(e.target.value)} rows={3}
+              className={taStyle} style={taBase} {...focusProps} />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Home Page — Our Heritage block" icon={Globe}>
+        <div className="space-y-4">
+          <Field label="Eyebrow" k="about_home_eyebrow" />
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Heading</label>
+            <textarea value={f.about_home_heading ?? ""} onChange={(e) => put("about_home_heading")(e.target.value)} rows={2}
+              className={taStyle} style={taBase} {...focusProps} />
+            <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>Press Enter for a line break.</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Body</label>
+            <textarea value={f.about_home_body ?? ""} onChange={(e) => put("about_home_body")(e.target.value)} rows={5}
+              className={taStyle} style={taBase} {...focusProps} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Closing line</label>
+            <textarea value={f.about_home_quote ?? ""} onChange={(e) => put("about_home_quote")(e.target.value)} rows={2}
+              className={taStyle} style={taBase} {...focusProps} />
+          </div>
+          <Field label="Link label" k="about_home_cta_label" hint="The link always points at /about." />
+        </div>
+      </SectionCard>
+
+      <div className="flex justify-end"><SaveButton saved={saved} loading={loading} onClick={handleSave} /></div>
     </div>
   );
 }
@@ -2465,6 +2683,7 @@ export default function SettingsClient({ options }: Props) {
       case "footer":        return <FooterTab />;
       case "options":       return <OptionsTab options={options} />;
       case "attributes":    return <AttributesTab />;
+      case "about":         return <AboutPageTab />;
       case "productpage":   return <ProductPageTab />;
       case "shipping":      return <ShippingTab />;
       case "zones":         return <ShippingZonesTab />;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Shield, RefreshCw, Truck, Sparkles, Facebook } from "lucide-react";
 import { getThemeSettings } from "@/lib/theme/server";
 import { getReturnsDays } from "@/lib/settings/returns";
+import { getAboutContent } from "@/lib/settings/about";
 import { getFeaturedProducts } from "@/lib/db/products";
 import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -115,6 +116,7 @@ export default async function HomePage() {
 
   const returnsDays = await getReturnsDays();
   const trustBadges = buildTrustBadges(returnsDays);
+  const about = await getAboutContent();
 
   const facebookUrl = facebookSetting?.value || null;
   const galleryPhotos = galleryItems.filter((g) => g.type !== "VIDEO" && g.type !== "FACEBOOK").slice(0, 8);
@@ -311,7 +313,7 @@ export default async function HomePage() {
                   className="text-xs font-semibold tracking-[0.18em] uppercase"
                   style={{ fontFamily: "var(--font-body)", color: "var(--color-gold)" }}
                 >
-                  Our Heritage
+                  {about.homeEyebrow}
                 </span>
               </div>
               <h2
@@ -323,7 +325,8 @@ export default async function HomePage() {
                   color: "var(--color-text-primary)",
                 }}
               >
-                Woven With<br />Generations of Love
+                {/* Newlines in the setting control where the headline wraps. */}
+                <span className="whitespace-pre-line">{about.homeHeading}</span>
               </h2>
               <p
                 style={{
@@ -333,11 +336,7 @@ export default async function HomePage() {
                   color: "var(--color-text-secondary)",
                 }}
               >
-                Every Vijaylakshmi saree carries the artistry of master weavers whose skills have
-                been passed down through generations. We work closely with skilled artisans, helping
-                preserve India&apos;s rich and time-honoured weaving traditions. Each saree is more than
-                a piece of fabric&mdash;it is a celebration of craftsmanship, heritage, and the hands
-                that bring it to life.
+                {about.homeBody}
               </p>
               <div className="gold-divider" />
               <p
@@ -348,15 +347,14 @@ export default async function HomePage() {
                   lineHeight: "var(--leading-body)",
                 }}
               >
-                When you buy a Vijaylakshmi saree, you are not just wearing fabric —
-                you are wearing someone&apos;s story.
+                {about.homeQuote}
               </p>
               <Link
                 href="/about"
                 className="inline-flex items-center gap-2 text-sm font-semibold font-body transition-all hover:gap-3"
                 style={{ color: "var(--color-primary)" }}
               >
-                Read Our Story <ArrowRight className="h-4 w-4" />
+                {about.homeCtaLabel} <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

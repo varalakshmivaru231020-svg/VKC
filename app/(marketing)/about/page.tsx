@@ -4,6 +4,7 @@ import { ArrowRight, Heart, ShieldCheck, Sparkles, Globe2, Phone, FileText, MapP
 import { SmartImage } from "@/components/ui/SmartImage";
 import { WhatsAppIcon } from "@/components/ui/SocialIcons";
 import { db } from "@/lib/db";
+import { getAboutContent } from "@/lib/settings/about";
 import { PromoBanner } from "@/components/home/PromoBanner";
 
 export const dynamic = "force-dynamic";
@@ -13,28 +14,9 @@ export const metadata: Metadata = {
   description: "For over a decade, Anjali's Vijaylakshmi Sarees has curated exquisite sarees blending India's rich textile traditions with contemporary sophistication.",
 };
 
-const values = [
-  {
-    icon: Heart,
-    title: "Heritage & Craftsmanship",
-    desc: "From intricate Aari work to exclusive handcrafted designs, every saree reflects our passion for perfection and India's rich textile traditions.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Trust & Authenticity",
-    desc: "Our journey has been built on trust, authenticity, and an unwavering commitment to quality — earning the love of customers across India and around the world.",
-  },
-  {
-    icon: Sparkles,
-    title: "Premium Quality",
-    desc: "Premium fabrics, refined finishes, and meticulous attention to detail — because every drape should tell a story of grace and enduring beauty.",
-  },
-  {
-    icon: Globe2,
-    title: "Accessible to Every Woman",
-    desc: "Through exhibitions, online live sales, and our digital presence, we continue to make exceptional sarees accessible to every woman, everywhere.",
-  },
-];
+// Values cards are editable in Admin → Settings → About Page; only the icon
+// artwork stays in code, looked up by the name stored against each card.
+const VALUE_ICONS: Record<string, React.ElementType> = { Heart, ShieldCheck, Sparkles, Globe2 };
 
 export default async function AboutPage() {
   const now = new Date();
@@ -53,6 +35,7 @@ export default async function AboutPage() {
     }).catch(() => []),
   ]);
 
+  const about = await getAboutContent();
   const heroBannerUrl = aboutBanners[0]?.imageUrl ?? null;
 
   const s: Record<string, string> = {};
@@ -86,7 +69,7 @@ export default async function AboutPage() {
                 className="text-xs font-semibold tracking-[0.18em] uppercase font-body"
                 style={{ color: "var(--color-gold)" }}
               >
-                Over a Decade of Trust
+                {about.heroEyebrow}
               </span>
             </div>
             <h1
@@ -98,7 +81,9 @@ export default async function AboutPage() {
                 color: heroBannerUrl ? "white" : "var(--color-text-primary)",
               }}
             >
-              Where Tradition<br />Meets Luxury.
+              {/* Newlines in the setting become line breaks, so the admin can
+                  control where the headline wraps. */}
+              <span className="whitespace-pre-line">{about.heroTitle}</span>
             </h1>
             <p
               className="mt-6 max-w-xl"
@@ -109,8 +94,7 @@ export default async function AboutPage() {
                 color: heroBannerUrl ? "rgba(255,255,255,0.85)" : "var(--color-text-secondary)",
               }}
             >
-              At Anjali's Vijaylakshmi Sarees, every saree is a celebration of heritage,
-              elegance, and timeless craftsmanship.
+              {about.heroSubtitle}
             </p>
           </div>
         </div>
@@ -162,29 +146,13 @@ export default async function AboutPage() {
                     color: "var(--color-text-primary)",
                   }}
                 >
-                  About Us
+                  {about.storyHeading}
                 </h2>
                 <div className="space-y-4" style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-body)", fontSize: "var(--text-body)", lineHeight: "var(--leading-body)" }}>
-                  <p>
-                    At Anjali's Vijaylakshmi Sarees, every saree is a celebration of heritage,
-                    elegance, and timeless craftsmanship. For over a decade, we have been
-                    curating exquisite collections that beautifully blend India's rich
-                    textile traditions with contemporary sophistication.
-                  </p>
-                  <p>
-                    From intricate Aari work and exclusive handcrafted designs to premium
-                    fabrics and refined finishes, each creation reflects our passion for
-                    perfection. Our journey has been built on trust, authenticity, and an
-                    unwavering commitment to quality, earning the love of customers across
-                    India and around the world.
-                  </p>
-                  <p>
-                    Through exhibitions, online live sales, and our digital presence, we
-                    continue to make exceptional sarees accessible to every woman. More than
-                    a brand, Anjali's Vijaylakshmi Sarees is a destination where tradition
-                    meets luxury, and every drape tells a story of grace, confidence and
-                    enduring beauty.
-                  </p>
+                  {/* Blank lines in the setting separate paragraphs. */}
+                  {about.storyBody.split(/\n{2,}/).map((para) => para.trim()).filter(Boolean).map((para, i) => (
+                    <p key={i}>{para}</p>
+                  ))}
                 </div>
               </div>
             </div>
@@ -197,7 +165,7 @@ export default async function AboutPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "var(--color-gold)" }}>
-              What We Stand For
+              {about.valuesEyebrow}
             </span>
             <h2
               className="mt-3"
@@ -208,11 +176,13 @@ export default async function AboutPage() {
                 color: "var(--color-text-primary)",
               }}
             >
-              Our Values
+              {about.valuesHeading}
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {values.map(({ icon: Icon, title, desc }) => (
+            {about.values.map(({ icon, title, desc }) => {
+              const Icon = VALUE_ICONS[icon] ?? Heart;
+              return (
               <div
                 key={title}
                 className="group rounded-2xl p-7 transition-all duration-300 hover:shadow-md hover:-translate-y-1"
@@ -237,7 +207,8 @@ export default async function AboutPage() {
                   {desc}
                 </p>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -247,7 +218,7 @@ export default async function AboutPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "var(--color-gold)" }}>
-              Reach Us
+              {about.officesEyebrow}
             </span>
             <h2
               className="mt-3"
@@ -258,7 +229,7 @@ export default async function AboutPage() {
                 color: "var(--color-text-primary)",
               }}
             >
-              Contact &amp; Registered Offices
+              {about.officesHeading}
             </h2>
           </div>
 
@@ -293,29 +264,7 @@ export default async function AboutPage() {
 
           {/* Offices */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {[
-              {
-                label: "Registered Office",
-                name: null as string | null,
-                lines: [
-                  "VL Group",
-                  "36/11, CHB Colony, Street No. 04",
-                  "Vellur Road",
-                  "Tiruchengode – 637211",
-                  "Namakkal Dt., Tamil Nadu",
-                ],
-              },
-              {
-                label: "Karnataka Office",
-                name: "Anjali's Vijaylakshmi Sarees — VL Group",
-                lines: [
-                  "D. No. 4/397/A1 to 4/397/A8",
-                  "Chantar Gram Panchayat, Brahmavar Hebri Road",
-                  "Chantar, Udupi",
-                  "Brahmavar – 576213, Karnataka",
-                ],
-              },
-            ].map((office) => (
+            {about.offices.map((office) => (
               <div
                 key={office.label}
                 className="rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
@@ -383,14 +332,13 @@ export default async function AboutPage() {
               color: "var(--color-text-primary)",
             }}
           >
-            Wear a Story
+            {about.ctaHeading}
           </h2>
           <p
             className="max-w-lg mx-auto"
             style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-body-xl)", color: "var(--color-text-secondary)" }}
           >
-            Browse our collection and find the saree that speaks to you — woven with
-            skill, intention, and a decade of passion.
+            {about.ctaText}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Link
