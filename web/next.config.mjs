@@ -12,7 +12,13 @@ const nextConfig = {
     formats: ["image/avif", "image/webp"],
   },
   experimental: {
-    serverActions: { allowedOrigins: ["localhost:3000"] },
+    serverActions: {
+      allowedOrigins: [
+        "localhost:3000",
+        "vijaylakshmisarees.com",
+        "www.vijaylakshmisarees.com",
+      ],
+    },
   },
   webpack: (config) => {
     config.parallelism = 1;
