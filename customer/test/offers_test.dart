@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vl_customer/screens/cart_screens.dart';
-import 'package:vl_customer/widgets.dart';
+import 'package:vkc_customer/screens/cart_screens.dart';
+import 'package:vkc_customer/widgets.dart';
 
 /// The cart's offer cards. These used to be a ticket stub behind a 9pt "VIEW
 /// OFFERS" link; the card now has to carry the badge, the code, a line of copy

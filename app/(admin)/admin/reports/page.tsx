@@ -182,7 +182,7 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-semibold font-body" style={{ color: "var(--color-text-primary)" }}>Reports & Analytics</h1>
-          <p className="text-sm font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>Vijaylakshmi Sarees performance overview</p>
+          <p className="text-sm font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>VKC Gold performance overview</p>
         </div>
         <button onClick={fetchData} className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded border" style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-muted)" }}>
           <RefreshCw className="h-3.5 w-3.5" /> Refresh

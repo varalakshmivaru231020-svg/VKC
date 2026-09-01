@@ -10,11 +10,6 @@ interface CartStore {
   removeItem: (variantId: string) => void;
   removeItems: (variantIds: string[]) => void;
   updateQty: (variantId: string, qty: number) => void;
-  // Checkout-time shortfall flow: customer wants more than what's in stock.
-  // Converts the item to a pre-booking line (full requested qty carries over
-  // unchanged) so it flows through the existing cart-split/pre-booking
-  // checkout machinery instead of silently overselling stock.
-  convertToPreBooking: (variantId: string, etaLabel: string | null) => void;
   clearCart: () => void;
   totalItems: () => number;
   subtotal: () => number;
@@ -27,7 +22,7 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (newItem) => {
         set((state) => {
-          const cap = newItem.isPreBooking ? (newItem.preBookingCap ?? Infinity) : (newItem.qtyCap ?? newItem.stockQty);
+          const cap = newItem.qtyCap ?? newItem.stockQty;
           const existing = state.items.find((i) => i.variantId === newItem.variantId);
           if (existing) {
             return {
@@ -62,19 +57,9 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({
           items: state.items.map((i) => {
             if (i.variantId !== variantId) return i;
-            const cap = i.isPreBooking ? (i.preBookingCap ?? Infinity) : (i.qtyCap ?? i.stockQty);
+            const cap = i.qtyCap ?? i.stockQty;
             return { ...i, quantity: Math.min(qty, cap) };
           }),
-        }));
-      },
-
-      convertToPreBooking: (variantId, etaLabel) => {
-        set((state) => ({
-          items: state.items.map((i) =>
-            i.variantId === variantId
-              ? { ...i, isPreBooking: true, preBookingCap: null, preBookingEtaLabel: etaLabel }
-              : i
-          ),
         }));
       },
 

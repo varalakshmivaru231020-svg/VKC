@@ -248,7 +248,7 @@ function GeneralTab() {
       <SectionCard title="Store Information" icon={Globe}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {([
-            { label: "Store Name", key: "store_name" as const, placeholder: "Vijaylakshmi Sarees" },
+            { label: "Store Name", key: "store_name" as const, placeholder: "VKC Gold" },
             { label: "Tagline", key: "tagline" as const, placeholder: "Timeless Weaves. Modern Souls." },
             { label: "Support Email", key: "support_email" as const, placeholder: "care@yourstore.in" },
             { label: "Support Phone", key: "support_phone" as const, placeholder: "+91 98765 43210" },
@@ -1972,7 +1972,7 @@ function SmsTab() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin Name *</label>
-            <input value={form.dtdc_origin_name} onChange={u("dtdc_origin_name")} placeholder="Vijaylakshmi Sarees" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
+            <input value={form.dtdc_origin_name} onChange={u("dtdc_origin_name")} placeholder="VKC Gold" className={inputCls} style={{ ...inputStyle, opacity: dtdcEnabled ? 1 : 0.6 }} {...focusProps} disabled={!dtdcEnabled} />
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Origin Phone *</label>
@@ -2092,7 +2092,7 @@ function AnalyticsTab() {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Default Meta Title</label>
-            <input value={form.meta_title} onChange={u("meta_title")} placeholder="Vijaylakshmi Sarees — Authentic Handwoven Sarees" className={inputCls} style={inputStyle} {...focusProps} />
+            <input value={form.meta_title} onChange={u("meta_title")} placeholder="VKC Gold — Authentic Handwoven Sarees" className={inputCls} style={inputStyle} {...focusProps} />
             <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>{form.meta_title.length}/60 characters</p>
           </div>
           <div className="space-y-1.5">
@@ -2350,7 +2350,7 @@ function RolesTab() {
             <div>
               <label className="block text-xs font-body font-medium mb-1" style={{ color: "#374151" }}>Email <span className="text-red-500">*</span></label>
               <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                className={inp} style={{ borderColor: "#D1D5DB" }} placeholder="staff@vijaylakshmi.in" />
+                className={inp} style={{ borderColor: "#D1D5DB" }} placeholder="staff@vkcgoldikshu.com" />
             </div>
 
             <div>

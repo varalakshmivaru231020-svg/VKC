@@ -7,11 +7,14 @@ export interface ProductOptions {
   occasions: string[];
 }
 
+// Empty by default — the old saree-specific fabric/weave/region/occasion lists
+// were removed for the VKC Gold (jaggery) catalogue. The admin can add their
+// own values under Settings → Product Options if any dropdowns are wanted.
 const DEFAULTS: ProductOptions = {
-  fabrics:   ["Silk", "Cotton", "Linen", "Georgette", "Chiffon", "Crepe", "Organza", "Net", "Tussar", "Khadi"],
-  weaves:    ["Handloom", "Powerloom", "Banarasi", "Kanjivaram", "Chanderi", "Patola", "Jamdani", "Ikat"],
-  regions:   ["Tamil Nadu", "Uttar Pradesh", "Gujarat", "Madhya Pradesh", "Karnataka", "Odisha", "West Bengal", "Rajasthan"],
-  occasions: ["Wedding", "Festival", "Casual", "Office", "Party", "Puja", "Reception", "Sangeet"],
+  fabrics:   [],
+  weaves:    [],
+  regions:   [],
+  occasions: [],
 };
 
 function parseCSV(value: string): string[] {

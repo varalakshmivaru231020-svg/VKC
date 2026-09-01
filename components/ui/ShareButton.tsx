@@ -28,7 +28,7 @@ export function ShareButton({ title, text }: { title: string; text?: string }) {
       onClick={handleShare}
       className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-body font-semibold border transition-all"
       style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)" }}
-      aria-label="Share this saree story"
+      aria-label="Share this story"
     >
       {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
       {copied ? "Link Copied" : "Share"}

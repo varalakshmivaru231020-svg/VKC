@@ -55,41 +55,44 @@ export interface AboutContent {
 export const ABOUT_VALUE_ICONS = ["Heart", "ShieldCheck", "Sparkles", "Globe2"] as const;
 
 export const ABOUT_DEFAULTS: AboutContent = {
-  heroEyebrow: "Over a Decade of Trust",
-  heroTitle: "Where Tradition\nMeets Luxury.",
+  heroEyebrow: "Mandya's Pride Since 1988",
+  heroTitle: "Sweetness of Nature,\nStrength of Tradition.",
   heroSubtitle:
-    "At Anjali's Vijaylakshmi Sarees, every saree is a celebration of heritage, elegance, and timeless craftsmanship.",
+    "Pure, chemical-free jaggery and cane products from the sugarcane fields of Mandya, Karnataka.",
   storyHeading: "About Us",
   storyBody: [
-    "At Anjali's Vijaylakshmi Sarees, every saree is a celebration of heritage, elegance, and timeless craftsmanship. For over a decade, we have been curating exquisite collections that beautifully blend India's rich textile traditions with contemporary sophistication.",
-    "From intricate Aari work and exclusive handcrafted designs to premium fabrics and refined finishes, each creation reflects our passion for perfection. Our journey has been built on trust, authenticity, and an unwavering commitment to quality, earning the love of customers across India and around the world.",
-    "Through exhibitions, online live sales, and our digital presence, we continue to make exceptional sarees accessible to every woman. More than a brand, Anjali's Vijaylakshmi Sarees is a destination where tradition meets luxury, and every drape tells a story of grace, confidence and enduring beauty.",
+    "VKC Gold delivers the purest form of natural sweetness, straight from the sugarcane fields of Mandya, Karnataka. Established in 1988, we are a natural food processing enterprise dedicated to chemical-free, healthy jaggery products.",
+    "We work directly with local farmers on fair pricing, then combine traditional know-how with modern, eco-friendly machinery — sugarcane crushing, juice extraction, filtration, boiling and packaging — so that nothing is lost between the field and the finished product.",
+    "Every product carries the same promise: no artificial colours, no artificial flavours, and no chemicals added. From pure jaggery cubes and natural powder to syrups, bars and festive gift hampers, we make natural sweetness part of everyday life.",
   ].join("\n\n"),
-  storyImage: "/uploads/Vijaylakshmi.png",
-  storyCaptionTop: "Handcrafted Elegance",
-  storyCaptionBottom: "Every drape tells a story",
+  // No default image: the only one we had was the previous brand's. SmartImage
+  // shows a neutral placeholder for an empty src, which is better than a photo
+  // that belongs to another business. Admin → Settings uploads the real one.
+  storyImage: "",
+  storyCaptionTop: "100% Natural",
+  storyCaptionBottom: "No chemicals, ever",
   valuesEyebrow: "What We Stand For",
   valuesHeading: "Our Values",
   values: [
     {
       icon: "Heart",
-      title: "Heritage & Craftsmanship",
-      desc: "From intricate Aari work to exclusive handcrafted designs, every saree reflects our passion for perfection and India's rich textile traditions.",
+      title: "Support to Local Farmers",
+      desc: "We empower rural communities around Mandya with fair pricing, buying cane directly from the farmers who grow it.",
     },
     {
       icon: "ShieldCheck",
-      title: "Trust & Authenticity",
-      desc: "Our journey has been built on trust, authenticity, and an unwavering commitment to quality — earning the love of customers across India and around the world.",
+      title: "Purity and Quality First",
+      desc: "100% natural production with no preservatives, no artificial colours or flavours, and no chemicals added at any stage.",
     },
     {
       icon: "Sparkles",
-      title: "Premium Quality",
-      desc: "Premium fabrics, refined finishes, and meticulous attention to detail — because every drape should tell a story of grace and enduring beauty.",
+      title: "Innovation with Tradition",
+      desc: "Time-honoured jaggery-making combined with modern machinery and hygienic processing, for consistent quality in every batch.",
     },
     {
       icon: "Globe2",
-      title: "Accessible to Every Woman",
-      desc: "Through exhibitions, online live sales, and our digital presence, we continue to make exceptional sarees accessible to every woman, everywhere.",
+      title: "Sustainable Growth",
+      desc: "Eco-friendly manufacturing that reduces waste, as we grow towards becoming a trusted global brand for Mandya's sweetness.",
     },
   ],
   officesEyebrow: "Reach Us",
@@ -97,35 +100,24 @@ export const ABOUT_DEFAULTS: AboutContent = {
   offices: [
     {
       label: "Registered Office",
-      name: null,
+      name: "VKC Cane Gold Foods Pvt. Ltd.",
       lines: [
-        "VL Group",
-        "36/11, CHB Colony, Street No. 04",
-        "Vellur Road",
-        "Tiruchengode – 637211",
-        "Namakkal Dt., Tamil Nadu",
-      ],
-    },
-    {
-      label: "Karnataka Office",
-      name: "Anjali's Vijaylakshmi Sarees — VL Group",
-      lines: [
-        "D. No. 4/397/A1 to 4/397/A8",
-        "Chantar Gram Panchayat, Brahmavar Hebri Road",
-        "Chantar, Udupi",
-        "Brahmavar – 576213, Karnataka",
+        "Ballenahalli Village",
+        "Srirangapatna Taluk",
+        "Mandya District",
+        "Karnataka – 571807",
       ],
     },
   ],
-  ctaHeading: "Wear a Story",
+  ctaHeading: "Taste the Difference",
   ctaText:
-    "Browse our collection and find the saree that speaks to you — woven with skill, intention, and a decade of passion.",
+    "Browse our range of chemical-free jaggery products — made with care, from cane grown by farmers we know by name.",
   homeEyebrow: "Our Heritage",
-  homeHeading: "Woven With\nGenerations of Love",
+  homeHeading: "Rooted in\nMandya Since 1988",
   homeBody:
-    "Every Vijaylakshmi saree carries the artistry of master weavers whose skills have been passed down through generations. We work closely with skilled artisans, helping preserve India's rich and time-honoured weaving traditions. Each saree is more than a piece of fabric — it is a celebration of craftsmanship, heritage, and the hands that bring it to life.",
+    "Every VKC Gold product begins in the sugarcane fields of Mandya, with farmers we have worked alongside for decades. We pay fairly, process without chemicals, and let the cane speak for itself. Each batch is more than a sweetener — it is the taste of a district that has grown cane for generations.",
   homeQuote:
-    "When you buy a Vijaylakshmi saree, you are not just wearing fabric — you are wearing someone's story.",
+    "When you choose VKC Gold, you are not just choosing sweetness — you are supporting the farmer who grew it.",
   homeCtaLabel: "Read Our Story",
 };
 

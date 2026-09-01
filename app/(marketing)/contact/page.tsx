@@ -3,8 +3,8 @@ import { db } from "@/lib/db";
 import ContactClient from "./ContactClient";
 
 export const metadata: Metadata = {
-  title: "Contact Us — Vijaylakshmi Sarees",
-  description: "Get in touch with Vijaylakshmi Sarees — we're happy to help with orders, styling advice, and wholesale queries.",
+  title: "Contact Us — VKC Gold",
+  description: "Get in touch with VKC Gold — we're happy to help with orders, bulk enquiries and wholesale queries.",
 };
 
 export const dynamic = "force-dynamic";

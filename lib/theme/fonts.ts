@@ -16,7 +16,7 @@ export const HEADING_FONTS: FontOption[] = [
     googleFamily: "Cormorant+Garamond",
     weights: "ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500",
     italic: true,
-    preview: "The Art of Silk Weaving",
+    preview: "The Art of Natural Jaggery",
   },
   {
     name: "Playfair Display",
@@ -25,7 +25,7 @@ export const HEADING_FONTS: FontOption[] = [
     googleFamily: "Playfair+Display",
     weights: "ital,wght@0,400;0,500;0,600;0,700;1,400",
     italic: true,
-    preview: "The Art of Silk Weaving",
+    preview: "The Art of Natural Jaggery",
   },
   {
     name: "DM Serif Display",
@@ -34,7 +34,7 @@ export const HEADING_FONTS: FontOption[] = [
     googleFamily: "DM+Serif+Display",
     weights: "ital,wght@0,400;1,400",
     italic: true,
-    preview: "The Art of Silk Weaving",
+    preview: "The Art of Natural Jaggery",
   },
   {
     name: "Libre Baskerville",
@@ -43,7 +43,7 @@ export const HEADING_FONTS: FontOption[] = [
     googleFamily: "Libre+Baskerville",
     weights: "ital,wght@0,400;0,700;1,400",
     italic: true,
-    preview: "The Art of Silk Weaving",
+    preview: "The Art of Natural Jaggery",
   },
   {
     name: "EB Garamond",
@@ -52,7 +52,7 @@ export const HEADING_FONTS: FontOption[] = [
     googleFamily: "EB+Garamond",
     weights: "ital,wght@0,400;0,500;0,600;0,700;1,400",
     italic: true,
-    preview: "The Art of Silk Weaving",
+    preview: "The Art of Natural Jaggery",
   },
   {
     name: "Bodoni Moda",
@@ -61,7 +61,7 @@ export const HEADING_FONTS: FontOption[] = [
     googleFamily: "Bodoni+Moda",
     weights: "ital,wght@0,400;0,500;0,700;1,400",
     italic: true,
-    preview: "The Art of Silk Weaving",
+    preview: "The Art of Natural Jaggery",
   },
   {
     name: "Crimson Text",
@@ -70,7 +70,7 @@ export const HEADING_FONTS: FontOption[] = [
     googleFamily: "Crimson+Text",
     weights: "ital,wght@0,400;0,600;1,400",
     italic: true,
-    preview: "The Art of Silk Weaving",
+    preview: "The Art of Natural Jaggery",
   },
   {
     name: "Josefin Sans",
@@ -78,7 +78,7 @@ export const HEADING_FONTS: FontOption[] = [
     category: "sans-serif",
     googleFamily: "Josefin+Sans",
     weights: "wght@300;400;600;700",
-    preview: "The Art of Silk Weaving",
+    preview: "The Art of Natural Jaggery",
   },
   {
     name: "Raleway",
@@ -86,7 +86,7 @@ export const HEADING_FONTS: FontOption[] = [
     category: "sans-serif",
     googleFamily: "Raleway",
     weights: "wght@300;400;500;600;700",
-    preview: "The Art of Silk Weaving",
+    preview: "The Art of Natural Jaggery",
   },
 ];
 
@@ -97,7 +97,7 @@ export const BODY_FONTS: FontOption[] = [
     category: "sans-serif",
     googleFamily: "Inter",
     weights: "wght@300;400;500;600;700",
-    preview: "Discover our curated collection of handwoven sarees from across India.",
+    preview: "Discover our range of pure, chemical-free jaggery products from Mandya.",
   },
   {
     name: "DM Sans",
@@ -105,7 +105,7 @@ export const BODY_FONTS: FontOption[] = [
     category: "sans-serif",
     googleFamily: "DM+Sans",
     weights: "wght@300;400;500;600;700",
-    preview: "Discover our curated collection of handwoven sarees from across India.",
+    preview: "Discover our range of pure, chemical-free jaggery products from Mandya.",
   },
   {
     name: "Nunito",
@@ -113,7 +113,7 @@ export const BODY_FONTS: FontOption[] = [
     category: "sans-serif",
     googleFamily: "Nunito",
     weights: "wght@300;400;500;600;700",
-    preview: "Discover our curated collection of handwoven sarees from across India.",
+    preview: "Discover our range of pure, chemical-free jaggery products from Mandya.",
   },
   {
     name: "Lato",
@@ -121,7 +121,7 @@ export const BODY_FONTS: FontOption[] = [
     category: "sans-serif",
     googleFamily: "Lato",
     weights: "wght@300;400;700",
-    preview: "Discover our curated collection of handwoven sarees from across India.",
+    preview: "Discover our range of pure, chemical-free jaggery products from Mandya.",
   },
   {
     name: "Poppins",
@@ -129,7 +129,7 @@ export const BODY_FONTS: FontOption[] = [
     category: "sans-serif",
     googleFamily: "Poppins",
     weights: "wght@300;400;500;600;700",
-    preview: "Discover our curated collection of handwoven sarees from across India.",
+    preview: "Discover our range of pure, chemical-free jaggery products from Mandya.",
   },
   {
     name: "Source Sans 3",
@@ -137,7 +137,7 @@ export const BODY_FONTS: FontOption[] = [
     category: "sans-serif",
     googleFamily: "Source+Sans+3",
     weights: "wght@300;400;500;600;700",
-    preview: "Discover our curated collection of handwoven sarees from across India.",
+    preview: "Discover our range of pure, chemical-free jaggery products from Mandya.",
   },
 ];
 

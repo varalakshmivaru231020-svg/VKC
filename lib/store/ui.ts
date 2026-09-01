@@ -15,9 +15,6 @@ interface UIStore {
   openLoginModal: (callback?: () => void) => void;
   closeLoginModal: () => void;
 
-  videoShoppingOpen: boolean;
-  openVideoShopping: () => void;
-  closeVideoShopping: () => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -34,7 +31,4 @@ export const useUIStore = create<UIStore>((set) => ({
   openLoginModal: (callback) => set({ loginModalOpen: true, loginModalCallback: callback ?? null }),
   closeLoginModal: () => set({ loginModalOpen: false, loginModalCallback: null }),
 
-  videoShoppingOpen: false,
-  openVideoShopping: () => set({ videoShoppingOpen: true }),
-  closeVideoShopping: () => set({ videoShoppingOpen: false }),
 }));

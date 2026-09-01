@@ -5,13 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  LayoutDashboard, ShoppingBag, Heart, MapPin, Settings, LogOut, ChevronRight, Wallet, Truck, Star, Video,
+  LayoutDashboard, ShoppingBag, Heart, MapPin, Settings, LogOut, ChevronRight, Wallet, Truck, Star,
 } from "lucide-react";
 
 const TOP_LINKS = [
   { href: "/account",               label: "Overview",         icon: LayoutDashboard, exact: true },
   { href: "/account/orders",        label: "My Orders",        icon: ShoppingBag,     exact: false },
-  { href: "/account/video-bookings", label: "Video Bookings",  icon: Video,           exact: false },
   { href: "/account/reviews",       label: "My Reviews",       icon: Star,            exact: false },
   { href: "/account/wallet",        label: "My Wallet",        icon: Wallet,          exact: false },
   { href: "/track-order",           label: "Track Order",      icon: Truck,           exact: false },
@@ -26,7 +25,6 @@ const SETTINGS_LINKS = [
 const ALL_MOBILE = [
   { href: "/account",               label: "Overview",  icon: LayoutDashboard, exact: true },
   { href: "/account/orders",        label: "Orders",    icon: ShoppingBag,     exact: false },
-  { href: "/account/video-bookings", label: "Video",    icon: Video,           exact: false },
   { href: "/account/reviews",       label: "Reviews",   icon: Star,            exact: false },
   { href: "/account/wallet",        label: "Wallet",    icon: Wallet,          exact: false },
   { href: "/account/profile",       label: "Profile",   icon: Settings,        exact: false },

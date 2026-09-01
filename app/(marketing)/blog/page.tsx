@@ -5,7 +5,7 @@ import { SmartImage } from "@/components/ui/SmartImage";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Blog — Vijaylakshmi Sarees" };
+export const metadata: Metadata = { title: "Blog — VKC Gold" };
 
 export default async function BlogListPage() {
   const blogs = await db.blog.findMany({
@@ -21,7 +21,7 @@ export default async function BlogListPage() {
           Our Blog
         </h1>
         <p className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>
-          Stories, styling tips & weaving traditions from across India
+          Recipes, wellness notes & stories from the cane fields of Mandya
         </p>
       </div>
 

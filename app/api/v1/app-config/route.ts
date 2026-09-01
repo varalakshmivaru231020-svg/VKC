@@ -19,7 +19,7 @@ export async function GET() {
 
     return NextResponse.json({
       site: {
-        name:        get("site.name", "Vijaylakshmi Sarees"),
+        name:        get("site.name", "VKC Gold"),
         tagline:     get("site.tagline"),
         logoUrl:     get("store_logo"),
         phone:       get("store_phone"),

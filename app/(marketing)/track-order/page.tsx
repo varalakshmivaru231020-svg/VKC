@@ -68,7 +68,7 @@ export default function TrackOrderPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Enter order number (e.g. VL-001234)"
+              placeholder="Enter order number (e.g. VKC-001234)"
               className="w-full h-12 pl-11 pr-4 border rounded-xl text-sm font-body focus:outline-none"
               style={{ borderColor: "var(--color-parchment)", background: "white" }}
               autoFocus

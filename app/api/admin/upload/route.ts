@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
 
     if (isCloudinaryConfigured()) {
       try {
-        const result = await uploadBufferToCloudinary(outputBuffer, { folder: "vijaylakshmi/products" });
+        const result = await uploadBufferToCloudinary(outputBuffer, { folder: "vkc/products" });
         url = result.secure_url;
         storedWidth = result.width ?? storedWidth;
         storedHeight = result.height ?? storedHeight;

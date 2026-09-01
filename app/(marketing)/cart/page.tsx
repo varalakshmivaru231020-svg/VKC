@@ -8,7 +8,6 @@ import {
   Globe, Truck, Heart, Info,
 } from "lucide-react";
 import { CouponPicker } from "@/components/cart/CouponPicker";
-import { PreBookingShortfallModal, type ShortfallEntry } from "@/components/cart/PreBookingShortfallModal";
 import { useSession } from "next-auth/react";
 import { useCartStore, useWishlistStore, useCheckoutMetaStore } from "@/lib/store/cart";
 import { useUIStore } from "@/lib/store/ui";
@@ -22,7 +21,7 @@ interface ShippingConfig {
 }
 
 export default function CartPage() {
-  const { items, removeItem, updateQty, convertToPreBooking, subtotal } = useCartStore();
+  const { items, removeItem, updateQty, subtotal } = useCartStore();
   const { toggle: wishlistToggle, isWishlisted } = useWishlistStore();
   const { coupon: couponApplied, setCoupon, removeCoupon } = useCheckoutMetaStore();
   const { openLoginModal } = useUIStore();
@@ -59,14 +58,7 @@ export default function CartPage() {
     fetch("/api/shipping-config").then(r => r.json()).then(d => setShippingConfig(d)).catch(() => {});
   }, []);
 
-  // Pre-Booking: a cart can hold both standard and pre-booked items, but they
-  // never check out together (this app has no multi-shipment order support —
-  // see PRE_BOOKING_PLAN.md §2.3). Split for display + routing.
-  const standardItems = items.filter((i) => !i.isPreBooking);
-  const preBookingItems = items.filter((i) => i.isPreBooking);
-  const isMixedCart = standardItems.length > 0 && preBookingItems.length > 0;
-  const preBookingSubtotal = preBookingItems.reduce((s, i) => s + i.salePrice * i.quantity, 0);
-  const preBookingQty = preBookingItems.reduce((s, i) => s + i.quantity, 0);
+  const standardItems = items;
 
   const sub = subtotal();
   const discountAmt = couponApplied ? couponApplied.discount : 0;
@@ -85,79 +77,49 @@ export default function CartPage() {
   // International = no shipping charge shown at cart stage
   const total = afterDiscount + (isInternational ? 0 : domesticShippingCost);
 
-  const [shortfallEntries, setShortfallEntries] = useState<ShortfallEntry[] | null>(null);
   const [checkingStock, setCheckingStock] = useState(false);
 
   const goToCheckout = () => {
-    const items = useCartStore.getState().items;
-    const stillMixed = items.some((i) => !i.isPreBooking) && items.some((i) => i.isPreBooking);
-    const stillPreBookingOnly = items.length > 0 && items.every((i) => i.isPreBooking);
-    if (!stillMixed && stillPreBookingOnly) {
-      router.push("/checkout?type=prebooking");
-      return;
-    }
     router.push(isInternational ? "/checkout?intl=1" : "/checkout");
   };
 
   const handleCheckout = () => {
     const proceed = async () => {
-      // Re-check live stock for standard (non-pre-booking) items right
-      // before checkout — cart quantities are snapshotted at add-time and
-      // can go stale, and today's checkout otherwise creates the order
-      // regardless of actual stock. Only surface the pre-booking split
-      // when there's an actual shortfall.
-      const standardItems = items.filter((i) => !i.isPreBooking);
-      if (standardItems.length === 0) { goToCheckout(); return; }
+      // Re-check live stock right before checkout — cart quantities are
+      // snapshotted at add-time and can go stale (someone else bought the
+      // last few), and checkout otherwise creates the order regardless of
+      // actual stock.
+      if (items.length === 0) { goToCheckout(); return; }
 
       setCheckingStock(true);
       try {
         const res = await fetch("/api/web/cart/check-stock", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: standardItems.map((i) => ({ variantId: i.variantId, quantity: i.quantity })) }),
+          body: JSON.stringify({ items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })) }),
         });
         const data = await res.json();
-        const results: { variantId: string; available: number; shortfall: number; preBookingEligible: boolean; preBookingEtaLabel: string | null }[] = data.results ?? [];
+        const results: { variantId: string; available: number; shortfall: number }[] = data.results ?? [];
         const shortfalls = results.filter((r) => r.shortfall > 0);
 
         if (shortfalls.length === 0) { goToCheckout(); return; }
 
-        setShortfallEntries(
-          shortfalls.map((r) => ({
-            item: standardItems.find((i) => i.variantId === r.variantId)!,
-            available: r.available,
-            preBookingEligible: r.preBookingEligible,
-            preBookingEtaLabel: r.preBookingEtaLabel,
-            resolved: false,
-          }))
+        // Some items are no longer available in the requested quantity —
+        // clamp each to what's in stock (removes any that sold out) and let
+        // the customer review before trying again.
+        for (const r of shortfalls) updateQty(r.variantId, r.available);
+        alert(
+          "Some items in your cart are no longer available in the quantity you chose. " +
+          "We've updated them to the current stock — please review your cart and checkout again."
         );
       } catch {
         // If the stock check itself fails, don't block checkout on it —
-        // fall back to today's behaviour rather than stranding the customer.
+        // fall back to proceeding rather than stranding the customer.
         goToCheckout();
       } finally {
         setCheckingStock(false);
       }
     };
-    if (!session) {
-      openLoginModal(proceed);
-    } else {
-      proceed();
-    }
-  };
-
-  const resolveBuyAvailable = (variantId: string, available: number) => {
-    updateQty(variantId, available);
-    setShortfallEntries((prev) => prev?.map((e) => e.item.variantId === variantId ? { ...e, resolved: true } : e) ?? null);
-  };
-
-  const resolvePreBook = (variantId: string, etaLabel: string | null) => {
-    convertToPreBooking(variantId, etaLabel);
-    setShortfallEntries((prev) => prev?.map((e) => e.item.variantId === variantId ? { ...e, resolved: true } : e) ?? null);
-  };
-
-  const handlePreBookingCheckout = () => {
-    const proceed = () => router.push("/checkout?type=prebooking");
     if (!session) {
       openLoginModal(proceed);
     } else {
@@ -177,10 +139,10 @@ export default function CartPage() {
           Your cart is empty
         </h2>
         <p className="mt-2 text-sm font-body" style={{ color: "var(--color-text-muted)" }}>
-          Discover our handwoven sarees and add your favourites
+          Discover our natural jaggery range and add your favourites
         </p>
         <Button asChild className="mt-8">
-          <Link href="/shop">Browse Sarees <ArrowRight className="ml-2 h-4 w-4" /></Link>
+          <Link href="/shop">Browse Products <ArrowRight className="ml-2 h-4 w-4" /></Link>
         </Button>
       </div>
     );
@@ -192,7 +154,7 @@ export default function CartPage() {
         {standardItems.length > 0 && (
         <div>
         <h1 className="mb-8 font-body font-semibold text-2xl" style={{ color: "var(--color-text-primary)" }}>
-          {preBookingItems.length > 0 ? "Ready to Ship" : "My Cart"} <span className="text-base font-normal ml-2" style={{ color: "var(--color-text-muted)" }}>({totalQty - preBookingQty} item{totalQty - preBookingQty !== 1 ? "s" : ""})</span>
+          My Cart <span className="text-base font-normal ml-2" style={{ color: "var(--color-text-muted)" }}>({totalQty} item{totalQty !== 1 ? "s" : ""})</span>
         </h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -502,126 +464,7 @@ export default function CartPage() {
         </div>
         </div>
         )}
-
-        {preBookingItems.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <h2 className="font-body font-semibold text-2xl" style={{ color: "var(--color-text-primary)" }}>
-              Pre-Booked
-            </h2>
-            <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full"
-              style={{ background: "var(--color-gold-light)", color: "var(--color-gold-dark)" }}>
-              Ships Separately
-            </span>
-            <span className="text-base font-normal ml-1" style={{ color: "var(--color-text-muted)" }}>
-              ({preBookingQty} item{preBookingQty !== 1 ? "s" : ""})
-            </span>
-          </div>
-          <p className="text-xs font-body mb-6" style={{ color: "var(--color-text-muted)" }}>
-            These items are made or procured after booking, so they ship on their own timeline — separately from the rest of your order.
-          </p>
-
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="flex-1 space-y-4">
-              {preBookingItems.map((item) => (
-                <div key={item.variantId} className="flex gap-5 p-6 rounded-md"
-                  style={{ background: "white", border: "1px solid var(--color-gold-light)" }}>
-                  <Link href={`/shop/${item.productId}`} className="shrink-0">
-                    <div className="relative w-32 h-44 rounded-sm overflow-hidden"
-                      style={{ background: item.colorHex + "30", border: "1px solid var(--color-parchment)" }}>
-                      {item.imageUrl
-                        ? <SmartImage src={item.imageUrl} alt={item.productName} fill objectFit="cover" />
-                        : <div className="w-full h-full flex items-center justify-center">
-                            <div className="w-8 h-8 rounded-full" style={{ background: item.colorHex }} />
-                          </div>
-                      }
-                    </div>
-                  </Link>
-
-                  <div className="flex-1 min-w-0 flex flex-col justify-between">
-                    <div className="flex justify-between gap-2">
-                      <div className="min-w-0">
-                        <Link href={`/shop/${item.productId}`}>
-                          <p className="font-body font-semibold text-sm leading-snug line-clamp-2 hover:text-primary transition-colors"
-                            style={{ color: "var(--color-text-primary)" }}>
-                            {item.productName}
-                          </p>
-                        </Link>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="w-3.5 h-3.5 rounded-full border border-white"
-                            style={{ background: item.colorHex, boxShadow: "0 0 0 1px var(--color-parchment)" }} />
-                          <span className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>
-                            {item.variantColor}
-                          </span>
-                        </div>
-                        {item.preBookingEtaLabel && (
-                          <p className="text-xs font-body font-medium mt-1.5" style={{ color: "var(--color-gold-dark)" }}>
-                            {item.preBookingEtaLabel}
-                          </p>
-                        )}
-                      </div>
-                      <button onClick={() => removeItem(item.variantId)}
-                        className="shrink-0 h-7 w-7 flex items-center justify-center rounded-sm transition-colors hover:bg-error-bg"
-                        style={{ color: "var(--color-text-muted)" }}>
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2 mt-3 flex-wrap">
-                      <span style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-price-sm)", fontStyle: "italic", color: "var(--color-primary)" }}>
-                        {formatINR(item.salePrice)}
-                      </span>
-                      <div className="flex items-center border rounded-xs overflow-hidden shrink-0"
-                        style={{ borderColor: "var(--color-parchment)" }}>
-                        <button onClick={() => updateQty(item.variantId, item.quantity - 1)}
-                          className="h-8 w-8 flex items-center justify-center transition-colors hover:bg-cream">
-                          <Minus className="h-3.5 w-3.5" style={{ color: "var(--color-text-muted)" }} />
-                        </button>
-                        <span className="h-8 w-10 flex items-center justify-center text-sm font-body font-medium border-x"
-                          style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-primary)" }}>
-                          {item.quantity}
-                        </span>
-                        <button onClick={() => updateQty(item.variantId, item.quantity + 1)}
-                          className="h-8 w-8 flex items-center justify-center transition-colors hover:bg-cream"
-                          disabled={item.preBookingCap != null && item.quantity >= item.preBookingCap}>
-                          <Plus className="h-3.5 w-3.5" style={{ color: "var(--color-text-muted)" }} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="lg:w-80 shrink-0">
-              <div className="p-5 rounded-md" style={{ background: "white", border: "1px solid var(--color-gold-light)" }}>
-                <p className="text-base font-body font-semibold mb-4" style={{ color: "var(--color-text-primary)" }}>Pre-Booking Summary</p>
-                <div className="flex items-center justify-between text-sm font-body mb-2">
-                  <span style={{ color: "var(--color-text-muted)" }}>Subtotal ({preBookingQty} item{preBookingQty !== 1 ? "s" : ""})</span>
-                  <span style={{ color: "var(--color-text-primary)" }}>{formatINR(preBookingSubtotal)}</span>
-                </div>
-                <p className="text-[11px] font-body mb-4" style={{ color: "var(--color-text-muted)" }}>
-                  Final total, delivery estimate and payment are confirmed at checkout.
-                </p>
-                <Button className="w-full h-12" style={{ background: "var(--color-gold-dark)" }} onClick={handlePreBookingCheckout}>
-                  Checkout Pre-Booked Items <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-        )}
       </div>
-
-      {shortfallEntries && (
-        <PreBookingShortfallModal
-          entries={shortfallEntries}
-          onBuyAvailable={resolveBuyAvailable}
-          onPreBook={resolvePreBook}
-          onContinue={() => { setShortfallEntries(null); goToCheckout(); }}
-          onClose={() => setShortfallEntries(null)}
-        />
-      )}
     </div>
   );
 }

@@ -206,24 +206,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (status === "CANCELLED") {
     const existing = await db.order.findUnique({
       where: { id: params.id },
-      select: { status: true, orderType: true, items: { select: { variantId: true, quantity: true, availableAtBooking: true } } },
+      select: { status: true, items: { select: { variantId: true, quantity: true } } },
     });
     if (existing && existing.status !== "CANCELLED") {
       await db.$transaction(async (tx) => {
         for (const item of existing.items) {
-          // Pre-booking orders never held real stock — cancelling releases
-          // the reserved pre-booking capacity, not phantom stockQty. Only
-          // the shortfall (qty beyond what was in stock at booking time)
-          // ever consumed capacity — a "buy 3 now, pre-book 7" order should
-          // only release 7, not all 10.
-          const field = existing.orderType === "PRE_BOOKING" ? "preBookedQty" : "stockQty";
-          const qty = existing.orderType === "PRE_BOOKING"
-            ? Math.max(0, item.quantity - (item.availableAtBooking ?? 0))
-            : item.quantity;
-          if (qty === 0) continue;
+          if (item.quantity === 0) continue;
           await tx.productVariant.update({
             where: { id: item.variantId },
-            data:  { [field]: { increment: existing.orderType === "PRE_BOOKING" ? -qty : qty } },
+            data:  { stockQty: { increment: item.quantity } },
           }).catch(() => {});
         }
         await tx.order.update({ where: { id: params.id }, data });

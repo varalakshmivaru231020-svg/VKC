@@ -196,12 +196,6 @@ export default async function AdminOrdersPage({
                     <td className="px-4 py-3">
                       <p className="text-sm font-body font-semibold flex items-center gap-1.5" style={{ color: "var(--color-text-primary)" }}>
                         #{order.orderNumber}
-                        {(order as any).orderType === "PRE_BOOKING" && (
-                          <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide rounded-full"
-                            style={{ background: "var(--color-gold-light)", color: "var(--color-gold-dark)" }}>
-                            ✦ Pre-Book
-                          </span>
-                        )}
                       </p>
                       {order.shippingAddress && typeof order.shippingAddress === "object" && (
                         <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>

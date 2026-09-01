@@ -225,7 +225,7 @@ export default function StoryForm({
           <div>
             <label className={LABEL_CLS}>Meta Title</label>
             <input value={form.metaTitle} onChange={(e) => set("metaTitle")(e.target.value)} className={FIELD_CLS} />
-            <p className="text-xs text-gray-400 mt-1">"| Vijaylakshmi Sarees" is added automatically — no need to type it here.</p>
+            <p className="text-xs text-gray-400 mt-1">"| VKC Gold" is added automatically — no need to type it here.</p>
           </div>
           <div>
             <label className={LABEL_CLS}>Meta Description</label>
@@ -233,7 +233,7 @@ export default function StoryForm({
           </div>
           <div>
             <label className={LABEL_CLS}>Canonical URL (optional)</label>
-            <input value={form.canonicalUrl} onChange={(e) => set("canonicalUrl")(e.target.value)} className={FIELD_CLS} placeholder="https://vijaylakshmisarees.com/saree-stories/kanchipuram" />
+            <input value={form.canonicalUrl} onChange={(e) => set("canonicalUrl")(e.target.value)} className={FIELD_CLS} placeholder="https://vkcgoldikshu.com/saree-stories/kanchipuram" />
           </div>
           <div>
             <label className={LABEL_CLS}>Social Share Image (Open Graph / Twitter Card)</label>

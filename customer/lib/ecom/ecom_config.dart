@@ -4,7 +4,7 @@ import 'ecom_models.dart';
 
 /// The store's own settings, as served by GET /v1/app-config — the same
 /// record the website reads, so shipping rates, payment availability and the
-/// contact block never drift from vijaylakshmisarees.com.
+/// contact block never drift from vkcgoldikshu.com.
 ///
 /// [storeConfig] holds the last successful fetch; every getter falls back to
 /// the shipped defaults, so screens can read it before the call lands.
@@ -26,7 +26,7 @@ class StoreConfig {
 
   // ── Site ──────────────────────────────────────────────────────────────────
   Map<String, dynamic> get site => _map('site');
-  String get storeName => _str(site, 'name', 'Vijaylakshmi Sarees');
+  String get storeName => _str(site, 'name', 'VKC Gold');
   String get tagline => _str(site, 'tagline');
   String get logoUrl => _str(site, 'logoUrl');
   String get phone => _str(site, 'phone');

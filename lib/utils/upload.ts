@@ -3,7 +3,7 @@
  *  ceiling the server won't honour.
  *
  *  MUST stay <= `client_max_body_size` in the nginx vhost
- *  (`/etc/nginx/sites-enabled/vijaylakshmisarees.com.conf`). If nginx is lower,
+ *  (`/etc/nginx/sites-enabled/vkcgoldikshu.com.conf`). If nginx is lower,
  *  it rejects the request itself with an HTML 413 that never reaches this app,
  *  and the admin just sees "invalid response". */
 export const MAX_VIDEO_UPLOAD_BYTES = 1000 * 1024 * 1024;

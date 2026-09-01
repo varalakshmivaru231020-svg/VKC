@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         // an out-of-memory kill on the server.
         const result = await uploadVideoBufferToCloudinary(
           Readable.fromWeb(file.stream() as any),
-          { folder: "vijaylakshmi/videos" }
+          { folder: "vkc/videos" }
         );
         return NextResponse.json({ url: result.secure_url });
       } catch (uploadErr: any) {

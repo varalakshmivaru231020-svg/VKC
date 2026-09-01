@@ -6,11 +6,10 @@
 // returned order silently inflated inventory and placing an order never moved
 // it at all.
 //
-// Follows the same guarded-conditional-update shape as
-// lib/prebooking/reserveSlots.ts: the `where` carries the precondition so that
-// two concurrent checkouts for the last unit cannot both succeed. Callers must
-// run this inside the same transaction as order creation, so a stock shortfall
-// rolls the order back rather than leaving a half-placed order behind.
+// Uses a guarded-conditional-update: the `where` carries the precondition so
+// that two concurrent checkouts for the last unit cannot both succeed. Callers
+// must run this inside the same transaction as order creation, so a stock
+// shortfall rolls the order back rather than leaving a half-placed order behind.
 
 export class StockError extends Error {
   constructor(message: string) {
@@ -22,20 +21,7 @@ export class StockError extends Error {
 export interface StockLine {
   variantId: string;
   quantity: number;
-  /**
-   * PRE_BOOKING lines only: how many units were shippable from existing stock
-   * when the order was placed. Anything above this is being manufactured and
-   * must not touch stockQty (that capacity lives in preBookedQty instead).
-   * Null/undefined for STANDARD lines, which come entirely from stock.
-   */
-  availableAtBooking?: number | null;
   productName?: string;
-}
-
-/** Units of a line that actually come out of on-hand stock. */
-function fromStock(line: StockLine): number {
-  if (line.availableAtBooking == null) return line.quantity;
-  return Math.max(0, Math.min(line.quantity, line.availableAtBooking));
 }
 
 /**
@@ -44,12 +30,11 @@ function fromStock(line: StockLine): number {
  */
 export async function decrementStock(tx: any, lines: StockLine[]): Promise<void> {
   for (const line of lines) {
-    const qty = fromStock(line);
-    if (qty <= 0) continue;
+    if (line.quantity <= 0) continue;
 
     const res = await tx.productVariant.updateMany({
-      where: { id: line.variantId, stockQty: { gte: qty } },
-      data:  { stockQty: { decrement: qty } },
+      where: { id: line.variantId, stockQty: { gte: line.quantity } },
+      data:  { stockQty: { decrement: line.quantity } },
     });
 
     if (res.count === 0) {
@@ -64,10 +49,9 @@ export async function decrementStock(tx: any, lines: StockLine[]): Promise<void>
 /** Put stock back — for a gateway payment that definitively failed. */
 export async function restoreStock(tx: any, lines: StockLine[]): Promise<void> {
   for (const line of lines) {
-    const qty = fromStock(line);
-    if (qty <= 0) continue;
+    if (line.quantity <= 0) continue;
     await tx.productVariant
-      .update({ where: { id: line.variantId }, data: { stockQty: { increment: qty } } })
+      .update({ where: { id: line.variantId }, data: { stockQty: { increment: line.quantity } } })
       .catch(() => {});
   }
 }

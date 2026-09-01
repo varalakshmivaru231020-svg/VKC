@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vl_customer/screens/auth_screens.dart';
+import 'package:vkc_customer/screens/auth_screens.dart';
 
 /// The splash Stack sizes itself to its largest non-positioned child, so
 /// without tight constraints it shrank to the wordmark's box and Scaffold

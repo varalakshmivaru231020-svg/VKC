@@ -26,18 +26,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       name, description, shortDesc, fabric, weaveType, regionOfOrigin,
       occasions, isFeatured, isActive, videoUrl, variants, productAttributes,
       categoryId, careInstructions, gstPercent, sareeLengthCm,
-      preBookingMode, preBookingEtaMinDays, preBookingEtaMaxDays,
-      preBookingMaxQtyPerOrder, preBookingMaxTotalQty, preBookingDisclaimer,
-      preBookingReturnsAllowed,
     } = body;
 
     if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
-    if (preBookingMode && !["OFF", "AUTO_ON_OUT_OF_STOCK", "ALWAYS_ON"].includes(preBookingMode)) {
-      return NextResponse.json({ error: "Invalid pre-booking mode" }, { status: 400 });
-    }
-    if (preBookingEtaMinDays != null && preBookingEtaMaxDays != null && Number(preBookingEtaMinDays) > Number(preBookingEtaMaxDays)) {
-      return NextResponse.json({ error: "Pre-booking maximum ETA days must be greater than or equal to minimum" }, { status: 400 });
-    }
 
     // Update base product fields
     const product = await db.product.update({
@@ -57,13 +48,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         isFeatured: isFeatured ?? false,
         isActive: isActive ?? true,
         videoUrl: videoUrl !== undefined ? (videoUrl || null) : undefined,
-        preBookingMode: preBookingMode || "OFF",
-        preBookingEtaMinDays: preBookingEtaMinDays ?? null,
-        preBookingEtaMaxDays: preBookingEtaMaxDays ?? null,
-        preBookingMaxQtyPerOrder: preBookingMaxQtyPerOrder ?? null,
-        preBookingMaxTotalQty: preBookingMaxTotalQty ?? null,
-        preBookingDisclaimer: preBookingDisclaimer || null,
-        preBookingReturnsAllowed: preBookingReturnsAllowed ?? true,
       },
     });
 

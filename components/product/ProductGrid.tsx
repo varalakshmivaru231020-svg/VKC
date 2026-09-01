@@ -13,7 +13,7 @@ export function ProductGrid({ products, loading }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="space-y-3">
-            <Skeleton className="saree-card-ratio rounded-sm" />
+            <Skeleton className="product-card-ratio rounded-sm" />
             <Skeleton className="h-3 w-16 rounded" />
             <Skeleton className="h-4 w-full rounded" />
             <Skeleton className="h-3 w-24 rounded" />

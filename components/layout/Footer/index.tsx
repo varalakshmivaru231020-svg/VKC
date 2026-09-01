@@ -6,12 +6,12 @@ import { NewsletterForm } from "./NewsletterForm";
 type FooterLink = { label: string; href: string };
 
 const DEFAULT_SHOP_LINKS: FooterLink[] = [
-  { label: "New Arrivals",       href: "/new-arrivals" },
-  { label: "Kanjivaram Sarees",  href: "/category/kanjivaram" },
-  { label: "Banarasi Sarees",    href: "/category/banarasi" },
-  { label: "Cotton Sarees",      href: "/category/cotton" },
-  { label: "Wedding Collection", href: "/shop?occasion=wedding" },
-  { label: "Sale",               href: "/shop?sale=true" },
+  { label: "New Arrivals",      href: "/new-arrivals" },
+  { label: "Jaggery & Powder",  href: "/category/jaggery" },
+  { label: "Bars & Snacks",     href: "/category/bars-snacks" },
+  { label: "Syrups",            href: "/category/syrups" },
+  { label: "Gift & Combo Boxes", href: "/category/gift-boxes" },
+  { label: "Sale",              href: "/shop?sale=true" },
 ];
 
 const DEFAULT_HELP_LINKS: FooterLink[] = [
@@ -20,8 +20,6 @@ const DEFAULT_HELP_LINKS: FooterLink[] = [
   { label: "Blog",              href: "/blog" },
   { label: "Shipping Policy",   href: "/shipping" },
   { label: "Return & Exchange", href: "/returns" },
-  { label: "Size Guide",        href: "/size-guide" },
-  { label: "Care Instructions", href: "/care" },
   { label: "Track Order",       href: "/account/orders" },
 ];
 
@@ -53,8 +51,8 @@ interface FooterProps {
 }
 
 export function Footer({
-  siteName = "Vijaylakshmi Sarees",
-  tagline = "Timeless Weaves. Modern Souls.",
+  siteName = "VKC Gold",
+  tagline = "Sweetness of Nature, Strength of Tradition.",
   logoUrl,
   // No sample phone/email defaults — an unset value must render nothing rather
   // than send customers to a number and inbox that are not the store's.
@@ -92,10 +90,10 @@ export function Footer({
             className="text-3xl"
             style={{ fontFamily: "var(--font-heading)", fontWeight: "var(--weight-heading)", color: "#FFFFFF" }}
           >
-            Stories from the Loom
+            Sweetness in Your Inbox
           </p>
           <p className="text-sm font-body" style={{ color: "#FFFFFF" }}>
-            New arrivals, exclusive offers, and weaving stories — straight to your inbox.
+            New arrivals, exclusive offers, and jaggery recipes — straight to your inbox.
           </p>
           <NewsletterForm />
         </div>

@@ -54,9 +54,7 @@ export default function WishlistPage() {
       originalPrice: variant.originalPrice,
       quantity: 1,
       stockQty: variant.stockQty,
-      qtyCap: product.preBookingMode === "OFF"
-        ? variant.stockQty - variant.reservedQty
-        : (product.preBookingMaxQtyPerOrder ?? 999),
+      qtyCap: variant.stockQty - variant.reservedQty,
       gstPercent: product.gstPercent,
     });
     toggle(variant.id);   // remove from wishlist
@@ -76,12 +74,12 @@ export default function WishlistPage() {
           </div>
           <div>
             <p className="text-base font-body font-semibold" style={{ color: "var(--color-text-primary)" }}>Your wishlist is empty</p>
-            <p className="text-sm font-body mt-1" style={{ color: "var(--color-text-muted)" }}>Save sarees you love by tapping the heart icon</p>
+            <p className="text-sm font-body mt-1" style={{ color: "var(--color-text-muted)" }}>Save products you love by tapping the heart icon</p>
           </div>
           <Link href="/shop"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-body font-semibold"
             style={{ background: "var(--color-primary)", color: "white" }}>
-            Discover Sarees
+            Discover Products
           </Link>
         </div>
       </div>

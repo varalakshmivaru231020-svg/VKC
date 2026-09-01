@@ -21,7 +21,7 @@ class BrandStack extends StatelessWidget {
     return Column(mainAxisSize: MainAxisSize.min, children: [
       Text('V L GROUP', style: VlText.upper(11, color: c.withValues(alpha: 0.7), letter: 0.4)),
       const SizedBox(height: 6),
-      Text('Vijaylakshmi', style: VlText.display(38, color: c, style: FontStyle.italic)),
+      Text('VKC Gold', style: VlText.display(38, color: c, style: FontStyle.italic)),
       if (sub != null) ...[
         const SizedBox(height: 8),
         Text(sub!.toUpperCase(), style: VlText.upper(8, color: c.withValues(alpha: 0.7), letter: 0.24)),
@@ -113,8 +113,8 @@ class _SplashScreenState extends State<SplashScreen> {
           AnimatedOpacity(
             opacity: _op,
             duration: const Duration(milliseconds: 800),
-            // The store's own line: "Celebrating India's master weavers since 1968."
-            child: BrandStack(color: VlBrand.canvas, sub: 'Heritage Sarees · Since 1968'),
+            // The store's own line, from its About page.
+            child: BrandStack(color: VlBrand.canvas, sub: 'Natural Jaggery · Since 1988'),
           ),
           Positioned(
             bottom: 80,
@@ -160,16 +160,16 @@ String _grouped(num v) => v.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\
 List<_Onb> _onboarding() {
   final cfg = storeConfig.value;
   return [
-    const _Onb('01', 'A loom that travels with you',
-        'Handwoven sarees from India’s master weavers — Kanjivaram, silk cotton, linen and more, curated piece by piece.',
-        'ANJALI’S VIJAYLAKSHMI SAREES', 0),
-    const _Onb('02', 'Shop the loom, live',
-        'Join our live shows and exhibitions. Ask, drape, compare — and buy the piece while you’re watching it.',
+    const _Onb('01', 'Mandya’s sweetness, delivered',
+        'Chemical-free jaggery straight from the cane fields — cubes, powder, syrups, bars and gift hampers, made without additives.',
+        'VKC GOLD', 0),
+    const _Onb('02', 'Shop with us, live',
+        'Join our live shows and exhibitions. Ask, compare — and buy while you’re watching.',
         'LIVE FROM THE STORE', 2),
     _Onb('03', 'From our store to your door',
         '${cfg.deliveryTitle} in ${cfg.deliveryNotes}, free above ₹${_grouped(cfg.freeShippingThreshold)}. '
             'Cash on delivery across India.',
-        'UDUPI · KARNATAKA', 5),
+        'MANDYA · KARNATAKA', 5),
   ];
 }
 
@@ -201,7 +201,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('Vijaylakshmi', style: VlText.display(18, style: FontStyle.italic)),
+              Text('VKC Gold', style: VlText.display(18, style: FontStyle.italic)),
               GestureDetector(
                 onTap: () => context.go('/home'),
                 child: Text('SKIP', style: VlText.upper(10, color: VlColors.muted, letter: 0.18)),

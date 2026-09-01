@@ -2,7 +2,7 @@
     <!-- Required for the API, live stream (WebView) and public chat. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="Vijaylakshmi"
+        android:label="VKC Gold"
         android:name="${applicationName}"
         android:usesCleartextTraffic="false"
         android:icon="@mipmap/ic_launcher">

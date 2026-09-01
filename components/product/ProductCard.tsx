@@ -40,8 +40,7 @@ export function ProductCard({ product, className, index = 0 }: Props) {
   const lowestPrice = Math.min(...product.variants.map((v) => v.salePrice));
   const multiPrice = product.variants.some((v) => v.salePrice !== firstVariant.salePrice);
   const outOfStock = product.variants.every((v) => v.stockQty <= 0);
-  const preBookable = outOfStock && product.variants.some((v) => v.preBookingAvailable);
-  const soldOut = outOfStock && !preBookable;
+  const soldOut = outOfStock;
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,9 +68,7 @@ export function ProductCard({ product, className, index = 0 }: Props) {
       originalPrice: firstVariant.originalPrice,
       quantity: 1,
       stockQty: firstVariant.stockQty,
-      qtyCap: product.preBookingMode === "OFF"
-        ? firstVariant.stockQty - firstVariant.reservedQty
-        : (product.preBookingMaxQtyPerOrder ?? 999),
+      qtyCap: firstVariant.stockQty - firstVariant.reservedQty,
       gstPercent: product.gstPercent,
     });
     setShowRipple(true);
@@ -106,7 +103,7 @@ export function ProductCard({ product, className, index = 0 }: Props) {
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: Math.min(index % 8, 7) * 0.06 }}
     >
-      {/* Image — tall 2:3 ratio for full saree portrait display */}
+      {/* Image — tall 2:3 ratio for full product portrait display */}
       <div
         className={cn(
           "relative overflow-hidden rounded-2xl flex-shrink-0",
@@ -135,12 +132,6 @@ export function ProductCard({ product, className, index = 0 }: Props) {
               <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm animate-pulse-soft"
                 style={{ background: "var(--color-error)", color: "white" }}>
                 {pct}% Off
-              </span>
-            )}
-            {preBookable && (
-              <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm"
-                style={{ background: "var(--color-gold-light)", color: "var(--color-gold-dark)" }}>
-                ✦ Pre-Book
               </span>
             )}
             {soldOut && (

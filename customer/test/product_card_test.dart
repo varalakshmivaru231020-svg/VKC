@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vl_customer/models.dart';
-import 'package:vl_customer/widgets.dart';
+import 'package:vkc_customer/models.dart';
+import 'package:vkc_customer/widgets.dart';
 
 /// Two sarees side by side, one with a short name and one that wraps.
 ///

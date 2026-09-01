@@ -10,7 +10,7 @@ import '../ecom/ecom_models.dart' as ecom show Banner;
 import '../theme.dart';
 import '../widgets.dart';
 
-const kSiteBase = 'https://vijaylakshmisarees.com';
+const kSiteBase = 'https://vkcgoldikshu.com';
 
 /// Routes that live inside the bottom-nav shell — pushing a second copy of the
 /// shell collides with its page key, so these are navigated with go().
@@ -499,11 +499,10 @@ class _PopupDialog extends StatelessWidget {
   }
 }
 
-// ── Website pages in-app (gallery, saree stories, policies) ──────────────────
-/// A page of vijaylakshmisarees.com shown inside the app. Used for the
-/// content the mobile API doesn't serve — the gallery, saree stories and the
-/// policy pages — so the customer reads the store's real words, not a copy
-/// that can drift.
+// ── Website pages in-app (gallery, policies) ─────────────────────────────────
+/// A page of vkcgoldikshu.com shown inside the app. Used for the
+/// content the mobile API doesn't serve — the gallery and the policy pages —
+/// so the customer reads the store's real words, not a copy that can drift.
 class WebPageScreen extends StatefulWidget {
   final String title;
   final String path;
@@ -649,68 +648,72 @@ class _AboutScreenState extends State<AboutScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       // Every line here is the store's own, from its About
-                      // page — the app used to claim five decades of weaving
-                      // when the store says "over a decade".
-                      Text('OVER A DECADE OF TRUST', style: VlText.upper(9, color: VlColors.red, letter: 0.22)),
+                      // page — kept in step with ABOUT_DEFAULTS in
+                      // lib/settings/about.ts on the web side.
+                      Text("MANDYA'S PRIDE SINCE 1988", style: VlText.upper(9, color: VlColors.red, letter: 0.22)),
                       const SizedBox(height: 8),
-                      Text('Where Tradition\nMeets Luxury', style: VlText.display(30, height: 1.15)),
+                      Text('Sweetness of Nature,\nStrength of Tradition.', style: VlText.display(30, height: 1.15)),
                       if (cfg.tagline.isNotEmpty) ...[
                         const SizedBox(height: 6),
                         Text(cfg.tagline, style: VlText.display(17, color: VlColors.muted, style: FontStyle.italic)),
                       ],
                       const DoubleRule(margin: EdgeInsets.symmetric(vertical: 20)),
                       Text(
-                        'At Anjali’s Vijaylakshmi Sarees, every saree is a celebration of heritage, elegance and timeless '
-                        'craftsmanship. For over a decade we have been curating collections that blend India’s rich textile '
-                        'traditions with contemporary sophistication — from intricate Aari work and exclusive handcrafted '
-                        'designs to premium fabrics and refined finishes.',
+                        'VKC Gold delivers the purest form of natural sweetness, straight from the sugarcane '
+                        'fields of Mandya, Karnataka. Established in 1988, we are a natural food processing '
+                        'enterprise dedicated to chemical-free, healthy jaggery products.',
                         style: VlText.body(14, color: VlColors.ink2, height: 1.75),
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Through exhibitions, online live sales and our digital presence, we continue to make exceptional '
-                        'sarees accessible to every woman, everywhere.',
+                        'We work directly with local farmers on fair pricing, then combine traditional know-how '
+                        'with modern, eco-friendly machinery — sugarcane crushing, juice extraction, filtration, '
+                        'boiling and packaging — so that nothing is lost between the field and the finished product.',
+                        style: VlText.body(14, color: VlColors.ink2, height: 1.75),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Every product carries the same promise: no artificial colours, no artificial flavours, '
+                        'and no chemicals added. From pure jaggery cubes and natural powder to syrups, bars and '
+                        'festive gift hampers, we make natural sweetness part of everyday life.',
                         style: VlText.body(14, color: VlColors.ink2, height: 1.75),
                       ),
                       const SizedBox(height: 22),
                       Text('WHAT WE STAND FOR', style: VlText.upper(9, letter: 0.22)),
                       const SizedBox(height: 12),
-                      _value('Heritage & Craftsmanship',
-                          'From intricate Aari work to exclusive handcrafted designs, every saree reflects India’s rich textile traditions.'),
-                      _value('Trust & Authenticity',
-                          'Built on trust, authenticity and an unwavering commitment to quality — loved by customers across India and abroad.'),
-                      _value('Premium Quality',
-                          'Premium fabrics, refined finishes and meticulous attention to detail in every drape.'),
-                      _value('Accessible to Every Woman',
-                          'Through exhibitions, online live sales and our digital presence, we make exceptional sarees accessible to every woman, everywhere.'),
+                      _value('Support to Local Farmers',
+                          'We empower rural communities around Mandya with fair pricing, buying cane directly from the farmers who grow it.'),
+                      _value('Purity and Quality First',
+                          '100% natural production with no preservatives, no artificial colours or flavours, and no chemicals added at any stage.'),
+                      _value('Innovation with Tradition',
+                          'Time-honoured jaggery-making combined with modern machinery and hygienic processing, for consistent quality in every batch.'),
+                      _value('Sustainable Growth',
+                          'Eco-friendly manufacturing that reduces waste, as we grow towards becoming a trusted global brand for Mandya’s sweetness.'),
                       const DoubleRule(margin: EdgeInsets.symmetric(vertical: 20)),
                       _fact(Icons.storefront_outlined, 'Karnataka store', cfg.storeAddress),
                       _fact(Icons.business_outlined, 'Registered office',
-                          'VL Group, 36/11, CHB Colony, Street No. 04, Vellur Road, Tiruchengode – 637211, Namakkal Dt., Tamil Nadu'),
+                          'VKC Cane Gold Foods Pvt. Ltd., Ballenahalli Village, Srirangapatna Taluk, Mandya District, Karnataka – 571807'),
                       if (cfg.phone.isNotEmpty) _fact(Icons.call_outlined, 'Call us', cfg.phone),
                       if (cfg.email.isNotEmpty) _fact(Icons.mail_outline, 'Write to us', cfg.email),
-                      _fact(Icons.receipt_long_outlined, 'GST', '29AAVFV5771G1ZA'),
+                      // The GST line is gone until the new entity's number is
+                      // confirmed — the one here belonged to the old business.
                       const SizedBox(height: 12),
-                      Row(children: [
-                        Expanded(
-                          child: _linkBtn('OUR STORY', () => context.push('/pages/saree-stories?title=Saree%20Stories')),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(child: _linkBtn('CONTACT', () => context.push('/contact'))),
-                      ]),
+                      // "Our Story" pointed at /saree-stories, a page the site no
+                      // longer has, so Contact stands on its own.
+                      _linkBtn('CONTACT', () => context.push('/contact')),
                       // The website closes its About page with this block —
                       // its words, its two calls to action.
                       const DoubleRule(margin: EdgeInsets.symmetric(vertical: 22)),
-                      Text('WEAR A STORY', style: VlText.upper(9, color: VlColors.red, letter: 0.22)),
+                      Text('TASTE THE DIFFERENCE', style: VlText.upper(9, color: VlColors.red, letter: 0.22)),
                       const SizedBox(height: 8),
                       Text(
-                        'Browse our collection and find the saree that speaks to you — woven with skill, '
-                        'intention, and a decade of passion.',
+                        'Browse our range of chemical-free jaggery products — made with care, from cane '
+                        'grown by farmers we know by name.',
                         style: VlText.body(14, color: VlColors.ink2, height: 1.75),
                       ),
                       const SizedBox(height: 16),
                       Row(children: [
-                        Expanded(child: _linkBtn('SHOP ALL SAREES', () => context.push('/listing'))),
+                        Expanded(child: _linkBtn('SHOP ALL', () => context.push('/listing'))),
                         const SizedBox(width: 10),
                         Expanded(child: _linkBtn('GET IN TOUCH', () => context.push('/contact'))),
                       ]),
@@ -719,7 +722,7 @@ class _AboutScreenState extends State<AboutScreen> {
                         child: Column(children: [
                           Lozenge(color: VlColors.rule2),
                           const SizedBox(height: 8),
-                          Text('VIJAYLAKSHMI SAREES', style: VlText.upper(8, color: VlColors.muted2, letter: 0.3)),
+                          Text('VKC GOLD', style: VlText.upper(8, color: VlColors.muted2, letter: 0.3)),
                         ]),
                       ),
                     ]),
@@ -825,7 +828,7 @@ class ContactScreen extends StatelessWidget {
                     // Every channel here comes from /v1/app-config; if that
                     // call hasn't landed, still give the customer a way out.
                     if (digits.isEmpty && phoneDigits.isEmpty && cfg.email.isEmpty && cfg.storeAddress.isEmpty)
-                      _tile(context, Icons.language, 'vijaylakshmisarees.com', 'Our contact details are on the website', kSiteBase),
+                      _tile(context, Icons.language, 'vkcgoldikshu.com', 'Our contact details are on the website', kSiteBase),
                     const DoubleRule(margin: EdgeInsets.symmetric(vertical: 20)),
                     Text('FOLLOW THE WEAVE', style: VlText.upper(9, letter: 0.22)),
                     const SizedBox(height: 12),

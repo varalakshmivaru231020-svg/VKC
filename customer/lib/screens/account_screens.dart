@@ -65,7 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(children: [
                 Lozenge(color: VlColors.rule2),
                 const SizedBox(height: 8),
-                Text('VIJAYLAKSHMI · v1.0 · SINCE 1968', style: VlText.upper(8, color: VlColors.muted2, letter: 0.3)),
+                Text('VKC GOLD · v1.0 · SINCE 1988', style: VlText.upper(8, color: VlColors.muted2, letter: 0.3)),
               ]),
             ),
           ],
@@ -252,7 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // separate "Track an Order" row only asked for a number the customer
         // would have had to go and look up. The /track-order route stays.
         _row(context, Icons.inventory_2_outlined, 'My Orders', 'Track your orders', to: '/orders'),
-        _row(context, Icons.favorite_border, 'Wishlist', 'Saved sarees', to: '/wishlist'),
+        _row(context, Icons.favorite_border, 'Wishlist', 'Saved products', to: '/wishlist'),
         if (loggedIn) ...[
           _row(context, Icons.location_on_outlined, 'Address Book', 'Delivery addresses',
               onTap: () => context.push('/addresses')),
@@ -266,13 +266,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _section('Discover'),
         _row(context, Icons.videocam_outlined, 'Book a Video Call', 'Shop with us, live',
             onTap: () => context.push('/video-booking')),
-        _row(context, Icons.menu_book_outlined, 'Journal', 'Stories from the loom', onTap: () => context.push('/journal')),
-        _row(context, Icons.auto_stories_outlined, 'Saree Stories', 'How each weave is made',
-            onTap: () => context.push('/pages/saree-stories?title=Saree%20Stories')),
-        _row(context, Icons.photo_library_outlined, 'Gallery', 'Photos & videos from our looms',
+        _row(context, Icons.menu_book_outlined, 'Journal', 'Notes from the farm', onTap: () => context.push('/journal')),
+        // "Saree Stories" linked to /pages/saree-stories, a page the site no
+        // longer has — the row is gone rather than opening a dead page.
+        _row(context, Icons.photo_library_outlined, 'Gallery', 'Photos & videos from our unit',
             onTap: () => context.push('/pages/gallery?title=Gallery')),
         _section('The House'),
-        _row(context, Icons.storefront_outlined, 'About Us', 'Weaving since 1968', onTap: () => context.push('/about')),
+        _row(context, Icons.storefront_outlined, 'About Us', 'Natural since 1988', onTap: () => context.push('/about')),
         _row(context, Icons.chat_bubble_outline, 'Contact Us', 'Call, WhatsApp or visit', onTap: () => context.push('/contact')),
         // Policy rows appear only for the documents the store has actually
         // published (via /v1/app-config → legal). The website's /shipping,

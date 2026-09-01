@@ -167,18 +167,9 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         <div>
           <h1 className="text-2xl font-semibold font-body flex items-center gap-2 flex-wrap" style={{ color: "var(--color-text-primary)" }}>
             Order #{order.orderNumber}
-            {order.orderType === "PRE_BOOKING" && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide rounded-full"
-                style={{ background: "var(--color-gold-light)", color: "var(--color-gold-dark)" }}>
-                ✦ Pre-Booking
-              </span>
-            )}
           </h1>
           <p className="text-sm font-body mt-1" style={{ color: "var(--color-text-muted)" }}>
             Placed on {fmtDate(order.createdAt)}
-            {order.orderType === "PRE_BOOKING" && (order as any).preBookingEtaDate && (
-              <> · Expected ready by {fmtDate((order as any).preBookingEtaDate)}</>
-            )}
           </p>
         </div>
         <div className="flex items-center gap-3">

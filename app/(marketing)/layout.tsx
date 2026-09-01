@@ -3,7 +3,6 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { QuickViewModal } from "@/components/product/QuickViewModal";
-import { VideoShoppingModal } from "@/components/VideoShoppingModal";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { LoginTrigger } from "@/components/auth/LoginTrigger";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -114,7 +113,6 @@ export default async function MarketingLayout({ children }: { children: React.Re
       />
       <CartSidebar />
       <QuickViewModal />
-      <VideoShoppingModal />
       <LoginModal />
       <Suspense><LoginTrigger /></Suspense>
       <MobileBottomNav />

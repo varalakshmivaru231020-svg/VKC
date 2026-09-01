@@ -13,7 +13,6 @@ import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import { useUIStore } from "@/lib/store/ui";
-import { VideoShoppingButton } from "@/components/VideoShoppingButton";
 
 export interface NavCategory {
   id: string;
@@ -27,12 +26,11 @@ export interface NavCategory {
 const NAV_BEFORE = [{ label: "Home", href: "/" }];
 
 const NAV_AFTER = [
-  { label: "Shop",          href: "/shop" },
-  { label: "About Us",      href: "/about" },
-  { label: "Saree Stories", href: "/saree-stories" },
-  { label: "Events",        href: "/events" },
-  { label: "Video Sharing", href: "/gallery" },
-  { label: "Contact",       href: "/contact" },
+  { label: "Shop",     href: "/shop" },
+  { label: "About Us", href: "/about" },
+  { label: "Events",   href: "/events" },
+  { label: "Gallery",  href: "/gallery" },
+  { label: "Contact",  href: "/contact" },
 ];
 
 // ── Animation variants ─────────────────────────────────────────────────────────
@@ -66,7 +64,7 @@ interface HeaderProps {
   whatsappNumber?: string;
 }
 
-export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook, youtube, navCategories = [], whatsappNumber }: HeaderProps) {
+export function Header({ siteName = "VKC Gold", logoUrl, instagram, facebook, youtube, navCategories = [], whatsappNumber }: HeaderProps) {
   const socialLinks = [
     { Icon: InstagramIcon, href: instagram, label: "Instagram" },
     { Icon: FacebookIcon,  href: facebook,  label: "Facebook" },
@@ -133,7 +131,6 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                     <Icon className="h-5 w-5" />
                   </a>
                 ))}
-                <VideoShoppingButton className="hidden lg:inline-flex ml-1 h-9 px-3 text-xs" />
               </div>
 
               {/* Center — logo */}
@@ -289,7 +286,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                     autoFocus
                     name="q"
                     type="text"
-                    placeholder="Search sarees, fabrics, occasions…"
+                    placeholder="Search jaggery, syrups, gift boxes…"
                     className="flex-1 min-w-0 text-base font-body bg-transparent outline-none"
                     style={{ color: "var(--color-text-primary)" }}
                     onKeyDown={(e) => { if (e.key === "Escape") setSearchOpen(false); }}
@@ -309,7 +306,7 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                 <div className="p-5">
                   <p className="text-xs font-body font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--color-text-muted)" }}>Popular Searches</p>
                   <div className="flex flex-wrap gap-2">
-                    {["Kanjivaram Silk", "Banarasi", "Wedding Sarees", "Cotton Sarees", "Patola"].map((tag) => (
+                    {["Jaggery Cubes", "Jaggery Powder", "Gift Boxes", "Syrups", "Energy Bites"].map((tag) => (
                       <Link key={tag} href={`/shop?q=${encodeURIComponent(tag)}`} onClick={() => setSearchOpen(false)}
                         className="px-3.5 py-2 text-sm font-body font-medium rounded-full border transition-all hover:scale-105"
                         style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-secondary)", background: "var(--color-cream)" }}
@@ -397,11 +394,6 @@ export function Header({ siteName = "Vijaylakshmi", logoUrl, instagram, facebook
                     </Link>
                   </>
                 )}
-              </div>
-
-              {/* Video Shopping CTA */}
-              <div className="px-3 pt-3">
-                <VideoShoppingButton className="w-full justify-center" onTrigger={() => setMobileOpen(false)} />
               </div>
 
               {/* Nav items — scrollable */}

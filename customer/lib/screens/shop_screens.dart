@@ -470,7 +470,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   right: 14,
                   bottom: 14,
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('VIJAYLAKSHMI STUDIO', style: VlText.upper(9, color: Colors.white70, letter: 0.22)),
+                    Text('VKC GOLD STUDIO', style: VlText.upper(9, color: Colors.white70, letter: 0.22)),
                     const SizedBox(height: 4),
                     Text('Shop our sarees, live',
                         maxLines: 1, overflow: TextOverflow.ellipsis, style: VlText.display(18, color: Colors.white)),

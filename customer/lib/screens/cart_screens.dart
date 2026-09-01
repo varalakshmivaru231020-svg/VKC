@@ -961,7 +961,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         'order_id': rzp['orderId'],
         'amount': rzp['amount'],
         'currency': rzp['currency'] ?? 'INR',
-        'name': 'Vijaylakshmi Sarees',
+        'name': 'VKC Gold',
         'description': 'Order $orderNumber',
         'prefill': {
           if ((user?.phone ?? '').isNotEmpty) 'contact': user!.phone,

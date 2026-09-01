@@ -223,7 +223,7 @@
     background: linear-gradient(to top, rgba(28,20,16,0.6) 0%, transparent 60%);
   }
 
-  .saree-card-ratio {
+  .product-card-ratio {
     aspect-ratio: 3 / 4;
   }
 
@@ -307,14 +307,14 @@
   .sidebar-sticky::-webkit-scrollbar-thumb { background: var(--color-sand); border-radius: 2px; }
 
   /* Rich text description on product detail page */
-  .prose-saree p { margin-bottom: 0.75rem; line-height: 1.75; }
-  .prose-saree p:last-child { margin-bottom: 0; }
-  .prose-saree ul, .prose-saree ol { margin: 0.5rem 0 0.75rem 1.25rem; }
-  .prose-saree li { margin-bottom: 0.35rem; line-height: 1.65; }
-  .prose-saree strong, .prose-saree b { font-weight: 600; color: var(--color-text-primary); }
-  .prose-saree em { font-style: italic; }
-  .prose-saree h3 { font-family: var(--font-heading); font-size: 1rem; font-weight: 600; color: var(--color-text-primary); margin: 1rem 0 0.35rem; }
-  .prose-saree h4 { font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary); margin: 0.75rem 0 0.25rem; }
+  .prose-product p { margin-bottom: 0.75rem; line-height: 1.75; }
+  .prose-product p:last-child { margin-bottom: 0; }
+  .prose-product ul, .prose-product ol { margin: 0.5rem 0 0.75rem 1.25rem; }
+  .prose-product li { margin-bottom: 0.35rem; line-height: 1.65; }
+  .prose-product strong, .prose-product b { font-weight: 600; color: var(--color-text-primary); }
+  .prose-product em { font-style: italic; }
+  .prose-product h3 { font-family: var(--font-heading); font-size: 1rem; font-weight: 600; color: var(--color-text-primary); margin: 1rem 0 0.35rem; }
+  .prose-product h4 { font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary); margin: 0.75rem 0 0.25rem; }
 }
 
 /* ── Order success / icon animations ──────────────────────────────────────── */

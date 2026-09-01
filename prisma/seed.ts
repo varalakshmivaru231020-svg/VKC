@@ -427,10 +427,10 @@ async function main() {
   const bcryptMod = await import("bcryptjs");
   const bcrypt = bcryptMod.default ?? bcryptMod;
   await db.user.upsert({
-    where: { email: "admin@vijaylakshmi.in" },
+    where: { email: "admin@vkcgoldikshu.com" },
     update: {},
     create: {
-      email: "admin@vijaylakshmi.in",
+      email: "admin@vkcgoldikshu.com",
       firstName: "Admin",
       lastName: "User",
       passwordHash: await bcrypt.hash("admin@123", 12),
@@ -438,15 +438,15 @@ async function main() {
       emailVerified: true,
     },
   });
-  console.log("  ✓ admin@vijaylakshmi.in / admin@123\n");
+  console.log("  ✓ admin@vkcgoldikshu.com / admin@123\n");
 
   // ── Demo customer ─────────────────────────────────────────────────────────
   console.log("→ Seeding demo customer...");
   await db.user.upsert({
-    where: { email: "demo@vijaylakshmi.in" },
+    where: { email: "demo@vkcgoldikshu.com" },
     update: {},
     create: {
-      email: "demo@vijaylakshmi.in",
+      email: "demo@vkcgoldikshu.com",
       firstName: "Priya",
       lastName: "Sharma",
       passwordHash: await bcrypt.hash("demo@123", 12),
@@ -455,7 +455,7 @@ async function main() {
       phoneVerified: false,
     },
   });
-  console.log("  ✓ demo@vijaylakshmi.in / demo@123\n");
+  console.log("  ✓ demo@vkcgoldikshu.com / demo@123\n");
 
   // ── Sample coupons ────────────────────────────────────────────────────────
   console.log("→ Seeding coupons...");
@@ -482,8 +482,8 @@ async function main() {
   console.log(`   Coupons  : ${coupons.length}`);
   console.log(`   Settings : ${Object.keys(DEFAULT_THEME).length}`);
   console.log("\n🔑 Login credentials:");
-  console.log("   Admin    : admin@vijaylakshmi.in / admin@123");
-  console.log("   Customer : demo@vijaylakshmi.in  / demo@123");
+  console.log("   Admin    : admin@vkcgoldikshu.com / admin@123");
+  console.log("   Customer : demo@vkcgoldikshu.com  / demo@123");
 }
 
 main()

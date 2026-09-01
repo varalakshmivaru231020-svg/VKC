@@ -65,7 +65,7 @@ export function QuickViewModal() {
   const wishlisted = isWishlisted(v.id);
   const outOfStock = v.stockQty <= 0;
   const available = v.stockQty - v.reservedQty;
-  const standardQtyCap = p.preBookingMode === "OFF" ? available : (p.preBookingMaxQtyPerOrder ?? 999);
+  const standardQtyCap = available;
 
   const handleAddToCart = () => {
     addItem({
@@ -205,7 +205,7 @@ export function QuickViewModal() {
               )}
             </div>
 
-            {/* Saree code */}
+            {/* Product code */}
             {v.sareeCode && (
               <div className="flex items-center gap-2">
                 <span className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>Code:</span>

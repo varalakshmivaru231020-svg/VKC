@@ -10,8 +10,8 @@ import { PromoBanner } from "@/components/home/PromoBanner";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "About Us — Anjali's Vijaylakshmi Sarees",
-  description: "For over a decade, Anjali's Vijaylakshmi Sarees has curated exquisite sarees blending India's rich textile traditions with contemporary sophistication.",
+  title: "About Us — VKC Gold",
+  description: "VKC Gold makes pure, chemical-free jaggery and cane products in Mandya, Karnataka — farmer-focused and 100% natural since 1988.",
 };
 
 // Values cards are editable in Admin → Settings → About Page; only the icon
@@ -346,7 +346,7 @@ export default async function AboutPage() {
               className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xs text-sm font-semibold font-body transition-all hover:gap-3.5 hover:shadow-md"
               style={{ background: "var(--color-primary)", color: "white" }}
             >
-              Shop All Sarees <ArrowRight className="h-4 w-4" />
+              Shop All Products <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/contact"

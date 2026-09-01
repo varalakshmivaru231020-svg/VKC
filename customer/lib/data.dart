@@ -43,16 +43,16 @@ Product _p(String id, String name, String cat, double price, double mrp, double 
     );
 
 final sampleProducts = <Product>[
-  _p('VL-2401', 'Marigold Border Kanjivaram', 'kanji', 18450, 24600, 4.8, 124, 'Pure Mulberry Silk', 0, badge: 'Bestseller'),
-  _p('VL-2402', 'Emerald Temple Kanjivaram', 'kanji', 21900, 29200, 4.9, 86, 'Pure Mulberry Silk', 1, badge: 'Editor’s Pick'),
-  _p('VL-2403', 'Royal Zari Banarasi', 'banar', 14200, 18900, 4.7, 211, 'Katan Silk', 2, isNew: true),
-  _p('VL-2404', 'Honey Brocade Banarasi', 'banar', 12800, 17066, 4.6, 92, 'Katan Silk', 3, badge: 'Flash'),
-  _p('VL-2405', 'Rani Patola Double Ikat', 'patola', 36500, 48700, 4.9, 41, 'Mashru Silk', 6, badge: 'Heritage'),
-  _p('VL-2406', 'Mist Chanderi', 'chande', 6900, 9200, 4.5, 167, 'Cotton-Silk', 8, isNew: true),
-  _p('VL-2407', 'Onyx Tussar with Kantha', 'tussar', 8400, 11200, 4.7, 78, 'Wild Silk', 4),
-  _p('VL-2408', 'Peacock Paithani Pallu', 'paithan', 28900, 38500, 4.8, 54, 'Paithani Silk', 7, badge: 'Bestseller'),
-  _p('VL-2409', 'Saffron Leheriya', 'leheria', 4900, 6500, 4.4, 198, 'Georgette', 5, isNew: true),
-  _p('VL-2410', 'Ivory Jamdani Muslin', 'jamdani', 9200, 12266, 4.6, 63, 'Bengal Muslin', 8),
+  _p('VKC-2401', 'Marigold Border Kanjivaram', 'kanji', 18450, 24600, 4.8, 124, 'Pure Mulberry Silk', 0, badge: 'Bestseller'),
+  _p('VKC-2402', 'Emerald Temple Kanjivaram', 'kanji', 21900, 29200, 4.9, 86, 'Pure Mulberry Silk', 1, badge: 'Editor’s Pick'),
+  _p('VKC-2403', 'Royal Zari Banarasi', 'banar', 14200, 18900, 4.7, 211, 'Katan Silk', 2, isNew: true),
+  _p('VKC-2404', 'Honey Brocade Banarasi', 'banar', 12800, 17066, 4.6, 92, 'Katan Silk', 3, badge: 'Flash'),
+  _p('VKC-2405', 'Rani Patola Double Ikat', 'patola', 36500, 48700, 4.9, 41, 'Mashru Silk', 6, badge: 'Heritage'),
+  _p('VKC-2406', 'Mist Chanderi', 'chande', 6900, 9200, 4.5, 167, 'Cotton-Silk', 8, isNew: true),
+  _p('VKC-2407', 'Onyx Tussar with Kantha', 'tussar', 8400, 11200, 4.7, 78, 'Wild Silk', 4),
+  _p('VKC-2408', 'Peacock Paithani Pallu', 'paithan', 28900, 38500, 4.8, 54, 'Paithani Silk', 7, badge: 'Bestseller'),
+  _p('VKC-2409', 'Saffron Leheriya', 'leheria', 4900, 6500, 4.4, 198, 'Georgette', 5, isNew: true),
+  _p('VKC-2410', 'Ivory Jamdani Muslin', 'jamdani', 9200, 12266, 4.6, 63, 'Bengal Muslin', 8),
 ];
 
 Product? productById(String id) {
@@ -65,16 +65,16 @@ Product? productById(String id) {
 /// Product → category id (kept separate from the Product model, which mirrors
 /// the API shape and has no category field).
 const _productCats = <String, String>{
-  'VL-2401': 'kanji',
-  'VL-2402': 'kanji',
-  'VL-2403': 'banar',
-  'VL-2404': 'banar',
-  'VL-2405': 'patola',
-  'VL-2406': 'chande',
-  'VL-2407': 'tussar',
-  'VL-2408': 'paithan',
-  'VL-2409': 'leheria',
-  'VL-2410': 'jamdani',
+  'VKC-2401': 'kanji',
+  'VKC-2402': 'kanji',
+  'VKC-2403': 'banar',
+  'VKC-2404': 'banar',
+  'VKC-2405': 'patola',
+  'VKC-2406': 'chande',
+  'VKC-2407': 'tussar',
+  'VKC-2408': 'paithan',
+  'VKC-2409': 'leheria',
+  'VKC-2410': 'jamdani',
 };
 
 String? productCat(String id) => _productCats[id];

@@ -47,7 +47,7 @@ export default async function OrdersPage() {
           <Link href="/shop"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-sm text-sm font-body font-semibold transition-colors"
             style={{ background: "var(--color-primary)", color: "white" }}>
-            Browse Sarees
+            Browse Products
           </Link>
         </div>
       ) : (

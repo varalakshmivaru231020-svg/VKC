@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vl_customer/ecom/ecom_models.dart';
-import 'package:vl_customer/screens/auth_screens.dart';
+import 'package:vkc_customer/ecom/ecom_models.dart';
+import 'package:vkc_customer/screens/auth_screens.dart';
 
 void main() {
   // The identity is cached beside the tokens so a launch with no connection

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vl_customer/ecom/ecom_config.dart';
-import 'package:vl_customer/ecom/ecom_models.dart';
-import 'package:vl_customer/screens/address_screens.dart';
+import 'package:vkc_customer/ecom/ecom_config.dart';
+import 'package:vkc_customer/ecom/ecom_models.dart';
+import 'package:vkc_customer/screens/address_screens.dart';
 
 Address _addr({String id = '1', bool isDefault = false}) => Address(
       id: id,

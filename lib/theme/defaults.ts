@@ -62,9 +62,9 @@ export const DEFAULT_THEME: ThemeSettings = {
   "tracking.label":   "0.08em",
 
   // ── General ───────────────────────────────────────────
-  "site.name":                "Vijaylakshmi Sarees",
-  "site.tagline":             "Timeless Weaves. Modern Souls.",
-  "site.announcement":        "Free shipping all over India · New Arrivals: Kanjivaram Collection",
+  "site.name":                "VKC Gold",
+  "site.tagline":             "Sweetness of Nature, Strength of Tradition.",
+  "site.announcement":        "Free shipping all over India · 100% natural, chemical-free jaggery",
   "site.announcement.active": "true",
   "site.currency.symbol":     "₹",
   "site.currency.code":       "INR",

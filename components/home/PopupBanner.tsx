@@ -126,7 +126,7 @@ export function PopupBanner({ popup }: { popup: PopupData | null }) {
           style={{ background: "var(--color-cream)", borderTop: "1px solid var(--color-parchment)" }}
         >
           <p className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>
-            Limited time · Handcrafted sarees
+            Limited time · 100% natural jaggery
           </p>
           {popup.linkUrl ? (
             <a

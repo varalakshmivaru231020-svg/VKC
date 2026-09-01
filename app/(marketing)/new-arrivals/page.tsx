@@ -4,7 +4,7 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import type { ProductData } from "@/lib/types/product";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "New Arrivals — Vijaylakshmi Sarees" };
+export const metadata: Metadata = { title: "New Arrivals — VKC Gold" };
 
 export default async function NewArrivalsPage() {
   let result: { products: ProductData[]; total: number; page: number; limit: number } = { products: [], total: 0, page: 1, limit: 24 };
@@ -27,7 +27,7 @@ export default async function NewArrivalsPage() {
           New Arrivals
         </h1>
         <p className="text-base font-body mt-3 max-w-md mx-auto" style={{ color: "var(--color-text-muted)" }}>
-          Fresh weaves, straight from the looms — handpicked from master artisans across India.
+          Fresh batches, straight from the press — new jaggery products and seasonal combos.
         </p>
         {result.total > 0 && (
           <p className="text-sm font-body mt-2" style={{ color: "var(--color-text-disabled)" }}>

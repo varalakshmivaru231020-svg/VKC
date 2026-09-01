@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   // while the server is running 404s until the next restart (same issue
   // already fixed for product images in app/api/admin/upload).
   if (isCloudinaryConfigured()) {
-    const result = await uploadBufferToCloudinary(outputBuffer, { folder: "vijaylakshmi/reviews" });
+    const result = await uploadBufferToCloudinary(outputBuffer, { folder: "vkc/reviews" });
     return NextResponse.json({ url: result.secure_url });
   }
 

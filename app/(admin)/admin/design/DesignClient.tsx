@@ -658,7 +658,7 @@ function LivePreview({ settings }: { settings: ThemeSettings }) {
             return (
               <div key={name} className="space-y-2.5">
                 <div
-                  className="saree-card-ratio rounded-sm"
+                  className="product-card-ratio rounded-sm"
                   style={{ background: settings["color.cream"], border: `1px solid ${settings["color.parchment"]}` }}
                 />
                 <div className="space-y-1">

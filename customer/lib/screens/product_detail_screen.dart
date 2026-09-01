@@ -24,7 +24,7 @@ Color? _hex(String? h) {
   return v == null ? null : Color(v);
 }
 
-/// Real product detail, bound to vijaylakshmi_ecom `/v1/products/:slug`.
+/// Real product detail, bound to vkcgold_ecom `/v1/products/:slug`.
 class ProductScreen extends StatefulWidget {
   final String id; // slug
   const ProductScreen({super.key, required this.id});
@@ -324,7 +324,7 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget _details(EcomProduct p) {
     final body = _stripHtml(p.description).isNotEmpty ? _stripHtml(p.description) : _stripHtml(p.shortDesc);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(body.isEmpty ? 'A handcrafted heritage saree from Vijaylakshmi.' : body,
+      Text(body.isEmpty ? 'A handcrafted heritage saree from VKC Gold.' : body,
           style: VlText.body(13, color: VlColors.muted, height: 1.6)),
       if (p.occasions.isNotEmpty) ...[
         const SizedBox(height: 12),

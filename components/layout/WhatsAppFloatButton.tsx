@@ -6,7 +6,7 @@ export function WhatsAppFloatButton({ phoneNumber }: { phoneNumber?: string }) {
 
   return (
     <a
-      href={`https://wa.me/${number}?text=${encodeURIComponent("Hi! I'd like to know more about your sarees.")}`}
+      href={`https://wa.me/${number}?text=${encodeURIComponent("Hi! I'd like to know more about your jaggery products.")}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"

@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 function generateOrderNumber(): string {
   const ts  = Date.now().toString(36).toUpperCase();
   const rnd = Math.random().toString(36).slice(2, 5).toUpperCase();
-  return `VL${ts}${rnd}`.slice(0, 12);
+  return `VKC${ts}${rnd}`.slice(0, 12);
 }
 
 interface CheckoutItem {

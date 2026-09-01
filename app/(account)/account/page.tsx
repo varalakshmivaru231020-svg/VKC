@@ -50,7 +50,7 @@ export default async function AccountDashboard() {
     {
       href: "/account/wishlist",
       label: "Wishlist",
-      desc: "Sarees saved for later",
+      desc: "Products saved for later",
       icon: Heart,
       accent: "#92400E",
       bg: "#FEF5E7",
@@ -142,7 +142,7 @@ export default async function AccountDashboard() {
               <Link href="/shop"
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-body font-semibold transition-colors"
                 style={{ background: "var(--color-primary)", color: "white" }}>
-                <Gift className="h-4 w-4" /> Browse Sarees
+                <Gift className="h-4 w-4" /> Browse Products
               </Link>
             </div>
           ) : (
@@ -219,10 +219,10 @@ export default async function AccountDashboard() {
                 New Arrivals
               </p>
               <p className="text-lg font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--color-text-primary)" }}>
-                Discover the latest sarees
+                Discover the latest products
               </p>
               <p className="text-sm font-body mt-1" style={{ color: "var(--color-text-muted)" }}>
-                Fresh weaves from master artisans across India
+                Fresh batches from our unit in Mandya
               </p>
             </div>
             <Link href="/shop"

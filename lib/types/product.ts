@@ -10,14 +10,9 @@ export interface ProductVariantData {
   originalPrice: number;
   stockQty: number;
   reservedQty: number;
-  preBookedQty: number;
   isActive: boolean;
   sortOrder: number;
   images: ProductImageData[];
-  // Computed server-side (lib/db/products.ts) from the product's pre-booking
-  // config + this variant's stock — not stored columns.
-  preBookingAvailable: boolean;
-  preBookingRemainingSlots: number | null;
 }
 
 export interface ProductImageData {
@@ -57,15 +52,6 @@ export interface ProductData {
   category?: { id: string; name: string; slug: string } | null;
   variants: ProductVariantData[];
   productAttributes?: ProductAttributeData[];
-  // ── Pre-Booking ──────────────────────────────────────────────────────────
-  preBookingMode: "OFF" | "AUTO_ON_OUT_OF_STOCK" | "ALWAYS_ON";
-  preBookingEtaMinDays?: number | null;
-  preBookingEtaMaxDays?: number | null;
-  preBookingMaxQtyPerOrder?: number | null;
-  preBookingMaxTotalQty?: number | null;
-  preBookingDisclaimer?: string | null;
-  preBookingReturnsAllowed: boolean;
-  preBookingEtaLabel?: string | null;
 }
 
 export interface CartItem {
@@ -82,20 +68,9 @@ export interface CartItem {
   quantity: number;
   stockQty: number;
   gstPercent: number;
-  // The ceiling the qty stepper enforces. Equal to stockQty for products
-  // with pre-booking off (can't sell more than what exists); higher when
-  // the product allows pre-booking, so a customer CAN request more than
-  // current stock — the shortfall is offered as a pre-booking choice at
-  // checkout (see cart page) rather than being silently capped here.
+  // The ceiling the qty stepper enforces — can't sell more than what's in
+  // stock. Defaults to stockQty when unset.
   qtyCap?: number;
-  // ── Pre-Booking ──────────────────────────────────────────────────────────
-  // Snapshotted at add-to-cart time. isPreBooking splits the cart/checkout
-  // flow (see cart page + checkout page) — a cart never checks out a mix of
-  // pre-booked and standard items in one order.
-  isPreBooking?: boolean;
-  preBookingEtaLabel?: string | null;
-  /** Remaining pre-booking slots at add-to-cart time, used to clamp qty. Null = uncapped. */
-  preBookingCap?: number | null;
 }
 
 export interface OrderData {

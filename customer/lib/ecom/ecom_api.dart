@@ -7,7 +7,7 @@ import 'ecom_cart.dart';
 import 'ecom_models.dart';
 import 'ecom_wishlist.dart';
 
-/// Auth state + token storage for the vijaylakshmi_ecom `/v1` API.
+/// Auth state + token storage for the vkcgold_ecom `/v1` API.
 /// Tokens persist in secure storage; [user] drives the logged-in UI.
 class EcomAuth {
   EcomAuth._();
@@ -133,7 +133,7 @@ String ecomError(Object e, String fallback) {
   return fallback;
 }
 
-/// Client for the vijaylakshmi_ecom `/api/v1/*` ecommerce API.
+/// Client for the vkcgold_ecom `/api/v1/*` ecommerce API.
 class EcomApi {
   EcomApi._() {
     _dio.interceptors.add(InterceptorsWrapper(
@@ -174,7 +174,7 @@ class EcomApi {
 
   /// Live ecom backend. Override for staging/local with
   /// --dart-define=ECOM_API_BASE=https://host  (path /api/v1 is appended).
-  static const host = String.fromEnvironment('ECOM_API_BASE', defaultValue: 'https://vijaylakshmisarees.com');
+  static const host = String.fromEnvironment('ECOM_API_BASE', defaultValue: 'https://vkcgoldikshu.com');
   static String get base => '$host/api/v1';
 
   final Dio _dio = Dio(BaseOptions(

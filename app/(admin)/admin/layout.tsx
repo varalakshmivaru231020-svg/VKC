@@ -11,7 +11,7 @@ import {
   ChevronRight, Store, Truck, BookOpen, FileText,
   Megaphone, Globe, Star, Heart,
   ChevronDown, ChevronUp, Layers, Shield, Boxes,
-  Video, Facebook, PackageSearch,
+  Video, Facebook,
 } from "lucide-react";
 
 // ── Sidebar counts hook ───────────────────────────────────────────────────────
@@ -19,7 +19,6 @@ interface SidebarCounts {
   pendingOrders?: number;
   customers?: number;
   pendingVideoBookings?: number;
-  pendingPreBookings?: number;
 }
 
 function useSidebarCounts() {
@@ -60,7 +59,7 @@ interface NavGroupDef { title: string; items: NavItemDef[] }
 
 // Hrefs accessible to STAFF role
 const STAFF_ALLOWED = new Set([
-  "/admin/orders", "/admin/pre-bookings", "/admin/shipments", "/admin/customers", "/admin/reviews",
+  "/admin/orders", "/admin/shipments", "/admin/customers", "/admin/reviews",
 ]);
 
 const navGroups: NavGroupDef[] = [
@@ -84,13 +83,6 @@ const navGroups: NavGroupDef[] = [
           { href: "/admin/orders?status=CANCELLED",   label: "Cancelled" },
           { href: "/admin/orders?status=RETURN_REQUESTED", label: "Returns" },
         ],
-      },
-      {
-        href: "/admin/pre-bookings",
-        label: "Pre-Booking Orders",
-        icon: PackageSearch,
-        countKey: "pendingPreBookings",
-        badgeVariant: "warning",
       },
       { href: "/admin/shipments", label: "Shipments",  icon: Truck },
       { href: "/admin/customers", label: "Customers",  icon: Users,  countKey: "customers" },
@@ -125,10 +117,8 @@ const navGroups: NavGroupDef[] = [
     title: "Content",
     items: [
       { href: "/admin/blogs",           label: "Blogs",           icon: BookOpen },
-      { href: "/admin/saree-stories",   label: "Saree Stories",   icon: Layers },
       { href: "/admin/gallery",         label: "Gallery",         icon: Image },
       { href: "/admin/videos",          label: "Videos",          icon: Video },
-      { href: "/admin/video-bookings",  label: "Video Bookings",  icon: Video, countKey: "pendingVideoBookings", badgeVariant: "warning" },
       { href: "/admin/facebook-videos", label: "Facebook Videos", icon: Facebook },
       { href: "/admin/pages",           label: "CMS Pages",       icon: FileText },
       { href: "/admin/events",          label: "Events",          icon: Star },
@@ -274,7 +264,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-white font-bold text-sm">V</span>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold font-body truncate" style={{ color: "#111827" }}>Vijaylakshmi</p>
+              <p className="text-sm font-semibold font-body truncate" style={{ color: "#111827" }}>VKC Gold</p>
               <p className="text-[10px] font-body" style={{ color: "#9CA3AF" }}>Admin Panel</p>
             </div>
           </Link>

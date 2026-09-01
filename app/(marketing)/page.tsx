@@ -28,12 +28,12 @@ const CAT_GRADIENTS = [
 
 const FALLBACK_SLIDES = [
   {
-    tag: "New Season",
-    heading: "The Art of\nKanjivaram Silk",
-    subtext: "Handwoven in the looms of Tamil Nadu — each thread a story, each saree a legacy.",
-    ctaLabel: "Explore Collection",
-    ctaHref: "/category/kanjivaram",
-    ctaSecLabel: "View Lookbook",
+    tag: "100% Natural",
+    heading: "Pure Jaggery\nfrom Mandya",
+    subtext: "Chemical-free jaggery pressed from cane grown in Srirangapatna — no preservatives, no artificial colours.",
+    ctaLabel: "Explore Range",
+    ctaHref: "/category/jaggery",
+    ctaSecLabel: "Our Story",
     ctaSecHref: "/about",
     bgColor: "#F2EBE0",
     imageBg: "linear-gradient(135deg, #D4A76A 0%, #8B4513 50%, #5C2E0A 100%)",
@@ -41,10 +41,10 @@ const FALLBACK_SLIDES = [
   },
   {
     tag: "Festive Edit",
-    heading: "Banarasi\nSplendour",
-    subtext: "The opulence of Varanasi — brocade weaves that transform every occasion into celebration.",
-    ctaLabel: "Shop Banarasi",
-    ctaHref: "/category/banarasi",
+    heading: "Gift Boxes &\nFestive Combos",
+    subtext: "Premium jaggery hampers, laddus and coconut bars — made for celebrations and thoughtful gifting.",
+    ctaLabel: "Shop Gift Boxes",
+    ctaHref: "/category/gift-boxes",
     ctaSecLabel: "See All Festive",
     ctaSecHref: "/shop?occasion=festival",
     bgColor: "#EDE3D5",
@@ -52,12 +52,12 @@ const FALLBACK_SLIDES = [
     imageUrl: null,
   },
   {
-    tag: "Everyday Elegance",
-    heading: "Soft Cotton\nSarees",
-    subtext: "Light, breathable, and effortlessly graceful — for every day that deserves to feel beautiful.",
-    ctaLabel: "Shop Cotton",
-    ctaHref: "/category/cotton",
-    ctaSecLabel: "Daily Wear",
+    tag: "Everyday Goodness",
+    heading: "Bars, Bites\n& Syrups",
+    subtext: "Puffed rice bars, coconut bars, energy bites and jaggery syrups — wholesome snacking for every day.",
+    ctaLabel: "Shop Snacks",
+    ctaHref: "/category/bars-snacks",
+    ctaSecLabel: "Daily Range",
     ctaSecHref: "/shop?occasion=daily",
     bgColor: "#EAE8E2",
     imageBg: "linear-gradient(135deg, #9DB5A0 0%, #5F7A65 50%, #3A5040 100%)",
@@ -68,7 +68,7 @@ const FALLBACK_SLIDES = [
 // Returns window comes from the `returns_days` setting so this badge, checkout
 // and the invoice always quote the same number.
 const buildTrustBadges = (returnsDays: number) => [
-  { Icon: Sparkles, title: "Authentic Weaves", desc: "Handpicked from master weavers across India" },
+  { Icon: Sparkles, title: "100% Natural",     desc: "No chemicals, preservatives or artificial colours" },
   { Icon: Truck,    title: "Free Shipping",    desc: "All over India" },
   { Icon: RefreshCw,title: `${returnsDays}-Day Returns`, desc: "No questions asked return policy" },
   { Icon: Shield,   title: "Secure Payment",   desc: "100% safe & encrypted checkout" },
@@ -150,7 +150,7 @@ export default async function HomePage() {
       {/* ── WELCOME STRIP ─────────────────────────────────────────────────────── */}
       <div className="py-2.5 text-center px-4" style={{ background: "var(--color-primary)" }}>
         <p className="text-xs sm:text-sm font-body tracking-wide" style={{ color: "white" }}>
-          Welcome to Vijaylakshmi Sarees — thank you for visiting. Every weave here is chosen with care, just for you.
+          Welcome to VKC Gold — thank you for visiting. Pure, chemical-free sweetness from Mandya, made with care.
         </p>
       </div>
 
@@ -273,7 +273,7 @@ export default async function HomePage() {
               className="inline-flex items-center gap-2.5 px-10 py-3.5 rounded-xs text-sm font-semibold font-body border transition-all duration-normal hover:gap-3.5"
               style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)" }}
             >
-              View All Sarees <ArrowRight className="h-4 w-4" />
+              View All Products <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -423,7 +423,7 @@ export default async function HomePage() {
               <div className="space-y-2">
                 <span className="text-xs font-semibold tracking-[0.18em] uppercase"
                   style={{ fontFamily: "var(--font-body)", color: "var(--color-gold)" }}>
-                  Behind the Weave
+                  Behind the Scenes
                 </span>
                 <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)" }}>
                   Gallery

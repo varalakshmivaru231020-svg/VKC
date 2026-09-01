@@ -1,4 +1,4 @@
-package com.vlgroups.vl_customer
+package com.vkcgold.vkc_customer
 
 import io.flutter.embedding.android.FlutterActivity
 

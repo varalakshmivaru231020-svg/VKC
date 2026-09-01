@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vl_customer/ecom/ecom_models.dart';
+import 'package:vkc_customer/ecom/ecom_models.dart';
 
 /// Payment methods come from the website's own GET /api/payment-config, which
 /// reads the very rows Admin → Settings → Payments writes. The app must mirror

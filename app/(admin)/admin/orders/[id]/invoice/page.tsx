@@ -83,7 +83,7 @@ export default async function InvoicePage({ params }: { params: { id: string } }
   if (!order) notFound();
 
   const addr          = order.shippingAddress as any;
-  const storeName     = settings["store_name"]     || "Vijaylakshmi Sarees";
+  const storeName     = settings["store_name"]     || "VKC Gold";
   const storePhone    = settings["store_phone"]    || "";
   const storeEmail    = settings["store_email"]    || "";
   const storeAddress  = settings["store_address"]  || "";
@@ -112,7 +112,7 @@ export default async function InvoicePage({ params }: { params: { id: string } }
         <div className="inv-header">
           <div className="logo-area">
             <h1>{storeName}</h1>
-            <p>Handcrafted Indian Sarees</p>
+            <p>100% Natural Jaggery & Cane Products</p>
             {storeAddress && <p style={{ marginTop: 6, maxWidth: 220 }}>{storeAddress}</p>}
             {storePhone && <p>📞 {storePhone}</p>}
             {storeEmail && <p>✉ {storeEmail}</p>}
@@ -251,7 +251,7 @@ export default async function InvoicePage({ params }: { params: { id: string } }
 
         <div className="thank-you">
           <p>Thank you for shopping with {storeName} 🙏</p>
-          <p style={{ marginTop: 4 }}>We hope you love your saree!</p>
+          <p style={{ marginTop: 4 }}>We hope you enjoy your order!</p>
         </div>
       </div>
     </div>

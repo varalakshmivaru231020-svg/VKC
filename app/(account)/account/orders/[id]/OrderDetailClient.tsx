@@ -25,8 +25,6 @@ interface Order {
   id: string;
   orderNumber: string;
   status: string;
-  orderType?: string;
-  preBookingEtaDate?: string | null;
   paymentStatus: string;
   paymentMethod: string | null;
   subtotal: string | number;
@@ -75,17 +73,6 @@ const TIMELINE_STEPS = [
   { key: "PROCESSING", label: "Processing",   icon: Clock },
   { key: "SHIPPED",    label: "Shipped",      icon: Truck },
   { key: "DELIVERED",  label: "Delivered",    icon: Package },
-];
-
-// Pre-booked orders reuse the same OrderStatus lifecycle (no separate admin
-// dashboard in this MVP — see PRE_BOOKING_PLAN.md) but read very differently
-// to a customer: "Processing" undersells what's actually a procurement wait.
-const PREBOOKING_TIMELINE_STEPS = [
-  { key: "PENDING",    label: "Booked",         icon: Box },
-  { key: "CONFIRMED",  label: "Confirmed",      icon: CheckCircle2 },
-  { key: "PROCESSING", label: "In Procurement", icon: Clock },
-  { key: "SHIPPED",    label: "Shipped",        icon: Truck },
-  { key: "DELIVERED",  label: "Delivered",      icon: Package },
 ];
 
 const STATUS_ORDER = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"];
@@ -335,18 +322,7 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
           </h1>
           <p className="text-sm font-body mt-0.5 flex items-center gap-2 flex-wrap" style={{ color: "var(--color-text-muted)" }}>
             Placed on {fmtDate(order.createdAt)}
-            {order.orderType === "PRE_BOOKING" && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded-full"
-                style={{ background: "var(--color-gold-light)", color: "var(--color-gold-dark)" }}>
-                ✦ Pre-Booking
-              </span>
-            )}
           </p>
-          {order.orderType === "PRE_BOOKING" && order.preBookingEtaDate && !["DELIVERED", "CANCELLED"].includes(order.status) && (
-            <p className="text-xs font-body mt-1" style={{ color: "var(--color-gold-dark)" }}>
-              Expected ready by {fmtDate(order.preBookingEtaDate)}
-            </p>
-          )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <a
@@ -386,7 +362,7 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
         const fmtStamp = (s: string | null) =>
           s ? new Date(s).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
 
-        const timelineSteps = order.orderType === "PRE_BOOKING" ? PREBOOKING_TIMELINE_STEPS : TIMELINE_STEPS;
+        const timelineSteps = TIMELINE_STEPS;
         return (
         <div className="p-6 rounded-md border" style={{ background: "white", borderColor: "var(--color-parchment)" }}>
           <h2 className="text-sm font-body font-semibold mb-6" style={{ color: "var(--color-text-primary)" }}>Order Status</h2>
@@ -938,7 +914,7 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
                       onClick={() => setRefundMethod("WALLET")}
                       icon={Wallet}
                       title="Store wallet"
-                      subtitle="Instant credit to your Vijaylakshmi wallet"
+                      subtitle="Instant credit to your VKC Gold wallet"
                     />
                   </div>
                 </div>

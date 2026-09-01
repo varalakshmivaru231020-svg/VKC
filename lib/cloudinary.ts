@@ -31,7 +31,7 @@ export function uploadBufferToCloudinary(
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: options.folder ?? "vijaylakshmi/products",
+        folder: options.folder ?? "vkc/products",
         format: options.format ?? "webp",
         resource_type: "image",
       },
@@ -67,7 +67,7 @@ export function uploadVideoBufferToCloudinary(
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_chunked_stream(
       {
-        folder: options.folder ?? "vijaylakshmi/videos",
+        folder: options.folder ?? "vkc/videos",
         resource_type: "video",
         chunk_size: VIDEO_CHUNK_SIZE,
         timeout: VIDEO_UPLOAD_TIMEOUT_MS,

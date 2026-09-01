@@ -10,7 +10,7 @@ import { attrKey } from "./attrKey";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import type { ProductData } from "@/lib/types/product";
 
-export const metadata: Metadata = { title: "Shop All Sarees" };
+export const metadata: Metadata = { title: "Shop All Products" };
 export const dynamic = "force-dynamic";
 
 const SORT_OPTIONS = [
@@ -123,7 +123,7 @@ export default async function ShopPage({ searchParams }: Props) {
             <div className="relative z-10">
               <p className="text-label mb-2" style={{ color: bannerImg ? "var(--color-gold)" : "var(--color-gold)" }}>Explore</p>
               <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h1)", fontWeight: "var(--weight-heading)", color: bannerImg ? "white" : "var(--color-text-primary)" }}>
-                All Sarees
+                All Products
               </h1>
               <p className="text-body-sm mt-2 font-body" style={{ color: bannerImg ? "rgba(255,255,255,0.8)" : "var(--color-text-muted)" }}>
                 {result.total > 0 ? `${result.total} products curated for you` : "Handwoven from across India"}

@@ -341,7 +341,7 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                  Text(l?.host ?? 'Vijaylakshmi Studio',
+                  Text(l?.host ?? 'VKC Gold Studio',
                       maxLines: 1, overflow: TextOverflow.ellipsis, style: VlText.ui(13, weight: FontWeight.w600, color: Colors.white)),
                   // Only a real viewer count is shown — this used to fall back
                   // to the number of chat messages and label it "watching".

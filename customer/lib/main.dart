@@ -31,7 +31,7 @@ void main() async {
   // Pull the store's admin theme + persisted auth in the background; the splash
   // (2.4s) covers the fetch, and the app rebuilds via themeVersion when applied.
   _bootstrap();
-  runApp(const VlApp());
+  runApp(const VkcApp());
 }
 
 Future<void> _loadPaymentMethods() async {
@@ -139,7 +139,7 @@ final _router = GoRouter(
     GoRoute(
       path: '/pages/:page',
       builder: (_, s) => WebPageScreen(
-        title: s.uri.queryParameters['title'] ?? 'Vijaylakshmi',
+        title: s.uri.queryParameters['title'] ?? 'VKC Gold',
         path: '/${s.pathParameters['page']}',
       ),
     ),
@@ -149,13 +149,13 @@ final _router = GoRouter(
   ],
 );
 
-class VlApp extends StatelessWidget {
-  const VlApp({super.key});
+class VkcApp extends StatelessWidget {
+  const VkcApp({super.key});
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<int>(
         valueListenable: themeVersion,
         builder: (context, _, __) => MaterialApp.router(
-          title: 'Vijaylakshmi Sarees',
+          title: 'VKC Gold',
           debugShowCheckedModeBanner: false,
           theme: vlTheme(),
           routerConfig: _router,

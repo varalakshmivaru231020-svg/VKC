@@ -1,4 +1,4 @@
-# Vijaylakshmi Sarees — Full-Stack E-Commerce Development Plan
+# VKC Gold — Full-Stack E-Commerce Development Plan
 > Reference: Taneira.com (Tata luxury saree brand) — Goal: Superior design, better UX, richer saree-specific features
 > Stack: Next.js 14 · Node.js · PostgreSQL · Flutter
 
@@ -421,7 +421,7 @@ Table: banners
 
 ### 5.1 Web (Next.js)
 ```
-vijaylakshmi-web/
+vkcgold-web/
 ├── app/
 │   ├── (marketing)/          # Public pages (no auth required)
 │   │   ├── page.tsx          # Home
@@ -583,7 +583,7 @@ vijaylakshmi-app/
                          Background: #8B1A2E, text: #E8C97A, 40px height
 
 [HEADER - Sticky]      — Height: 72px desktop / 64px mobile
-  Logo (left)          — Wordmark "Vijaylakshmi" in Cormorant Garamond 28px gold
+  Logo (left)          — Wordmark "VKC Gold" in Cormorant Garamond 28px gold
   Nav (center)         — New Arrivals | Collections | Shop | Our Story | Contact
   Icons (right)        — Search | Wishlist (count) | Cart (count) | Account
 

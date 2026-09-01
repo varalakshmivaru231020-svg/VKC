@@ -1,4 +1,4 @@
-// Models mirroring the vijaylakshmi_ecom `/api/v1/*` JSON, adapted from that
+// Models mirroring the vkcgold_ecom `/api/v1/*` JSON, adapted from that
 // project's own Flutter app so the shapes match exactly. Ecommerce screens use
 // these; the Live screens keep using the salesproject (VL Group) models.
 

@@ -107,7 +107,7 @@ export function CartSidebar() {
                 Your cart is empty
               </p>
               <p className="text-sm font-body mt-1" style={{ color: "var(--color-text-muted)" }}>
-                Discover our handwoven sarees
+                Discover our natural jaggery range
               </p>
             </div>
             <button
@@ -115,7 +115,7 @@ export function CartSidebar() {
               className="px-6 py-3 rounded-sm text-sm font-body font-semibold transition-colors"
               style={{ background: "var(--color-primary)", color: "white" }}
             >
-              Browse Sarees
+              Browse Products
             </button>
           </div>
         ) : (
