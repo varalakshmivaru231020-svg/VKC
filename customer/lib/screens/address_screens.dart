@@ -225,7 +225,7 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
       return _state(Icons.wifi_off, _error!, 'The addresses could not be fetched just now.', 'RETRY', _load);
     }
     if (_addresses.isEmpty) {
-      return _state(Icons.location_on_outlined, 'No saved addresses', 'Add the address your sarees should travel to.', 'ADD ADDRESS', _add);
+      return _state(Icons.location_on_outlined, 'No saved addresses', 'Add the address your orders should travel to.', 'ADD ADDRESS', _add);
     }
     return RefreshIndicator(
       color: VlColors.red,

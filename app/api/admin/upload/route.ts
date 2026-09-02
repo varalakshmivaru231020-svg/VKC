@@ -3,8 +3,9 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { isCloudinaryConfigured, uploadBufferToCloudinary } from "@/lib/cloudinary";
+import { diskUploadsConfigured, uploadsDir } from "@/lib/upload-storage";
 
-const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads", "products");
+const UPLOADS_DIR = uploadsDir("products");
 const MAX_INPUT_SIZE = 30 * 1024 * 1024; // 30 MB raw input
 const MAX_DIMENSION  = 2400;             // px — resize if wider/taller
 const WEBP_QUALITY   = 85;
@@ -113,16 +114,15 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Store file ────────────────────────────────────────────────────────────
-    // Cloudinary is preferred — local disk writes don't survive on most hosting
-    // platforms (ephemeral/serverless filesystems), which is why uploaded images
-    // can go missing in production even though they work fine locally. Falls
-    // back to local disk only when Cloudinary isn't configured (e.g. a bare
-    // local dev checkout without credentials).
+    // Storage priority: UPLOADS_DIR (persistent disk outside the app folder,
+    // served by nginx) wins when set; otherwise Cloudinary; otherwise local
+    // public/uploads in dev only. Plain public/ writes are refused in
+    // production because they don't survive a redeploy/restart.
     let url: string;
     let storedWidth = meta.width;
     let storedHeight = meta.height;
 
-    if (isCloudinaryConfigured()) {
+    if (!diskUploadsConfigured && isCloudinaryConfigured()) {
       try {
         const result = await uploadBufferToCloudinary(outputBuffer, { folder: "vkc/products" });
         url = result.secure_url;
@@ -138,15 +138,15 @@ export async function POST(req: NextRequest) {
           { status: 500 }
         );
       }
-    } else if (process.env.NODE_ENV === "production") {
-      // Never silently fall back to local disk in production — those files
+    } else if (!diskUploadsConfigured && process.env.NODE_ENV === "production") {
+      // Never silently fall back to public/uploads in production — those files
       // won't survive a redeploy/restart, so the admin would see a fake
       // "success" for an upload that later 404s on the live site.
-      console.error("[Upload] ✗ CLOUDINARY_* env vars not set in production — refusing local-disk fallback.");
+      console.error("[Upload] ✗ Neither UPLOADS_DIR nor CLOUDINARY_* set in production — refusing public/ fallback.");
       return NextResponse.json(
         {
           error: "Image storage is not configured",
-          details: "CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET must be set in the production environment. Contact the site admin.",
+          details: "Set UPLOADS_DIR (persistent disk path served by nginx) or the CLOUDINARY_* env vars in the production environment. Contact the site admin.",
         },
         { status: 500 }
       );
@@ -167,7 +167,9 @@ export async function POST(req: NextRequest) {
         );
       }
       url = `/uploads/products/${filename}`;
-      console.warn("[Upload] ⚠ CLOUDINARY_* env vars not set — saved to local disk. This file will NOT be available on a deployed/production server.");
+      if (!diskUploadsConfigured) {
+        console.warn("[Upload] ⚠ Saved to public/uploads (dev fallback). This file will NOT be available on a deployed/production server.");
+      }
     }
 
     // ── Done ──────────────────────────────────────────────────────────────────

@@ -138,9 +138,9 @@ class _CartScreenState extends State<CartScreen> {
                   const SizedBox(height: 14),
                   Text('Your cart is empty', style: VlText.display(22)),
                   const SizedBox(height: 6),
-                  Text('Add a heritage saree to begin.', style: VlText.body(13, color: VlColors.muted)),
+                  Text('Add some pure jaggery to begin.', style: VlText.body(13, color: VlColors.muted)),
                   const SizedBox(height: 16),
-                  TextButton(onPressed: () => context.go('/shop'), child: Text('Browse Sarees', style: VlText.ui(13, color: VlColors.red))),
+                  TextButton(onPressed: () => context.go('/shop'), child: Text('Browse Products', style: VlText.ui(13, color: VlColors.red))),
                 ]),
               ),
             ),
@@ -176,7 +176,7 @@ class _CartScreenState extends State<CartScreen> {
                     cart.freeShipping
                         ? 'Coupon applied — free shipping'
                         : cart.shipping > 0
-                            ? '${cart.count} saree${cart.count > 1 ? 's' : ''} · ₹${_inr(storeConfig.value.firstSareeRate)}'
+                            ? '${cart.count} item${cart.count > 1 ? 's' : ''} · ₹${_inr(storeConfig.value.firstSareeRate)}'
                                 '${cart.count > 1 ? ' + ${cart.count - 1}×₹${_inr(storeConfig.value.additionalSareeRate)}' : ''}'
                             : 'Free above ₹${_inr(storeConfig.value.freeShippingThreshold)}',
                     style: VlText.mono(9, color: cart.shipping == 0 ? VlColors.green : VlColors.muted2, letter: 0.1),
@@ -264,7 +264,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   /// Removes a line, with an undo — a mis-tap shouldn't cost the customer the
-  /// saree they were choosing.
+  /// product they were choosing.
   void _removeLine(CartItem it) {
     EcomCart.I.remove(it.variantId);
     if (!mounted) return;
@@ -1112,7 +1112,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ] else if (_addresses.isEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: Text('No saved addresses yet — add the one your saree should travel to.',
+            child: Text('No saved addresses yet — add the one your order should travel to.',
                 style: VlText.body(13, color: VlColors.muted, height: 1.5)),
           ),
         ..._addresses.map((a) => Padding(
@@ -1348,7 +1348,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (cart.freeShipping) {
       note = 'Coupon applied — free shipping';
     } else if (cart.shipping > 0) {
-      note = '$n saree${n > 1 ? 's' : ''} · ₹${_inr(cfg.firstSareeRate)}'
+      note = '$n item${n > 1 ? 's' : ''} · ₹${_inr(cfg.firstSareeRate)}'
           '${n > 1 ? ' + ${n - 1}×₹${_inr(cfg.additionalSareeRate)}' : ''}';
     } else {
       note = 'Free above ₹${_inr(cfg.freeShippingThreshold)}';
@@ -1490,7 +1490,7 @@ class OrderSuccessScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Text('Thank you\nfor your order', textAlign: TextAlign.center, style: VlText.display(30, height: 1.15)),
             const SizedBox(height: 8),
-            Text('Your saree is being lovingly packed. We’ll send tracking updates to your phone.',
+            Text('Your jaggery is being carefully packed. We’ll send tracking updates to your phone.',
                 textAlign: TextAlign.center, style: VlText.body(13, color: VlColors.muted, height: 1.6)),
             const SizedBox(height: 28),
             Row(children: [

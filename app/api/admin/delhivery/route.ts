@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       order.paymentStatus === "PAID" ? "Prepaid" : order.paymentMethod === "COD" ? "COD" : "Prepaid";
     const subTotal = Number(order.totalAmount);
     const codAmount = paymentMode === "COD" ? subTotal : 0;
-    const description = order.items.map((i) => i.sareeCode ?? i.productName).filter(Boolean).join(", ") || "Saree";
+    const description = order.items.map((i) => i.sareeCode ?? i.productName).filter(Boolean).join(", ") || "Product";
     const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
     const weightKg = Number(dims.weight) || Math.max(0.5, 0.5 * totalQty);
 

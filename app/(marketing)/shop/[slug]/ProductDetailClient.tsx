@@ -144,7 +144,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                 ["Type", product.fabric],
                 ["Variety", product.weaveType],
                 ["Region", product.regionOfOrigin],
-                ["Saree Length", product.sareeLengthCm ? `${product.sareeLengthCm / 100}m` : null],
+                ["Length", product.sareeLengthCm ? `${product.sareeLengthCm / 100}m` : null],
                 ["Weight", product.weightGm ? `${product.weightGm}g` : null],
               ].filter(([, v]) => v).map(([k, v]) => (
                 <div key={k as string}>

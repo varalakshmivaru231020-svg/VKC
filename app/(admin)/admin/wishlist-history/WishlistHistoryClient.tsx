@@ -99,7 +99,7 @@ export default function WishlistHistoryClient() {
 
       const rows: string[][] = [
         ["Customer Name", "Email", "Phone", "Customer #", "Product", "Colour",
-         "Saree Code", "Sale Price", "Added On"],
+         "Product Code", "Sale Price", "Added On"],
       ];
       for (const item of (data.data as WishlistItem[])) {
         rows.push([
@@ -256,7 +256,7 @@ export default function WishlistHistoryClient() {
             <table className="w-full min-w-[800px]">
               <thead>
                 <tr style={{ background: "var(--color-cream)", borderBottom: "1px solid var(--color-parchment)" }}>
-                  {["Customer", "Phone", "Product", "Colour", "Saree Code", "Price", "Added On"].map(h => (
+                  {["Customer", "Phone", "Product", "Colour", "Product Code", "Price", "Added On"].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-body font-semibold uppercase tracking-wide"
                       style={{ color: "var(--color-text-muted)" }}>{h}</th>
                   ))}
@@ -313,7 +313,7 @@ export default function WishlistHistoryClient() {
                       </div>
                     </td>
 
-                    {/* Saree Code */}
+                    {/* Product Code */}
                     <td className="px-4 py-3 text-xs font-body font-mono"
                       style={{ color: "var(--color-text-muted)" }}>
                       {item.variant.sareeCode ?? "—"}

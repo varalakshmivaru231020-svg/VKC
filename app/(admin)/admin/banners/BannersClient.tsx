@@ -389,7 +389,7 @@ export default function BannersClient({ banners: initial }: Props) {
               {/* Link URL */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Link URL</label>
-                <input value={form.linkUrl} onChange={(e) => set("linkUrl")(e.target.value)} placeholder="/shop or /category/silk-sarees"
+                <input value={form.linkUrl} onChange={(e) => set("linkUrl")(e.target.value)} placeholder="/shop or /category/jaggery-blocks"
                   className="w-full h-10 px-4 border rounded-lg text-sm font-body focus:outline-none transition-all"
                   style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} {...focusStyle} />
               </div>

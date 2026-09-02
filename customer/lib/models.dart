@@ -36,7 +36,7 @@ class LiveSession {
 
   /// True when the host actually named this show in the admin console.
   ///
-  /// [title] falls back to "Live now — heritage sarees", which is right on the
+  /// [title] falls back to "Live now — pure cane jaggery", which is right on the
   /// Live tab and wrong on a show that finished last week. Screens that aren't
   /// showing a live broadcast use this to pick their own wording.
   final bool hasTitle;
@@ -73,7 +73,7 @@ class LiveSession {
     return LiveSession(
       id: id,
       liveId: number.isNotEmpty ? number : id,
-      title: pick(j['liveTitle'], j['title'] ?? j['name'], 'Live now — heritage sarees'),
+      title: pick(j['liveTitle'], j['title'] ?? j['name'], 'Live now — pure cane jaggery'),
       host: pick(j['liveHost'], j['host'] ?? j['hostName'], 'VKC Gold Studio'),
       studio: (j['studio'] ?? 'VKC Gold').toString(),
       viewers: _int(j['viewers']),
@@ -134,7 +134,7 @@ class Product {
   /// so a heart on a card can hit the server like the detail screen's does.
   final String? variantId;
 
-  /// Set by the host in the live console — the saree on camera right now. The
+  /// Set by the host in the live console — the product on camera right now. The
   /// strip used to fake this by styling whichever product happened to sort
   /// first, which was wrong the moment the host talked about anything else.
   final bool isPinned;
@@ -173,7 +173,7 @@ class Product {
     return Product(
       id: serial,
       name: (j['name'] ?? j['tag'] ?? j['title'] ?? serial).toString(),
-      weave: (j['weave'] ?? j['category'] ?? j['sareeCode'] ?? 'Handloom Silk').toString(),
+      weave: (j['weave'] ?? j['category'] ?? j['sareeCode'] ?? 'Pure Jaggery').toString(),
       price: price,
       mrp: mrp,
       discount: mrp != null && mrp > price ? (((mrp - price) / mrp) * 100).round() : _int(j['discount']),

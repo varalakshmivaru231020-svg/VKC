@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vkc_customer/models.dart';
 import 'package:vkc_customer/widgets.dart';
 
-/// Two sarees side by side, one with a short name and one that wraps.
+/// Two products side by side, one with a short name and one that wraps.
 ///
 /// This pairing is the whole point: the card used to give its image whatever
 /// height was left after the text, so a one-line name produced a taller image
@@ -14,7 +14,7 @@ Product _p({
   required String name,
   required double price,
   double? mrp,
-  String weave = 'HANDLOOM',
+  String weave = 'JAGGERY',
 }) =>
     Product(
       id: id,
@@ -57,7 +57,7 @@ void main() {
     testWidgets('neighbouring cards get identical image heights', (tester) async {
       await tester.pumpWidget(grid([
         _p(id: 'a', name: 'KANCHI SILK COTTON', price: 23000, mrp: 24999),
-        _p(id: 'b', name: 'Royal Kanchipuram Pure Silk Saree — Elegant Traditional', price: 23999, mrp: 29999),
+        _p(id: 'b', name: 'Premium Mandya Pure Cane Jaggery Blocks — Traditional Slow-Cooked', price: 23999, mrp: 29999),
       ]));
       await tester.pump();
 
@@ -70,7 +70,7 @@ void main() {
     testWidgets('prices line up across a row whatever the name length', (tester) async {
       await tester.pumpWidget(grid([
         _p(id: 'a', name: 'KANCHI SILK COTTON', price: 23000, mrp: 24999),
-        _p(id: 'b', name: 'Royal Kanchipuram Pure Silk Saree — Elegant Traditional', price: 23999, mrp: 29999),
+        _p(id: 'b', name: 'Premium Mandya Pure Cane Jaggery Blocks — Traditional Slow-Cooked', price: 23999, mrp: 29999),
       ]));
       await tester.pump();
 
@@ -80,7 +80,7 @@ void main() {
     });
 
     testWidgets('discount rides on the image as a badge, once', (tester) async {
-      await tester.pumpWidget(grid([_p(id: 'a', name: 'Kota Saree', price: 8999, mrp: 9998)]));
+      await tester.pumpWidget(grid([_p(id: 'a', name: 'Jaggery Cubes', price: 8999, mrp: 9998)]));
       await tester.pump();
 
       // 9998 → 8999 is 10% off.
@@ -89,16 +89,16 @@ void main() {
       expect(find.text('₹9,998'), findsOneWidget);
     });
 
-    testWidgets('no badge when the saree is not discounted', (tester) async {
-      await tester.pumpWidget(grid([_p(id: 'a', name: 'Kota Saree', price: 8999)]));
+    testWidgets('no badge when the product is not discounted', (tester) async {
+      await tester.pumpWidget(grid([_p(id: 'a', name: 'Jaggery Cubes', price: 8999)]));
       await tester.pump();
       expect(find.textContaining('% OFF'), findsNothing);
     });
 
     testWidgets('each card keeps its own name, price and discount', (tester) async {
       await tester.pumpWidget(grid([
-        _p(id: 'a', name: 'Alpha Saree', price: 6000, mrp: 6500, weave: 'SUB CAT 1'),
-        _p(id: 'b', name: 'Beta Saree', price: 8999, mrp: 9998, weave: 'HANDLOOM'),
+        _p(id: 'a', name: 'Alpha Jaggery', price: 6000, mrp: 6500, weave: 'SUB CAT 1'),
+        _p(id: 'b', name: 'Beta Jaggery', price: 8999, mrp: 9998, weave: 'JAGGERY'),
       ]));
       await tester.pump();
 
@@ -107,13 +107,13 @@ void main() {
       expect(find.text('8% OFF'), findsOneWidget);
       expect(find.text('10% OFF'), findsOneWidget);
       expect(find.text('SUB CAT 1'), findsOneWidget);
-      expect(find.text('HANDLOOM'), findsOneWidget);
+      expect(find.text('JAGGERY'), findsOneWidget);
     });
 
     testWidgets('survives a narrow screen and a large system font', (tester) async {
       await tester.pumpWidget(grid(
         [
-          _p(id: 'a', name: 'Royal Kanchipuram Pure Silk Saree — Elegant Traditional', price: 23999, mrp: 29999),
+          _p(id: 'a', name: 'Premium Mandya Pure Cane Jaggery Blocks — Traditional Slow-Cooked', price: 23999, mrp: 29999),
           _p(id: 'b', name: 'KANCHI SILK COTTON', price: 23000, mrp: 24999),
         ],
         width: 320,

@@ -185,7 +185,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       return _empty(
         Icons.inventory_2_outlined,
         _tab == 0 ? 'No orders yet' : 'No ${_tabs[_tab].toLowerCase()} orders',
-        _tab == 0 ? 'Browse Sarees' : 'Refresh',
+        _tab == 0 ? 'Browse Products' : 'Refresh',
         _tab == 0 ? () => context.go('/shop') : _load,
       );
     }

@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  * Body: { items: [{ orderItemId, quantity }], reason, remark?, refundMethod? }
  *
  * Multiple returns are allowed against the same order over time (e.g. a
- * customer returns one saree now and another later). Each return is tracked
+ * customer returns one item now and another later). Each return is tracked
  * independently in the OrderReturn table with its own pickup workflow.
  */
 export async function POST(req: Request, { params }: { params: { id: string } }) {

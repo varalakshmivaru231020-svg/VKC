@@ -321,7 +321,7 @@ export default function HeroSlidesClient({ slides: initial }: { slides: HeroSlid
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Subtext</label>
                 <textarea value={form.subtext} onChange={(e) => set("subtext")(e.target.value)} rows={2}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none"
-                  placeholder="Handwoven in the looms of Tamil Nadu..." />
+                  placeholder="Slow-simmered from fresh Mandya sugarcane..." />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

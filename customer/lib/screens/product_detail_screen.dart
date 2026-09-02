@@ -324,7 +324,7 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget _details(EcomProduct p) {
     final body = _stripHtml(p.description).isNotEmpty ? _stripHtml(p.description) : _stripHtml(p.shortDesc);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(body.isEmpty ? 'A handcrafted heritage saree from VKC Gold.' : body,
+      Text(body.isEmpty ? 'Pure, chemical-free cane jaggery from VKC Gold.' : body,
           style: VlText.body(13, color: VlColors.muted, height: 1.6)),
       if (p.occasions.isNotEmpty) ...[
         const SizedBox(height: 12),
@@ -345,7 +345,7 @@ class _ProductScreenState extends State<ProductScreen> {
       ('Weave', p.weaveType),
       ('Region', p.regionOfOrigin),
       ('Colour', v.colorName),
-      ('Saree code', v.sareeCode),
+      ('Product code', v.sareeCode),
       ('Care', p.careInstructions),
     ].where((s) => s.$2 != null && s.$2!.isNotEmpty).toList();
     if (specs.isEmpty) {
@@ -456,7 +456,7 @@ class _ProductScreenState extends State<ProductScreen> {
     }
   }
 
-  /// Shares the saree's own page on the store site — the same URL the website
+  /// Shares the product's own page on the store site — the same URL the website
   /// serves at `/shop/<slug>`, so whoever receives it lands on the real
   /// product rather than the app's internal route.
   Future<void> _share() async {

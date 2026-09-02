@@ -4,8 +4,9 @@ import path from "path";
 import { Readable } from "stream";
 import { isCloudinaryConfigured, uploadVideoBufferToCloudinary } from "@/lib/cloudinary";
 import { MAX_VIDEO_UPLOAD_BYTES, MAX_VIDEO_UPLOAD_LABEL } from "@/lib/utils/upload";
+import { diskUploadsConfigured, uploadsDir } from "@/lib/upload-storage";
 
-const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads", "videos");
+const UPLOADS_DIR = uploadsDir("videos");
 const MAX_SIZE = MAX_VIDEO_UPLOAD_BYTES;
 const ALLOWED = ["video/mp4", "video/webm", "video/quicktime"];
 
@@ -24,12 +25,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Only MP4, WebM, MOV allowed" }, { status: 400 });
     }
 
-    // Cloudinary is preferred — local disk writes don't survive on most hosting
-    // platforms (and even where they do, static file serving can be misconfigured),
-    // which is why uploaded media can go missing in production even though it
-    // works fine locally. Falls back to local disk only when Cloudinary isn't
-    // configured (e.g. a bare local dev checkout without credentials).
-    if (isCloudinaryConfigured()) {
+    // Storage priority: UPLOADS_DIR (persistent disk outside the app folder,
+    // served by nginx) wins when set; otherwise Cloudinary; otherwise local
+    // public/uploads in dev only — plain public/ writes are refused in
+    // production because they don't survive a redeploy/restart.
+    if (!diskUploadsConfigured && isCloudinaryConfigured()) {
       try {
         // Piped rather than buffered: `Buffer.from(await file.arrayBuffer())`
         // would hold a second full copy of the file in memory, and at the sizes
@@ -52,15 +52,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (process.env.NODE_ENV === "production") {
-      // Never silently fall back to local disk in production — those files
+    if (!diskUploadsConfigured && process.env.NODE_ENV === "production") {
+      // Never silently fall back to public/uploads in production — those files
       // won't survive a redeploy/restart, so the admin would see a fake
       // "success" for an upload that later 404s on the live site.
-      console.error("[Upload Video] ✗ CLOUDINARY_* env vars not set in production — refusing local-disk fallback.");
+      console.error("[Upload Video] ✗ Neither UPLOADS_DIR nor CLOUDINARY_* set in production — refusing public/ fallback.");
       return NextResponse.json(
         {
           error: "Video storage is not configured",
-          details: "CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET must be set in the production environment. Contact the site admin.",
+          details: "Set UPLOADS_DIR (persistent disk path served by nginx) or the CLOUDINARY_* env vars in the production environment. Contact the site admin.",
         },
         { status: 500 }
       );
@@ -72,7 +72,9 @@ export async function POST(req: NextRequest) {
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const filepath = path.join(UPLOADS_DIR, filename);
     await writeFile(filepath, buffer);
-    console.warn("[Upload Video] ⚠ CLOUDINARY_* env vars not set — saved to local disk. This file will NOT be available on a deployed/production server.");
+    if (!diskUploadsConfigured) {
+      console.warn("[Upload Video] ⚠ Saved to public/uploads (dev fallback). This file will NOT be available on a deployed/production server.");
+    }
 
     const url = `/uploads/videos/${filename}`;
     return NextResponse.json({ url });

@@ -334,7 +334,7 @@ export default function NewProductClient() {
           </Link>
           <div>
             <h1 className="text-xl font-bold font-body" style={{ color: "#111827" }}>Add New Product</h1>
-            <p className="text-sm font-body mt-0.5" style={{ color: "#6B7280" }}>Fill in details to add a saree to the catalogue</p>
+            <p className="text-sm font-body mt-0.5" style={{ color: "#6B7280" }}>Fill in details to add a product to the catalogue</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -355,7 +355,7 @@ export default function NewProductClient() {
       {/* Basic Info */}
       <SectionCard title="Basic Information">
         <div className="space-y-4">
-          <Field label="Product Name" value={name} onChange={setName} required placeholder="e.g. Kanjivaram Silk Saree with Zari Border" />
+          <Field label="Product Name" value={name} onChange={setName} required placeholder="e.g. Organic Cane Jaggery Block — 1 kg" />
           <CategorySelect categories={categories} value={categoryId} onChange={setCategoryId} />
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Short Description</label>
@@ -381,7 +381,7 @@ export default function NewProductClient() {
           {attributeDefs.length === 0 ? (
             <div className="rounded-xl border-2 border-dashed p-8 text-center" style={{ borderColor: "#E5E7EB" }}>
               <p className="text-sm font-body" style={{ color: "#9CA3AF" }}>
-                No attributes defined yet. Go to <strong>Settings → Attributes</strong> to add product attributes like Fabric, Weave Type, etc.
+                No attributes defined yet. Go to <strong>Settings → Attributes</strong> to add product attributes like Type, Variety, etc.
               </p>
             </div>
           ) : (
@@ -451,7 +451,7 @@ export default function NewProductClient() {
       <SectionCard title="Specifications">
         <div className="space-y-1.5">
           <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>
-            Saree Length (m)
+            Length (m)
           </label>
           <input
             type="number"
@@ -612,7 +612,7 @@ export default function NewProductClient() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Saree Code</label>
+                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Product Code</label>
                     <input value={v.sareeCode} onChange={(e) => updateVariant(i, "sareeCode", e.target.value.toUpperCase())}
                       placeholder="KNJ-001-R" className="w-full h-9 px-3 border rounded-lg text-sm font-mono focus:outline-none uppercase"
                       style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} />

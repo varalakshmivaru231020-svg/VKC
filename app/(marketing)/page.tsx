@@ -147,13 +147,6 @@ export default async function HomePage() {
     <>
       <PopupBanner popup={activePopup} />
 
-      {/* ── WELCOME STRIP ─────────────────────────────────────────────────────── */}
-      <div className="py-2.5 text-center px-4" style={{ background: "var(--color-primary)" }}>
-        <p className="text-xs sm:text-sm font-body tracking-wide" style={{ color: "white" }}>
-          Welcome to VKC Gold — thank you for visiting. Pure, chemical-free sweetness from Mandya, made with care.
-        </p>
-      </div>
-
       {/* ── HERO SLIDER ──────────────────────────────────────────────────────── */}
       <HeroSlider slides={heroSlides} />
 

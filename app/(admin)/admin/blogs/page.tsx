@@ -226,7 +226,7 @@ export default function BlogsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium font-body text-gray-700 mb-1.5">Tags (comma separated)</label>
-                  <input value={form.tags} onChange={(e) => set("tags")(e.target.value)} className={inputCls} style={inputStyle} placeholder="saree, fashion, tips" />
+                  <input value={form.tags} onChange={(e) => set("tags")(e.target.value)} className={inputCls} style={inputStyle} placeholder="jaggery, health, recipes" />
                 </div>
                 <div className="flex items-end pb-0.5">
                   <label className="flex items-center gap-3 cursor-pointer">

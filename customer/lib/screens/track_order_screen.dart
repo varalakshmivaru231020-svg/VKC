@@ -74,7 +74,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               children: [
-                Text('Where is my saree?', style: VlText.display(24)),
+                Text('Where is my order?', style: VlText.display(24)),
                 const SizedBox(height: 6),
                 Text('Enter the order number from your confirmation message.',
                     style: VlText.body(13, color: VlColors.muted, height: 1.6)),

@@ -32,7 +32,7 @@ class _ListingScreenState extends State<ListingScreen> {
   List<Product> _catalog = [];
   bool _loading = true;
   bool _error = false;
-  String _title = 'All Sarees';
+  String _title = 'All Products';
 
   static const _pageSize = 24;
   final _scroll = ScrollController();
@@ -71,7 +71,7 @@ class _ListingScreenState extends State<ListingScreen> {
     if (_scroll.position.pixels > _scroll.position.maxScrollExtent - 600) _loadMore();
   }
 
-  /// Pulls the next page. The catalogue used to stop at the first 40 sarees
+  /// Pulls the next page. The catalogue used to stop at the first 40 products
   /// with no way to reach the rest.
   Future<void> _loadMore() async {
     if (_loadingMore || !_hasMore || _loading || _error) return;
@@ -131,9 +131,9 @@ class _ListingScreenState extends State<ListingScreen> {
       );
       if (!mounted) return;
       // Name the category even when it has no products — falling back to the
-      // slug beats mislabelling a filtered listing as "All Sarees".
+      // slug beats mislabelling a filtered listing as "All Products".
       final title = widget.cat == null
-          ? (widget.featured ? 'Featured' : 'All Sarees')
+          ? (widget.featured ? 'Featured' : 'All Products')
           : (page.products.isNotEmpty ? page.products.first.category?.name : null) ?? _titleize(widget.cat!);
       setState(() {
         _catalog = productsFromEcom(page.products);
@@ -208,7 +208,7 @@ class _ListingScreenState extends State<ListingScreen> {
         ),
       );
 
-  /// "silk-sarees" → "Silk Sarees", for categories the API returned no products for.
+  /// "organic-jaggery" → "Organic Jaggery", for categories the API returned no products for.
   static String _titleize(String slug) => slug
       .split('-')
       .where((w) => w.isNotEmpty)
@@ -324,7 +324,7 @@ class _ListingScreenState extends State<ListingScreen> {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Icon(Icons.wifi_off_rounded, size: 36, color: VlColors.muted2),
             const SizedBox(height: 14),
-            Text("Couldn't load sarees", style: VlText.display(20), textAlign: TextAlign.center),
+            Text("Couldn't load products", style: VlText.display(20), textAlign: TextAlign.center),
             const SizedBox(height: 6),
             Text('Check your connection and try again.',
                 style: VlText.body(13, color: VlColors.muted), textAlign: TextAlign.center),
@@ -373,7 +373,7 @@ class _ListingScreenState extends State<ListingScreen> {
             // tile maths matches what the grid actually has to work with.
             sliver: SliverLayoutBuilder(
               builder: (context, sliverConstraints) => SliverGrid.builder(
-                // Same geometry as Home, so a saree looks identical wherever
+                // Same geometry as Home, so a product looks identical wherever
                 // the customer meets it.
                 gridDelegate: productGridDelegate(context, sliverConstraints.crossAxisExtent),
                 itemCount: items.length,
@@ -421,7 +421,7 @@ class _ListingScreenState extends State<ListingScreen> {
                     Text(p.name, style: VlText.ui(14, weight: FontWeight.w500)),
                     const SizedBox(height: 6),
                     // The catalogue API carries no ratings, so the list view
-                    // showed "0 · 0" beside a gold star on every saree.
+                    // showed "0 · 0" beside a gold star on every product.
                     if (p.rating > 0)
                       Row(children: [
                         Icon(Icons.star, size: 11, color: VlColors.gold),

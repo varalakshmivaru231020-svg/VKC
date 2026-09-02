@@ -66,7 +66,7 @@ void main() {
       'shipping': {'freeShippingThreshold': 10000, 'firstSareeRate': 100, 'additionalSareeRate': 50},
     });
 
-    test('first saree at the base rate, each extra at the additional rate', () {
+    test('first item at the base rate, each extra at the additional rate', () {
       expect(cfg.shippingFor(subtotal: 4000, itemCount: 1), 100);
       expect(cfg.shippingFor(subtotal: 4000, itemCount: 3), 200);
     });

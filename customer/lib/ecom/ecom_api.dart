@@ -223,7 +223,7 @@ class EcomApi {
     });
     final session = AuthSession.fromJson((r.data as Map).cast<String, dynamic>());
     await EcomAuth.I.saveSession(session);
-    // Pull the account's saved sarees so the hearts are right immediately.
+    // Pull the account's saved products so the hearts are right immediately.
     Wishlist.I.loadQuietly();
     return session;
   }

@@ -275,7 +275,7 @@ export default function CategoriesClient({ categories: initial }: Props) {
               {/* Name */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Category Name *</label>
-                <input value={form.name} onChange={(e) => set("name")(e.target.value)} placeholder="e.g. Silk Sarees"
+                <input value={form.name} onChange={(e) => set("name")(e.target.value)} placeholder="e.g. Jaggery Blocks"
                   className="w-full h-10 px-4 border rounded-lg text-sm font-body focus:outline-none transition-all"
                   style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} {...focusStyle} />
               </div>

@@ -375,7 +375,7 @@ export default function EditProductClient({ product }: Props) {
       {/* Basic Info */}
       <SectionCard title="Basic Information">
         <div className="space-y-4">
-          <Field label="Product Name" value={name} onChange={setName} required placeholder="e.g. Kanjivaram Silk Saree with Zari Border" />
+          <Field label="Product Name" value={name} onChange={setName} required placeholder="e.g. Organic Cane Jaggery Block — 1 kg" />
           <CategorySelect categories={categories} value={categoryId} onChange={setCategoryId} />
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Short Description</label>
@@ -470,7 +470,7 @@ export default function EditProductClient({ product }: Props) {
       <SectionCard title="Specifications">
         <div className="space-y-1.5">
           <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>
-            Saree Length (m)
+            Length (m)
           </label>
           <input
             type="number"
@@ -627,7 +627,7 @@ export default function EditProductClient({ product }: Props) {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Saree Code</label>
+                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Product Code</label>
                     <input value={v.sareeCode} onChange={(e) => updateVariant(i, "sareeCode", e.target.value.toUpperCase())}
                       placeholder="KNJ-001-R" className="w-full h-9 px-3 border rounded-lg text-sm font-mono focus:outline-none uppercase"
                       style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} />

@@ -179,7 +179,7 @@ export default function DesignClient({ initialSettings }: Props) {
                   value={settings["font.heading"]}
                   options={HEADING_FONTS}
                   onChange={(v) => update("font.heading", v)}
-                  previewText="The Art of Handwoven Silk"
+                  previewText="The Purity of Cane Gold"
                   previewSize="28px"
                 />
                 <FontFamilyPicker
@@ -188,7 +188,7 @@ export default function DesignClient({ initialSettings }: Props) {
                   value={settings["font.body"]}
                   options={BODY_FONTS}
                   onChange={(v) => update("font.body", v)}
-                  previewText="Discover our curated collection of handwoven sarees from across India."
+                  previewText="Discover pure, chemical-free jaggery crafted from fresh Mandya sugarcane."
                   previewSize="15px"
                 />
               </div>
@@ -602,7 +602,7 @@ function LivePreview({ settings }: { settings: ThemeSettings }) {
             color: settings["color.text.primary"],
           }}
         >
-          The Art of Handwoven Silk
+          The Purity of Cane Gold
         </p>
         <p
           className="max-w-md mx-auto"
@@ -613,7 +613,7 @@ function LivePreview({ settings }: { settings: ThemeSettings }) {
             lineHeight: settings["leading.body"],
           }}
         >
-          {settings["site.tagline"]}. Explore timeless weaves from across India.
+          {settings["site.tagline"]}. Pure cane jaggery from Mandya.
         </p>
         <div className="flex items-center justify-center gap-3 pt-2">
           <button
@@ -650,7 +650,7 @@ function LivePreview({ settings }: { settings: ThemeSettings }) {
             color: settings["color.text.primary"],
           }}
         >
-          Featured Sarees
+          Featured Products
         </p>
         <div className="grid grid-cols-4 gap-5">
           {["Kanjivaram Silk", "Banarasi Georgette", "Patola Silk", "Chanderi Cotton"].map((name, i) => {
@@ -737,13 +737,13 @@ function LivePreview({ settings }: { settings: ThemeSettings }) {
 }
 
 function previewForKey(key: string, settings: ThemeSettings): string {
-  if (key === "text.display") return "The Art of Handwoven Silk";
+  if (key === "text.display") return "The Purity of Cane Gold";
   if (key === "text.h1") return "Kanjivaram Collection";
-  if (key === "text.h2") return "Featured Sarees";
-  if (key === "text.h3") return "Pure Silk Weaves";
+  if (key === "text.h2") return "Featured Products";
+  if (key === "text.h3") return "Pure Cane Jaggery";
   if (key === "text.h4") return "New Arrivals";
   if (key === "text.h5") return "Free Shipping Above ₹2,999";
-  if (key === "text.body") return "Handwoven with love from across India.";
+  if (key === "text.body") return "Made with care in Mandya, Karnataka.";
   if (key === "text.sm") return "In stock · Ships in 3–5 days";
   if (key === "text.price") return `${settings["site.currency.symbol"]}18,500`;
   if (key === "text.price.sm") return `${settings["site.currency.symbol"]}14,200`;

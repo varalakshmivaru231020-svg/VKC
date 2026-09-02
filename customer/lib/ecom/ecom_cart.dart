@@ -56,8 +56,8 @@ class EcomCart {
   bool get freeShipping => coupon?.freeShipping == true;
 
   /// Shipping by the store's own rates (/app-config → shipping): free above
-  /// the threshold or with a free-shipping coupon, else first-saree rate plus
-  /// the additional rate per extra saree — the website's exact formula, on
+  /// the threshold or with a free-shipping coupon, else first-item rate plus
+  /// the additional rate per extra item — the website's exact formula, on
   /// the pre-discount subtotal.
   num get shipping => storeConfig.value.shippingFor(
         subtotal: subtotal,

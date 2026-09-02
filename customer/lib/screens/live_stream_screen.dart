@@ -36,7 +36,7 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
   /// message the sender already sees.
   final Set<String> _mine = {};
 
-  /// Serial of the saree that just sold, shown briefly over the stream.
+  /// Serial of the product that just sold, shown briefly over the stream.
   String? _justSold;
   Timer? _soldClear;
 
@@ -111,7 +111,7 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
     });
   }
 
-  /// Someone else bought a saree — mark it sold without a round trip, so every
+  /// Someone else bought a product — mark it sold without a round trip, so every
   /// viewer's strip agrees with the stock.
   void _onSold(String productId, String? serial, int qtyLeft, String status) {
     final d = _detail;
@@ -141,7 +141,7 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
     });
   }
 
-  /// The host moved the camera to a different saree.
+  /// The host moved the camera to a different product.
   void _onPinned(String? productId) {
     if (mounted) _load();
   }
@@ -292,7 +292,7 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
       Text(
         ended
             ? 'Everything shown in this session is still below — scroll to browse it.'
-            : 'The video appears here the moment the host goes live. The sarees below are ready now.',
+            : 'The video appears here the moment the host goes live. The products below are ready now.',
         textAlign: TextAlign.center,
         style: VlText.body(12, color: Colors.white70, height: 1.6),
       ),
@@ -383,14 +383,14 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
         ),
 
         // Title. Only the host's own title on a finished show — the generic
-        // "Live now — heritage sarees" fallback is for a show that is actually
+        // "Live now — pure cane jaggery" fallback is for a show that is actually
         // on air.
         if (l != null && (l.hasTitle || !_ended))
           Positioned(
             top: MediaQuery.of(context).padding.top + 96,
             left: 14,
             right: 90,
-            child: Text(l.hasTitle ? l.title : 'Live now — heritage sarees',
+            child: Text(l.hasTitle ? l.title : 'Live now — pure cane jaggery',
                 maxLines: 2, overflow: TextOverflow.ellipsis, style: VlText.display(18, color: Colors.white)),
           ),
 

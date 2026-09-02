@@ -267,8 +267,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _row(context, Icons.videocam_outlined, 'Book a Video Call', 'Shop with us, live',
             onTap: () => context.push('/video-booking')),
         _row(context, Icons.menu_book_outlined, 'Journal', 'Notes from the farm', onTap: () => context.push('/journal')),
-        // "Saree Stories" linked to /pages/saree-stories, a page the site no
-        // longer has — the row is gone rather than opening a dead page.
+        // A "Stories" row linked to a page the site no longer has — the row
+        // is gone rather than opening a dead page.
         _row(context, Icons.photo_library_outlined, 'Gallery', 'Photos & videos from our unit',
             onTap: () => context.push('/pages/gallery?title=Gallery')),
         _section('The House'),
@@ -393,7 +393,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     final items = <_Notif>[
-      const _Notif('live', 'Live Shopping', 'Watch our sarees live and buy in real time.', '', route: '/live'),
+      const _Notif('live', 'Live Shopping', 'Watch our products live and buy in real time.', '', route: '/live'),
     ];
     try {
       final results = await Future.wait([

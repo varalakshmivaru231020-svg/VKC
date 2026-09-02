@@ -7,8 +7,8 @@ export interface ProductOptions {
   occasions: string[];
 }
 
-// Empty by default — the old saree-specific fabric/weave/region/occasion lists
-// were removed for the VKC Gold (jaggery) catalogue. The admin can add their
+// Empty by default — the fabric/weave/region/occasion lists from the previous
+// catalogue were removed for the VKC Gold (jaggery) catalogue. The admin can add their
 // own values under Settings → Product Options if any dropdowns are wanted.
 const DEFAULTS: ProductOptions = {
   fabrics:   [],

@@ -444,7 +444,7 @@ class ReviewsScreen extends StatelessWidget {
                   Text('Reviews live on the website', textAlign: TextAlign.center, style: VlText.display(22)),
                   const SizedBox(height: 8),
                   Text(
-                    'Rate the sarees you’ve received at vkcgoldikshu.com — sign in with the same mobile number.',
+                    'Rate the products you’ve received at vkcgoldikshu.com — sign in with the same mobile number.',
                     textAlign: TextAlign.center,
                     style: VlText.body(13, color: VlColors.muted, height: 1.6),
                   ),

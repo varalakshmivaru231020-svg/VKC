@@ -74,7 +74,6 @@ export async function GET() {
         additionalSareeRate:   Number(get("shipping_additional_saree_rate", "50")),
         deliveryTitle:         get("domestic_delivery_title", "Standard Delivery"),
         deliveryNotes:         get("domestic_delivery_notes", "4–7 business days"),
-        internationalNote:     get("international_shipping_note", ""),
       },
       payment: {
         razorpay: {

@@ -158,7 +158,7 @@ export default function StockPage() {
 
   const exportCSV = () => {
     const rows = [
-      ["Product", "Color", "Size", "Saree Code", "Stock", "Reserved", "Available"],
+      ["Product", "Color", "Size", "Product Code", "Stock", "Reserved", "Available"],
       ...sorted.map(v => [
         v.product.name, v.colorName, v.size ?? "", v.sareeCode ?? "",
         v._draft ?? v.stockQty, v.reservedQty,

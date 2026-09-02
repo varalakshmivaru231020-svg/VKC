@@ -158,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     // Only the catalogue is essential. Never substitute sample data — showing
-    // sarees that aren't really for sale is worse than showing an error.
+    // products that aren't really for sale is worse than showing an error.
     if (newest == null && _products.isEmpty) {
       setState(() {
         _error = true;
@@ -472,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('VKC GOLD STUDIO', style: VlText.upper(9, color: Colors.white70, letter: 0.22)),
                     const SizedBox(height: 4),
-                    Text('Shop our sarees, live',
+                    Text('Shop our jaggery, live',
                         maxLines: 1, overflow: TextOverflow.ellipsis, style: VlText.display(18, color: Colors.white)),
                     const SizedBox(height: 8),
                     Row(children: [
@@ -522,8 +522,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final useReal = _cats.isNotEmpty;
     final count = useReal ? (_cats.length > 8 ? 8 : _cats.length) : (categories.length > 6 ? 6 : categories.length);
     return SizedBox(
-      // Taller and wider than before: "CHIFFAN SAREES" and "SILK COTTON" were
-      // ellipsised into "CHIFFAN…" in an 80dp tile with a single line.
+      // Taller and wider than before: long category names were
+      // ellipsised into a single word in an 80dp tile with a single line.
       height: 168,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
@@ -604,7 +604,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final p = items[i];
             return ProductCard(
               // Keyed by product: without it Flutter can reuse the element of a
-              // card that scrolled away and briefly show one saree's photo
+              // card that scrolled away and briefly show one product's photo
               // against another's price.
               key: ValueKey(p.variantId ?? p.id),
               p: p,
@@ -699,10 +699,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      // A silent empty grid read as "this store has no sarees"; say what
+      // A silent empty grid read as "this store has no products"; say what
       // actually happened and offer the retry.
       setState(() {
-        _error = ecomError(e, 'Could not load the weaves.');
+        _error = ecomError(e, 'Could not load the categories.');
         _loading = false;
       });
     }
@@ -916,7 +916,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // The grid is the shared wishlist itself, so un-hearting a saree here (or
+    // The grid is the shared wishlist itself, so un-hearting a product here (or
     // anywhere else in the app) removes it in place.
     return ValueListenableBuilder<List<WishlistEntry>>(
       valueListenable: Wishlist.I.entries,
@@ -929,14 +929,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
   Widget _body(List<WishlistEntry> entries) {
     if (!EcomAuth.I.isLoggedIn) {
-      return _empty(context, 'Sign in to see your wishlist', 'Save sarees you love and find them here.', 'Sign in', () => context.push('/login'));
+      return _empty(context, 'Sign in to see your wishlist', 'Save products you love and find them here.', 'Sign in', () => context.push('/login'));
     }
     if (_loading && Wishlist.I.entries.value.isEmpty) return const ProductGridSkeleton(count: 4, padding: EdgeInsets.all(20));
     if (_error != null && entries.isEmpty) {
       return _empty(context, 'Couldn’t load your wishlist', _error!, 'Retry', _load);
     }
     if (entries.isEmpty) {
-      return _empty(context, 'Your wishlist is empty', 'Tap the heart on a saree you love to save it for later.', 'Browse', () => context.go('/shop'));
+      return _empty(context, 'Your wishlist is empty', 'Tap the heart on a product you love to save it for later.', 'Browse', () => context.go('/shop'));
     }
     return RefreshIndicator(
       color: VlColors.red,

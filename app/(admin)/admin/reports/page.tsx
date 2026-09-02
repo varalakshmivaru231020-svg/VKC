@@ -636,7 +636,7 @@ function PendingOrdersTab({ data, range }: any) {
 
 // ─── Stock On Hand Tab ─────────────────────────────────────────────────────────
 function StockOnHandTab({ data }: any) {
-  const HEADERS = ["Product", "Category", "Colour", "Saree Code", "Sale Price (₹)", "Cost Price (₹)", "Stock", "Reserved", "Available", "Stock Value (₹)"];
+  const HEADERS = ["Product", "Category", "Colour", "Product Code", "Sale Price (₹)", "Cost Price (₹)", "Stock", "Reserved", "Available", "Stock Value (₹)"];
   const toRows = (rows: any[]) => rows.map((r: any) => [r.productName, r.category, r.colorName, r.sareeCode, (r.salePrice ?? 0).toFixed(2), (r.costPrice ?? 0).toFixed(2), r.stockQty, r.reservedQty, r.availableQty, (r.stockValue ?? 0).toFixed(2)]);
   const fname = `stock_on_hand_${new Date().toISOString().slice(0, 10)}`;
   const { sorted, Th } = useSortedRows(data.rows ?? []);
@@ -696,7 +696,7 @@ function StockOnHandTab({ data }: any) {
 
 // ─── Low Stock Tab ─────────────────────────────────────────────────────────────
 function LowStockTab({ data }: any) {
-  const HEADERS = ["Product", "Category", "Colour", "Saree Code", "Sale Price (₹)", "Stock Qty", "Status"];
+  const HEADERS = ["Product", "Category", "Colour", "Product Code", "Sale Price (₹)", "Stock Qty", "Status"];
   const toRows = (rows: any[]) => rows.map((r: any) => [r.productName, r.category, r.colorName, r.sareeCode, (r.salePrice ?? 0).toFixed(2), r.stockQty, r.status]);
   const fname = `low_stock_alert_${new Date().toISOString().slice(0, 10)}`;
   const { sorted, Th } = useSortedRows(data.rows ?? []);

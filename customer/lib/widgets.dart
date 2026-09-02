@@ -57,7 +57,7 @@ class NetImage extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, box) {
           // Decode at the size actually painted. The store's photos arrive far
-          // larger than the cell showing them — a 2000px saree decoded into a
+          // larger than the cell showing them — a 2000px photo decoded into a
           // 168px card costs ~16MB of image cache and a long frame, which is
           // what made the first Home scroll stutter.
           final w = box.hasBoundedWidth ? box.maxWidth : 0.0;
@@ -532,7 +532,7 @@ Future<void> toggleWishlist(BuildContext context, Product product) async {
   }
   final variantId = product.variantId;
   if (variantId == null) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This saree can’t be saved right now')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This item can’t be saved right now')));
     return;
   }
   try {

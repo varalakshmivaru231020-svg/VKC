@@ -60,283 +60,148 @@ const SETTING_META: Record<string, { label: string; group: string; type: string;
   "site.currency.code":       { label: "Currency Code",        group: "general", type: "text",    sortOrder: 95 },
 };
 
-// ─── Saree product data with realistic INR pricing ─────────────────────────
+// ─── Jaggery product data with realistic INR pricing ────────────────────────
+// Note: `sareeLengthCm` and `sareeCode` are legacy column names kept in the
+// schema. `sareeCode` now carries the product SKU (e.g. "VKC-BLK-001-1KG") and
+// `sareeLengthCm` (non-nullable) holds a nominal block/pack dimension in cm.
+// Variant `colorName` carries the pack size; `colorHex`/`colorHex2` are the
+// warm jaggery shades shown as swatches.
 
-const SAREE_PRODUCTS = [
-  // ── KANJIVARAM ──────────────────────────────────────────────────────────────
+const JAGGERY_PRODUCTS = [
+  // ── JAGGERY BLOCKS ──────────────────────────────────────────────────────────
   {
-    name: "Royal Kanjivaram Pure Silk Saree",
-    slug: "royal-kanjivaram-pure-silk-saree",
-    shortDesc: "Handwoven pure silk from the heritage looms of Kanchipuram. Features traditional zari border with peacock motifs.",
-    description: "This exquisite Kanjivaram silk saree is a timeless masterpiece from the looms of Kanchipuram, Tamil Nadu. Woven with pure mulberry silk and real zari (gold thread), every inch of this saree reflects the skill of master craftsmen. The rich contrast border with temple motifs and traditional peacock design make it a perfect choice for weddings and grand celebrations.",
-    fabric: "Pure Silk", weaveType: "Kanjivaram", regionOfOrigin: "Tamil Nadu",
-    occasions: ["Wedding", "Festival"], blousePiece: true, blouseLengthCm: 80,
-    sareeLengthCm: 600, weightGm: 820, isFeatured: true,
-    careInstructions: "Dry clean only. Store in a muslin cloth. Avoid contact with perfume and deodorant. Air dry in shade if wet.",
-    tags: ["kanjivaram", "silk", "wedding", "zari", "handwoven"],
-    categorySlug: "kanjivaram",
+    name: "VKC Cane Gold Jaggery Block",
+    slug: "vkc-cane-gold-jaggery-block",
+    shortDesc: "Pure, chemical-free jaggery block made from fresh Mandya sugarcane. No sulphur, no added colour — just slow-simmered cane juice.",
+    description: "Our signature jaggery block is made the traditional way: fresh sugarcane from our Mandya farms is crushed within hours of harvest and the juice is slow-simmered in open bhatti pans until it sets into rich golden blocks. No sulphur, no superphosphate, no bleaching agents, no added colour — the warm brown-gold shade comes purely from the cane itself. Use it in coffee, payasa, obbattu, or anywhere you would use sugar, for a deeper, mineral-rich sweetness.",
+    regionOfOrigin: "Mandya, Karnataka",
+    occasions: ["Daily Use", "Cooking", "Festive Sweets"],
+    sareeLengthCm: 10, weightGm: 500, isFeatured: true,
+    careInstructions: "Store in an airtight container in a cool, dry place away from direct sunlight. Keep away from moisture; use a dry spoon. Best consumed within 9 months of packing.",
+    tags: ["jaggery", "block", "chemical-free", "mandya", "organic"],
+    categorySlug: "jaggery-blocks",
     variants: [
-      { colorName: "Deep Crimson", colorHex: "#8B1A2E", sareeCode: "VL-KNJ-001-DC", costPrice: 9500, salePrice: 22500, originalPrice: 26000, stockQty: 4 },
-      { colorName: "Royal Blue",  colorHex: "#1B3A6B", sareeCode: "VL-KNJ-001-RB", costPrice: 9800, salePrice: 24000, originalPrice: 28000, stockQty: 3 },
-      { colorName: "Forest Green", colorHex: "#1B5E20", sareeCode: "VL-KNJ-001-FG", costPrice: 9500, salePrice: 22500, originalPrice: 26000, stockQty: 2 },
-      { colorName: "Kanchi Gold",  colorHex: "#B8860B", sareeCode: "VL-KNJ-001-KG", costPrice: 10200, salePrice: 26000, originalPrice: 30000, stockQty: 5 },
+      { colorName: "500 g", colorHex: "#A0692F", colorHex2: "#C68E4E", sareeCode: "VKC-BLK-001-500G", costPrice: 55,  salePrice: 95,  originalPrice: 120, stockQty: 40 },
+      { colorName: "1 kg",  colorHex: "#8B5A2B", colorHex2: "#B8860B", sareeCode: "VKC-BLK-001-1KG",  costPrice: 100, salePrice: 180, originalPrice: 220, stockQty: 30 },
     ],
   },
   {
-    name: "Kanjivaram Soft Silk Saree with Temple Border",
-    slug: "kanjivaram-soft-silk-temple-border",
-    shortDesc: "Lightweight Kanjivaram silk with classic temple border, ideal for daily festive wear.",
-    description: "A softer, lighter variant of the classic Kanjivaram, this saree is perfect for those who love the look but prefer easier draping. The intricate temple border and contrast pallu make this an elegant choice for festivals and family occasions.",
-    fabric: "Soft Silk", weaveType: "Kanjivaram", regionOfOrigin: "Tamil Nadu",
-    occasions: ["Festival", "Party"], blousePiece: true, blouseLengthCm: 75,
-    sareeLengthCm: 560, weightGm: 620, isFeatured: true,
-    tags: ["kanjivaram", "soft-silk", "festival", "temple-border"],
-    categorySlug: "kanjivaram",
+    name: "Premium Dark Bhatti Jaggery Block",
+    slug: "premium-dark-bhatti-jaggery-block",
+    shortDesc: "Deep caramel-dark jaggery from a longer bhatti simmer — intense flavour, ideal for traditional sweets and decoctions.",
+    description: "Simmered longer over the wood-fired bhatti, this dark jaggery develops a deep caramel note and a firmer set that seasoned cooks prize for holige, ellu bella, kashaya, and filter-coffee decoctions. Made from single-origin Mandya sugarcane with zero chemicals at every step — no sulphur fumigation, no soda, no colour. Each block is hand-cut and sun-checked before packing.",
+    regionOfOrigin: "Mandya, Karnataka",
+    occasions: ["Cooking", "Festive Sweets", "Traditional Remedies"],
+    sareeLengthCm: 10, weightGm: 500, isFeatured: true,
+    careInstructions: "Store airtight in a cool, dry place. Dark jaggery may soften slightly in humid weather — this is natural and does not affect quality.",
+    tags: ["jaggery", "block", "dark-jaggery", "bhatti", "chemical-free", "mandya"],
+    categorySlug: "jaggery-blocks",
     variants: [
-      { colorName: "Peacock Teal",  colorHex: "#008B8B", sareeCode: "VL-KNJ-002-PT", costPrice: 6200, salePrice: 14500, originalPrice: 17000, stockQty: 6 },
-      { colorName: "Lotus Pink",    colorHex: "#C2185B", sareeCode: "VL-KNJ-002-LP", costPrice: 6000, salePrice: 14000, originalPrice: 17000, stockQty: 4 },
-      { colorName: "Mango Yellow",  colorHex: "#F9A825", sareeCode: "VL-KNJ-002-MY", costPrice: 6200, salePrice: 14500, originalPrice: 17000, stockQty: 3 },
-    ],
-  },
-  {
-    name: "Bridal Kanjivaram with Korvai Border",
-    slug: "bridal-kanjivaram-korvai-border",
-    shortDesc: "A bridal masterpiece with authentic korvai (joined weave) border. Each saree takes 8–10 days to weave.",
-    description: "The korvai technique is the pinnacle of Kanjivaram weaving, where the border and body are woven separately then joined on the loom — creating an indestructible, perfectly integrated border. This bridal saree features heavy zari work, traditional peacock and lotus motifs, and a dramatic contrast pallu.",
-    fabric: "Pure Silk", weaveType: "Kanjivaram Korvai", regionOfOrigin: "Tamil Nadu",
-    occasions: ["Wedding"], blousePiece: true, blouseLengthCm: 90,
-    sareeLengthCm: 620, weightGm: 980, isFeatured: false,
-    tags: ["kanjivaram", "bridal", "korvai", "wedding", "heavy-zari"],
-    categorySlug: "kanjivaram",
-    variants: [
-      { colorName: "Bridal Red",    colorHex: "#B71C1C", sareeCode: "VL-KNJ-003-BR", costPrice: 18000, salePrice: 42000, originalPrice: 48000, stockQty: 2 },
-      { colorName: "Maroon Gold",   colorHex: "#7B1FA2", colorHex2: "#B8860B", sareeCode: "VL-KNJ-003-MG", costPrice: 19000, salePrice: 45000, originalPrice: 52000, stockQty: 1 },
+      { colorName: "500 g", colorHex: "#6B4423", colorHex2: "#8B5A2B", sareeCode: "VKC-BLK-002-500G", costPrice: 65,  salePrice: 110, originalPrice: 140, stockQty: 25 },
+      { colorName: "1 kg",  colorHex: "#5C3A1E", colorHex2: "#7A4A1D", sareeCode: "VKC-BLK-002-1KG",  costPrice: 120, salePrice: 210, originalPrice: 260, stockQty: 18 },
     ],
   },
 
-  // ── BANARASI ────────────────────────────────────────────────────────────────
+  // ── JAGGERY POWDER ──────────────────────────────────────────────────────────
   {
-    name: "Banarasi Pure Silk Brocade Saree",
-    slug: "banarasi-pure-silk-brocade-saree",
-    shortDesc: "Opulent Banarasi silk with intricate Meenakari brocade work. A celebration in every thread.",
-    description: "Woven on the banks of the holy Ganga, this Banarasi silk saree is a testament to centuries of weaving tradition. The Meenakari brocade work uses coloured silk threads alongside gold and silver zari to create jewel-like patterns. The heavy pallu with floral jaal makes this the perfect wedding or festive saree.",
-    fabric: "Pure Silk", weaveType: "Banarasi", regionOfOrigin: "Uttar Pradesh",
-    occasions: ["Wedding", "Festival"], blousePiece: true, blouseLengthCm: 80,
-    sareeLengthCm: 560, weightGm: 720, isFeatured: true,
-    tags: ["banarasi", "silk", "brocade", "meenakari", "wedding"],
-    categorySlug: "banarasi",
+    name: "Organic Jaggery Powder",
+    slug: "organic-jaggery-powder",
+    shortDesc: "Free-flowing, naturally granulated jaggery powder — a spoon-for-spoon replacement for refined sugar.",
+    description: "Our jaggery powder is made by granulating freshly set jaggery while it is still warm, then sieving it to a fine, free-flowing texture — nothing added, nothing bleached. It dissolves quickly in tea, coffee, milk, and batters, making it the easiest way to switch your kitchen from refined sugar to whole cane sweetness. Retains the iron, calcium, and minerals that refining strips away.",
+    regionOfOrigin: "Mandya, Karnataka",
+    occasions: ["Daily Use", "Tea & Coffee", "Baking"],
+    sareeLengthCm: 8, weightGm: 500, isFeatured: true,
+    careInstructions: "Keep tightly sealed after opening; jaggery powder absorbs moisture quickly. Use a dry spoon and store away from steam and sunlight.",
+    tags: ["jaggery", "powder", "sugar-substitute", "organic", "chemical-free", "mandya"],
+    categorySlug: "jaggery-powder",
     variants: [
-      { colorName: "Midnight Blue",  colorHex: "#1A237E", sareeCode: "VL-BNR-001-MB", costPrice: 8500, salePrice: 19500, originalPrice: 23000, stockQty: 5 },
-      { colorName: "Ruby Red",       colorHex: "#C62828", sareeCode: "VL-BNR-001-RR", costPrice: 8500, salePrice: 19500, originalPrice: 23000, stockQty: 4 },
-      { colorName: "Emerald Green",  colorHex: "#1B5E20", sareeCode: "VL-BNR-001-EG", costPrice: 8800, salePrice: 20500, originalPrice: 24000, stockQty: 3 },
-      { colorName: "Antique Gold",   colorHex: "#B8860B", sareeCode: "VL-BNR-001-AG", costPrice: 9200, salePrice: 21500, originalPrice: 25000, stockQty: 6 },
+      { colorName: "250 g", colorHex: "#C68E4E", colorHex2: "#D2A24C", sareeCode: "VKC-PWD-001-250G", costPrice: 40,  salePrice: 80,  originalPrice: 100, stockQty: 50 },
+      { colorName: "500 g", colorHex: "#B8860B", colorHex2: "#C68E4E", sareeCode: "VKC-PWD-001-500G", costPrice: 70,  salePrice: 130, originalPrice: 160, stockQty: 35 },
+      { colorName: "1 kg",  colorHex: "#A0692F", colorHex2: "#B8860B", sareeCode: "VKC-PWD-001-1KG",  costPrice: 130, salePrice: 240, originalPrice: 300, stockQty: 20 },
     ],
   },
   {
-    name: "Banarasi Georgette Saree with Zari Work",
-    slug: "banarasi-georgette-zari-work",
-    shortDesc: "Lightweight Banarasi georgette with delicate zari jaal — the modern bride's choice.",
-    description: "This Banarasi georgette saree combines the grandeur of traditional zari work with the comfort and drapeability of georgette fabric. The all-over jaal pattern with a heavy zari border and pallu makes it a favourite for cocktail parties, sangeet ceremonies, and receptions.",
-    fabric: "Georgette", weaveType: "Banarasi", regionOfOrigin: "Uttar Pradesh",
-    occasions: ["Party", "Festival", "Wedding"], blousePiece: false,
-    sareeLengthCm: 560, weightGm: 420, isFeatured: true,
-    tags: ["banarasi", "georgette", "zari", "party", "lightweight"],
-    categorySlug: "banarasi",
+    name: "Dry Ginger Jaggery Powder (Sukku Bella)",
+    slug: "dry-ginger-jaggery-powder",
+    shortDesc: "Jaggery powder blended with stone-ground dry ginger — the traditional base for kashaya and winter drinks.",
+    description: "A time-honoured Karnataka pantry staple: our chemical-free jaggery powder blended with stone-ground dry ginger (sukku). Stir a spoon into hot water or milk for an instant soothing kashaya, or use it in chukku kaapi during the monsoon. Made in small batches with nothing but our own bhatti jaggery and sun-dried ginger.",
+    regionOfOrigin: "Mandya, Karnataka",
+    occasions: ["Traditional Remedies", "Tea & Coffee", "Daily Use"],
+    sareeLengthCm: 8, weightGm: 250, isFeatured: false,
+    careInstructions: "Store airtight in a cool, dry place. The ginger aroma is strongest in the first three months — consume fresh for best flavour.",
+    tags: ["jaggery", "powder", "dry-ginger", "kashaya", "chemical-free", "mandya"],
+    categorySlug: "jaggery-powder",
     variants: [
-      { colorName: "Rose Gold",     colorHex: "#C9867A", sareeCode: "VL-BNR-002-RG", costPrice: 4200, salePrice: 9800, originalPrice: 12000, stockQty: 8 },
-      { colorName: "Dusty Lavender", colorHex: "#9575CD", sareeCode: "VL-BNR-002-DL", costPrice: 4000, salePrice: 9500, originalPrice: 12000, stockQty: 6 },
-      { colorName: "Teal Green",    colorHex: "#00695C", sareeCode: "VL-BNR-002-TG", costPrice: 4200, salePrice: 9800, originalPrice: 12000, stockQty: 5 },
-      { colorName: "Ivory White",   colorHex: "#F5F0E8", sareeCode: "VL-BNR-002-IW", costPrice: 4500, salePrice: 10500, originalPrice: 13000, stockQty: 4 },
-    ],
-  },
-
-  // ── PATOLA ──────────────────────────────────────────────────────────────────
-  {
-    name: "Patan Patola Double Ikat Silk Saree",
-    slug: "patan-patola-double-ikat-silk-saree",
-    shortDesc: "Authentic double ikat handwoven Patola from Patan, Gujarat. One of India's most precious textile traditions.",
-    description: "The Patan Patola is a UNESCO-recognised intangible cultural heritage. Created using the double ikat technique, both warp and weft threads are tie-dyed before weaving — requiring extraordinary precision. A single saree can take 4–6 months to weave. Each piece is an heirloom that appreciates in value.",
-    fabric: "Pure Silk", weaveType: "Patola Double Ikat", regionOfOrigin: "Gujarat",
-    occasions: ["Wedding", "Festival"], blousePiece: true, blouseLengthCm: 80,
-    sareeLengthCm: 560, weightGm: 680, isFeatured: true,
-    tags: ["patola", "ikat", "gujarat", "heritage", "heirloom"],
-    categorySlug: "patola",
-    variants: [
-      { colorName: "Traditional Red-Black", colorHex: "#8B1A2E", colorHex2: "#1C1410", sareeCode: "VL-PTL-001-RB", costPrice: 28000, salePrice: 65000, originalPrice: 75000, stockQty: 2 },
-      { colorName: "Green-Gold",            colorHex: "#2E7D32", colorHex2: "#B8860B", sareeCode: "VL-PTL-001-GG", costPrice: 30000, salePrice: 68000, originalPrice: 78000, stockQty: 1 },
-    ],
-  },
-  {
-    name: "Single Ikat Rajkot Patola Saree",
-    slug: "single-ikat-rajkot-patola-saree",
-    shortDesc: "Single ikat Patola from Rajkot — vibrant geometric patterns at an accessible price point.",
-    description: "The Rajkot Patola uses the single ikat technique (only warp threads dyed) making it more accessible than Patan Patola while retaining the distinctive geometric patterns and vibrant colours that make Patola instantly recognisable.",
-    fabric: "Art Silk", weaveType: "Patola Single Ikat", regionOfOrigin: "Gujarat",
-    occasions: ["Festival", "Party"], blousePiece: false,
-    sareeLengthCm: 560, weightGm: 480, isFeatured: false,
-    tags: ["patola", "rajkot", "ikat", "geometric"],
-    categorySlug: "patola",
-    variants: [
-      { colorName: "Turquoise & Red",  colorHex: "#00ACC1", colorHex2: "#C62828", sareeCode: "VL-PTL-002-TR", costPrice: 2800, salePrice: 6500, originalPrice: 8000, stockQty: 10 },
-      { colorName: "Purple & Gold",    colorHex: "#7B1FA2", colorHex2: "#F9A825", sareeCode: "VL-PTL-002-PG", costPrice: 2800, salePrice: 6500, originalPrice: 8000, stockQty: 8 },
-      { colorName: "Navy & Orange",    colorHex: "#1A237E", colorHex2: "#E65100", sareeCode: "VL-PTL-002-NO", costPrice: 2800, salePrice: 6500, originalPrice: 8000, stockQty: 7 },
+      { colorName: "250 g", colorHex: "#9C6B30", colorHex2: "#C68E4E", sareeCode: "VKC-PWD-002-250G", costPrice: 55, salePrice: 110, originalPrice: 140, stockQty: 25 },
+      { colorName: "500 g", colorHex: "#8B5A2B", colorHex2: "#A0692F", sareeCode: "VKC-PWD-002-500G", costPrice: 95, salePrice: 190, originalPrice: 240, stockQty: 15 },
     ],
   },
 
-  // ── CHANDERI ────────────────────────────────────────────────────────────────
+  // ── JAGGERY CUBES ───────────────────────────────────────────────────────────
   {
-    name: "Chanderi Katan Silk Saree",
-    slug: "chanderi-katan-silk-saree",
-    shortDesc: "Sheer, lightweight Chanderi Katan silk with silver zari bootis — the quintessential summer silk.",
-    description: "Chanderi Katan silk is known for its sheer texture, lightweight feel, and natural sheen. Woven in the town of Chanderi, Madhya Pradesh, these sarees feature delicate zari bootis (small motifs) and a classic border. The translucent quality gives it an ethereal look, perfect for daytime occasions.",
-    fabric: "Katan Silk", weaveType: "Chanderi", regionOfOrigin: "Madhya Pradesh",
-    occasions: ["Festival", "Party", "Office"], blousePiece: false,
-    sareeLengthCm: 560, weightGm: 280, isFeatured: true,
-    tags: ["chanderi", "katan-silk", "lightweight", "sheer"],
-    categorySlug: "chanderi",
+    name: "Jaggery Cubes — Bite Size",
+    slug: "jaggery-cubes-bite-size",
+    shortDesc: "Neat bite-size cubes of pure cane jaggery — portioned sweetness for the table and the tiffin box.",
+    description: "The same slow-simmered Mandya jaggery, set in small moulds into uniform bite-size cubes. No breaking, no grating, no mess — drop one into your coffee, pack a few with the kids' tiffin, or serve them after meals the traditional way. Each cube is roughly 10 g of pure, chemical-free cane sweetness with no sulphur and no added colour.",
+    regionOfOrigin: "Mandya, Karnataka",
+    occasions: ["Daily Use", "Tea & Coffee", "Gifting"],
+    sareeLengthCm: 3, weightGm: 250, isFeatured: true,
+    careInstructions: "Store in an airtight jar in a cool, dry place. Cubes may develop a light natural bloom in humid weather; this is harmless.",
+    tags: ["jaggery", "cubes", "portion-control", "chemical-free", "mandya", "organic"],
+    categorySlug: "jaggery-cubes",
     variants: [
-      { colorName: "Mint Green",   colorHex: "#A5D6A7", sareeCode: "VL-CND-001-MG", costPrice: 2200, salePrice: 5200, originalPrice: 6500, stockQty: 12 },
-      { colorName: "Pale Peach",   colorHex: "#FFCCBC", sareeCode: "VL-CND-001-PP", costPrice: 2200, salePrice: 5200, originalPrice: 6500, stockQty: 10 },
-      { colorName: "Sky Blue",     colorHex: "#90CAF9", sareeCode: "VL-CND-001-SB", costPrice: 2200, salePrice: 5200, originalPrice: 6500, stockQty: 8 },
-      { colorName: "Ivory White",  colorHex: "#FFF8F0", sareeCode: "VL-CND-001-IW", costPrice: 2400, salePrice: 5800, originalPrice: 7200, stockQty: 6 },
+      { colorName: "250 g", colorHex: "#A0692F", colorHex2: "#D2A24C", sareeCode: "VKC-CUB-001-250G", costPrice: 45, salePrice: 90,  originalPrice: 110, stockQty: 40 },
+      { colorName: "500 g", colorHex: "#8B5A2B", colorHex2: "#C68E4E", sareeCode: "VKC-CUB-001-500G", costPrice: 80, salePrice: 160, originalPrice: 200, stockQty: 25 },
     ],
   },
   {
-    name: "Chanderi Cotton Silk Saree with Zari Border",
-    slug: "chanderi-cotton-silk-zari-border",
-    shortDesc: "Comfortable cotton-silk blend Chanderi with gold zari border. Perfect for daily festive wear.",
-    description: "This Chanderi cotton-silk blend offers the best of both worlds — the breathability of cotton and the lustre of silk. The fine zari border adds elegance without the heaviness. Ideal for office wear, casual outings, and everyday festivities.",
-    fabric: "Cotton Silk", weaveType: "Chanderi", regionOfOrigin: "Madhya Pradesh",
-    occasions: ["Office", "Daily", "Festival"], blousePiece: false,
-    sareeLengthCm: 560, weightGm: 320, isFeatured: false,
-    tags: ["chanderi", "cotton-silk", "daily", "office"],
-    categorySlug: "chanderi",
+    name: "Tea-Time Mini Jaggery Cubes",
+    slug: "tea-time-mini-jaggery-cubes",
+    shortDesc: "Extra-small 5 g cubes that dissolve fast in a single cup of tea or coffee — the honest swap for sugar cubes.",
+    description: "Made for the daily chai ritual: extra-small 5 g cubes sized for a single cup, so one cube sweetens without guesswork. They dissolve noticeably faster than block jaggery and bring a warm caramel depth that refined sugar cubes cannot match. Slow-simmered from fresh Mandya cane juice with zero chemical processing.",
+    regionOfOrigin: "Mandya, Karnataka",
+    occasions: ["Tea & Coffee", "Daily Use"],
+    sareeLengthCm: 2, weightGm: 250, isFeatured: false,
+    careInstructions: "Keep the pack sealed between uses and store away from moisture. Transfer to a dry glass jar after opening for best shelf life.",
+    tags: ["jaggery", "cubes", "tea", "coffee", "chemical-free", "mandya"],
+    categorySlug: "jaggery-cubes",
     variants: [
-      { colorName: "Coral Orange",  colorHex: "#FF7043", sareeCode: "VL-CND-002-CO", costPrice: 1500, salePrice: 3500, originalPrice: 4500, stockQty: 15 },
-      { colorName: "Slate Blue",    colorHex: "#5C6BC0", sareeCode: "VL-CND-002-SB", costPrice: 1500, salePrice: 3500, originalPrice: 4500, stockQty: 12 },
-      { colorName: "Sage Green",    colorHex: "#7CB342", sareeCode: "VL-CND-002-SG", costPrice: 1500, salePrice: 3500, originalPrice: 4500, stockQty: 10 },
-      { colorName: "Dusty Rose",    colorHex: "#E07B7B", sareeCode: "VL-CND-002-DR", costPrice: 1500, salePrice: 3500, originalPrice: 4500, stockQty: 8 },
-    ],
-  },
-
-  // ── TUSSAR SILK ─────────────────────────────────────────────────────────────
-  {
-    name: "Pure Tussar Silk Saree with Hand Block Print",
-    slug: "pure-tussar-silk-hand-block-print",
-    shortDesc: "Natural golden tussar silk with traditional hand block prints in vegetable dyes.",
-    description: "Tussar silk (also called Kosa or Wild Silk) is produced from silkworms found in the forests of Jharkhand and Bihar. Its characteristic golden hue and slightly textured surface give it a unique, earthy elegance. This saree features traditional hand block prints using natural vegetable dyes.",
-    fabric: "Tussar Silk", weaveType: "Hand Block Printed", regionOfOrigin: "Jharkhand",
-    occasions: ["Festival", "Party", "Daily"], blousePiece: false,
-    sareeLengthCm: 560, weightGm: 460, isFeatured: true,
-    tags: ["tussar", "silk", "block-print", "natural-dye", "eco-friendly"],
-    categorySlug: "tussar-silk",
-    variants: [
-      { colorName: "Natural Beige",   colorHex: "#D4B896", sareeCode: "VL-TSR-001-NB", costPrice: 2800, salePrice: 6800, originalPrice: 8500, stockQty: 10 },
-      { colorName: "Indigo Blue",     colorHex: "#283593", sareeCode: "VL-TSR-001-IB", costPrice: 3000, salePrice: 7200, originalPrice: 9000, stockQty: 8 },
-      { colorName: "Brick Red",       colorHex: "#BF360C", sareeCode: "VL-TSR-001-BR", costPrice: 2900, salePrice: 7000, originalPrice: 8800, stockQty: 6 },
-    ],
-  },
-  {
-    name: "Bhagalpuri Tussar Silk Saree",
-    slug: "bhagalpuri-tussar-silk-saree",
-    shortDesc: "Famous Bhagalpuri silk with characteristic nub texture and natural lustre.",
-    description: "Bhagalpuri silk from Bihar is renowned for its distinctive nub texture created by the natural slubs in wild silk yarn. This saree showcases the natural beauty of the fibre with minimal adornment — the texture itself is the design. Available in rich, saturated colours that are unique to this weaving tradition.",
-    fabric: "Bhagalpuri Silk", weaveType: "Bhagalpuri", regionOfOrigin: "Bihar",
-    occasions: ["Festival", "Party", "Office"], blousePiece: false,
-    sareeLengthCm: 560, weightGm: 520, isFeatured: false,
-    tags: ["bhagalpuri", "tussar", "silk", "bihar"],
-    categorySlug: "tussar-silk",
-    variants: [
-      { colorName: "Wine Red",      colorHex: "#880E4F", costPrice: 2000, salePrice: 4800, originalPrice: 6000, stockQty: 14 },
-      { colorName: "Bottle Green",  colorHex: "#1B5E20", costPrice: 2000, salePrice: 4800, originalPrice: 6000, stockQty: 12 },
-      { colorName: "Steel Blue",    colorHex: "#1565C0", costPrice: 2000, salePrice: 4800, originalPrice: 6000, stockQty: 10 },
+      { colorName: "250 g", colorHex: "#B8860B", colorHex2: "#D2A24C", sareeCode: "VKC-CUB-002-250G", costPrice: 50, salePrice: 100, originalPrice: 125, stockQty: 30 },
+      { colorName: "500 g", colorHex: "#A0692F", colorHex2: "#C68E4E", sareeCode: "VKC-CUB-002-500G", costPrice: 90, salePrice: 175, originalPrice: 220, stockQty: 20 },
     ],
   },
 
-  // ── COTTON ──────────────────────────────────────────────────────────────────
+  // ── SPECIALTY JAGGERY ───────────────────────────────────────────────────────
   {
-    name: "Handloom Cotton Saree — Bengal Tant",
-    slug: "handloom-cotton-bengal-tant-saree",
-    shortDesc: "Authentic Bengal Tant handloom cotton — light, breathable, and quintessentially Bengali.",
-    description: "The Bengal Tant saree is a GI-tagged handloom textile from West Bengal. Known for its fine count cotton, crisp texture, and distinctive colour combinations with bold borders and intricate patterns. Lightweight and breathable, it is the staple saree for everyday elegance in Bengali culture.",
-    fabric: "Cotton", weaveType: "Bengal Tant Handloom", regionOfOrigin: "West Bengal",
-    occasions: ["Daily", "Festival", "Office"], blousePiece: false,
-    sareeLengthCm: 560, weightGm: 260, isFeatured: false,
-    tags: ["cotton", "tant", "bengal", "handloom", "daily-wear"],
-    categorySlug: "cotton",
+    name: "Palm Jaggery (Karupatti)",
+    slug: "palm-jaggery-karupatti",
+    shortDesc: "Traditional karupatti made from palmyra palm sap — dark, smoky, and naturally low on the glycemic index.",
+    description: "Karupatti is tapped at dawn from palmyra palms and simmered the same day into dense, dark discs with a distinctive smoky-caramel flavour. Long treasured in South Indian households for paniyaram, karupatti coffee, and postpartum nutrition, palm jaggery is richer in iron and has a lower glycemic index than cane sugar. Ours is sourced from traditional tappers and processed with no chemicals whatsoever.",
+    regionOfOrigin: "Karnataka & Tamil Nadu",
+    occasions: ["Traditional Remedies", "Cooking", "Gifting"],
+    sareeLengthCm: 6, weightGm: 250, isFeatured: true,
+    careInstructions: "Store airtight; palm jaggery is more hygroscopic than cane jaggery and softens quickly if exposed to humid air. Refrigeration is fine in coastal climates.",
+    tags: ["palm-jaggery", "karupatti", "jaggery", "low-gi", "chemical-free"],
+    categorySlug: "specialty-jaggery",
     variants: [
-      { colorName: "Classic White-Red", colorHex: "#FAFAFA", colorHex2: "#C62828", costPrice: 550, salePrice: 1400, originalPrice: 1800, stockQty: 25 },
-      { colorName: "Mustard-Green",     colorHex: "#F9A825", colorHex2: "#2E7D32", costPrice: 550, salePrice: 1400, originalPrice: 1800, stockQty: 20 },
-      { colorName: "Blue-White",        colorHex: "#1565C0", colorHex2: "#FAFAFA", costPrice: 550, salePrice: 1400, originalPrice: 1800, stockQty: 18 },
-      { colorName: "Magenta-Black",     colorHex: "#AD1457", colorHex2: "#1C1410", costPrice: 580, salePrice: 1500, originalPrice: 1900, stockQty: 15 },
+      { colorName: "250 g", colorHex: "#5C3A1E", colorHex2: "#7A4A1D", sareeCode: "VKC-PLM-001-250G", costPrice: 140, salePrice: 280, originalPrice: 340, stockQty: 12 },
+      { colorName: "500 g", colorHex: "#4E2F14", colorHex2: "#6B4423", sareeCode: "VKC-PLM-001-500G", costPrice: 250, salePrice: 495, originalPrice: 600, stockQty: 8  },
     ],
   },
   {
-    name: "Sambalpuri Ikat Cotton Saree",
-    slug: "sambalpuri-ikat-cotton-saree",
-    shortDesc: "GI-tagged Sambalpuri saree with traditional pasapalli and shankha-chakra ikat motifs.",
-    description: "The Sambalpuri saree from Odisha is a GI-tagged handloom textile known for its distinctive tie-dye (ikat) technique. The traditional motifs include the pasapalli (chessboard), shankha (conch), chakra (wheel), and phula (flower) — each carrying cultural significance. Woven on pit looms by artisans who have inherited the craft.",
-    fabric: "Cotton", weaveType: "Sambalpuri Ikat", regionOfOrigin: "Odisha",
-    occasions: ["Festival", "Daily", "Office"], blousePiece: false,
-    sareeLengthCm: 560, weightGm: 380, isFeatured: true,
-    tags: ["sambalpuri", "ikat", "odisha", "handloom", "cotton"],
-    categorySlug: "cotton",
+    name: "Coconut Jaggery",
+    slug: "coconut-jaggery",
+    shortDesc: "Golden coconut-blossom jaggery with a gentle butterscotch note — a chef's favourite for desserts.",
+    description: "Made from the sweet sap of coconut blossoms, coconut jaggery has a lighter, butterscotch-like flavour that pastry chefs love in caramel, payasam, and baked desserts. It melts smoothly, never tastes harsh, and carries the same clean, chemical-free promise as everything we make — no sulphur, no bleaching, no additives, just fresh sap reduced slowly over a wood fire.",
+    regionOfOrigin: "Coastal Karnataka",
+    occasions: ["Baking", "Festive Sweets", "Gifting"],
+    sareeLengthCm: 6, weightGm: 250, isFeatured: false,
+    careInstructions: "Store in an airtight container away from heat and sunlight. Use a dry spoon; reseal promptly after each use.",
+    tags: ["coconut-jaggery", "jaggery", "baking", "chemical-free", "organic"],
+    categorySlug: "specialty-jaggery",
     variants: [
-      { colorName: "Red-Black Pasapalli", colorHex: "#B71C1C", colorHex2: "#212121", sareeCode: "VL-COT-002-RB", costPrice: 1800, salePrice: 4200, originalPrice: 5500, stockQty: 10 },
-      { colorName: "Blue-White Chakra",   colorHex: "#283593", colorHex2: "#FAFAFA", sareeCode: "VL-COT-002-BW", costPrice: 1800, salePrice: 4200, originalPrice: 5500, stockQty: 8  },
-      { colorName: "Green-Gold Phula",    colorHex: "#2E7D32", colorHex2: "#F9A825", sareeCode: "VL-COT-002-GG", costPrice: 1900, salePrice: 4500, originalPrice: 5800, stockQty: 7  },
-    ],
-  },
-
-  // ── MYSORE SILK ─────────────────────────────────────────────────────────────
-  {
-    name: "Mysore Pure Silk Saree — Karnataka Silk Industries",
-    slug: "mysore-pure-silk-saree",
-    shortDesc: "Buttery soft Mysore silk with characteristic plain body and rich pallu. GI-certified.",
-    description: "Mysore Silk is produced exclusively by the Karnataka Silk Industries Corporation (KSIC) under strict quality control. Made from two-ply pure mulberry silk, it is known for its softness, lustre, and the characteristic plain (kaddi) body with a contrast pallu. The GI tag guarantees authenticity.",
-    fabric: "Pure Silk", weaveType: "Mysore Silk", regionOfOrigin: "Karnataka",
-    occasions: ["Wedding", "Festival", "Party"], blousePiece: true, blouseLengthCm: 75,
-    sareeLengthCm: 560, weightGm: 540, isFeatured: true,
-    tags: ["mysore", "silk", "karnataka", "gi-tagged", "pure-silk"],
-    categorySlug: "mysore-silk",
-    variants: [
-      { colorName: "Royal Purple",   colorHex: "#6A1B9A", sareeCode: "VL-MYS-001-RP", costPrice: 5200, salePrice: 12500, originalPrice: 15000, stockQty: 6 },
-      { colorName: "Peacock Blue",   colorHex: "#006064", sareeCode: "VL-MYS-001-PB", costPrice: 5200, salePrice: 12500, originalPrice: 15000, stockQty: 5 },
-      { colorName: "Sandalwood",     colorHex: "#D4A96A", sareeCode: "VL-MYS-001-SW", costPrice: 5500, salePrice: 13000, originalPrice: 15500, stockQty: 4 },
-      { colorName: "Deep Magenta",   colorHex: "#880E4F", sareeCode: "VL-MYS-001-DM", costPrice: 5200, salePrice: 12500, originalPrice: 15000, stockQty: 7 },
-    ],
-  },
-  {
-    name: "Mysore Crepe Silk Saree",
-    slug: "mysore-crepe-silk-saree",
-    shortDesc: "Lightweight Mysore crepe silk with a matte finish — ideal for corporate and formal wear.",
-    description: "Mysore crepe silk has a distinctive crinkled texture and matte finish that sets it apart from regular Mysore silk. The crepe weave makes it more fluid and drape-friendly. Available in solid colours with a subtle sheen, it is the preferred choice for professional settings and formal gatherings.",
-    fabric: "Crepe Silk", weaveType: "Mysore Crepe", regionOfOrigin: "Karnataka",
-    occasions: ["Office", "Party", "Festival"], blousePiece: false,
-    sareeLengthCm: 560, weightGm: 380, isFeatured: false,
-    tags: ["mysore", "crepe-silk", "office", "formal"],
-    categorySlug: "mysore-silk",
-    variants: [
-      { colorName: "Charcoal Grey",  colorHex: "#455A64", costPrice: 2800, salePrice: 6800, originalPrice: 6800, stockQty: 12 },
-      { colorName: "Burgundy",       colorHex: "#6D1B1B", costPrice: 2800, salePrice: 6800, originalPrice: 6800, stockQty: 10 },
-      { colorName: "Olive Green",    colorHex: "#558B2F", costPrice: 2800, salePrice: 6800, originalPrice: 6800, stockQty: 8  },
-    ],
-  },
-
-  // ── SAMBALPURI ──────────────────────────────────────────────────────────────
-  {
-    name: "Sambalpuri Silk Saree with Bomkai Work",
-    slug: "sambalpuri-silk-bomkai-work",
-    shortDesc: "Premium Sambalpuri silk with traditional Bomkai embroidery on pallu and border.",
-    description: "This Sambalpuri silk saree combines the ikat dyeing technique with the intricate Bomkai embroidery on the pallu. The Bomkai work features geometric and tribal motifs traditionally worn by the women of Odisha for auspicious occasions. A true collector's piece.",
-    fabric: "Silk", weaveType: "Sambalpuri Bomkai", regionOfOrigin: "Odisha",
-    occasions: ["Wedding", "Festival"], blousePiece: true, blouseLengthCm: 75,
-    sareeLengthCm: 560, weightGm: 620, isFeatured: false,
-    tags: ["sambalpuri", "silk", "bomkai", "odisha", "ikat"],
-    categorySlug: "sambalpuri",
-    variants: [
-      { colorName: "Vermillion-Black",  colorHex: "#D84315", colorHex2: "#212121", sareeCode: "VL-SMB-001-VB", costPrice: 4500, salePrice: 10500, originalPrice: 13000, stockQty: 5 },
-      { colorName: "Indigo-Beige",      colorHex: "#283593", colorHex2: "#D4B896", sareeCode: "VL-SMB-001-IB", costPrice: 4500, salePrice: 10500, originalPrice: 13000, stockQty: 4 },
+      { colorName: "250 g", colorHex: "#C68E4E", colorHex2: "#D2A24C", sareeCode: "VKC-CCO-001-250G", costPrice: 120, salePrice: 240, originalPrice: 290, stockQty: 12 },
+      { colorName: "500 g", colorHex: "#B8860B", colorHex2: "#C68E4E", sareeCode: "VKC-CCO-001-500G", costPrice: 220, salePrice: 440, originalPrice: 520, stockQty: 10 },
     ],
   },
 ];
@@ -359,14 +224,10 @@ async function main() {
   // ── Categories ───────────────────────────────────────────────────────────
   console.log("→ Seeding categories...");
   const categoryDefs = [
-    { name: "Kanjivaram Sarees",  slug: "kanjivaram",   description: "Pure silk sarees from the heritage looms of Kanchipuram, Tamil Nadu", sortOrder: 1 },
-    { name: "Banarasi Sarees",    slug: "banarasi",     description: "Opulent silk and brocade weaves from Varanasi, Uttar Pradesh", sortOrder: 2 },
-    { name: "Patola Sarees",      slug: "patola",       description: "Double and single ikat silk masterpieces from Gujarat", sortOrder: 3 },
-    { name: "Chanderi Sarees",    slug: "chanderi",     description: "Sheer, lightweight silk and cotton blends from Madhya Pradesh", sortOrder: 4 },
-    { name: "Tussar Silk Sarees", slug: "tussar-silk",  description: "Natural wild silk with earthy texture from Jharkhand & Bihar", sortOrder: 5 },
-    { name: "Cotton Sarees",      slug: "cotton",       description: "Handloom cotton sarees from Bengal, Odisha, and across India", sortOrder: 6 },
-    { name: "Mysore Silk",        slug: "mysore-silk",  description: "GI-certified buttery soft silk from Karnataka Silk Industries", sortOrder: 7 },
-    { name: "Sambalpuri Sarees",  slug: "sambalpuri",   description: "GI-tagged ikat weave sarees from Odisha", sortOrder: 8 },
+    { name: "Jaggery Blocks",    slug: "jaggery-blocks",    description: "Traditional slow-simmered jaggery blocks from fresh Mandya sugarcane — chemical-free, no sulphur", sortOrder: 1 },
+    { name: "Jaggery Powder",    slug: "jaggery-powder",    description: "Free-flowing granulated jaggery powder — the everyday replacement for refined sugar", sortOrder: 2 },
+    { name: "Jaggery Cubes",     slug: "jaggery-cubes",     description: "Portioned bite-size and tea-time cubes of pure cane jaggery", sortOrder: 3 },
+    { name: "Specialty Jaggery", slug: "specialty-jaggery", description: "Palm (karupatti) and coconut-blossom jaggery from traditional tappers", sortOrder: 4 },
   ];
 
   const categoryMap: Record<string, string> = {};
@@ -385,7 +246,7 @@ async function main() {
   let productCount = 0;
   let variantCount = 0;
 
-  for (const p of SAREE_PRODUCTS) {
+  for (const p of JAGGERY_PRODUCTS) {
     const { variants, categorySlug, ...productData } = p;
     const categoryId = categoryMap[categorySlug];
 
@@ -420,7 +281,7 @@ async function main() {
       variantCount++;
     }
   }
-  console.log(`  ✓ ${productCount} products, ${variantCount} colour variants\n`);
+  console.log(`  ✓ ${productCount} products, ${variantCount} pack-size variants\n`);
 
   // ── Admin user ────────────────────────────────────────────────────────────
   console.log("→ Seeding admin user...");
@@ -460,11 +321,11 @@ async function main() {
   // ── Sample coupons ────────────────────────────────────────────────────────
   console.log("→ Seeding coupons...");
   const coupons = [
-    { code: "WELCOME10", type: "PERCENTAGE" as const, value: 10, minOrderAmount: 1999, maxDiscount: 2000 },
-    { code: "VL20",      type: "PERCENTAGE" as const, value: 20, minOrderAmount: 9999, maxDiscount: 5000 },
-    { code: "SILK15",    type: "PERCENTAGE" as const, value: 15, minOrderAmount: 4999, maxDiscount: 3000 },
-    { code: "FREESHIP",  type: "FREE_SHIPPING" as const, value: 0, minOrderAmount: 999 },
-    { code: "FLAT500",   type: "FIXED" as const, value: 500, minOrderAmount: 4999 },
+    { code: "WELCOME10", type: "PERCENTAGE" as const, value: 10, minOrderAmount: 299, maxDiscount: 100 },
+    { code: "VKC15",     type: "PERCENTAGE" as const, value: 15, minOrderAmount: 499, maxDiscount: 150 },
+    { code: "SWEET20",   type: "PERCENTAGE" as const, value: 20, minOrderAmount: 999, maxDiscount: 250 },
+    { code: "FREESHIP",  type: "FREE_SHIPPING" as const, value: 0, minOrderAmount: 499 },
+    { code: "FLAT50",    type: "FIXED" as const, value: 50, minOrderAmount: 599 },
   ];
   for (const coupon of coupons) {
     await db.coupon.upsert({
@@ -473,7 +334,7 @@ async function main() {
       create: { ...coupon, isActive: true },
     });
   }
-  console.log(`  ✓ ${coupons.length} coupons (WELCOME10, VL20, SILK15, FREESHIP, FLAT500)\n`);
+  console.log(`  ✓ ${coupons.length} coupons (WELCOME10, VKC15, SWEET20, FREESHIP, FLAT50)\n`);
 
   console.log("✅ Database seeded successfully!");
   console.log("\n📊 Summary:");

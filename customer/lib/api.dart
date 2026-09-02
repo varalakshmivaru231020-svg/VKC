@@ -31,7 +31,7 @@ class Api {
     return data.map((e) => LiveSession.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  /// Finished shows — the sarees stay browsable. GET /public/sessions/past
+  /// Finished shows — the products stay browsable. GET /public/sessions/past
   Future<List<LiveSession>> pastSessions() async {
     final r = await _dio.get('/public/sessions/past');
     final data = (r.data['data'] ?? r.data) as List? ?? [];

@@ -51,9 +51,9 @@ class StoreConfig {
   String get deliveryTitle => _str(_shipping, 'deliveryTitle', 'Standard Delivery');
   String get deliveryNotes => _str(_shipping, 'deliveryNotes', '7 business days');
 
-  /// Shipping for [itemCount] sarees at [subtotal], by the website's rule:
+  /// Shipping for [itemCount] items at [subtotal], by the website's rule:
   /// free above the threshold or with a free-shipping coupon, else the first
-  /// saree rate plus the additional rate for every saree after it.
+  /// item's rate plus the additional rate for every item after it.
   num shippingFor({required num subtotal, required int itemCount, bool freeShippingCoupon = false}) {
     if (itemCount <= 0 || subtotal <= 0) return 0;
     if (freeShippingCoupon || subtotal >= freeShippingThreshold) return 0;

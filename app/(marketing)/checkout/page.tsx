@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Check, ChevronRight, MapPin, CreditCard, ClipboardList,
   Truck, ShieldCheck, ArrowRight, Plus, X, Wallet, Info, Pencil,
@@ -12,7 +12,7 @@ import { useCartStore, useCheckoutMetaStore } from "@/lib/store/cart";
 import { CouponPicker } from "@/components/cart/CouponPicker";
 import { formatINR } from "@/lib/utils/format";
 import { Button } from "@/components/ui/button";
-import { SearchableSelect, COUNTRY_NAMES } from "@/components/ui/SearchableSelect";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { SmartImage } from "@/components/ui/SmartImage";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -218,15 +218,12 @@ function PhoneVerifyModal({ phone, onVerified, onClose }: {
 
 // ─── Address form fields ──────────────────────────────────────────────────────
 
-function AddressFormFields({ address, onChange, errors, isInternational }: {
+function AddressFormFields({ address, onChange, errors }: {
   address: AddressForm;
   onChange: (field: keyof AddressForm) => (v: string) => void;
   errors: Partial<AddressForm>;
-  isInternational: boolean;
 }) {
-  const countryOptions = isInternational
-    ? COUNTRY_NAMES.filter((c) => c !== "India")
-    : ["India"];
+  const countryOptions = ["India"];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -265,7 +262,7 @@ function AddressFormFields({ address, onChange, errors, isInternational }: {
           onChange={onChange("country")}
           options={countryOptions}
           placeholder="Select Country"
-          disabled={!isInternational}
+          disabled
         />
       </div>
     </div>
@@ -336,7 +333,6 @@ export default function CheckoutPage() {
   } = useCheckoutMetaStore();
   const { data: session, status, update: updateSession } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [step, setStep]                       = useState<Step>(0);
   const [address, setAddress]                 = useState<AddressForm>(emptyAddress);
@@ -356,9 +352,7 @@ export default function CheckoutPage() {
   const [shippingConfig, setShippingConfig] = useState({
     freeShippingThreshold: 2999, firstSareeRate: 100, additionalSareeRate: 50,
     deliveryTitle: "Standard Delivery", deliveryNotes: "4–7 business days",
-    internationalShippingNote: "",
   });
-  const [showSummaryIntlNote, setShowSummaryIntlNote] = useState(false);
   useEffect(() => {
     fetch("/api/shipping-config").then(r => r.json()).then(d => setShippingConfig(d)).catch(() => {});
   }, []);
@@ -389,9 +383,6 @@ export default function CheckoutPage() {
   }, []);
 
 
-  // International shipping — derived from ?intl=1 URL param set by cart page
-  const effectiveIntl = searchParams.get("intl") === "1";
-
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/user/wallet").then(r => r.json()).then(d => {
@@ -409,7 +400,6 @@ export default function CheckoutPage() {
   }, 0);
 
   const shippingCost = (() => {
-    if (effectiveIntl) return 0; // International: no charge at checkout
     if (coupon?.freeShipping) return 0;
     if (sub >= shippingConfig.freeShippingThreshold) return 0;
     return shippingConfig.firstSareeRate + Math.max(0, totalQty - 1) * shippingConfig.additionalSareeRate;
@@ -430,9 +420,8 @@ export default function CheckoutPage() {
         const list: SavedAddress[] = addresses ?? [];
         setSavedAddresses(list);
 
-        // Only auto-select an address whose country is compatible with the shipping mode
-        const compatible = (a: SavedAddress) =>
-          effectiveIntl ? a.country !== "India" : a.country === "India";
+        // Only auto-select an India address — delivery is domestic only
+        const compatible = (a: SavedAddress) => a.country === "India";
 
         const suitable =
           list.find((a) => a.isDefault && compatible(a)) ??
@@ -444,15 +433,6 @@ export default function CheckoutPage() {
   }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addr = (field: keyof AddressForm) => (v: string) => setAddress((a) => ({ ...a, [field]: v }));
-
-  // Sync country with shipping mode
-  useEffect(() => {
-    if (!effectiveIntl) {
-      setAddress((a) => ({ ...a, country: "India" }));
-    } else if (address.country === "India") {
-      setAddress((a) => ({ ...a, country: "" }));
-    }
-  }, [effectiveIntl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const validate = (a: AddressForm): boolean => {
     const e: Partial<AddressForm> = {};
@@ -906,9 +886,7 @@ export default function CheckoutPage() {
 
                 <div className="p-6 space-y-5">
                   {(() => {
-                    const compatibleAddresses = savedAddresses.filter((a) =>
-                      effectiveIntl ? a.country !== "India" : a.country === "India"
-                    );
+                    const compatibleAddresses = savedAddresses.filter((a) => a.country === "India");
                     const hasIncompatible = savedAddresses.length > 0 && compatibleAddresses.length === 0;
                     const showSaved = session && compatibleAddresses.length > 0;
 
@@ -919,11 +897,7 @@ export default function CheckoutPage() {
                           <div className="flex items-start gap-3 p-3.5 rounded-lg border text-sm font-body"
                             style={{ background: "#FFFBEB", borderColor: "#FCD34D", color: "#92400E" }}>
                             <MapPin className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#D97706" }} />
-                            <p>
-                              {effectiveIntl
-                                ? "Your saved addresses are for India only. Please add an international shipping address."
-                                : "Your saved addresses are for international shipping. Please add an India address for domestic delivery."}
-                            </p>
+                            <p>Please add an India address for delivery.</p>
                           </div>
                         )}
 
@@ -986,7 +960,7 @@ export default function CheckoutPage() {
                                     Editing saved address — changes will update it.
                                   </p>
                                 )}
-                                <AddressFormFields address={address} onChange={addr} errors={errors} isInternational={effectiveIntl} />
+                                <AddressFormFields address={address} onChange={addr} errors={errors} />
                               </div>
                             )}
                           </div>
@@ -994,7 +968,7 @@ export default function CheckoutPage() {
 
                         {/* No compatible saved addresses, or guest — show form directly */}
                         {(!session || savedAddresses.length === 0 || hasIncompatible) && (
-                          <AddressFormFields address={address} onChange={addr} errors={errors} isInternational={effectiveIntl} />
+                          <AddressFormFields address={address} onChange={addr} errors={errors} />
                         )}
                       </>
                     );
@@ -1007,20 +981,17 @@ export default function CheckoutPage() {
                       <Truck className="h-4 w-4 shrink-0" style={{ color: "var(--color-primary)" }} />
                       <div>
                         <p className="text-sm font-medium font-body" style={{ color: "var(--color-text-primary)" }}>
-                          {effectiveIntl ? "International Shipping" : shippingConfig.deliveryTitle}
+                          {shippingConfig.deliveryTitle}
                         </p>
                         <p className="text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>
-                          {effectiveIntl ? "Charges communicated separately" : shippingConfig.deliveryNotes}
+                          {shippingConfig.deliveryNotes}
                         </p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
                       <span className="text-sm font-semibold font-body" style={{ color: "var(--color-success)" }}>
-                        {effectiveIntl ? "—" : shippingCost === 0 ? "Free" : formatINR(shippingCost)}
+                        {shippingCost === 0 ? "Free" : formatINR(shippingCost)}
                       </span>
-                      <p className="text-[11px] font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>
-                        {effectiveIntl ? "International" : "Domestic"}
-                      </p>
                     </div>
                   </div>
 
@@ -1259,60 +1230,17 @@ export default function CheckoutPage() {
                   )}
                   <div className="space-y-0.5">
                     <div className="flex justify-between text-sm font-body">
-                      <span style={{ color: "var(--color-text-muted)" }}>
-                        Shipping
-                        <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold align-middle"
-                          style={{
-                            background: effectiveIntl ? "#EFF6FF" : "#F0FDF4",
-                            color: effectiveIntl ? "#1D4ED8" : "#15803D",
-                          }}>
-                          {effectiveIntl ? "International" : "Domestic"}
-                        </span>
+                      <span style={{ color: "var(--color-text-muted)" }}>Shipping</span>
+                      <span style={{ color: shippingCost === 0 ? "var(--color-success)" : "var(--color-text-primary)", fontWeight: shippingCost === 0 ? 600 : 400 }}>
+                        {shippingCost === 0 ? "Free" : formatINR(shippingCost)}
                       </span>
-                      {effectiveIntl ? (
-                        <span className="relative inline-block">
-                          {shippingConfig.internationalShippingNote && (
-                            <button
-                              type="button"
-                              onClick={() => setShowSummaryIntlNote(v => !v)}
-                              onMouseEnter={() => setShowSummaryIntlNote(true)}
-                              onMouseLeave={() => setShowSummaryIntlNote(false)}
-                              aria-label="International shipping details"
-                              className="absolute -top-3 -right-1 cursor-help"
-                              style={{ color: "#1D4ED8" }}
-                            >
-                              <Info className="h-3 w-3" />
-                            </button>
-                          )}
-                          <span
-                            className="block whitespace-nowrap text-xs font-medium underline decoration-dotted underline-offset-2"
-                            style={{ color: "#1D4ED8" }}
-                          >
-                            Charges Applicable
-                          </span>
-                          {showSummaryIntlNote && shippingConfig.internationalShippingNote && (
-                            <div
-                              className="absolute right-0 top-full mt-2 w-72 z-20 p-3 rounded-md shadow-lg"
-                              style={{ background: "white", border: "1px solid var(--color-parchment)" }}
-                            >
-                              <p className="text-xs font-body whitespace-pre-line leading-relaxed text-left" style={{ color: "var(--color-text-secondary)" }}>
-                                {shippingConfig.internationalShippingNote}
-                              </p>
-                            </div>
-                          )}
-                        </span>
-                      ) : (
-                        <span style={{ color: shippingCost === 0 ? "var(--color-success)" : "var(--color-text-primary)", fontWeight: shippingCost === 0 ? 600 : 400 }}>
-                          {shippingCost === 0 ? "Free" : formatINR(shippingCost)}
-                        </span>
-                      )}
                     </div>
-                    {!effectiveIntl && shippingCost > 0 && (
+                    {shippingCost > 0 && (
                       <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
                         {totalQty} item{totalQty > 1 ? "s" : ""} · ₹{shippingConfig.firstSareeRate} + {Math.max(0, totalQty - 1)}×₹{shippingConfig.additionalSareeRate}
                       </p>
                     )}
-                    {!effectiveIntl && shippingCost === 0 && !coupon?.freeShipping && (
+                    {shippingCost === 0 && !coupon?.freeShipping && (
                       <p className="text-[11px] font-body" style={{ color: "var(--color-success)" }}>
                         Free above {formatINR(shippingConfig.freeShippingThreshold)}
                       </p>

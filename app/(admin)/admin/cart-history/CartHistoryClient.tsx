@@ -102,7 +102,7 @@ export default function CartHistoryClient() {
 
       const rows: string[][] = [
         ["Customer Name", "Email", "Phone", "Customer #", "Product", "Colour",
-         "Saree Code", "Qty", "Sale Price", "Cart Total", "Last Updated", "Status"],
+         "Product Code", "Qty", "Sale Price", "Cart Total", "Last Updated", "Status"],
       ];
       for (const cart of (data.data as Cart[])) {
         const name  = customerName(cart.user);

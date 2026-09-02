@@ -85,7 +85,7 @@ export default async function AdminProductsPage({
             <input
               name="q"
               defaultValue={q}
-              placeholder="Search products, fabric, code…"
+              placeholder="Search products, type, code…"
               className="w-full h-9 pl-9 pr-4 border rounded-lg text-sm font-body focus:outline-none transition-all"
               style={{ borderColor: "#E5E7EB", background: "#F9FAFB", color: "#111827" }}
             />

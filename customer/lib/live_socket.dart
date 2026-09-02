@@ -10,7 +10,7 @@ import 'models.dart';
 ///
 /// The stream screen used to poll chat every 3 seconds, which meant a message
 /// could sit unseen for three seconds, the viewer count could not exist at all,
-/// and a saree that sold stayed "available" on everyone else's screen until
+/// and a product that sold stayed "available" on everyone else's screen until
 /// they happened to reload. This subscribes to the server's customer-safe
 /// `live:*` channel instead and pushes those three things as they happen.
 ///
@@ -30,11 +30,11 @@ class LiveSocket {
   /// Current number of people watching.
   final void Function(int) onViewers;
 
-  /// A saree's stock moved — productId is the server UUID. Carries no buyer
+  /// A product's stock moved — productId is the server UUID. Carries no buyer
   /// identity: this reaches every stranger in the room.
   final void Function(String productId, String? serial, int qtyLeft, String status) onSold;
 
-  /// The host changed which saree is on camera. Null clears the pin.
+  /// The host changed which product is on camera. Null clears the pin.
   final void Function(String? productId) onPinned;
 
   /// The show finished.

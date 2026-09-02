@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     const pickupLocation = (body.pickupLocation ?? cfg.pickupLocation ?? "Primary") as string;
 
     const orderItems = order.items.map((item) => ({
-      name: item.productName ?? "Saree",
+      name: item.productName ?? "Product",
       sku: item.sareeCode ?? item.variantId,
       units: item.quantity,
       selling_price: Number(item.unitPrice),

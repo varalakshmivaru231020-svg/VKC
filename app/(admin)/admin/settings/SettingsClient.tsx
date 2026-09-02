@@ -18,7 +18,7 @@ import { CSS } from "@dnd-kit/utilities";
 interface Props { options: ProductOptions }
 
 type TabId =
-  | "general" | "navigation" | "homepage" | "about" | "footer" | "options" | "attributes" | "productpage" | "shipping" | "zones"
+  | "general" | "navigation" | "homepage" | "about" | "footer" | "options" | "attributes" | "productpage" | "shipping"
   | "social" | "payments" | "sms" | "analytics"
   | "returns" | "notifications" | "roles";
 
@@ -28,11 +28,10 @@ const tabs: { id: TabId; label: string; icon: React.ElementType; desc: string }[
   { id: "homepage",      label: "Homepage",         icon: LayoutGrid,    desc: "Shop by Category section" },
   { id: "about",         label: "About Page",       icon: Globe,         desc: "About Us & home heritage block" },
   { id: "footer",        label: "Footer Links",     icon: List,          desc: "Shop, Help & Account footer links" },
-  { id: "options",       label: "Product Options",  icon: Tag,           desc: "Fabrics, weaves, regions" },
+  { id: "options",       label: "Product Options",  icon: Tag,           desc: "Types, varieties, regions" },
   { id: "attributes",   label: "Attributes",       icon: Sliders,       desc: "Dynamic product attributes" },
   { id: "productpage",  label: "Product Page",     icon: Package,       desc: "Care & delivery instructions" },
-  { id: "shipping",     label: "Domestic Shipping",     icon: Truck,  desc: "Per-saree rates & free shipping" },
-  { id: "zones",        label: "International Shipping", icon: Globe,  desc: "Notes shown to international customers" },
+  { id: "shipping",     label: "Domestic Shipping",     icon: Truck,  desc: "Per-item rates & free shipping" },
   { id: "returns",      label: "Returns & Cancel",  icon: RotateCcw,     desc: "Policy, reasons & periods" },
   { id: "social",       label: "Social Links",      icon: Share2,        desc: "Instagram, Facebook & more" },
   { id: "payments",     label: "Payment Gateway",   icon: CreditCard,    desc: "Razorpay, COD & keys" },
@@ -249,7 +248,7 @@ function GeneralTab() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {([
             { label: "Store Name", key: "store_name" as const, placeholder: "VKC Gold" },
-            { label: "Tagline", key: "tagline" as const, placeholder: "Timeless Weaves. Modern Souls." },
+            { label: "Tagline", key: "tagline" as const, placeholder: "Sweetness of Nature, Strength of Tradition." },
             { label: "Support Email", key: "support_email" as const, placeholder: "care@yourstore.in" },
             { label: "Support Phone", key: "support_phone" as const, placeholder: "+91 98765 43210" },
             { label: "WhatsApp Number", key: "whatsapp_number" as const, placeholder: "+919876543210" },
@@ -340,10 +339,10 @@ function OptionsTab({ options }: { options: ProductOptions }) {
         <div className="space-y-4">
           <p className="text-sm font-body" style={{ color: "#6B7280" }}>Separate items with commas. These populate dropdowns in the product form.</p>
           {([
-            { key: "fabrics" as const, label: "Fabrics", hint: "Silk, Cotton, Georgette, Chiffon…" },
-            { key: "weaves" as const, label: "Weave Types", hint: "Kanjivaram, Banarasi, Ikat…" },
-            { key: "regions" as const, label: "Regions of Origin", hint: "Tamil Nadu, Uttar Pradesh, Gujarat…" },
-            { key: "occasions" as const, label: "Occasions", hint: "Wedding, Festival, Party, Daily…" },
+            { key: "fabrics" as const, label: "Types", hint: "Cane Jaggery, Palm Jaggery, Coconut Jaggery…" },
+            { key: "weaves" as const, label: "Varieties", hint: "Block, Powder, Cubes…" },
+            { key: "regions" as const, label: "Regions of Origin", hint: "Mandya, Karnataka…" },
+            { key: "occasions" as const, label: "Uses", hint: "Daily Use, Festive Sweets, Gifting…" },
           ]).map(({ key, label, hint }) => (
             <div key={key} className="space-y-1.5">
               <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>{label}</label>
@@ -1216,18 +1215,18 @@ function ShippingTab() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Per-Saree Shipping Rates" icon={Package}>
+      <SectionCard title="Per-Item Shipping Rates" icon={Package}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>
-              First Saree (₹)
+              First Item (₹)
             </label>
             <input type="number" value={form.shipping_first_saree_rate} onChange={u("shipping_first_saree_rate")}
               placeholder="100" className={inputCls} style={inputStyle} {...focusProps} />
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>
-              Each Additional Saree (₹)
+              Each Additional Item (₹)
             </label>
             <input type="number" value={form.shipping_additional_saree_rate} onChange={u("shipping_additional_saree_rate")}
               placeholder="50" className={inputCls} style={inputStyle} {...focusProps} />
@@ -1247,7 +1246,7 @@ function ShippingTab() {
               return (
                 <div key={qty} className="flex items-center justify-between px-4 py-2.5">
                   <p className="text-sm font-body" style={{ color: "#374151" }}>
-                    {qty} saree{qty > 1 ? "s" : ""}
+                    {qty} item{qty > 1 ? "s" : ""}
                   </p>
                   <p className="text-sm font-semibold font-body" style={{ color: "var(--color-primary)" }}>
                     ₹{cost}
@@ -1288,73 +1287,6 @@ function ShippingTab() {
       </SectionCard>
 
       <div className="flex justify-end"><SaveButton saved={saved} loading={loading} onClick={handleSave} /></div>
-    </div>
-  );
-}
-
-/* ─────────────── INTERNATIONAL SHIPPING ─────────────── */
-function ShippingZonesTab() {
-  const [note, setNote] = useState("");
-  const [saved, setSaved] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/admin/settings").then(r => r.json()).then(({ settings }) => {
-      if (settings?.international_shipping_note) setNote(settings.international_shipping_note);
-    });
-  }, []);
-
-  const handleSave = async () => {
-    setLoading(true);
-    await fetch("/api/admin/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ international_shipping_note: note }),
-    });
-    setLoading(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  };
-
-  return (
-    <div className="space-y-5">
-      {/* Info banner */}
-      <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
-        <div className="h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#16A34A" }}>
-          <Check className="h-3 w-3 text-white" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold font-body" style={{ color: "#15803D" }}>No charges applied for international orders</p>
-          <p className="text-xs font-body mt-0.5" style={{ color: "#166534" }}>
-            The note below is displayed to international customers at checkout and on relevant pages. Shipping is handled offline.
-          </p>
-        </div>
-      </div>
-
-      <SectionCard title="International Shipping Note" icon={Globe}>
-        <div className="space-y-3">
-          <p className="text-xs font-body" style={{ color: "#6B7280" }}>
-            Write anything you'd like customers to know — delivery timelines, how to place an international order, customs responsibilities, contact details, etc.
-          </p>
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            rows={8}
-            placeholder={`e.g.\nWe ship worldwide! International orders are handled personally.\n\nPlease WhatsApp or email us with your order and delivery address — we'll share the shipping quote and payment details.\n\n• Estimated delivery: 10–21 business days\n• Custom duties & import taxes are the buyer's responsibility\n• We ship via DHL / FedEx with tracking`}
-            className="w-full px-4 py-3 border rounded-xl text-sm font-body focus:outline-none resize-y"
-            style={{ borderColor: "#E5E7EB", background: "white", color: "#111827", minHeight: 160 }}
-            onFocus={e => { e.currentTarget.style.borderColor = "var(--color-primary)"; e.currentTarget.style.boxShadow = "0 0 0 3px var(--color-primary-50)"; }}
-            onBlur={e => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.boxShadow = "none"; }}
-          />
-          <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>
-            Supports plain text. Use line breaks to separate sections.
-          </p>
-        </div>
-      </SectionCard>
-
-      <div className="flex justify-end">
-        <SaveButton saved={saved} loading={loading} onClick={handleSave} />
-      </div>
     </div>
   );
 }
@@ -2092,20 +2024,20 @@ function AnalyticsTab() {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Default Meta Title</label>
-            <input value={form.meta_title} onChange={u("meta_title")} placeholder="VKC Gold — Authentic Handwoven Sarees" className={inputCls} style={inputStyle} {...focusProps} />
+            <input value={form.meta_title} onChange={u("meta_title")} placeholder="VKC Gold — Pure Cane Jaggery" className={inputCls} style={inputStyle} {...focusProps} />
             <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>{form.meta_title.length}/60 characters</p>
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Default Meta Description</label>
             <textarea value={form.meta_description} onChange={u("meta_description")} rows={3}
-              placeholder="Shop authentic handwoven silk sarees directly from master weavers across India."
+              placeholder="Shop pure, chemical-free jaggery made from fresh sugarcane in Mandya."
               className="w-full px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none resize-none"
               style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} {...focusProps} />
             <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>{form.meta_description.length}/160 characters</p>
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Keywords (comma-separated)</label>
-            <input value={form.meta_keywords} onChange={u("meta_keywords")} placeholder="silk sarees, kanjivaram, banarasi, handwoven sarees" className={inputCls} style={inputStyle} {...focusProps} />
+            <input value={form.meta_keywords} onChange={u("meta_keywords")} placeholder="jaggery, organic jaggery, cane jaggery, natural sweetener" className={inputCls} style={inputStyle} {...focusProps} />
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>OG Image URL</label>
@@ -2600,9 +2532,9 @@ const FOOTER_SECTIONS: Array<{ key: FooterSectionKey; label: string }> = [
 const DEFAULT_FOOTER: Record<FooterSectionKey, FooterLink[]> = {
   shop: [
     { label: "New Arrivals",       href: "/new-arrivals" },
-    { label: "Kanjivaram Sarees",  href: "/category/kanjivaram" },
-    { label: "Banarasi Sarees",    href: "/category/banarasi" },
-    { label: "Cotton Sarees",      href: "/category/cotton" },
+    { label: "Jaggery Blocks",  href: "/category/jaggery-blocks" },
+    { label: "Jaggery Powder",  href: "/category/jaggery-powder" },
+    { label: "Jaggery Cubes",   href: "/category/jaggery-cubes" },
     { label: "Wedding Collection", href: "/shop?occasion=wedding" },
     { label: "Sale",               href: "/shop?sale=true" },
   ],
@@ -2792,7 +2724,6 @@ export default function SettingsClient({ options }: Props) {
       case "about":         return <AboutPageTab />;
       case "productpage":   return <ProductPageTab />;
       case "shipping":      return <ShippingTab />;
-      case "zones":         return <ShippingZonesTab />;
       case "returns":       return <ReturnsTab />;
       case "social":        return <SocialTab />;
       case "payments":      return <PaymentsTab />;

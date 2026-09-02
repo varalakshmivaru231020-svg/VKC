@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Trash2, Minus, Plus, ShoppingBag, ArrowRight,
-  Globe, Truck, Heart, Info,
+  Trash2, Minus, Plus, ShoppingBag, ArrowRight, Heart,
 } from "lucide-react";
 import { CouponPicker } from "@/components/cart/CouponPicker";
 import { useSession } from "next-auth/react";
@@ -17,7 +16,7 @@ import { SmartImage } from "@/components/ui/SmartImage";
 
 interface ShippingConfig {
   freeShippingThreshold: number; firstSareeRate: number; additionalSareeRate: number;
-  deliveryTitle: string; deliveryNotes: string; internationalShippingNote: string;
+  deliveryTitle: string; deliveryNotes: string;
 }
 
 export default function CartPage() {
@@ -42,16 +41,10 @@ export default function CartPage() {
     setTimeout(() => setMovedToWishlist(null), 2500);
   };
 
-  // International shipping — no charges; passes ?intl=1 to checkout
-  const [isInternational, setIsInternational] = useState(false);
-  const [showIntlNote, setShowIntlNote] = useState(false);
-  const [showSummaryIntlNote, setShowSummaryIntlNote] = useState(false);
-
-  // Shipping config (includes international note)
+  // Shipping config
   const [shippingConfig, setShippingConfig] = useState<ShippingConfig>({
     freeShippingThreshold: 2999, firstSareeRate: 100, additionalSareeRate: 50,
     deliveryTitle: "Standard Delivery", deliveryNotes: "4–7 business days",
-    internationalShippingNote: "",
   });
 
   useEffect(() => {
@@ -74,13 +67,12 @@ export default function CartPage() {
     ? 0
     : shippingConfig.firstSareeRate + Math.max(0, totalQty - 1) * shippingConfig.additionalSareeRate;
 
-  // International = no shipping charge shown at cart stage
-  const total = afterDiscount + (isInternational ? 0 : domesticShippingCost);
+  const total = afterDiscount + domesticShippingCost;
 
   const [checkingStock, setCheckingStock] = useState(false);
 
   const goToCheckout = () => {
-    router.push(isInternational ? "/checkout?intl=1" : "/checkout");
+    router.push("/checkout");
   };
 
   const handleCheckout = () => {
@@ -292,72 +284,6 @@ export default function CartPage() {
             </div>
 
             {/* Shipping option */}
-            <div className="p-5 rounded-md space-y-4" style={{ background: "white", border: "1px solid var(--color-parchment)" }}>
-              <p className="text-sm font-body font-semibold flex items-center gap-2" style={{ color: "var(--color-text-primary)" }}>
-                <Truck className="h-4 w-4" style={{ color: "var(--color-primary)" }} />
-                Shipping
-              </p>
-
-              {/* International checkbox */}
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div
-                  onClick={() => { setIsInternational(v => !v); setShowIntlNote(false); }}
-                  className="relative w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all"
-                  style={{
-                    borderColor: isInternational ? "var(--color-primary)" : "var(--color-parchment)",
-                    background: isInternational ? "var(--color-primary)" : "white",
-                  }}
-                >
-                  {isInternational && (
-                    <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm font-medium font-body" style={{ color: "var(--color-text-primary)" }}>
-                    Ship Internationally
-                  </p>
-                  <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
-                    Outside India
-                  </p>
-                </div>
-                <Globe className="h-4 w-4 ml-auto shrink-0" style={{ color: isInternational ? "var(--color-primary)" : "var(--color-text-muted)" }} />
-              </label>
-
-              {/* International info — no charges, show note */}
-              {isInternational && (
-                <div className="rounded-lg border overflow-hidden" style={{ borderColor: "var(--color-parchment)" }}>
-                  <div className="flex items-center justify-between px-3.5 py-2.5"
-                    style={{ background: "var(--color-primary-50)" }}>
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--color-primary)" }} />
-                      <p className="text-sm font-medium font-body" style={{ color: "var(--color-primary)" }}>
-                        Charges will be communicated separately
-                      </p>
-                    </div>
-                    {shippingConfig.internationalShippingNote && (
-                      <button
-                        onClick={() => setShowIntlNote(v => !v)}
-                        className="text-[11px] font-semibold font-body underline underline-offset-2 shrink-0 ml-2"
-                        style={{ color: "var(--color-primary)" }}
-                      >
-                        {showIntlNote ? "Hide" : "View details"}
-                      </button>
-                    )}
-                  </div>
-                  {showIntlNote && shippingConfig.internationalShippingNote && (
-                    <div className="px-3.5 py-3 border-t" style={{ borderColor: "var(--color-parchment)", background: "white" }}>
-                      <p className="text-xs font-body whitespace-pre-line leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                        {shippingConfig.internationalShippingNote}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-            </div>
-
             {/* Summary */}
             <div className="p-5 rounded-md" style={{ background: "white", border: "1px solid var(--color-parchment)" }}>
               <p className="text-base font-body font-semibold mb-4" style={{ color: "var(--color-text-primary)" }}>Order Summary</p>
@@ -378,59 +304,16 @@ export default function CartPage() {
                   </div>
                 )}
                 <div className="flex items-center justify-between text-sm font-body">
-                  <span style={{ color: "var(--color-text-muted)" }}>
-                    Shipping
-                    <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold align-middle"
-                      style={{
-                        background: isInternational ? "#EFF6FF" : "#F0FDF4",
-                        color: isInternational ? "#1D4ED8" : "#15803D",
-                      }}>
-                      {isInternational ? "International" : "Domestic"}
-                    </span>
+                  <span style={{ color: "var(--color-text-muted)" }}>Shipping</span>
+                  <span style={{
+                    color: domesticShippingCost === 0 ? "var(--color-success)" : "var(--color-text-primary)",
+                    fontWeight: domesticShippingCost === 0 ? 600 : 400,
+                  }}>
+                    {domesticShippingCost === 0 ? "Free" : formatINR(domesticShippingCost)}
                   </span>
-                  {isInternational ? (
-                    <span className="relative inline-block">
-                      {shippingConfig.internationalShippingNote && (
-                        <button
-                          type="button"
-                          onClick={() => setShowSummaryIntlNote(v => !v)}
-                          onMouseEnter={() => setShowSummaryIntlNote(true)}
-                          onMouseLeave={() => setShowSummaryIntlNote(false)}
-                          aria-label="International shipping details"
-                          className="absolute -top-3 -right-1 cursor-help"
-                          style={{ color: "#1D4ED8" }}
-                        >
-                          <Info className="h-3 w-3" />
-                        </button>
-                      )}
-                      <span
-                        className="block whitespace-nowrap text-xs font-medium underline decoration-dotted underline-offset-2"
-                        style={{ color: "#1D4ED8" }}
-                      >
-                        Charges Applicable
-                      </span>
-                      {showSummaryIntlNote && shippingConfig.internationalShippingNote && (
-                        <div
-                          className="absolute right-0 top-full mt-2 w-72 z-20 p-3 rounded-md shadow-lg"
-                          style={{ background: "white", border: "1px solid var(--color-parchment)" }}
-                        >
-                          <p className="text-xs font-body whitespace-pre-line leading-relaxed text-left" style={{ color: "var(--color-text-secondary)" }}>
-                            {shippingConfig.internationalShippingNote}
-                          </p>
-                        </div>
-                      )}
-                    </span>
-                  ) : (
-                    <span style={{
-                      color: domesticShippingCost === 0 ? "var(--color-success)" : "var(--color-text-primary)",
-                      fontWeight: domesticShippingCost === 0 ? 600 : 400,
-                    }}>
-                      {domesticShippingCost === 0 ? "Free" : formatINR(domesticShippingCost)}
-                    </span>
-                  )}
                 </div>
 
-                {!isInternational && domesticShippingCost > 0 && afterDiscount < shippingConfig.freeShippingThreshold && (
+                {domesticShippingCost > 0 && afterDiscount < shippingConfig.freeShippingThreshold && (
                   <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
                     Add {formatINR(shippingConfig.freeShippingThreshold - afterDiscount)} more for free shipping
                   </p>

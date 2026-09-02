@@ -187,7 +187,7 @@ class _LiveListScreenState extends State<LiveListScreen> {
         ]),
       );
 
-  /// A finished show. The sarees stay browsable, which is the reason to keep it.
+  /// A finished show. The products stay browsable, which is the reason to keep it.
   Widget _pastCard(LiveSession l) => GestureDetector(
         onTap: () => context.push('/live/${Uri.encodeComponent(l.liveId)}'),
         child: Container(
@@ -220,9 +220,9 @@ class _LiveListScreenState extends State<LiveListScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(_endedLabel(l.endedAt), style: VlText.mono(9, color: VlColors.muted, letter: 0.2)),
                 const SizedBox(height: 6),
-                // "Live now — heritage sarees" is the Live tab's fallback and
+                // "Live now — pure cane jaggery" is the Live tab's fallback and
                 // reads as nonsense on a show that finished last week.
-                Text(l.hasTitle ? l.title : 'Heritage sarees',
+                Text(l.hasTitle ? l.title : 'Pure cane jaggery',
                     maxLines: 2, overflow: TextOverflow.ellipsis, style: VlText.display(17)),
                 const SizedBox(height: 6),
                 Text(_sareeCount(l.productCount), style: VlText.mono(9, color: VlColors.muted, letter: 0.16)),
@@ -233,8 +233,8 @@ class _LiveListScreenState extends State<LiveListScreen> {
         ),
       );
 
-  /// "1 SAREE FROM THIS SHOW", not "1 SAREES FROM THIS SHOW".
-  String _sareeCount(int n) => n == 1 ? '1 SAREE FROM THIS SHOW' : '$n SAREES FROM THIS SHOW';
+  /// "1 PRODUCT FROM THIS SHOW", not "1 PRODUCTS FROM THIS SHOW".
+  String _sareeCount(int n) => n == 1 ? '1 PRODUCT FROM THIS SHOW' : '$n PRODUCTS FROM THIS SHOW';
 
   String _whenLabel(DateTime? at) {
     if (at == null) return 'SCHEDULED';

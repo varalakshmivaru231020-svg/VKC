@@ -14,7 +14,7 @@ Product productFromEcom(EcomProduct e, {String? variantId}) {
   return Product(
     id: e.slug.isNotEmpty ? e.slug : e.id,
     name: e.name,
-    weave: e.fabric ?? e.weaveType ?? e.category?.name ?? 'Handloom',
+    weave: e.fabric ?? e.weaveType ?? e.category?.name ?? 'Jaggery',
     price: v.salePrice.toDouble(),
     mrp: mrp,
     discount: v.discountPercent,

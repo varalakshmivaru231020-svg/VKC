@@ -31,7 +31,7 @@ describe("parseVideoUrl", () => {
   });
 
   it("parses a Facebook video URL", () => {
-    const url = "https://www.facebook.com/VijaylakshmiSarees/videos/1234567890/";
+    const url = "https://www.facebook.com/VKCGold/videos/1234567890/";
     const result = parseVideoUrl(url);
     expect(result?.platform).toBe("facebook");
     expect(result?.embedUrl).toContain(encodeURIComponent(url));
@@ -48,7 +48,7 @@ describe("parseVideoUrl", () => {
   });
 
   it("returns null for a direct video file URL", () => {
-    expect(parseVideoUrl("https://cdn.example.com/uploads/saree-demo.mp4")).toBeNull();
+    expect(parseVideoUrl("https://cdn.example.com/uploads/demo.mp4")).toBeNull();
   });
 
   it("returns null for an empty string", () => {

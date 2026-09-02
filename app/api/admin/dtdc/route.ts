@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     const subTotal = Number(order.totalAmount);
     const declaredValue = Number(body.declaredValue) > 0 ? Number(body.declaredValue) : Math.max(subTotal, 1);
     const codAmount = paymentMode === "COD" ? subTotal : 0;
-    const description = order.items.map((i) => i.sareeCode ?? i.productName).filter(Boolean).join(", ") || "Saree";
+    const description = order.items.map((i) => i.sareeCode ?? i.productName).filter(Boolean).join(", ") || "Product";
     const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
 
     try {

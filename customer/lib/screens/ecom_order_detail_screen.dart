@@ -330,7 +330,7 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
       _busy = 'REORDER';
     });
     // "unavailable" and "the network died" are different answers, and telling
-    // a customer their sarees are gone when the request never landed is worse
+    // a customer their items are gone when the request never landed is worse
     // than telling them nothing.
     var added = 0, missing = 0, failed = 0;
     for (final it in o.items) {
@@ -363,7 +363,7 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
     if (added == 0) {
       _toast(failed > 0
           ? 'Could not reach the store. Check your connection and try again.'
-          : 'These sarees are no longer available');
+          : 'These items are no longer available');
       return;
     }
     final skipped = missing + failed;

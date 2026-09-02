@@ -4,8 +4,9 @@ import path from "path";
 import sharp from "sharp";
 import { auth } from "@/auth";
 import { isCloudinaryConfigured, uploadBufferToCloudinary } from "@/lib/cloudinary";
+import { diskUploadsConfigured, uploadsDir } from "@/lib/upload-storage";
 
-const UPLOADS_DIR    = path.join(process.cwd(), "public", "uploads", "reviews");
+const UPLOADS_DIR    = uploadsDir("reviews");
 const MAX_INPUT_SIZE = 15 * 1024 * 1024;
 const MAX_DIMENSION  = 1600;
 const WEBP_QUALITY   = 80;
@@ -42,16 +43,17 @@ export async function POST(req: NextRequest) {
     .webp({ quality: WEBP_QUALITY })
     .toBuffer();
 
-  // Cloudinary is preferred — `next start` only recognizes public/ files that
-  // existed when the process last booted, so anything written to local disk
-  // while the server is running 404s until the next restart (same issue
-  // already fixed for product images in app/api/admin/upload).
-  if (isCloudinaryConfigured()) {
+  // Storage priority: UPLOADS_DIR (persistent disk outside the app folder,
+  // served by nginx) wins when set; otherwise Cloudinary; otherwise local
+  // public/uploads in dev only — `next start` only recognizes public/ files
+  // that existed when the process last booted, so runtime public/ writes are
+  // refused in production.
+  if (!diskUploadsConfigured && isCloudinaryConfigured()) {
     const result = await uploadBufferToCloudinary(outputBuffer, { folder: "vkc/reviews" });
     return NextResponse.json({ url: result.secure_url });
   }
 
-  if (process.env.NODE_ENV === "production") {
+  if (!diskUploadsConfigured && process.env.NODE_ENV === "production") {
     return NextResponse.json(
       { error: "Image storage is not configured. Contact the site admin." },
       { status: 500 }

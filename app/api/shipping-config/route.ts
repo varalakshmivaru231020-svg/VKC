@@ -13,7 +13,6 @@ export async function GET() {
           "shipping_additional_saree_rate",
           "domestic_delivery_title",
           "domestic_delivery_notes",
-          "international_shipping_note",
         ],
       },
     },
@@ -27,6 +26,5 @@ export async function GET() {
     additionalSareeRate:      Number(s["shipping_additional_saree_rate"] ?? 50),
     deliveryTitle:            s["domestic_delivery_title"] ?? "Standard Delivery",
     deliveryNotes:            s["domestic_delivery_notes"] ?? "4–7 business days",
-    internationalShippingNote: s["international_shipping_note"] ?? "",
   });
 }

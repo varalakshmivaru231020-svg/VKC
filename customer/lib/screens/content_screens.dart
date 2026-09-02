@@ -698,7 +698,7 @@ class _AboutScreenState extends State<AboutScreen> {
                       // The GST line is gone until the new entity's number is
                       // confirmed — the one here belonged to the old business.
                       const SizedBox(height: 12),
-                      // "Our Story" pointed at /saree-stories, a page the site no
+                      // "Our Story" pointed at a stories page the site no
                       // longer has, so Contact stands on its own.
                       _linkBtn('CONTACT', () => context.push('/contact')),
                       // The website closes its About page with this block —
@@ -856,7 +856,7 @@ class ContactScreen extends StatelessWidget {
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('Shop over a video call', style: VlText.ui(13, weight: FontWeight.w600)),
                               const SizedBox(height: 2),
-                              Text('We’ll drape the sarees for you, live.', style: VlText.body(11, color: VlColors.muted)),
+                              Text('We’ll show you the jaggery up close, live.', style: VlText.body(11, color: VlColors.muted)),
                             ]),
                           ),
                           Icon(Icons.chevron_right, size: 16, color: VlColors.muted),
@@ -1061,7 +1061,7 @@ class _VideoBookingScreenState extends State<VideoBookingScreen> {
         children: [
           Text('Shop with us, live', style: VlText.display(26, height: 1.2)),
           const SizedBox(height: 6),
-          Text('Pick a time and we’ll ring you on WhatsApp — sarees draped, borders held to the light, questions answered.',
+          Text('Pick a time and we’ll ring you on WhatsApp — jaggery shown up close, fresh from the unit, questions answered.',
               style: VlText.body(13, color: VlColors.muted, height: 1.7)),
           const SizedBox(height: 20),
           if (_formError != null) ...[
