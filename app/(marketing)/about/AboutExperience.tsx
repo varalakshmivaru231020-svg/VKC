@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, Sprout, Handshake, Recycle, Cog, Heart, ShieldCheck,
   Sparkles, Globe2, Factory, BadgeCheck, MapPin, Phone,
-  Mail, MessageCircle, Target, Eye, Wheat, Leaf, Scale,
+  Mail, MessageCircle, Target, Eye, Wheat, Leaf, Scale, Quote,
 } from "lucide-react";
 
 /* ── Deep-green & jaggery-gold palette (layered on the site tokens) ───────── */
@@ -233,6 +233,202 @@ function TeamCard({ name, role, photo, bio, index }: { name: string; role: strin
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+/* ── Floating card: idle bob + cursor tilt + glare + hover lift ───────────── */
+function FloatCard({ children, index, dark = false, className = "" }: { children: React.ReactNode; index: number; dark?: boolean; className?: string }) {
+  const reduced = useReducedMotion();
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const spring = { stiffness: 150, damping: 16, mass: 0.5 };
+  const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [8, -8]), spring);
+  const rotateY = useSpring(useTransform(mx, [-0.5, 0.5], [-10, 10]), spring);
+  const glare = useTransform([mx, my], ([x, y]) =>
+    `radial-gradient(260px circle at ${50 + (x as number) * 100}% ${50 + (y as number) * 100}%, rgba(255,255,255,${dark ? 0.12 : 0.4}), transparent 65%)`);
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (reduced) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    mx.set((e.clientX - r.left) / r.width - 0.5);
+    my.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  const onLeave = () => { mx.set(0); my.set(0); };
+  return (
+    <motion.div
+      className={className}
+      initial={reduced ? false : { opacity: 0, y: 70 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "0px 0px -12% 0px" }}
+      transition={{ duration: 1, ease: EASE, delay: index * 0.15 }}
+      style={{ perspective: 1100 }}
+    >
+      {/* Idle float: each card bobs on its own period so they never move in unison. */}
+      <motion.div
+        animate={reduced ? undefined : { y: [0, -14, 0] }}
+        transition={{ duration: 5.5 + index * 0.9, repeat: Infinity, ease: "easeInOut", delay: index * 0.7 }}
+      >
+        <motion.div
+          onMouseMove={onMove}
+          onMouseLeave={onLeave}
+          whileHover={reduced ? undefined : { scale: 1.03 }}
+          style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+          className="group relative rounded-lg overflow-hidden transition-shadow duration-500 hover:shadow-[0_44px_80px_-24px_rgba(18,32,23,0.4)]"
+        >
+          <div className="absolute inset-0 rounded-lg" style={{ background: dark ? C.bark : C.ivory, border: `1px solid ${dark ? "rgba(240,201,109,0.28)" : C.parchment}` }} />
+          {dark && <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.1, mixBlendMode: "overlay" }} />}
+          <motion.div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: glare }} />
+          <div className="relative" style={{ transform: "translateZ(30px)" }}>{children}</div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ── Spotlight: a warm glow that follows the cursor across a panel ────────── */
+function Spotlight({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+  const rawX = useMotionValue(30);
+  const rawY = useMotionValue(40);
+  const x = useSpring(rawX, { stiffness: 80, damping: 20 });
+  const y = useSpring(rawY, { stiffness: 80, damping: 20 });
+  const bg = useTransform([x, y], ([px, py]) => `radial-gradient(460px circle at ${px}% ${py}%, rgba(240,201,109,0.32), transparent 62%)`);
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    rawX.set(((e.clientX - r.left) / r.width) * 100);
+    rawY.set(((e.clientY - r.top) / r.height) * 100);
+  };
+  return (
+    <div onMouseMove={onMove} className={`relative overflow-hidden ${className}`} style={style}>
+      <motion.div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: bg }} />
+      {children}
+    </div>
+  );
+}
+
+/* ── Scroll-highlight text: words brighten as the reader scrolls past ─────── */
+function ScrollWord({ word, progress, start, end, accent }: { word: string; progress: MotionValue<number>; start: number; end: number; accent: boolean }) {
+  const opacity = useTransform(progress, [start, end], [0.14, 1]);
+  return (
+    <motion.span className="inline-block mr-[0.26em]" style={{ opacity, color: accent ? C.jaggeryLite : undefined, fontStyle: accent ? "italic" : undefined }}>
+      {word}
+    </motion.span>
+  );
+}
+function ScrollText({ text, accentFrom = Infinity, className = "", style }: { text: string; accentFrom?: number; className?: string; style?: React.CSSProperties }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.9", "end 0.5"] });
+  const words = text.split(" ");
+  return (
+    <p ref={ref} className={className} style={style}>
+      {words.map((w, i) => (
+        <ScrollWord key={i} word={w} progress={scrollYProgress} start={i / words.length} end={(i + 1) / words.length} accent={i >= accentFrom} />
+      ))}
+    </p>
+  );
+}
+
+/* ── Process: a gold line draws itself across the steps as you scroll ─────── */
+function ProcessStep({ step, index, total, progress }: { step: { n: string; t: string; d: string }; index: number; total: number; progress: MotionValue<number> }) {
+  const t = (index + 0.5) / total;
+  const active = useTransform(progress, [Math.max(0, t - 0.14), t], [0, 1]);
+  const scale = useTransform(active, [0, 1], [0.82, 1]);
+  const bg = useTransform(active, [0, 1], [C.bark, C.jaggery]);
+  const fg = useTransform(active, [0, 1], [C.jaggeryLite, C.bark]);
+  const textOpacity = useTransform(active, [0, 1], [0.45, 1]);
+  return (
+    <div className="relative flex lg:block gap-6">
+      <motion.div
+        className="relative z-10 shrink-0 h-[72px] w-[72px] rounded-full grid place-items-center font-heading"
+        style={{ scale, background: bg, color: fg, border: "1px solid rgba(240,201,109,0.5)", fontSize: 24, boxShadow: "0 0 0 10px rgba(18,32,23,1)" }}
+      >
+        {step.n}
+      </motion.div>
+      <motion.div style={{ opacity: textOpacity }} className="lg:mt-7">
+        <h3 className="font-heading" style={{ fontSize: 23, lineHeight: 1.1, color: C.ivory }}>{step.t}</h3>
+        <p className="font-body mt-2" style={{ fontSize: 14.5, lineHeight: 1.7, color: "rgba(252,251,247,0.66)", maxWidth: 260 }}>{step.d}</p>
+      </motion.div>
+    </div>
+  );
+}
+function ProcessSteps({ steps }: { steps: { n: string; t: string; d: string }[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.85", "end 0.55"] });
+  const pathLength = useSpring(scrollYProgress, { stiffness: 60, damping: 20 });
+  return (
+    <div ref={ref} className="relative mt-16">
+      {/* Desktop: horizontal rail through the step badges. Mobile: vertical rail. */}
+      <svg aria-hidden className="hidden lg:block absolute left-0 top-[36px] w-full h-[2px]" viewBox="0 0 100 2" preserveAspectRatio="none">
+        <line x1="0" y1="1" x2="100" y2="1" stroke="rgba(240,201,109,0.18)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        <motion.line x1="0" y1="1" x2="100" y2="1" stroke={C.jaggeryLite} strokeWidth="2" vectorEffect="non-scaling-stroke" style={{ pathLength }} />
+      </svg>
+      <svg aria-hidden className="lg:hidden absolute left-[35px] top-0 h-full w-[2px]" viewBox="0 0 2 100" preserveAspectRatio="none">
+        <line x1="1" y1="0" x2="1" y2="100" stroke="rgba(240,201,109,0.18)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        <motion.line x1="1" y1="0" x2="1" y2="100" stroke={C.jaggeryLite} strokeWidth="2" vectorEffect="non-scaling-stroke" style={{ pathLength }} />
+      </svg>
+      <div className="grid gap-12 lg:gap-6 lg:grid-cols-4">
+        {steps.map((p, i) => <ProcessStep key={p.n} step={p} index={i} total={steps.length} progress={scrollYProgress} />)}
+      </div>
+    </div>
+  );
+}
+
+/* ── Stacking cards: each value pins under the last and settles back ──────── */
+const STACK_THEMES = [
+  { bg: "#FCFBF7", fg: "#111827", accent: "#8A5B17", sub: "#354052" },
+  { bg: "#1F6F5C", fg: "#FCFBF7", accent: "#F0C96D", sub: "rgba(252,251,247,0.75)" },
+  { bg: "#F0C96D", fg: "#122017", accent: "#8A5B17", sub: "rgba(18,32,23,0.75)" },
+  { bg: "#122017", fg: "#FCFBF7", accent: "#F0C96D", sub: "rgba(252,251,247,0.72)" },
+  { bg: "#F3F0E8", fg: "#111827", accent: "#1F6F5C", sub: "#354052" },
+];
+function StackCard({ value, index, total, progress }: { value: { icon: any; t: string; d: string }; index: number; total: number; progress: MotionValue<number> }) {
+  const theme = STACK_THEMES[index % STACK_THEMES.length];
+  const start = index / total;
+  const scale = useTransform(progress, [start, 1], [1, 1 - (total - 1 - index) * 0.045]);
+  const Icon = value.icon;
+  return (
+    <motion.div
+      className="sticky rounded-lg overflow-hidden"
+      style={{ top: `calc(148px + ${index * 16}px)`, scale, transformOrigin: "top center", background: theme.bg, color: theme.fg, boxShadow: "0 -12px 40px rgba(18,32,23,0.14)", border: `1px solid ${index === 2 || index === 4 || index === 0 ? "rgba(17,24,39,0.08)" : "rgba(240,201,109,0.2)"}` }}
+    >
+      <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.08, mixBlendMode: "overlay" }} />
+      <div className="relative grid lg:grid-cols-12 gap-8 items-end p-8 sm:p-12 lg:p-14" style={{ minHeight: "clamp(360px, 52vh, 520px)" }}>
+        <div className="lg:col-span-2 font-heading" style={{ fontSize: "clamp(4rem,9vw,8rem)", lineHeight: 0.85, letterSpacing: "-0.05em", color: theme.accent }}>0{index + 1}</div>
+        <div className="lg:col-span-7">
+          <h3 className="font-heading" style={{ fontSize: "clamp(2rem,4.2vw,3.6rem)", lineHeight: 1.02, letterSpacing: "-0.02em", color: theme.fg }}>{value.t}</h3>
+          <p className="font-body mt-4" style={{ fontSize: 17, lineHeight: 1.7, color: theme.sub, maxWidth: 520 }}>{value.d}</p>
+        </div>
+        <div className="lg:col-span-3 lg:justify-self-end">
+          <div className="h-20 w-20 rounded-full grid place-items-center" style={{ border: `1px solid ${theme.accent}66`, color: theme.accent }}>
+            <Icon className="h-8 w-8" />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+function StackCards({ values }: { values: { icon: any; t: string; d: string }[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  return (
+    <div ref={ref} className="relative space-y-6">
+      {values.map((v, i) => <StackCard key={v.t} value={v} index={i} total={values.length} progress={scrollYProgress} />)}
+    </div>
+  );
+}
+
+/* ── Seal: slowly rotating circular text around a still emblem ────────────── */
+function Seal({ text, size = 150, color = C.jaggeryDark, children }: { text: string; size?: number; color?: string; children?: React.ReactNode }) {
+  const reduced = useReducedMotion();
+  return (
+    <div className="relative grid place-items-center" style={{ width: size, height: size }}>
+      <motion.svg viewBox="0 0 100 100" width={size} height={size} className="absolute inset-0"
+        animate={reduced ? undefined : { rotate: 360 }} transition={{ duration: 26, repeat: Infinity, ease: "linear" }}>
+        <defs><path id={`seal-${size}`} d="M50,50 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0" /></defs>
+        <text fontSize="8" letterSpacing="1.9" fill={color} fontFamily="Inter, system-ui, sans-serif" fontWeight="600">
+          <textPath href={`#seal-${size}`}>{text}</textPath>
+        </text>
+      </motion.svg>
+      <div className="relative">{children}</div>
+    </div>
   );
 }
 
@@ -493,48 +689,32 @@ export default function AboutExperience({
             </Reveal>
           </div>
 
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
-            {PHILOSOPHY.map((p, i) => (
-              <motion.div
-                key={p.t}
-                initial={reduced ? false : { opacity: 0, y: 40, scale: 0.96 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, margin: "0px 0px -12% 0px" }}
-                transition={{ duration: 0.9, ease: EASE, delay: 0.1 + i * 0.14 }}
-                whileHover={reduced ? undefined : { y: -8 }}
-                className="group relative rounded-lg overflow-hidden"
-                style={{ background: C.ivory, border: `1px solid ${C.parchment}` }}
-              >
-                {/* Gold sweep on hover */}
-                <motion.span
-                  aria-hidden
-                  className="absolute left-0 right-0 top-0 h-[3px] origin-left"
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1, ease: EASE, delay: 0.4 + i * 0.14 }}
-                  style={{ background: `linear-gradient(90deg, ${C.jaggery}, ${C.jaggeryLite})` }}
-                />
-                <div aria-hidden className="absolute -right-12 -bottom-12 h-40 w-40 rounded-full transition-transform duration-700 group-hover:scale-150" style={{ background: `radial-gradient(circle, ${C.green}14, transparent 70%)` }} />
-                <div className="relative p-8 sm:p-9">
-                  <div className="flex items-start justify-between">
-                    <motion.div
-                      className="h-14 w-14 rounded-lg grid place-items-center"
-                      initial={reduced ? false : { rotate: -8, scale: 0.8, opacity: 0 }}
-                      whileInView={{ rotate: 0, scale: 1, opacity: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.7, ease: EASE, delay: 0.3 + i * 0.14 }}
-                      style={{ background: C.bark, color: C.jaggeryLite }}
-                    >
-                      <p.icon className="h-7 w-7" />
-                    </motion.div>
-                    <span className="font-heading" style={{ fontSize: 40, lineHeight: 1, color: `${C.jaggery}44`, letterSpacing: "-0.03em" }}>0{i + 1}</span>
+          {/* Floating trio: the middle card sits higher and dark, the outer two
+              drift on their own periods. Cursor tilts and lights each card. */}
+          <div className="relative mt-16 md:mt-24 grid gap-6 md:gap-7 md:grid-cols-3 md:items-start">
+            <div aria-hidden className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[120%] w-[70%] rounded-full pointer-events-none"
+              style={{ background: `radial-gradient(ellipse at center, ${C.jaggery}22, transparent 65%)`, filter: "blur(30px)" }} />
+            {PHILOSOPHY.map((p, i) => {
+              const dark = i === 1;
+              return (
+                <FloatCard key={p.t} index={i} dark={dark} className={i === 1 ? "md:-mt-12" : "md:mt-6"}>
+                  <div className="p-8 sm:p-9" style={{ minHeight: 320 }}>
+                    <div className="flex items-start justify-between">
+                      <div className="relative h-16 w-16">
+                        <span aria-hidden className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:rotate-180" style={{ border: `1px dashed ${dark ? "rgba(240,201,109,0.55)" : `${C.jaggery}77`}` }} />
+                        <div className="absolute inset-[6px] rounded-full grid place-items-center" style={{ background: dark ? C.jaggery : C.bark, color: dark ? C.bark : C.jaggeryLite }}>
+                          <p.icon className="h-6 w-6" />
+                        </div>
+                      </div>
+                      <span className="font-heading" style={{ fontSize: 44, lineHeight: 1, color: dark ? "rgba(240,201,109,0.35)" : `${C.jaggery}55`, letterSpacing: "-0.03em" }}>0{i + 1}</span>
+                    </div>
+                    <h3 className="font-heading mt-9" style={{ fontSize: 27, lineHeight: 1.08, letterSpacing: "-0.01em", color: dark ? C.ivory : C.ink }}>{p.t}</h3>
+                    <p className="font-body mt-3" style={{ fontSize: 15, lineHeight: 1.72, color: dark ? "rgba(252,251,247,0.74)" : C.ink2 }}>{p.d}</p>
+                    <span className="block mt-7 h-[2px] w-10 origin-left transition-transform duration-500 group-hover:scale-x-[2.6]" style={{ background: dark ? C.jaggeryLite : C.jaggery }} />
                   </div>
-                  <h3 className="font-heading mt-8" style={{ fontSize: 26, lineHeight: 1.1, letterSpacing: "-0.01em", color: C.ink }}>{p.t}</h3>
-                  <p className="font-body mt-3" style={{ fontSize: 15, lineHeight: 1.72, color: C.ink2 }}>{p.d}</p>
-                </div>
-              </motion.div>
-            ))}
+                </FloatCard>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -560,26 +740,37 @@ export default function AboutExperience({
               </div>
             </Reveal>
           </div>
-          <div className="lg:col-span-5">
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { icon: MapPin, k: "Location", v: "Ballenahalli, Srirangapatna Taluk, Mandya — Karnataka 571807" },
-                { icon: BadgeCheck, k: "Registration", v: "MSME / Udyam & GST compliant" },
-                { icon: Sprout, k: "Sourcing", v: "Sugarcane from local Mandya farmers" },
-                { icon: Factory, k: "Production", v: "Chemical-free, modern processing" },
-              ].map((b, i) => (
-                <Reveal key={b.k} delay={i * 0.08} className={i % 2 === 1 ? "sm:translate-y-8" : ""}>
-                  <div className={`${card} p-6 h-full hover:-translate-y-1 hover:shadow-lg`} style={{ background: "white", borderColor: C.parchment }}>
-                    <div className="h-10 w-10 rounded-lg grid place-items-center" style={{ background: `${C.green}12`, color: C.green }}>
-                      <b.icon className="h-5 w-5" />
-                    </div>
-                    <div className="font-body font-semibold mt-4 uppercase" style={{ fontSize: 11.5, letterSpacing: "0.12em", color: C.jaggeryDark }}>{b.k}</div>
-                    <div className="font-body mt-1.5" style={{ fontSize: 14, lineHeight: 1.55, color: C.ink2 }}>{b.v}</div>
+          {/* Fact sheet: a dark ledger with dotted leaders and a rotating seal —
+              deliberately no cards here, so it reads as a document, not a grid. */}
+          <Reveal delay={0.1} className="lg:col-span-5">
+            <div className="relative mt-10 lg:mt-0">
+              <div className="absolute -top-14 right-2 sm:right-6 z-10">
+                <Seal text="MADE IN MANDYA · SINCE 1988 · " size={136} color={C.jaggeryLite}>
+                  <div className="h-11 w-11 rounded-full grid place-items-center" style={{ background: C.jaggery, color: C.bark }}>
+                    <Wheat className="h-5 w-5" />
                   </div>
-                </Reveal>
-              ))}
+                </Seal>
+              </div>
+              <dl className="relative rounded-lg p-7 sm:p-9 pt-16 sm:pt-16 overflow-hidden" style={{ background: `linear-gradient(160deg, ${C.bark}, ${C.barkSoft})`, color: C.ivory }}>
+                <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.1, mixBlendMode: "overlay" }} />
+                <div className="relative font-body font-semibold uppercase mb-2" style={{ fontSize: 10.5, letterSpacing: "0.24em", color: C.jaggeryLite }}>Company fact sheet</div>
+                {[
+                  { icon: MapPin, k: "Location", v: "Ballenahalli, Srirangapatna Taluk, Mandya — 571807" },
+                  { icon: BadgeCheck, k: "Registration", v: "MSME / Udyam · GST compliant" },
+                  { icon: Sprout, k: "Sourcing", v: "Cane from local Mandya farmers" },
+                  { icon: Factory, k: "Production", v: "Chemical-free, modern processing" },
+                  { icon: Handshake, k: "Founded", v: "1988 · Vairamudi Krupa Crusher" },
+                ].map((b) => (
+                  <div key={b.k} className="group relative grid grid-cols-[auto_1fr] sm:grid-cols-[auto_auto_1fr_auto] items-baseline gap-x-4 py-4" style={{ borderTop: "1px solid rgba(240,201,109,0.14)" }}>
+                    <b.icon className="h-4 w-4 self-center transition-colors duration-300" style={{ color: "rgba(240,201,109,0.6)" }} />
+                    <dt className="font-body font-semibold uppercase transition-colors duration-300 group-hover:text-[#F0C96D]" style={{ fontSize: 11, letterSpacing: "0.16em", color: "rgba(252,251,247,0.6)" }}>{b.k}</dt>
+                    <span aria-hidden className="hidden sm:block self-center h-px" style={{ borderTop: "1px dotted rgba(240,201,109,0.35)" }} />
+                    <dd className="font-body col-start-2 sm:col-start-4 sm:text-right transition-transform duration-300 group-hover:-translate-x-1" style={{ fontSize: 14.5, lineHeight: 1.5, color: C.ivory }}>{b.v}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -590,38 +781,37 @@ export default function AboutExperience({
           <SectionHeading light eyebrow="Technology & Machinery" title="Modern engineering, traditional soul"
             sub="We pair heritage jaggery-making with modern, energy-efficient machinery — for cleaner processing and consistent quality in every batch." />
 
-          {/* Process steps */}
-          <div className="mt-14 grid gap-px sm:grid-cols-2 lg:grid-cols-4 rounded-lg overflow-hidden" style={{ background: "rgba(240,201,109,0.16)" }}>
-            {PROCESS.map((p, i) => (
-              <Reveal key={p.n} delay={i * 0.08}>
-                <div className="h-full p-7 sm:p-8 transition-colors duration-500 hover:bg-[rgba(252,251,247,0.06)]" style={{ background: C.bark }}>
-                  <div className="font-heading" style={{ fontSize: 44, lineHeight: 1, color: C.jaggeryLite, letterSpacing: "-0.03em" }}>{p.n}</div>
-                  <h3 className="font-heading mt-6" style={{ fontSize: 22, color: C.ivory }}>{p.t}</h3>
-                  <p className="font-body mt-2" style={{ fontSize: 14.5, lineHeight: 1.7, color: "rgba(252,251,247,0.66)" }}>{p.d}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          {/* Process rail: a gold line draws across the four steps as the
+              reader scrolls, lighting each badge as it passes. */}
+          <ProcessSteps steps={PROCESS} />
 
-          {/* Dealer card */}
+          {/* Dealer "ticket": perforated edge and a slowly turning cog. */}
           <Reveal delay={0.1}>
-            <div className="mt-6 rounded-lg p-8 sm:p-10 grid lg:grid-cols-12 gap-8 items-center" style={{ background: "rgba(252,251,247,0.05)", border: "1px solid rgba(240,201,109,0.25)", backdropFilter: "blur(6px)" }}>
-              <div className="lg:col-span-2">
-                <div className="h-16 w-16 rounded-lg grid place-items-center" style={{ background: C.jaggery, color: C.bark, boxShadow: "0 16px 40px rgba(201,139,46,0.35)" }}>
-                  <Cog className="h-8 w-8" />
+            <div className="mt-20 relative grid lg:grid-cols-12 rounded-lg overflow-hidden" style={{ background: "rgba(252,251,247,0.05)", border: "1px solid rgba(240,201,109,0.25)", backdropFilter: "blur(6px)" }}>
+              <div className="lg:col-span-3 relative p-8 sm:p-10 grid place-items-center" style={{ background: "rgba(240,201,109,0.08)" }}>
+                <motion.div animate={reduced ? undefined : { rotate: 360 }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+                  className="h-20 w-20 rounded-full grid place-items-center" style={{ background: C.jaggery, color: C.bark, boxShadow: "0 16px 40px rgba(201,139,46,0.35)" }}>
+                  <Cog className="h-9 w-9" />
+                </motion.div>
+                {/* perforation */}
+                <div aria-hidden className="hidden lg:block absolute right-0 top-0 bottom-0 w-px" style={{ borderRight: "2px dashed rgba(240,201,109,0.35)" }} />
+                <span aria-hidden className="hidden lg:block absolute -right-3 -top-3 h-6 w-6 rounded-full" style={{ background: C.bark }} />
+                <span aria-hidden className="hidden lg:block absolute -right-3 -bottom-3 h-6 w-6 rounded-full" style={{ background: C.bark }} />
+              </div>
+              <div className="lg:col-span-9 p-8 sm:p-10 grid lg:grid-cols-12 gap-6 items-center">
+                <div className="lg:col-span-8">
+                  <div className="font-body font-semibold uppercase" style={{ fontSize: 10.5, letterSpacing: "0.24em", color: C.jaggeryLite }}>Machinery partnership</div>
+                  <h3 className="font-heading mt-3" style={{ fontSize: "clamp(1.5rem,2.4vw,2rem)", lineHeight: 1.15, color: C.ivory }}>Jagadish Engineering Works, Gujarat</h3>
+                  <p className="font-body mt-3" style={{ fontSize: 15.5, lineHeight: 1.75, color: "rgba(252,251,247,0.78)" }}>
+                    Beyond our own production, VKC is the <strong style={{ color: C.jaggeryLite }}>authorized Karnataka dealer</strong> for
+                    Jagadish Engineering Works — bringing proven, energy-efficient jaggery-processing machinery to producers across the state.
+                  </p>
                 </div>
-              </div>
-              <div className="lg:col-span-7">
-                <h3 className="font-heading" style={{ fontSize: "clamp(1.5rem,2.4vw,2rem)", lineHeight: 1.15, color: C.ivory }}>In partnership with Jagadish Engineering Works, Gujarat</h3>
-                <p className="font-body mt-3" style={{ fontSize: 15.5, lineHeight: 1.75, color: "rgba(252,251,247,0.78)" }}>
-                  Beyond our own production, VKC is the <strong style={{ color: C.jaggeryLite }}>authorized Karnataka dealer</strong> for
-                  Jagadish Engineering Works — bringing proven, energy-efficient jaggery-processing machinery to producers across the state.
-                </p>
-              </div>
-              <div className="lg:col-span-3 lg:text-right">
-                <span className="inline-flex items-center gap-2 font-body font-semibold rounded-full px-4 py-2.5" style={{ fontSize: 13, background: "rgba(240,201,109,0.14)", color: C.jaggeryLite, border: "1px solid rgba(240,201,109,0.3)" }}>
-                  <Factory className="h-4 w-4" /> Authorized Karnataka Dealer
-                </span>
+                <div className="lg:col-span-4 lg:justify-self-end">
+                  <span className="inline-flex items-center gap-2 font-body font-semibold rounded-full px-4 py-2.5" style={{ fontSize: 13, background: "rgba(240,201,109,0.14)", color: C.jaggeryLite, border: "1px solid rgba(240,201,109,0.3)" }}>
+                    <Factory className="h-4 w-4" /> Authorized Karnataka Dealer
+                  </span>
+                </div>
               </div>
             </div>
           </Reveal>
@@ -630,23 +820,23 @@ export default function AboutExperience({
 
       {/* ── 6 · VISION & MISSION ─────────────────────────────────────────── */}
       <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
+        {/* Vision: a cursor-following spotlight over the green panel. */}
         <Reveal>
-          <div className="relative rounded-lg p-10 sm:p-16 lg:p-20 overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.green}, ${C.greenDeep})`, color: C.ivory }}>
+          <Spotlight className="rounded-lg p-10 sm:p-16 lg:p-20" style={{ background: `linear-gradient(135deg, ${C.green}, ${C.greenDeep})`, color: C.ivory }}>
             <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.12, mixBlendMode: "overlay" }} />
-            <motion.div aria-hidden className="absolute -right-24 -bottom-24 h-96 w-96 rounded-full" animate={reduced ? undefined : { scale: [1, 1.12, 1] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-              style={{ background: `radial-gradient(circle, ${C.jaggeryLite}44, transparent 66%)` }} />
             <div className="relative grid lg:grid-cols-12 gap-10 items-start">
               <div className="lg:col-span-3">
-                <div className="inline-flex h-12 w-12 rounded-full items-center justify-center" style={{ background: "rgba(252,251,247,0.12)" }}>
+                <motion.div className="inline-flex h-12 w-12 rounded-full items-center justify-center" style={{ background: "rgba(252,251,247,0.12)" }}
+                  animate={reduced ? undefined : { boxShadow: ["0 0 0 0 rgba(240,201,109,0.5)", "0 0 0 18px rgba(240,201,109,0)"] }} transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}>
                   <Eye className="h-6 w-6" style={{ color: C.jaggeryLite }} />
-                </div>
+                </motion.div>
                 <div className="mt-4"><Eyebrow color={C.jaggeryLite}>Our Vision</Eyebrow></div>
               </div>
               <p className="lg:col-span-9 font-heading" style={{ fontSize: "clamp(1.8rem,3.6vw,3.1rem)", lineHeight: 1.12, letterSpacing: "-0.015em" }}>
                 <Words text="To make VKC Cane Gold Foods Pvt Ltd a trusted global brand representing Mandya's heritage of purity, health, and sweetness." />
               </p>
             </div>
-          </div>
+          </Spotlight>
         </Reveal>
 
         <div className="mt-20 grid lg:grid-cols-12 gap-10">
@@ -659,15 +849,18 @@ export default function AboutExperience({
             </div>
           </div>
           <div className="lg:col-span-8">
+            {/* Mission ledger: hovering a row sweeps a gold wash in from the
+                left and swells its number — an index, not a card grid. */}
             {MISSION.map((m, i) => (
               <Reveal key={m.t} delay={i * 0.05}>
-                <div className="group grid grid-cols-[auto_1fr_auto] items-center gap-5 sm:gap-8 py-6 sm:py-7" style={{ borderTop: `1px solid ${C.parchment}`, borderBottom: i === MISSION.length - 1 ? `1px solid ${C.parchment}` : "none" }}>
-                  <span className="font-heading tabular-nums" style={{ fontSize: 15, color: C.muted, width: 28 }}>0{i + 1}</span>
-                  <div>
-                    <h3 className="font-heading transition-transform duration-300 group-hover:translate-x-1.5" style={{ fontSize: "clamp(1.35rem,2.2vw,1.85rem)", lineHeight: 1.1, color: C.ink }}>{m.t}</h3>
-                    <p className="font-body mt-1.5" style={{ fontSize: 14.5, lineHeight: 1.65, color: C.ink2, maxWidth: 520 }}>{m.d}</p>
+                <div className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-5 sm:gap-8 py-6 sm:py-7 px-3 -mx-3 overflow-hidden" style={{ borderTop: `1px solid ${C.parchment}`, borderBottom: i === MISSION.length - 1 ? `1px solid ${C.parchment}` : "none" }}>
+                  <span aria-hidden className="absolute inset-0 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out" style={{ background: `linear-gradient(90deg, ${C.jaggery}1f, transparent)` }} />
+                  <span className="relative font-heading tabular-nums transition-all duration-500 group-hover:scale-150 group-hover:text-[#8A5B17]" style={{ fontSize: 15, color: C.muted, width: 28, transformOrigin: "left center" }}>0{i + 1}</span>
+                  <div className="relative">
+                    <h3 className="font-heading transition-transform duration-500 group-hover:translate-x-2" style={{ fontSize: "clamp(1.35rem,2.2vw,1.85rem)", lineHeight: 1.1, color: C.ink }}>{m.t}</h3>
+                    <p className="font-body mt-1.5 transition-transform duration-500 group-hover:translate-x-2" style={{ fontSize: 14.5, lineHeight: 1.65, color: C.ink2, maxWidth: 520 }}>{m.d}</p>
                   </div>
-                  <div className="h-12 w-12 rounded-full grid place-items-center transition-all duration-300 group-hover:rotate-12" style={{ background: `${C.jaggery}18`, color: C.jaggeryDark }}>
+                  <div className="relative h-12 w-12 rounded-full grid place-items-center transition-all duration-500 group-hover:rotate-[20deg] group-hover:bg-[#122017] group-hover:text-[#F0C96D]" style={{ background: `${C.jaggery}18`, color: C.jaggeryDark }}>
                     <m.icon className="h-5 w-5" />
                   </div>
                 </div>
@@ -677,25 +870,13 @@ export default function AboutExperience({
         </div>
       </section>
 
-      {/* ── 7 · CORE VALUES (snap rail on mobile) ────────────────────────── */}
-      <section style={{ background: C.cream }} className="overflow-hidden">
-        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
-          <SectionHeading center eyebrow="Core Values" title="What guides every batch" />
-          <div className="vkc-rail mt-14 flex lg:grid lg:grid-cols-5 gap-4 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:mx-0 sm:px-0 pb-2" style={{ scrollbarWidth: "none" }}>
-            {VALUES.map((v, i) => (
-              <Reveal key={v.t} delay={i * 0.06} className="snap-start shrink-0 w-[78%] sm:w-[46%] lg:w-auto">
-                <div className={`${card} h-full p-7 flex flex-col hover:-translate-y-1.5 hover:shadow-lg`} style={{ background: C.ivory, borderColor: C.parchment, minHeight: 260 }}>
-                  <div className="flex items-center justify-between">
-                    <div className="h-12 w-12 rounded-lg grid place-items-center" style={{ background: `${C.green}12`, color: C.green }}>
-                      <v.icon className="h-6 w-6" />
-                    </div>
-                    <span className="font-heading" style={{ fontSize: 34, lineHeight: 1, color: `${C.jaggery}55` }}>0{i + 1}</span>
-                  </div>
-                  <h3 className="font-heading mt-auto pt-8" style={{ fontSize: 21, lineHeight: 1.1, color: C.ink }}>{v.t}</h3>
-                  <p className="font-body mt-2" style={{ fontSize: 14, lineHeight: 1.6, color: C.muted }}>{v.d}</p>
-                </div>
-              </Reveal>
-            ))}
+      {/* ── 7 · CORE VALUES (stacking cards) ─────────────────────────────── */}
+      <section style={{ background: C.cream }}>
+        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 pt-24 sm:pt-32 pb-24 sm:pb-40">
+          <SectionHeading center eyebrow="Core Values" title="What guides every batch"
+            sub="Five commitments, one on top of the other. Keep scrolling — each one settles beneath the next." />
+          <div className="mt-16">
+            <StackCards values={VALUES} />
           </div>
         </div>
       </section>
@@ -714,24 +895,27 @@ export default function AboutExperience({
       {/* ── 10 · MANIFESTO ───────────────────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ background: `radial-gradient(120% 120% at 80% 0%, ${C.barkSoft}, ${C.bark})` }}>
         <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.1, mixBlendMode: "overlay" }} />
-        <div className="relative max-w-[1100px] mx-auto px-5 sm:px-8 py-28 sm:py-36 text-center">
-          <Reveal><Wheat className="h-8 w-8 mx-auto" style={{ color: C.jaggeryLite }} /></Reveal>
-          <h2 className="font-heading mx-auto mt-7" style={{ fontSize: "clamp(2.3rem,5.6vw,4.4rem)", lineHeight: 1.04, letterSpacing: "-0.025em", color: C.ivory, maxWidth: 900 }}>
-            <span className="block"><Words text="No chemicals. No shortcuts." /></span>
-            <span className="block" style={{ color: C.jaggeryLite, fontStyle: "italic" }}><Words text="Just natural sweetness." /></span>
-          </h2>
-          <div className="mt-14 grid sm:grid-cols-3 gap-4">
+        {/* Manifesto: one long line that brightens word by word as you scroll —
+            no cards, no grid, just the statement. */}
+        <div className="relative max-w-[1100px] mx-auto px-5 sm:px-8 py-28 sm:py-40">
+          <Reveal><Eyebrow color={C.jaggeryLite}>Our Promise</Eyebrow></Reveal>
+          <ScrollText
+            text="No chemicals. No shortcuts. We pay the farmer fairly, we process without a single additive, we waste less every year, and we earn your trust one batch at a time. Just natural sweetness."
+            accentFrom={33}
+            className="font-heading mt-8"
+            style={{ fontSize: "clamp(2rem,4.8vw,4rem)", lineHeight: 1.12, letterSpacing: "-0.02em", color: C.ivory, maxWidth: 1000 }}
+          />
+          <div className="mt-14 flex flex-wrap gap-x-10 gap-y-4">
             {[
-              { icon: Sprout, t: "Farmer Support", d: "Fair prices, direct partnerships." },
-              { icon: Recycle, t: "Sustainability", d: "Cleaner, lower-waste processing." },
-              { icon: Heart, t: "Quality & Trust", d: "Earned in every single batch." },
+              { icon: Sprout, t: "Farmer Support" },
+              { icon: Recycle, t: "Sustainability" },
+              { icon: Heart, t: "Quality & Trust" },
             ].map((x, i) => (
-              <Reveal key={x.t} delay={i * 0.08}>
-                <div className="rounded-lg p-7 text-center transition-colors duration-500 hover:bg-[rgba(252,251,247,0.08)]" style={{ background: "rgba(252,251,247,0.04)", border: "1px solid rgba(240,201,109,0.2)" }}>
-                  <x.icon className="h-6 w-6 mx-auto" style={{ color: C.jaggeryLite }} />
-                  <h3 className="font-heading mt-4" style={{ fontSize: 21, color: C.ivory }}>{x.t}</h3>
-                  <p className="font-body mt-1.5" style={{ fontSize: 14, lineHeight: 1.6, color: "rgba(252,251,247,0.68)" }}>{x.d}</p>
-                </div>
+              <Reveal key={x.t} delay={i * 0.1}>
+                <span className="inline-flex items-center gap-3 font-body font-semibold uppercase" style={{ fontSize: 12, letterSpacing: "0.2em", color: "rgba(252,251,247,0.7)" }}>
+                  <span className="h-9 w-9 rounded-full grid place-items-center" style={{ border: "1px solid rgba(240,201,109,0.4)", color: C.jaggeryLite }}><x.icon className="h-4 w-4" /></span>
+                  {x.t}
+                </span>
               </Reveal>
             ))}
           </div>
@@ -742,16 +926,41 @@ export default function AboutExperience({
       <section className="max-w-[1100px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
         <SectionHeading center eyebrow="Looking Ahead" title="Carrying Mandya's sweetness forward"
           sub="As we grow into new markets, our purpose stays the same: a healthy, natural alternative to refined sugar — made with people and the planet in mind." />
+        {/* A postcard from Mandya: tilted paper that straightens on hover, with
+            a stamp seal — the one "object" on the page. */}
         <Reveal delay={0.1}>
-          <figure className="mt-14 relative rounded-lg p-10 sm:p-16 text-center overflow-hidden" style={{ background: C.cream, border: `1px solid ${C.parchment}` }}>
-            <span aria-hidden className="absolute left-6 top-2 font-heading select-none" style={{ fontSize: 180, lineHeight: 1, color: `${C.jaggery}22` }}>"</span>
-            <blockquote className="relative font-heading mx-auto" style={{ fontSize: "clamp(1.6rem,3.2vw,2.5rem)", lineHeight: 1.25, letterSpacing: "-0.01em", color: C.ink, maxWidth: 800 }}>
-              With every batch, we deliver more than sweetness — we deliver a story of purity, people and progress.
-            </blockquote>
-            <figcaption className="relative font-body mt-7 inline-flex items-center gap-3" style={{ fontSize: 12.5, letterSpacing: "0.16em", textTransform: "uppercase", color: C.jaggeryDark }}>
-              <span className="h-px w-8" style={{ background: C.jaggery }} /> VKC Cane Gold Foods <span className="h-px w-8" style={{ background: C.jaggery }} />
-            </figcaption>
-          </figure>
+          <motion.figure
+            initial={false}
+            animate={reduced ? { rotate: 0 } : { rotate: -1.6 }}
+            whileHover={reduced ? undefined : { rotate: 0, y: -6 }}
+            transition={{ type: "spring", stiffness: 120, damping: 14 }}
+            className="mt-16 relative mx-auto rounded-lg p-8 sm:p-12 lg:p-14 overflow-hidden"
+            style={{ background: C.ivory, border: `1px solid ${C.parchment}`, boxShadow: "0 30px 70px -30px rgba(18,32,23,0.35), 0 2px 0 rgba(255,255,255,0.8) inset", maxWidth: 960 }}
+          >
+            <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.07, mixBlendMode: "multiply" }} />
+            <div aria-hidden className="absolute left-0 top-0 bottom-0 w-[6px]" style={{ background: `repeating-linear-gradient(180deg, ${C.jaggery} 0 14px, ${C.green} 14px 28px)` }} />
+            <div className="relative grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+              <div className="lg:col-span-8">
+                <Quote className="h-8 w-8" style={{ color: C.jaggery }} />
+                <blockquote className="font-heading mt-5" style={{ fontSize: "clamp(1.6rem,3.2vw,2.5rem)", lineHeight: 1.22, letterSpacing: "-0.01em", color: C.ink }}>
+                  With every batch, we deliver more than sweetness — we deliver a story of purity, people and progress.
+                </blockquote>
+                <figcaption className="mt-8 flex items-center gap-4">
+                  <span className="font-heading italic" style={{ fontSize: 26, color: C.jaggeryDark }}>VKC Cane Gold Foods</span>
+                  <span className="h-px flex-1" style={{ background: C.parchment }} />
+                  <span className="font-body uppercase" style={{ fontSize: 11, letterSpacing: "0.18em", color: C.muted }}>Mandya, Karnataka</span>
+                </figcaption>
+              </div>
+              <div className="lg:col-span-4 lg:justify-self-end lg:pt-2">
+                <div className="relative">
+                  <Seal text="VKC CANE GOLD · MANDYA · 571807 · " size={150} color={C.jaggeryDark}>
+                    <div className="h-16 w-16 rounded-full grid place-items-center font-heading" style={{ border: `1.5px solid ${C.jaggery}`, color: C.jaggeryDark, fontSize: 15 }}>1988</div>
+                  </Seal>
+                  <div aria-hidden className="absolute -inset-2 rounded-full pointer-events-none" style={{ border: `1px dashed ${C.jaggery}55` }} />
+                </div>
+              </div>
+            </div>
+          </motion.figure>
         </Reveal>
       </section>
 

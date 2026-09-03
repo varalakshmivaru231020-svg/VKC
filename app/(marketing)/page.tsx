@@ -10,6 +10,7 @@ import HeroSlider from "@/components/home/HeroSlider";
 import { PopupBanner } from "@/components/home/PopupBanner";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { PromoBanner } from "@/components/home/PromoBanner";
+import { WhyChoose } from "@/components/home/WhyChoose";
 import { getActiveGalleryItems } from "@/lib/db/gallery";
 import { EventGallery } from "@/components/events/EventGallery";
 
@@ -492,6 +493,9 @@ export default async function HomePage() {
           )}
         </section>
       )}
+
+      {/* ── WHY CHOOSE VKC ───────────────────────────────────────────────────── */}
+      <WhyChoose />
 
       {/* ── TRUST BADGES ─────────────────────────────────────────────────────── */}
       <section
