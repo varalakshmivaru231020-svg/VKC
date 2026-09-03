@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, Sprout, Handshake, Recycle, Cog, Heart, ShieldCheck,
-  Sparkles, Globe2, Factory, Award, BadgeCheck, Clock3, MapPin, Phone,
+  Sparkles, Globe2, Factory, BadgeCheck, MapPin, Phone,
   Mail, MessageCircle, Target, Eye, Wheat, Leaf, Scale,
 } from "lucide-react";
 
@@ -272,18 +272,6 @@ const LEADERS = [
   { name: "Mr. Naveenchandra B R", role: "Managing Director", photo: "/images/team/naveenchandra-b-r.webp", bio: "Leads operations, finance, and strategic growth." },
   { name: "Mr. Abhishek B R", role: "Director — Operations", photo: "/images/team/abhishek-b-r.webp", bio: "Oversees production, modernization, and vendor coordination." },
   { name: "Mrs. Pushpalatha", role: "Director — Quality & Administration", photo: "/images/team/pushpalatha.webp", bio: "Ensures hygiene, packaging, and internal audits." },
-];
-
-const CERTS_DONE = [
-  { t: "MSME / Udyam", d: "Registered micro-enterprise" },
-  { t: "GST", d: "Registered & compliant" },
-  { t: "IEC", d: "Import–Export Code" },
-  { t: "Trademark", d: "Brand registered" },
-];
-const CERTS_PROGRESS = [
-  { t: "FSSAI", d: "In process" },
-  { t: "Lean MSME", d: "Under process" },
-  { t: "Enterprise Membership — IID", d: "In progress" },
 ];
 
 const PROCESS = [
@@ -720,54 +708,6 @@ export default function AboutExperience({
           {LEADERS.map((l, i) => (
             <TeamCard key={l.name} index={i} {...l} />
           ))}
-        </div>
-      </section>
-
-      {/* ── 9 · CERTIFICATIONS ───────────────────────────────────────────── */}
-      <section style={{ background: C.cream }}>
-        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
-          <SectionHeading eyebrow="Certifications & Recognition" title="Credentials you can count on"
-            sub="Registered, compliant, and continually raising the bar — here's exactly where we stand." />
-          <div className="mt-14 grid lg:grid-cols-2 gap-8">
-            <Reveal>
-              <div className="flex items-center gap-2 mb-5">
-                <BadgeCheck className="h-5 w-5" style={{ color: C.green }} />
-                <span className="font-body font-semibold uppercase" style={{ fontSize: 12, letterSpacing: "0.16em", color: C.green }}>Completed</span>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {CERTS_DONE.map((c) => (
-                  <div key={c.t} className={`${card} p-5 flex items-start gap-3 hover:-translate-y-0.5`} style={{ background: C.ivory, borderColor: `${C.green}33` }}>
-                    <div className="h-10 w-10 rounded-lg grid place-items-center shrink-0" style={{ background: `${C.green}14`, color: C.green }}>
-                      <Award className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="font-body font-semibold" style={{ fontSize: 15, color: C.ink }}>{c.t}</div>
-                      <div className="font-body" style={{ fontSize: 13, color: C.muted }}>{c.d}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <div className="flex items-center gap-2 mb-5">
-                <Clock3 className="h-5 w-5" style={{ color: C.jaggeryDark }} />
-                <span className="font-body font-semibold uppercase" style={{ fontSize: 12, letterSpacing: "0.16em", color: C.jaggeryDark }}>In Progress</span>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {CERTS_PROGRESS.map((c) => (
-                  <div key={c.t} className={`${card} p-5 flex items-start gap-3 hover:-translate-y-0.5`} style={{ background: C.ivory, borderColor: C.parchment, borderStyle: "dashed" }}>
-                    <div className="h-10 w-10 rounded-lg grid place-items-center shrink-0" style={{ background: `${C.jaggery}18`, color: C.jaggeryDark }}>
-                      <Clock3 className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="font-body font-semibold" style={{ fontSize: 15, color: C.ink }}>{c.t}</div>
-                      <div className="font-body" style={{ fontSize: 13, color: C.muted }}>{c.d}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-          </div>
         </div>
       </section>
 

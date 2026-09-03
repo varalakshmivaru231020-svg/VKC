@@ -20,6 +20,24 @@ export function QuickViewModal() {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariantData | null>(null);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  // Live rating summary from the same endpoint the product page uses. null
+  // while loading so the row can stay hidden instead of flashing zero stars.
+  const [rating, setRating] = useState<{ average: number; total: number } | null>(null);
+
+  useEffect(() => {
+    const slug = quickViewProduct?.slug;
+    setRating(null);
+    if (!slug) return;
+    let cancelled = false;
+    fetch(`/api/v1/products/${slug}/reviews?limit=1`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d?.summary) return;
+        setRating({ average: Number(d.summary.averageRating || 0), total: Number(d.summary.totalReviews || 0) });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [quickViewProduct?.slug]);
 
   useEffect(() => {
     if (quickViewProduct) {
@@ -122,14 +140,14 @@ export function QuickViewModal() {
           >
             <div className="absolute inset-0 sm:min-h-[380px]">
               {primaryImage ? (
-                // "cover" fills the panel edge to edge. Product images are
-                // uploaded 1:1, so there is nothing meaningful to crop —
-                // "contain" would only letterbox them against the tinted panel.
+                // "contain" so the whole product image is visible, including
+                // its edges — jaggery packshots are not uploaded 1:1, and
+                // "cover" was cropping the label and bottle top.
                 <SmartImage
                   src={primaryImage.url}
                   alt={primaryImage.altText ?? p.name}
                   fill
-                  objectFit="cover"
+                  objectFit="contain"
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -180,13 +198,23 @@ export function QuickViewModal() {
               {p.name}
             </h2>
 
-            {/* Rating placeholder */}
-            <div className="flex items-center gap-1">
-              {[1,2,3,4,5].map((s) => (
-                <Star key={s} className="h-3.5 w-3.5 fill-current" style={{ color: s <= 4 ? "var(--color-gold)" : "var(--color-parchment)" }} />
-              ))}
-              <span className="text-xs font-body ml-1" style={{ color: "var(--color-text-muted)" }}>(24 reviews)</span>
-            </div>
+            {/* Rating — real approved reviews only; hidden until loaded */}
+            {rating && (
+              <div className="flex items-center gap-1" aria-label={rating.total ? `Rated ${rating.average.toFixed(1)} out of 5 from ${rating.total} reviews` : "No reviews yet"}>
+                {[1,2,3,4,5].map((s) => (
+                  <Star
+                    key={s}
+                    className="h-3.5 w-3.5 fill-current"
+                    style={{ color: rating.total && s <= Math.round(rating.average) ? "var(--color-gold)" : "var(--color-parchment)" }}
+                  />
+                ))}
+                <span className="text-xs font-body ml-1" style={{ color: "var(--color-text-muted)" }}>
+                  {rating.total
+                    ? `${rating.average.toFixed(1)} · ${rating.total} ${rating.total === 1 ? "review" : "reviews"}`
+                    : "No reviews yet"}
+                </span>
+              </div>
+            )}
 
             {/* Price */}
             <div className="flex items-baseline gap-2 flex-wrap">
