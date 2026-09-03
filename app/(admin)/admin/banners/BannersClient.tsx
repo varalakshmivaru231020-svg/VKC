@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { Plus, Eye, EyeOff, Pencil, Trash2, X, Save, Loader2, Upload, ImageIcon, AlertCircle } from "lucide-react";
 import { uploadImageFile } from "@/lib/utils/upload";
 import { SmartImage } from "@/components/ui/SmartImage";
+import {
+  BANNER_POSITIONS as POSITIONS,
+  BANNER_TYPES,
+  normalizeBannerImageUrl,
+  normalizeBannerLinkUrl,
+  normalizeBannerPosition,
+} from "@/lib/banners";
 
 interface Banner {
   id: string;
@@ -18,27 +25,6 @@ interface Banner {
   sortOrder: number;
   isActive: boolean;
 }
-
-const POSITIONS: Record<string, string> = {
-  home_hero:       "Home — Hero",
-  home_mid:        "Home — Mid Section",
-  home_bottom:     "Home — Bottom",
-  category_top:    "Category — Top",
-  category_banner: "Category — Banner",
-  shop_top:        "Shop — Top",
-  shop_banner:     "Shop — Banner",
-  about_banner:    "Our Story — Banner",
-};
-
-const BANNER_TYPES: Record<string, { label: string; color: string; bg: string }> = {
-  PROMOTIONAL:  { label: "Promotional",   color: "#7C3AED", bg: "#EDE9FE" },
-  SEASONAL:     { label: "Seasonal",      color: "#0369A1", bg: "#E0F2FE" },
-  SALE:         { label: "Sale / Offer",  color: "#DC2626", bg: "#FEE2E2" },
-  CATEGORY:     { label: "Category",      color: "#059669", bg: "#D1FAE5" },
-  BRAND:        { label: "Brand",         color: "#D97706", bg: "#FEF3C7" },
-  ANNOUNCEMENT: { label: "Announcement",  color: "#374151", bg: "#F3F4F6" },
-  CUSTOM:       { label: "Custom",        color: "#6B7280", bg: "#F9FAFB" },
-};
 
 const emptyForm = () => ({
   title: "", subtitle: "", imageUrl: "", mobileImageUrl: "", linkUrl: "",
@@ -109,9 +95,35 @@ export default function BannersClient({ banners: initial }: Props) {
   };
 
   const handleSave = async () => {
-    if (!form.title.trim()) { alert("Title is required"); return; }
-    if (!form.imageUrl.trim()) { alert("Image is required"); return; }
-    if (!form.position.trim()) { alert("Position is required"); return; }
+    const title = form.title.trim();
+    const subtitle = form.subtitle.trim();
+    const imageUrl = normalizeBannerImageUrl(form.imageUrl);
+    const mobileImageUrl = form.mobileImageUrl.trim()
+      ? normalizeBannerImageUrl(form.mobileImageUrl)
+      : null;
+    const linkUrl = form.linkUrl.trim()
+      ? normalizeBannerLinkUrl(form.linkUrl)
+      : null;
+    const position = normalizeBannerPosition(form.position);
+
+    if (!title) { alert("Title is required"); return; }
+    if (title.length > 200) { alert("Title must be 200 characters or less"); return; }
+    if (subtitle.length > 400) { alert("Subtitle must be 400 characters or less"); return; }
+    if (!imageUrl) { alert("Upload an image or use a trusted HTTPS image URL"); return; }
+    if (form.mobileImageUrl.trim() && !mobileImageUrl) { alert("Mobile image URL is not allowed"); return; }
+    if (form.linkUrl.trim() && !linkUrl) { alert("Link URL must be an internal path or HTTPS URL"); return; }
+    if (!position) { alert("Select a valid position"); return; }
+
+    const payload = {
+      ...form,
+      title,
+      subtitle,
+      imageUrl,
+      mobileImageUrl: mobileImageUrl ?? "",
+      linkUrl: linkUrl ?? "",
+      position,
+    };
+
     setSaving(true);
     try {
       const url = modal === "edit" ? `/api/admin/banners/${editTarget!.id}` : "/api/admin/banners";
@@ -119,7 +131,7 @@ export default function BannersClient({ banners: initial }: Props) {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(await res.text());
       const saved: Banner = await res.json();
