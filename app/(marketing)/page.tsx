@@ -13,6 +13,7 @@ import { PromoBanner } from "@/components/home/PromoBanner";
 import { WhyChoose } from "@/components/home/WhyChoose";
 import { Testimonials, type TestimonialItem } from "@/components/home/Testimonials";
 import { HomeHighlights, type HighlightBlock } from "@/components/home/HomeHighlights";
+import { ShopByCategories } from "@/components/home/ShopByCategories";
 import { getActiveGalleryItems } from "@/lib/db/gallery";
 import { EventGallery } from "@/components/events/EventGallery";
 
@@ -179,17 +180,31 @@ export default async function HomePage() {
   let homepageCategoryIds: string[] = [];
   try { if (homepageCatSetting?.value) homepageCategoryIds = JSON.parse(homepageCatSetting.value); } catch {}
 
-  const allHomepageCats = homepageCategoryIds.length
-    ? await db.category.findMany({
-        where: { id: { in: homepageCategoryIds }, isActive: true },
-        select: { id: true, name: true, slug: true, imageUrl: true },
-      }).catch(() => [])
-    : [];
-
-  // Preserve the admin-chosen order
-  const homeCategories = homepageCategoryIds
-    .map(id => allHomepageCats.find(c => c.id === id))
-    .filter(Boolean) as { id: string; name: string; slug: string; imageUrl: string | null }[];
+  // Admin → Settings → Homepage can pin and order categories. When nothing is
+  // pinned, show every active category that has an image, in catalogue order,
+  // so the section works out of the box as categories are added.
+  type HomeCat = { id: string; name: string; slug: string; imageUrl: string | null };
+  const catSelect = { id: true, name: true, slug: true, imageUrl: true } as const;
+  let homeCategories: HomeCat[] = [];
+  if (homepageCategoryIds.length) {
+    const picked = await db.category
+      .findMany({ where: { id: { in: homepageCategoryIds }, isActive: true }, select: catSelect })
+      .catch(() => [] as HomeCat[]);
+    // Preserve the admin-chosen order
+    homeCategories = homepageCategoryIds.map((id) => picked.find((c) => c.id === id)).filter(Boolean) as HomeCat[];
+  }
+  // A stale pin list (categories since deleted or deactivated) must not blank
+  // the section — fall back to the automatic list.
+  if (!homeCategories.length) {
+    homeCategories = await db.category
+      .findMany({
+        where: { isActive: true, imageUrl: { not: null } },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: catSelect,
+        take: 10,
+      })
+      .catch(() => [] as HomeCat[]);
+  }
 
   const heroBanners = activeBanners.filter(b => b.position === "home_hero");
   const midBanners = activeBanners.filter(b => b.position === "home_mid");
@@ -210,79 +225,8 @@ export default async function HomePage() {
           ))}
         </section>
       )}
-
-      {/* ── SHOP BY CATEGORY ─────────────────────────────────────────────────── */}
-      {homeCategories.length > 0 && (
-        <section className="py-12" style={{ background: "var(--color-ivory)" }}>
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontSize: "var(--text-h3)",
-                  fontWeight: "var(--weight-heading)",
-                  color: "var(--color-text-primary)",
-                }}
-              >
-                Shop by Category
-              </h2>
-              <Link
-                href="/shop"
-                className="text-sm font-medium font-body flex items-center gap-1.5 hover:gap-2.5 transition-all"
-                style={{ color: "var(--color-primary)" }}
-              >
-                View All <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-
-            <div className="overflow-x-auto scrollbar-hide pb-2">
-              <div className="flex gap-5 snap-x py-2 w-max min-w-full">
-                {homeCategories.map((cat, i) => (
-                  <Link
-                    key={cat.id}
-                    href={`/category/${cat.slug}`}
-                    className="snap-start shrink-0 flex flex-col items-center gap-3 group"
-                    style={{ width: 130 }}
-                  >
-                    <div
-                      className="w-[120px] h-[120px] rounded-2xl overflow-hidden relative transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl"
-                      style={cat.imageUrl
-                        ? {}
-                        : { background: CAT_GRADIENTS[i % CAT_GRADIENTS.length] }}
-                    >
-                      {cat.imageUrl
-                        ? <SmartImage src={cat.imageUrl} alt={cat.name} fill objectFit="cover" />
-                        : (
-                          <div className="w-full h-full flex items-center justify-center p-3">
-                            <span className="text-xs font-semibold font-body text-center leading-tight"
-                              style={{ color: "rgba(255,255,255,0.9)" }}>
-                              {cat.name}
-                            </span>
-                          </div>
-                        )
-                      }
-                      {cat.imageUrl && (
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-2.5">
-                          <span className="text-[11px] font-semibold font-body text-white text-center w-full leading-tight line-clamp-2">
-                            {cat.name}
-                          </span>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 rounded-2xl border-2 border-white/0 group-hover:border-white/40 transition-all duration-300" />
-                    </div>
-                    <span
-                      className="text-xs font-body font-medium text-center leading-tight group-hover:underline underline-offset-2 transition-all"
-                      style={{ color: "var(--color-text-muted)" }}
-                    >
-                      {cat.name}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* ── SHOP BY CATEGORIES — round tiles right under the hero ─────────── */}
+      <ShopByCategories categories={homeCategories} />
 
       {/* ── FEATURED PRODUCTS ─────────────────────────────────────────────────── */}
       <section className="pt-10 pb-16 lg:pt-12 lg:pb-20" style={{ background: "var(--color-cream)" }}>
