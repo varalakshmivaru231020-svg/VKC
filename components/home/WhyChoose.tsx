@@ -64,7 +64,7 @@ export function WhyChoose() {
                 className="mt-5"
                 style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(2.2rem,4.6vw,3.9rem)", lineHeight: 1.02, letterSpacing: "-0.02em", color: C.ivory, fontWeight: 500 }}
               >
-                Why choose <span style={{ color: C.jaggeryLite, fontStyle: "italic" }}>VKC Cane Gold</span> Foods
+                Why choose <span style={{ color: C.jaggeryLite, fontStyle: "italic" }}>vkcgoldikshu</span>
               </motion.h2>
 
               {/* Preview tile mirrors whichever reason is hovered */}
