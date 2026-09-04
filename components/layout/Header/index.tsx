@@ -110,8 +110,8 @@ export function Header({ siteName = "VKC Gold", logoUrl, instagram, facebook, yo
         <img
           src={logoUrl}
           alt={siteName}
-          className="transition-opacity duration-200 group-hover:opacity-75 object-contain"
-          style={{ maxHeight: 52, maxWidth: 200 }}
+          className="transition-opacity duration-200 group-hover:opacity-75 object-contain h-[54px] lg:h-[78px] w-auto mix-blend-multiply"
+          style={{ maxWidth: 260 }}
         />
       ) : (
         <span className="tracking-wide transition-opacity duration-200 group-hover:opacity-75 leading-none"
@@ -131,7 +131,7 @@ export function Header({ siteName = "VKC Gold", logoUrl, instagram, facebook, yo
         {/* ── Single-row bar: logo · nav · actions ── */}
         <div className="border-b" style={{ borderColor: "var(--color-parchment)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between gap-3 h-[68px] lg:h-[80px]">
+            <div className="flex items-center justify-between gap-3 h-[70px] lg:h-[96px]">
               {/* Left — hamburger (mobile) / logo (desktop) */}
               <div className="flex items-center gap-1 lg:min-w-0">
                 <button className={cn(iconBtnCls, "lg:hidden")} style={iconBtnStyle} {...iconHover}

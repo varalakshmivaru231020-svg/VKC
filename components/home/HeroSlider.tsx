@@ -281,14 +281,16 @@ export default function HeroSlider({ slides }: Props) {
           in-flow copy), so the whole banner is always visible — nothing is
           cropped on any screen. Slides without an image fall back to a
           viewport-based height. */}
-      <div className="relative" style={hasImage ? { minHeight: "clamp(300px, 42vw, 760px)" } : undefined}>
+      <div className="relative" style={hasImage ? { minHeight: "clamp(260px, 36vw, 560px)" } : undefined}>
         {hasImage ? (
           /* Invisible in-flow copies of the slide image size the stage to the
-             image's own aspect ratio. The min-height above only matters when
-             the image is missing or unusually wide; either way, nothing crops. */
+             image's own aspect ratio, capped so the hero never gets taller than
+             about two-thirds of the viewport. Above the cap the visible layer
+             letterboxes with object-fit: contain, so the whole image still
+             shows — shorter stage, nothing cropped. */
           <>
-            <img aria-hidden src={s.imageUrl as string} alt="" className={`block w-full h-auto invisible pointer-events-none ${s.mobileImageUrl ? "hidden md:block" : ""}`} />
-            {s.mobileImageUrl && <img aria-hidden src={s.mobileImageUrl} alt="" className="block w-full h-auto invisible pointer-events-none md:hidden" />}
+            <img aria-hidden src={s.imageUrl as string} alt="" className={`block w-full h-auto invisible pointer-events-none ${s.mobileImageUrl ? "hidden md:block" : ""}`} style={{ maxHeight: "clamp(380px, 68vh, 640px)" }} />
+            {s.mobileImageUrl && <img aria-hidden src={s.mobileImageUrl} alt="" className="block w-full h-auto invisible pointer-events-none md:hidden" style={{ maxHeight: "72vh" }} />}
           </>
         ) : (
           <div aria-hidden style={{ minHeight: s.videoUrl ? "clamp(420px, 56vw, 820px)" : "clamp(520px, 80vh, 880px)" }} />
