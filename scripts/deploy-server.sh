@@ -21,11 +21,17 @@ if [[ "${1:-}" != "--no-pull" ]]; then
 fi
 echo "deploying $(git rev-parse --short HEAD)"
 
-# Dependencies only when the lockfile changed since the last deploy.
-if [[ ! -f .deployed-lock-hash ]] || [[ "$(md5sum package-lock.json | cut -d' ' -f1)" != "$(cat .deployed-lock-hash)" ]]; then
-  echo "package-lock.json changed — installing dependencies"
-  npm ci --no-audit --no-fund
-  md5sum package-lock.json | cut -d' ' -f1 > .deployed-lock-hash
+# Dependencies only when the lockfile changed since the last deploy. On the
+# very first run just record the hash — node_modules is already installed.
+# Never `npm ci` here: it deletes node_modules first, which takes the live
+# server down for the whole install. `npm install` updates in place.
+LOCK_HASH="$(md5sum package-lock.json | cut -d' ' -f1)"
+if [[ ! -f .deployed-lock-hash ]]; then
+  echo "$LOCK_HASH" > .deployed-lock-hash
+elif [[ "$LOCK_HASH" != "$(cat .deployed-lock-hash)" ]]; then
+  echo "package-lock.json changed — installing dependencies in place"
+  npm install --no-audit --no-fund
+  echo "$LOCK_HASH" > .deployed-lock-hash
 fi
 
 rm -rf .next-build
