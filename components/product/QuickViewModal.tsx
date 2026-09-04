@@ -198,20 +198,20 @@ export function QuickViewModal() {
               {p.name}
             </h2>
 
-            {/* Rating — real approved reviews only; hidden until loaded */}
-            {rating && (
-              <div className="flex items-center gap-1" aria-label={rating.total ? `Rated ${rating.average.toFixed(1)} out of 5 from ${rating.total} reviews` : "No reviews yet"}>
+            {/* Rating — rendered only when approved customer reviews exist.
+                Products with zero reviews show nothing here: no empty stars,
+                no "No reviews yet". */}
+            {rating && rating.total > 0 && (
+              <div className="flex items-center gap-1" aria-label={`Rated ${rating.average.toFixed(1)} out of 5 from ${rating.total} ${rating.total === 1 ? "review" : "reviews"}`}>
                 {[1,2,3,4,5].map((s) => (
                   <Star
                     key={s}
                     className="h-3.5 w-3.5 fill-current"
-                    style={{ color: rating.total && s <= Math.round(rating.average) ? "var(--color-gold)" : "var(--color-parchment)" }}
+                    style={{ color: s <= Math.round(rating.average) ? "var(--color-gold)" : "var(--color-parchment)" }}
                   />
                 ))}
                 <span className="text-xs font-body ml-1" style={{ color: "var(--color-text-muted)" }}>
-                  {rating.total
-                    ? `${rating.average.toFixed(1)} · ${rating.total} ${rating.total === 1 ? "review" : "reviews"}`
-                    : "No reviews yet"}
+                  {rating.average.toFixed(1)} · {rating.total} {rating.total === 1 ? "review" : "reviews"}
                 </span>
               </div>
             )}

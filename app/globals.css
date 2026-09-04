@@ -8,29 +8,29 @@
    ────────────────────────────────────────────────────────────────────────── */
 :root {
   /* Colors */
-  --color-primary:        #8B1A2E;
-  --color-primary-dark:   #5E1020;
-  --color-primary-light:  #B5293F;
-  --color-primary-50:     #FDF0F2;
-  --color-gold:           #C4922A;
-  --color-gold-light:     #E8C97A;
-  --color-gold-dark:      #8B6318;
-  --color-ivory:          #FBF8F3;
-  --color-cream:          #F2EBE0;
-  --color-parchment:      #E8DDD0;
-  --color-sand:           #C9BAA8;
-  --color-text-primary:   #1C1410;
-  --color-text-secondary: #4A3F38;
-  --color-text-muted:     #8A7B72;
-  --color-text-disabled:  #BEB3AC;
-  --color-text-inverse:   #FBF8F3;
+  --color-primary:        #D9731A;
+  --color-primary-dark:   #A8520A;
+  --color-primary-light:  #EE8B2F;
+  --color-primary-50:     #FDF1E4;
+  --color-gold:           #F5B301;
+  --color-gold-light:     #FFD65C;
+  --color-gold-dark:      #A66A00;
+  --color-ivory:          #FFFBF4;
+  --color-cream:          #FBF1DE;
+  --color-parchment:      #F0DCB6;
+  --color-sand:           #D9B27A;
+  --color-text-primary:   #2B1708;
+  --color-text-secondary: #5C3A1E;
+  --color-text-muted:     #8A6A4E;
+  --color-text-disabled:  #C9B399;
+  --color-text-inverse:   #FFFBF4;
   --color-success:        #2E6B47;
   --color-success-bg:     #EDF7F2;
   --color-error:          #C42B2B;
   --color-error-bg:       #FEF0F0;
   --color-warning:        #C47A2B;
   --color-warning-bg:     #FEF5E7;
-  --color-border:         #E8DDD0;
+  --color-border:         #F0DCB6;
 
   /* Typography */
   --font-heading: 'Cormorant Garamond', Georgia, serif;

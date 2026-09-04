@@ -103,54 +103,85 @@ export function Header({ siteName = "VKC Gold", logoUrl, instagram, facebook, yo
     onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = "var(--color-text-muted)"; e.currentTarget.style.background = "transparent"; },
   };
 
+  // One logo element, rendered on the left for desktop and centred on mobile.
+  const logo = (
+    <Link href="/" className="group flex items-center" aria-label={siteName}>
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt={siteName}
+          className="transition-opacity duration-200 group-hover:opacity-75 object-contain"
+          style={{ maxHeight: 52, maxWidth: 200 }}
+        />
+      ) : (
+        <span className="tracking-wide transition-opacity duration-200 group-hover:opacity-75 leading-none"
+          style={{ fontFamily: "var(--font-heading)", fontWeight: "var(--weight-heading)", fontSize: "clamp(1.3rem, 2.2vw, 1.7rem)", color: "var(--color-primary)" }}>
+          {siteName}
+        </span>
+      )}
+    </Link>
+  );
+
   return (
     <>
       <header
         className={cn("sticky top-0 z-50 w-full transition-all duration-300", scrolled ? "shadow-[0_2px_24px_rgba(0,0,0,0.08)]" : "")}
         style={{ background: scrolled ? "rgba(251,248,243,0.96)" : "var(--color-ivory)", backdropFilter: scrolled ? "blur(12px)" : "none" }}
       >
-        {/* ── Top bar ── */}
+        {/* ── Single-row bar: logo · nav · actions ── */}
         <div className="border-b" style={{ borderColor: "var(--color-parchment)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-3 items-center h-[88px]">
-              {/* Left — menu (mobile) / social (desktop) */}
-              <div className="flex items-center gap-1">
-                {/* Hamburger — mobile only, left side */}
+            <div className="flex items-center justify-between gap-3 h-[68px] lg:h-[80px]">
+              {/* Left — hamburger (mobile) / logo (desktop) */}
+              <div className="flex items-center gap-1 lg:min-w-0">
                 <button className={cn(iconBtnCls, "lg:hidden")} style={iconBtnStyle} {...iconHover}
                   onClick={() => setMobileOpen(true)} aria-label="Open menu">
                   <Menu className="h-5 w-5" />
                 </button>
-                {/* Social links — desktop only */}
-                {socialLinks.map(({ Icon, href, label }) => (
-                  <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                    className="hidden lg:flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200 hover:scale-110"
-                    style={{ background: "transparent" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-primary-50)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                    <Icon className="h-5 w-5" />
-                  </a>
-                ))}
+                <span className="hidden lg:block">{logo}</span>
               </div>
 
-              {/* Center — logo */}
-              <div className="flex justify-center">
-                <Link href="/" className="group flex flex-col items-center gap-0.5">
-                  {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt={siteName}
-                      className="transition-opacity duration-200 group-hover:opacity-75 object-contain"
-                      style={{ maxHeight: 72, maxWidth: 280 }}
-                    />
-                  ) : (
-                    <span className="tracking-wide transition-opacity duration-200 group-hover:opacity-75 leading-none"
-                      style={{ fontFamily: "var(--font-heading)", fontWeight: "var(--weight-heading)", fontSize: "clamp(1.4rem, 2.5vw, 1.9rem)", color: "var(--color-primary)" }}>
-                      {siteName}
-                    </span>
-                  )}
-                  <span className="block h-px w-10 transition-all duration-300 group-hover:w-16"
-                    style={{ background: "linear-gradient(90deg, transparent, var(--color-gold), transparent)" }} />
-                </Link>
+              {/* Center — logo (mobile) / nav (desktop), all in the same row */}
+              <div className="flex-1 flex items-center justify-center min-w-0">
+                <span className="lg:hidden">{logo}</span>
+                <nav className="hidden lg:flex items-center justify-center">
+                  {NAV_BEFORE.map((item) => (
+                    <DesktopNavLink key={item.href} href={item.href} label={item.label} isActive={isActive(item.href)} />
+                  ))}
+                  {navCategories.map((cat) => (
+                    <div key={cat.id} className="relative group">
+                      <Link
+                        href={`/category/${cat.slug}`}
+                        className={NAV_LINK_CLS}
+                        style={{ color: isActive(`/category/${cat.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
+                      >
+                        {cat.name}
+                        {cat.children.length > 0 && <ChevronDown className="h-3 w-3 shrink-0" />}
+                      </Link>
+                      {cat.children.length > 0 && (
+                        <div className="absolute left-0 top-full pt-2 hidden group-hover:block min-w-[140px] w-max z-10">
+                          <div className="rounded-lg overflow-hidden py-1" style={{ background: "white", boxShadow: "0 10px 30px rgba(0,0,0,0.12)" }}>
+                            {cat.children.map((child) => (
+                              <Link
+                                key={child.id}
+                                href={`/category/${child.slug}`}
+                                className="block px-4 py-2.5 text-[14px] font-medium font-body whitespace-nowrap transition-colors duration-300"
+                                style={{ color: isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-cream)"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)"; e.currentTarget.style.background = "transparent"; }}
+                              >
+                                {child.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {NAV_AFTER.map((item) => (
+                    <DesktopNavLink key={item.href} href={item.href} label={item.label} isActive={isActive(item.href)} />
+                  ))}
+                </nav>
               </div>
 
               {/* Right — actions */}
@@ -205,54 +236,6 @@ export function Header({ siteName = "VKC Gold", logoUrl, instagram, facebook, yo
           </div>
         </div>
 
-        {/* ── Desktop nav bar (flat, fixed items) ── */}
-        <div className="hidden lg:block border-b" style={{ background: "var(--color-cream)", borderColor: "var(--color-parchment)" }}>
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <nav className="flex items-center justify-center h-11">
-              {NAV_BEFORE.map((item) => (
-                <DesktopNavLink key={item.href} href={item.href} label={item.label} isActive={isActive(item.href)} />
-              ))}
-              {navCategories.map((cat) => (
-                <div key={cat.id} className="relative group">
-                  <Link
-                    href={`/category/${cat.slug}`}
-                    className={NAV_LINK_CLS}
-                    style={{ color: isActive(`/category/${cat.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
-                  >
-                    {cat.name}
-                    {cat.children.length > 0 && <ChevronDown className="h-3 w-3 shrink-0" />}
-                  </Link>
-                  {cat.children.length > 0 && (
-                    <div
-                      className="absolute left-0 top-full pt-2 hidden group-hover:block min-w-[140px] w-max z-10"
-                    >
-                      <div
-                        className="rounded-lg overflow-hidden py-1"
-                        style={{ background: "white", boxShadow: "0 10px 30px rgba(0,0,0,0.12)" }}
-                      >
-                        {cat.children.map((child) => (
-                          <Link
-                            key={child.id}
-                            href={`/category/${child.slug}`}
-                            className="block px-4 py-2.5 text-[14px] font-medium font-body whitespace-nowrap transition-colors duration-300"
-                            style={{ color: isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)" }}
-                            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-primary)"; e.currentTarget.style.background = "var(--color-cream)"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.color = isActive(`/category/${child.slug}`) ? "var(--color-primary)" : "var(--color-text-secondary)"; e.currentTarget.style.background = "transparent"; }}
-                          >
-                            {child.name}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {NAV_AFTER.map((item) => (
-                <DesktopNavLink key={item.href} href={item.href} label={item.label} isActive={isActive(item.href)} />
-              ))}
-            </nav>
-          </div>
-        </div>
       </header>
 
       {/* ── Search overlay ── */}

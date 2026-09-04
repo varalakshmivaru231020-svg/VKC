@@ -12,20 +12,20 @@ import {
 
 /* ── Deep-green & jaggery-gold palette (layered on the site tokens) ───────── */
 const C = {
-  bark:        "#122017",
-  barkSoft:    "#1D3329",
-  green:       "#1F6F5C",
-  greenLight:  "#4F907A",
-  greenDeep:   "#16483C",
-  jaggery:     "#C98B2E",
-  jaggeryDark: "#8A5B17",
-  jaggeryLite: "#F0C96D",
-  cream:       "#F3F0E8",
-  ivory:       "#FCFBF7",
-  parchment:   "#DED7CB",
-  ink:         "#111827",
-  ink2:        "#354052",
-  muted:       "#667085",
+  bark:        "#3A1F0A",
+  barkSoft:    "#5A3210",
+  green:       "#B85C12",
+  greenLight:  "#D9781F",
+  greenDeep:   "#8B3A05",
+  jaggery:     "#E0961C",
+  jaggeryDark: "#9A5B0B",
+  jaggeryLite: "#FFD65C",
+  cream:       "#FBF1DE",
+  ivory:       "#FFFBF4",
+  parchment:   "#F0DCB6",
+  ink:         "#2B1708",
+  ink2:        "#5C3A1E",
+  muted:       "#8A6A4E",
 };
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -105,7 +105,7 @@ function Stat({ value, suffix = "", label }: { value: number; suffix?: string; l
       <div className="font-heading leading-none tabular-nums" style={{ fontSize: "clamp(2.6rem,5.5vw,4.2rem)", color: C.jaggeryLite, letterSpacing: "-0.02em" }}>
         {n}{suffix}
       </div>
-      <div className="mt-2 font-body uppercase" style={{ fontSize: 11, letterSpacing: "0.2em", color: "rgba(252,251,247,0.6)" }}>
+      <div className="mt-2 font-body uppercase" style={{ fontSize: 11, letterSpacing: "0.2em", color: "rgba(255,251,244,0.6)" }}>
         {label}
       </div>
     </div>
@@ -135,7 +135,7 @@ function SectionHeading({ eyebrow, title, sub, light = false, center = false, si
         <Words text={title} />
       </h2>
       {sub && (
-        <p className="font-body mt-5" style={{ fontSize: 17, lineHeight: 1.7, color: light ? "rgba(252,251,247,0.72)" : C.ink2, maxWidth: 620, margin: center ? "1.25rem auto 0" : undefined }}>
+        <p className="font-body mt-5" style={{ fontSize: 17, lineHeight: 1.7, color: light ? "rgba(255,251,244,0.72)" : C.ink2, maxWidth: 620, margin: center ? "1.25rem auto 0" : undefined }}>
           {sub}
         </p>
       )}
@@ -272,9 +272,9 @@ function FloatCard({ children, index, dark = false, className = "" }: { children
           onMouseLeave={onLeave}
           whileHover={reduced ? undefined : { scale: 1.03 }}
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-          className="group relative rounded-lg overflow-hidden transition-shadow duration-500 hover:shadow-[0_44px_80px_-24px_rgba(18,32,23,0.4)]"
+          className="group relative rounded-lg overflow-hidden transition-shadow duration-500 hover:shadow-[0_44px_80px_-24px_rgba(58,31,10,0.4)]"
         >
-          <div className="absolute inset-0 rounded-lg" style={{ background: dark ? C.bark : C.ivory, border: `1px solid ${dark ? "rgba(240,201,109,0.28)" : C.parchment}` }} />
+          <div className="absolute inset-0 rounded-lg" style={{ background: dark ? C.bark : C.ivory, border: `1px solid ${dark ? "rgba(255,214,92,0.28)" : C.parchment}` }} />
           {dark && <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.1, mixBlendMode: "overlay" }} />}
           <motion.div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: glare }} />
           <div className="relative" style={{ transform: "translateZ(30px)" }}>{children}</div>
@@ -290,7 +290,7 @@ function Spotlight({ children, className = "", style }: { children: React.ReactN
   const rawY = useMotionValue(40);
   const x = useSpring(rawX, { stiffness: 80, damping: 20 });
   const y = useSpring(rawY, { stiffness: 80, damping: 20 });
-  const bg = useTransform([x, y], ([px, py]) => `radial-gradient(460px circle at ${px}% ${py}%, rgba(240,201,109,0.32), transparent 62%)`);
+  const bg = useTransform([x, y], ([px, py]) => `radial-gradient(460px circle at ${px}% ${py}%, rgba(255,214,92,0.32), transparent 62%)`);
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     rawX.set(((e.clientX - r.left) / r.width) * 100);
@@ -338,13 +338,13 @@ function ProcessStep({ step, index, total, progress }: { step: { n: string; t: s
     <div className="relative flex lg:block gap-6">
       <motion.div
         className="relative z-10 shrink-0 h-[72px] w-[72px] rounded-full grid place-items-center font-heading"
-        style={{ scale, background: bg, color: fg, border: "1px solid rgba(240,201,109,0.5)", fontSize: 24, boxShadow: "0 0 0 10px rgba(18,32,23,1)" }}
+        style={{ scale, background: bg, color: fg, border: "1px solid rgba(255,214,92,0.5)", fontSize: 24, boxShadow: "0 0 0 10px rgba(58,31,10,1)" }}
       >
         {step.n}
       </motion.div>
       <motion.div style={{ opacity: textOpacity }} className="lg:mt-7">
         <h3 className="font-heading" style={{ fontSize: 23, lineHeight: 1.1, color: C.ivory }}>{step.t}</h3>
-        <p className="font-body mt-2" style={{ fontSize: 14.5, lineHeight: 1.7, color: "rgba(252,251,247,0.66)", maxWidth: 260 }}>{step.d}</p>
+        <p className="font-body mt-2" style={{ fontSize: 14.5, lineHeight: 1.7, color: "rgba(255,251,244,0.66)", maxWidth: 260 }}>{step.d}</p>
       </motion.div>
     </div>
   );
@@ -357,11 +357,11 @@ function ProcessSteps({ steps }: { steps: { n: string; t: string; d: string }[] 
     <div ref={ref} className="relative mt-16">
       {/* Desktop: horizontal rail through the step badges. Mobile: vertical rail. */}
       <svg aria-hidden className="hidden lg:block absolute left-0 top-[36px] w-full h-[2px]" viewBox="0 0 100 2" preserveAspectRatio="none">
-        <line x1="0" y1="1" x2="100" y2="1" stroke="rgba(240,201,109,0.18)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        <line x1="0" y1="1" x2="100" y2="1" stroke="rgba(255,214,92,0.18)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         <motion.line x1="0" y1="1" x2="100" y2="1" stroke={C.jaggeryLite} strokeWidth="2" vectorEffect="non-scaling-stroke" style={{ pathLength }} />
       </svg>
       <svg aria-hidden className="lg:hidden absolute left-[35px] top-0 h-full w-[2px]" viewBox="0 0 2 100" preserveAspectRatio="none">
-        <line x1="1" y1="0" x2="1" y2="100" stroke="rgba(240,201,109,0.18)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        <line x1="1" y1="0" x2="1" y2="100" stroke="rgba(255,214,92,0.18)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         <motion.line x1="1" y1="0" x2="1" y2="100" stroke={C.jaggeryLite} strokeWidth="2" vectorEffect="non-scaling-stroke" style={{ pathLength }} />
       </svg>
       <div className="grid gap-12 lg:gap-6 lg:grid-cols-4">
@@ -373,11 +373,11 @@ function ProcessSteps({ steps }: { steps: { n: string; t: string; d: string }[] 
 
 /* ── Stacking cards: each value pins under the last and settles back ──────── */
 const STACK_THEMES = [
-  { bg: "#FCFBF7", fg: "#111827", accent: "#8A5B17", sub: "#354052" },
-  { bg: "#1F6F5C", fg: "#FCFBF7", accent: "#F0C96D", sub: "rgba(252,251,247,0.75)" },
-  { bg: "#F0C96D", fg: "#122017", accent: "#8A5B17", sub: "rgba(18,32,23,0.75)" },
-  { bg: "#122017", fg: "#FCFBF7", accent: "#F0C96D", sub: "rgba(252,251,247,0.72)" },
-  { bg: "#F3F0E8", fg: "#111827", accent: "#1F6F5C", sub: "#354052" },
+  { bg: "#FFFBF4", fg: "#2B1708", accent: "#9A5B0B", sub: "#5C3A1E" },
+  { bg: "#B85C12", fg: "#FFFBF4", accent: "#FFD65C", sub: "rgba(255,251,244,0.75)" },
+  { bg: "#FFD65C", fg: "#3A1F0A", accent: "#9A5B0B", sub: "rgba(58,31,10,0.75)" },
+  { bg: "#3A1F0A", fg: "#FFFBF4", accent: "#FFD65C", sub: "rgba(255,251,244,0.72)" },
+  { bg: "#FBF1DE", fg: "#2B1708", accent: "#B85C12", sub: "#5C3A1E" },
 ];
 function StackCard({ value, index, total, progress }: { value: { icon: any; t: string; d: string }; index: number; total: number; progress: MotionValue<number> }) {
   const theme = STACK_THEMES[index % STACK_THEMES.length];
@@ -387,7 +387,7 @@ function StackCard({ value, index, total, progress }: { value: { icon: any; t: s
   return (
     <motion.div
       className="sticky rounded-lg overflow-hidden"
-      style={{ top: `calc(148px + ${index * 16}px)`, scale, transformOrigin: "top center", background: theme.bg, color: theme.fg, boxShadow: "0 -12px 40px rgba(18,32,23,0.14)", border: `1px solid ${index === 2 || index === 4 || index === 0 ? "rgba(17,24,39,0.08)" : "rgba(240,201,109,0.2)"}` }}
+      style={{ top: `calc(148px + ${index * 16}px)`, scale, transformOrigin: "top center", background: theme.bg, color: theme.fg, boxShadow: "0 -12px 40px rgba(58,31,10,0.14)", border: `1px solid ${index === 2 || index === 4 || index === 0 ? "rgba(17,24,39,0.08)" : "rgba(255,214,92,0.2)"}` }}
     >
       <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.08, mixBlendMode: "overlay" }} />
       <div className="relative grid lg:grid-cols-12 gap-8 items-end p-8 sm:p-12 lg:p-14" style={{ minHeight: "clamp(360px, 52vh, 520px)" }}>
@@ -510,7 +510,6 @@ export default function AboutExperience({
 
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", reduced ? "0%" : "18%"]);
   const copyY = useTransform(scrollYProgress, [0, 1], [0, reduced ? 0 : 80]);
   const copyOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0.2]);
 
@@ -526,23 +525,26 @@ export default function AboutExperience({
       }} />
 
       {/* ── 1 · HERO ─────────────────────────────────────────────────────── */}
+      {/* With an uploaded banner (Admin → Banners → "About Us — Hero Banner")
+          the banner IS the hero: shown full-width at its own aspect ratio,
+          never cropped, with no static copy over it — the artwork carries
+          whatever message the team designs into it. The mobile crop swaps in
+          below md when one was uploaded. Without a banner, the designed hero
+          below takes over. */}
+      {hasBanner && desktopBanner && (
+        <section ref={heroRef} className="relative" style={{ background: C.bark }} aria-label={bannerAlt || "About VKC Cane Gold Foods"}>
+          <img
+            src={desktopBanner}
+            alt={bannerAlt}
+            className={`block w-full h-auto ${hasSeparateMobileBanner ? "hidden md:block" : ""}`}
+          />
+          {hasSeparateMobileBanner && mobileBanner && (
+            <img src={mobileBanner} alt={bannerAlt} className="block w-full h-auto md:hidden" />
+          )}
+        </section>
+      )}
+      {!hasBanner && (
       <section ref={heroRef} className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.bark} 0%, ${C.green} 100%)`, minHeight: "clamp(600px, calc(100svh - 120px), 980px)" }}>
-        {desktopBanner && (
-          <motion.div className="absolute inset-0" style={{ y: bgY, scale: 1.12 }}>
-            <Image
-              src={desktopBanner}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className={`object-cover ${hasSeparateMobileBanner ? "hidden md:block" : "block"}`}
-            />
-            {hasSeparateMobileBanner && mobileBanner && (
-              <Image src={mobileBanner} alt="" fill priority sizes="100vw" className="object-cover md:hidden" />
-            )}
-            <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(18,32,23,0.92) 0%, rgba(18,32,23,0.72) 48%, rgba(18,32,23,0.34) 100%), linear-gradient(0deg, rgba(18,32,23,0.8) 0%, transparent 40%)" }} />
-          </motion.div>
-        )}
         <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.12, mixBlendMode: "overlay" }} />
         {!hasBanner && (
           <>
@@ -552,7 +554,7 @@ export default function AboutExperience({
               style={{ bottom: -160, left: -120, width: 420, height: 420, borderRadius: "50%", background: `radial-gradient(circle, ${C.greenLight}66, transparent 70%)` }} />
             {/* Ghosted watermark */}
             <div aria-hidden className="absolute right-[-2%] bottom-[-6%] font-heading select-none pointer-events-none hidden lg:block"
-              style={{ fontSize: "clamp(10rem,22vw,20rem)", lineHeight: 1, color: "rgba(240,201,109,0.05)", letterSpacing: "-0.04em", fontStyle: "italic" }}>
+              style={{ fontSize: "clamp(10rem,22vw,20rem)", lineHeight: 1, color: "rgba(255,214,92,0.05)", letterSpacing: "-0.04em", fontStyle: "italic" }}>
               1988
             </div>
           </>
@@ -563,7 +565,7 @@ export default function AboutExperience({
           <div className="grid lg:grid-cols-12 gap-10 items-end">
             <div className="lg:col-span-8">
               <Reveal y={16}>
-                <span className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-body font-medium backdrop-blur-sm" style={{ fontSize: 12.5, background: "rgba(252,251,247,0.08)", border: "1px solid rgba(240,201,109,0.3)", color: C.jaggeryLite }}>
+                <span className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-body font-medium backdrop-blur-sm" style={{ fontSize: 12.5, background: "rgba(255,251,244,0.08)", border: "1px solid rgba(255,214,92,0.3)", color: C.jaggeryLite }}>
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: C.jaggeryLite, boxShadow: `0 0 0 4px ${C.jaggeryLite}33` }} />
                   Mandya's Pride · Since 1988
                 </span>
@@ -573,7 +575,7 @@ export default function AboutExperience({
                 <span className="block"><Words text="to the World" accent="World" /></span>
               </h1>
               <Reveal delay={0.35}>
-                <p className="font-body mt-7" style={{ fontSize: "clamp(1.05rem,1.4vw,1.25rem)", lineHeight: 1.7, color: "rgba(252,251,247,0.8)", maxWidth: 600 }}>
+                <p className="font-body mt-7" style={{ fontSize: "clamp(1.05rem,1.4vw,1.25rem)", lineHeight: 1.7, color: "rgba(255,251,244,0.8)", maxWidth: 600 }}>
                   VKC Cane Gold Foods crafts pure, chemical-free jaggery and cane products
                   straight from the sugarcane fields of Mandya, Karnataka — rooted in a
                   farmer-first tradition that began in 1988.
@@ -589,7 +591,7 @@ export default function AboutExperience({
                     </span>
                   </a>
                   <Link href="/contact" className="group inline-flex items-center gap-2 px-7 rounded-full font-body font-semibold text-sm transition-colors duration-300 backdrop-blur-sm"
-                    style={{ height: 52, border: "1px solid rgba(240,201,109,0.45)", color: C.jaggeryLite, background: "rgba(252,251,247,0.05)" }}>
+                    style={{ height: 52, border: "1px solid rgba(255,214,92,0.45)", color: C.jaggeryLite, background: "rgba(255,251,244,0.05)" }}>
                     Contact Us <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                   </Link>
                 </div>
@@ -609,11 +611,12 @@ export default function AboutExperience({
 
         {/* Scroll cue */}
         <div className="absolute bottom-7 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 pointer-events-none">
-          <span className="relative block w-px h-12 overflow-hidden" style={{ background: "rgba(252,251,247,0.2)" }}>
+          <span className="relative block w-px h-12 overflow-hidden" style={{ background: "rgba(255,251,244,0.2)" }}>
             <motion.span className="absolute left-0 top-0 w-px h-5" animate={reduced ? undefined : { y: [-20, 48] }} transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }} style={{ background: C.jaggeryLite }} />
           </span>
         </div>
       </section>
+      )}
 
       <Marquee items={["100% Natural", "Chemical-Free", "Farmer-First", "Made in Mandya", "Since 1988", "No Preservatives"]} />
 
@@ -701,15 +704,15 @@ export default function AboutExperience({
                   <div className="p-8 sm:p-9" style={{ minHeight: 320 }}>
                     <div className="flex items-start justify-between">
                       <div className="relative h-16 w-16">
-                        <span aria-hidden className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:rotate-180" style={{ border: `1px dashed ${dark ? "rgba(240,201,109,0.55)" : `${C.jaggery}77`}` }} />
+                        <span aria-hidden className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:rotate-180" style={{ border: `1px dashed ${dark ? "rgba(255,214,92,0.55)" : `${C.jaggery}77`}` }} />
                         <div className="absolute inset-[6px] rounded-full grid place-items-center" style={{ background: dark ? C.jaggery : C.bark, color: dark ? C.bark : C.jaggeryLite }}>
                           <p.icon className="h-6 w-6" />
                         </div>
                       </div>
-                      <span className="font-heading" style={{ fontSize: 44, lineHeight: 1, color: dark ? "rgba(240,201,109,0.35)" : `${C.jaggery}55`, letterSpacing: "-0.03em" }}>0{i + 1}</span>
+                      <span className="font-heading" style={{ fontSize: 44, lineHeight: 1, color: dark ? "rgba(255,214,92,0.35)" : `${C.jaggery}55`, letterSpacing: "-0.03em" }}>0{i + 1}</span>
                     </div>
                     <h3 className="font-heading mt-9" style={{ fontSize: 27, lineHeight: 1.08, letterSpacing: "-0.01em", color: dark ? C.ivory : C.ink }}>{p.t}</h3>
-                    <p className="font-body mt-3" style={{ fontSize: 15, lineHeight: 1.72, color: dark ? "rgba(252,251,247,0.74)" : C.ink2 }}>{p.d}</p>
+                    <p className="font-body mt-3" style={{ fontSize: 15, lineHeight: 1.72, color: dark ? "rgba(255,251,244,0.74)" : C.ink2 }}>{p.d}</p>
                     <span className="block mt-7 h-[2px] w-10 origin-left transition-transform duration-500 group-hover:scale-x-[2.6]" style={{ background: dark ? C.jaggeryLite : C.jaggery }} />
                   </div>
                 </FloatCard>
@@ -761,10 +764,10 @@ export default function AboutExperience({
                   { icon: Factory, k: "Production", v: "Chemical-free, modern processing" },
                   { icon: Handshake, k: "Founded", v: "1988 · Vairamudi Krupa Crusher" },
                 ].map((b) => (
-                  <div key={b.k} className="group relative grid grid-cols-[auto_1fr] sm:grid-cols-[auto_auto_1fr_auto] items-baseline gap-x-4 py-4" style={{ borderTop: "1px solid rgba(240,201,109,0.14)" }}>
-                    <b.icon className="h-4 w-4 self-center transition-colors duration-300" style={{ color: "rgba(240,201,109,0.6)" }} />
-                    <dt className="font-body font-semibold uppercase transition-colors duration-300 group-hover:text-[#F0C96D]" style={{ fontSize: 11, letterSpacing: "0.16em", color: "rgba(252,251,247,0.6)" }}>{b.k}</dt>
-                    <span aria-hidden className="hidden sm:block self-center h-px" style={{ borderTop: "1px dotted rgba(240,201,109,0.35)" }} />
+                  <div key={b.k} className="group relative grid grid-cols-[auto_1fr] sm:grid-cols-[auto_auto_1fr_auto] items-baseline gap-x-4 py-4" style={{ borderTop: "1px solid rgba(255,214,92,0.14)" }}>
+                    <b.icon className="h-4 w-4 self-center transition-colors duration-300" style={{ color: "rgba(255,214,92,0.6)" }} />
+                    <dt className="font-body font-semibold uppercase transition-colors duration-300 group-hover:text-[#FFD65C]" style={{ fontSize: 11, letterSpacing: "0.16em", color: "rgba(255,251,244,0.6)" }}>{b.k}</dt>
+                    <span aria-hidden className="hidden sm:block self-center h-px" style={{ borderTop: "1px dotted rgba(255,214,92,0.35)" }} />
                     <dd className="font-body col-start-2 sm:col-start-4 sm:text-right transition-transform duration-300 group-hover:-translate-x-1" style={{ fontSize: 14.5, lineHeight: 1.5, color: C.ivory }}>{b.v}</dd>
                   </div>
                 ))}
@@ -787,14 +790,14 @@ export default function AboutExperience({
 
           {/* Dealer "ticket": perforated edge and a slowly turning cog. */}
           <Reveal delay={0.1}>
-            <div className="mt-20 relative grid lg:grid-cols-12 rounded-lg overflow-hidden" style={{ background: "rgba(252,251,247,0.05)", border: "1px solid rgba(240,201,109,0.25)", backdropFilter: "blur(6px)" }}>
-              <div className="lg:col-span-3 relative p-8 sm:p-10 grid place-items-center" style={{ background: "rgba(240,201,109,0.08)" }}>
+            <div className="mt-20 relative grid lg:grid-cols-12 rounded-lg overflow-hidden" style={{ background: "rgba(255,251,244,0.05)", border: "1px solid rgba(255,214,92,0.25)", backdropFilter: "blur(6px)" }}>
+              <div className="lg:col-span-3 relative p-8 sm:p-10 grid place-items-center" style={{ background: "rgba(255,214,92,0.08)" }}>
                 <motion.div animate={reduced ? undefined : { rotate: 360 }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
                   className="h-20 w-20 rounded-full grid place-items-center" style={{ background: C.jaggery, color: C.bark, boxShadow: "0 16px 40px rgba(201,139,46,0.35)" }}>
                   <Cog className="h-9 w-9" />
                 </motion.div>
                 {/* perforation */}
-                <div aria-hidden className="hidden lg:block absolute right-0 top-0 bottom-0 w-px" style={{ borderRight: "2px dashed rgba(240,201,109,0.35)" }} />
+                <div aria-hidden className="hidden lg:block absolute right-0 top-0 bottom-0 w-px" style={{ borderRight: "2px dashed rgba(255,214,92,0.35)" }} />
                 <span aria-hidden className="hidden lg:block absolute -right-3 -top-3 h-6 w-6 rounded-full" style={{ background: C.bark }} />
                 <span aria-hidden className="hidden lg:block absolute -right-3 -bottom-3 h-6 w-6 rounded-full" style={{ background: C.bark }} />
               </div>
@@ -802,13 +805,13 @@ export default function AboutExperience({
                 <div className="lg:col-span-8">
                   <div className="font-body font-semibold uppercase" style={{ fontSize: 10.5, letterSpacing: "0.24em", color: C.jaggeryLite }}>Machinery partnership</div>
                   <h3 className="font-heading mt-3" style={{ fontSize: "clamp(1.5rem,2.4vw,2rem)", lineHeight: 1.15, color: C.ivory }}>Jagadish Engineering Works, Gujarat</h3>
-                  <p className="font-body mt-3" style={{ fontSize: 15.5, lineHeight: 1.75, color: "rgba(252,251,247,0.78)" }}>
+                  <p className="font-body mt-3" style={{ fontSize: 15.5, lineHeight: 1.75, color: "rgba(255,251,244,0.78)" }}>
                     Beyond our own production, VKC is the <strong style={{ color: C.jaggeryLite }}>authorized Karnataka dealer</strong> for
                     Jagadish Engineering Works — bringing proven, energy-efficient jaggery-processing machinery to producers across the state.
                   </p>
                 </div>
                 <div className="lg:col-span-4 lg:justify-self-end">
-                  <span className="inline-flex items-center gap-2 font-body font-semibold rounded-full px-4 py-2.5" style={{ fontSize: 13, background: "rgba(240,201,109,0.14)", color: C.jaggeryLite, border: "1px solid rgba(240,201,109,0.3)" }}>
+                  <span className="inline-flex items-center gap-2 font-body font-semibold rounded-full px-4 py-2.5" style={{ fontSize: 13, background: "rgba(255,214,92,0.14)", color: C.jaggeryLite, border: "1px solid rgba(255,214,92,0.3)" }}>
                     <Factory className="h-4 w-4" /> Authorized Karnataka Dealer
                   </span>
                 </div>
@@ -826,8 +829,8 @@ export default function AboutExperience({
             <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.12, mixBlendMode: "overlay" }} />
             <div className="relative grid lg:grid-cols-12 gap-10 items-start">
               <div className="lg:col-span-3">
-                <motion.div className="inline-flex h-12 w-12 rounded-full items-center justify-center" style={{ background: "rgba(252,251,247,0.12)" }}
-                  animate={reduced ? undefined : { boxShadow: ["0 0 0 0 rgba(240,201,109,0.5)", "0 0 0 18px rgba(240,201,109,0)"] }} transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}>
+                <motion.div className="inline-flex h-12 w-12 rounded-full items-center justify-center" style={{ background: "rgba(255,251,244,0.12)" }}
+                  animate={reduced ? undefined : { boxShadow: ["0 0 0 0 rgba(255,214,92,0.5)", "0 0 0 18px rgba(255,214,92,0)"] }} transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}>
                   <Eye className="h-6 w-6" style={{ color: C.jaggeryLite }} />
                 </motion.div>
                 <div className="mt-4"><Eyebrow color={C.jaggeryLite}>Our Vision</Eyebrow></div>
@@ -855,12 +858,12 @@ export default function AboutExperience({
               <Reveal key={m.t} delay={i * 0.05}>
                 <div className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-5 sm:gap-8 py-6 sm:py-7 px-3 -mx-3 overflow-hidden" style={{ borderTop: `1px solid ${C.parchment}`, borderBottom: i === MISSION.length - 1 ? `1px solid ${C.parchment}` : "none" }}>
                   <span aria-hidden className="absolute inset-0 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out" style={{ background: `linear-gradient(90deg, ${C.jaggery}1f, transparent)` }} />
-                  <span className="relative font-heading tabular-nums transition-all duration-500 group-hover:scale-150 group-hover:text-[#8A5B17]" style={{ fontSize: 15, color: C.muted, width: 28, transformOrigin: "left center" }}>0{i + 1}</span>
+                  <span className="relative font-heading tabular-nums transition-all duration-500 group-hover:scale-150 group-hover:text-[#9A5B0B]" style={{ fontSize: 15, color: C.muted, width: 28, transformOrigin: "left center" }}>0{i + 1}</span>
                   <div className="relative">
                     <h3 className="font-heading transition-transform duration-500 group-hover:translate-x-2" style={{ fontSize: "clamp(1.35rem,2.2vw,1.85rem)", lineHeight: 1.1, color: C.ink }}>{m.t}</h3>
                     <p className="font-body mt-1.5 transition-transform duration-500 group-hover:translate-x-2" style={{ fontSize: 14.5, lineHeight: 1.65, color: C.ink2, maxWidth: 520 }}>{m.d}</p>
                   </div>
-                  <div className="relative h-12 w-12 rounded-full grid place-items-center transition-all duration-500 group-hover:rotate-[20deg] group-hover:bg-[#122017] group-hover:text-[#F0C96D]" style={{ background: `${C.jaggery}18`, color: C.jaggeryDark }}>
+                  <div className="relative h-12 w-12 rounded-full grid place-items-center transition-all duration-500 group-hover:rotate-[20deg] group-hover:bg-[#3A1F0A] group-hover:text-[#FFD65C]" style={{ background: `${C.jaggery}18`, color: C.jaggeryDark }}>
                     <m.icon className="h-5 w-5" />
                   </div>
                 </div>
@@ -912,8 +915,8 @@ export default function AboutExperience({
               { icon: Heart, t: "Quality & Trust" },
             ].map((x, i) => (
               <Reveal key={x.t} delay={i * 0.1}>
-                <span className="inline-flex items-center gap-3 font-body font-semibold uppercase" style={{ fontSize: 12, letterSpacing: "0.2em", color: "rgba(252,251,247,0.7)" }}>
-                  <span className="h-9 w-9 rounded-full grid place-items-center" style={{ border: "1px solid rgba(240,201,109,0.4)", color: C.jaggeryLite }}><x.icon className="h-4 w-4" /></span>
+                <span className="inline-flex items-center gap-3 font-body font-semibold uppercase" style={{ fontSize: 12, letterSpacing: "0.2em", color: "rgba(255,251,244,0.7)" }}>
+                  <span className="h-9 w-9 rounded-full grid place-items-center" style={{ border: "1px solid rgba(255,214,92,0.4)", color: C.jaggeryLite }}><x.icon className="h-4 w-4" /></span>
                   {x.t}
                 </span>
               </Reveal>
@@ -935,7 +938,7 @@ export default function AboutExperience({
             whileHover={reduced ? undefined : { rotate: 0, y: -6 }}
             transition={{ type: "spring", stiffness: 120, damping: 14 }}
             className="mt-16 relative mx-auto rounded-lg p-8 sm:p-12 lg:p-14 overflow-hidden"
-            style={{ background: C.ivory, border: `1px solid ${C.parchment}`, boxShadow: "0 30px 70px -30px rgba(18,32,23,0.35), 0 2px 0 rgba(255,255,255,0.8) inset", maxWidth: 960 }}
+            style={{ background: C.ivory, border: `1px solid ${C.parchment}`, boxShadow: "0 30px 70px -30px rgba(58,31,10,0.35), 0 2px 0 rgba(255,255,255,0.8) inset", maxWidth: 960 }}
           >
             <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.07, mixBlendMode: "multiply" }} />
             <div aria-hidden className="absolute left-0 top-0 bottom-0 w-[6px]" style={{ background: `repeating-linear-gradient(180deg, ${C.jaggery} 0 14px, ${C.green} 14px 28px)` }} />
@@ -975,7 +978,7 @@ export default function AboutExperience({
                 <Words text="Let's talk sweetness — the natural way" />
               </h2>
               <Reveal delay={0.15}>
-                <p className="font-body mt-5" style={{ fontSize: 16.5, lineHeight: 1.7, color: "rgba(18,32,23,0.78)", maxWidth: 480 }}>
+                <p className="font-body mt-5" style={{ fontSize: 16.5, lineHeight: 1.7, color: "rgba(58,31,10,0.78)", maxWidth: 480 }}>
                   Questions about our jaggery, bulk orders, or machinery? We'd love to hear from you.
                 </p>
                 <div className="mt-9 flex flex-wrap gap-3">
@@ -988,7 +991,7 @@ export default function AboutExperience({
                   </Link>
                   <a href={whatsappHref} target={whatsappDigits ? "_blank" : undefined} rel={whatsappDigits ? "noopener noreferrer" : undefined}
                     className="inline-flex items-center gap-2 px-7 rounded-full font-body font-semibold text-sm transition-colors duration-300"
-                    style={{ height: 52, border: `1px solid ${C.bark}66`, color: C.bark, background: "rgba(252,251,247,0.25)" }}>
+                    style={{ height: 52, border: `1px solid ${C.bark}66`, color: C.bark, background: "rgba(255,251,244,0.25)" }}>
                     <MessageCircle className="h-4 w-4" /> WhatsApp
                   </a>
                 </div>
@@ -996,7 +999,7 @@ export default function AboutExperience({
             </div>
 
             <Reveal delay={0.1} className="lg:col-span-6">
-              <div className="rounded-lg p-7 sm:p-9 space-y-1 backdrop-blur-sm" style={{ background: "rgba(252,251,247,0.92)", boxShadow: "0 30px 80px rgba(18,32,23,0.25)" }}>
+              <div className="rounded-lg p-7 sm:p-9 space-y-1 backdrop-blur-sm" style={{ background: "rgba(255,251,244,0.92)", boxShadow: "0 30px 80px rgba(58,31,10,0.25)" }}>
                 {[
                   { icon: MapPin, k: "Visit", v: "Ballenahalli Village, Srirangapatna Taluk, Mandya District, Karnataka – 571807" },
                   { icon: Phone, k: "Call", v: phone, href: phoneHref },

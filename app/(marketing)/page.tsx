@@ -288,16 +288,17 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Image */}
             <div
-              className="aspect-[4/5] rounded-md overflow-hidden relative"
+              className="aspect-square w-full max-w-[460px] mx-auto lg:mx-0 lg:ml-auto rounded-md overflow-hidden relative"
               style={{ background: "linear-gradient(135deg, var(--color-cream), var(--color-parchment))" }}
             >
               {/* Same image as the About page's story portrait — one setting
-                  drives both, so updating it in admin changes them together. */}
+                  drives both, so updating it in admin changes them together.
+                  "contain" so the whole picture shows, whatever its shape. */}
               <SmartImage
                 src={about.storyImage}
                 alt={about.homeEyebrow}
                 fill
-                objectFit="cover"
+                objectFit="contain"
                 objectPosition="center"
               />
             </div>
