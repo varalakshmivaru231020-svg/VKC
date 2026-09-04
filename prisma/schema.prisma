@@ -786,3 +786,21 @@ model SareeStoryMedia {
   @@map("saree_story_media")
 }
 
+
+/// Admin-managed customer testimonials shown on the home page.
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(120)
+  location  String?  @db.VarChar(120)
+  tag       String?  @db.VarChar(80)
+  rating    Int      @default(5)
+  quote     String   @db.Text
+  avatarUrl String?  @db.VarChar(500)
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("testimonials")
+}

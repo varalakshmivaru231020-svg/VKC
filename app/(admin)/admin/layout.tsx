@@ -12,6 +12,7 @@ import {
   Megaphone, Globe, Star, Heart,
   ChevronDown, ChevronUp, Layers, Shield, Boxes,
   Video, Facebook,
+  MessageSquareQuote,
 } from "lucide-react";
 
 // ── Sidebar counts hook ───────────────────────────────────────────────────────
@@ -117,6 +118,7 @@ const navGroups: NavGroupDef[] = [
     title: "Content",
     items: [
       { href: "/admin/blogs",           label: "Blogs",           icon: BookOpen },
+      { href: "/admin/testimonials",    label: "Testimonials",    icon: MessageSquareQuote },
       { href: "/admin/gallery",         label: "Gallery",         icon: Image },
       { href: "/admin/videos",          label: "Videos",          icon: Video },
       { href: "/admin/facebook-videos", label: "Facebook Videos", icon: Facebook },

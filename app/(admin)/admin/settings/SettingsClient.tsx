@@ -1030,12 +1030,19 @@ function ProductPageTab() {
 }
 
 /* ─────────────── HOMEPAGE ─────────────── */
+const HOME_COPY_KEYS = [
+  "home_blog_eyebrow", "home_blog_heading", "home_blog_description",
+  "home_testimonials_eyebrow", "home_testimonials_heading",
+] as const;
+
 function HomepageTab() {
   const [cats, setCats] = useState<{ id: string; name: string }[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
+  const [copy, setCopy] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const putCopy = (k: string) => (v: string) => setCopy((p) => ({ ...p, [k]: v }));
 
   useEffect(() => {
     Promise.all([
@@ -1045,6 +1052,11 @@ function HomepageTab() {
       setCats(Array.isArray(catData) ? catData.filter((c: any) => c.isActive) : []);
       if (settings?.homepage_category_ids) {
         try { setSelected(JSON.parse(settings.homepage_category_ids)); } catch {}
+      }
+      if (settings) {
+        const next: Record<string, string> = {};
+        HOME_COPY_KEYS.forEach((k) => { next[k] = settings[k] ?? ""; });
+        setCopy(next);
       }
     }).finally(() => setFetching(false));
   }, []);
@@ -1074,9 +1086,11 @@ function HomepageTab() {
 
   const handleSave = async () => {
     setLoading(true);
+    const payload: Record<string, string> = { homepage_category_ids: JSON.stringify(selected) };
+    HOME_COPY_KEYS.forEach((k) => { payload[k] = copy[k] ?? ""; });
     await fetch("/api/admin/settings", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ homepage_category_ids: JSON.stringify(selected) }),
+      body: JSON.stringify(payload),
     });
     setLoading(false); setSaved(true); setTimeout(() => setSaved(false), 2500);
   };
@@ -1084,8 +1098,47 @@ function HomepageTab() {
   const unselected = cats.filter(c => !selected.includes(c.id));
   const selectedCats = selected.map(id => cats.find(c => c.id === id)).filter(Boolean) as { id: string; name: string }[];
 
+  const copyInputCls = "w-full px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none";
+  const copyInputStyle = { borderColor: "#E5E7EB", background: "white", color: "#111827" };
+
   return (
     <div className="space-y-5">
+      <SectionCard title="Blog Section — Title & Description" icon={LayoutGrid}>
+        <p className="text-sm font-body mb-4" style={{ color: "#6B7280" }}>
+          Heading shown above the latest blog posts on the home page. Leave a field empty to use the built-in wording.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Eyebrow</label>
+            <input value={copy.home_blog_eyebrow ?? ""} onChange={(e) => putCopy("home_blog_eyebrow")(e.target.value)} placeholder="From the Blog" className={copyInputCls} style={copyInputStyle} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Title</label>
+            <input value={copy.home_blog_heading ?? ""} onChange={(e) => putCopy("home_blog_heading")(e.target.value)} placeholder="Stories from the cane fields" className={copyInputCls} style={copyInputStyle} />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Description</label>
+            <textarea value={copy.home_blog_description ?? ""} onChange={(e) => putCopy("home_blog_description")(e.target.value)} rows={2} placeholder="One or two lines under the title (optional)" className={copyInputCls + " resize-y"} style={copyInputStyle} />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Testimonials Section — Title" icon={LayoutGrid}>
+        <p className="text-sm font-body mb-4" style={{ color: "#6B7280" }}>
+          The testimonials themselves are managed under Admin → Testimonials. These fields only change the section heading.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Eyebrow</label>
+            <input value={copy.home_testimonials_eyebrow ?? ""} onChange={(e) => putCopy("home_testimonials_eyebrow")(e.target.value)} placeholder="Customer stories" className={copyInputCls} style={copyInputStyle} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Title</label>
+            <input value={copy.home_testimonials_heading ?? ""} onChange={(e) => putCopy("home_testimonials_heading")(e.target.value)} placeholder="What our customers say" className={copyInputCls} style={copyInputStyle} />
+          </div>
+        </div>
+      </SectionCard>
+
       <SectionCard title="Shop by Category Section" icon={LayoutGrid}>
         <p className="text-sm font-body mb-5" style={{ color: "#6B7280" }}>
           Pick which categories appear in the "Shop by Category" section on the homepage. Use the arrows to control display order.

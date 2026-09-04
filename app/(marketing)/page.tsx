@@ -121,28 +121,22 @@ export default async function HomePage() {
   const trustBadges = buildTrustBadges(returnsDays);
   const about = await getAboutContent();
 
-  // Testimonials: approved, written reviews only. Nothing is shown until real
-  // customers have reviewed — the section hides itself when this is empty.
-  const testimonialRows = await db.review
+  // Testimonials are managed in Admin → Testimonials. The section hides
+  // itself when there are no active entries.
+  const testimonials: TestimonialItem[] = await db.testimonial
     .findMany({
-      where: { isApproved: true, rating: { gte: 4 }, body: { not: null } },
-      orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
-      take: 3,
-      include: { user: { select: { firstName: true } }, product: { select: { name: true, slug: true } } },
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      take: 8,
+      select: { id: true, name: true, location: true, tag: true, rating: true, quote: true },
     })
     .catch(() => []);
-  const testimonials: TestimonialItem[] = testimonialRows
-    .filter((r) => (r.body ?? "").trim().length > 0)
-    .map((r) => ({
-      id: r.id,
-      rating: r.rating,
-      title: r.title,
-      body: (r.body as string).trim(),
-      author: r.user?.firstName?.trim() || "Verified customer",
-      productName: r.product.name,
-      productSlug: r.product.slug,
-      createdAt: r.createdAt,
-    }));
+
+  // Home-page section copy editable in Admin → Settings → Homepage.
+  const homeCopyRows = await db.siteSetting
+    .findMany({ where: { key: { in: ["home_blog_eyebrow", "home_blog_heading", "home_blog_description", "home_testimonials_eyebrow", "home_testimonials_heading"] } } })
+    .catch(() => [] as { key: string; value: string }[]);
+  const homeCopy = (key: string, fallback: string) => homeCopyRows.find((r) => r.key === key)?.value?.trim() || fallback;
 
   // Three highlight blocks under the testimonials. Pictures come from the
   // catalogue's category images so they are always the brand's own.
@@ -419,15 +413,20 @@ export default async function HomePage() {
       {latestBlogs.length > 0 && (
         <section className="py-16 lg:py-20" style={{ background: "var(--color-ivory)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-10">
-              <div className="space-y-2">
+            <div className="flex items-end justify-between gap-6 mb-10">
+              <div className="space-y-2 max-w-2xl">
                 <span className="text-xs font-semibold tracking-[0.18em] uppercase"
                   style={{ fontFamily: "var(--font-body)", color: "var(--color-gold)" }}>
-                  From the Blog
+                  {homeCopy("home_blog_eyebrow", "From the Blog")}
                 </span>
                 <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)" }}>
-                  Stories & Traditions
+                  {homeCopy("home_blog_heading", "Stories from the cane fields")}
                 </h2>
+                {homeCopy("home_blog_description", "") && (
+                  <p className="text-sm font-body" style={{ color: "var(--color-text-muted)", textAlign: "left", hyphens: "none", maxWidth: 560 }}>
+                    {homeCopy("home_blog_description", "")}
+                  </p>
+                )}
               </div>
               <Link href="/blog" className="text-sm font-medium font-body flex items-center gap-1.5 hover:gap-2.5 transition-all"
                 style={{ color: "var(--color-primary)" }}>
@@ -556,7 +555,11 @@ export default async function HomePage() {
       <WhyChoose />
 
       {/* ── TESTIMONIALS (real approved reviews only; hidden when none) ─────── */}
-      <Testimonials items={testimonials} />
+      <Testimonials
+        items={testimonials}
+        eyebrow={homeCopy("home_testimonials_eyebrow", "Customer stories")}
+        heading={homeCopy("home_testimonials_heading", "What our customers say")}
+      />
 
       {/* ── HIGHLIGHTS: three content blocks with catalogue imagery ─────────── */}
       <HomeHighlights blocks={highlights} />
