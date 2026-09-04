@@ -52,7 +52,7 @@ function AdminLoginForm() {
             <ShieldCheck className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-2xl font-semibold font-body" style={{ color: "#111827" }}>Admin Sign In</h1>
-          <p className="text-sm font-body mt-1" style={{ color: "#6B7280" }}>VKC Gold Admin Panel</p>
+          <p className="text-sm font-body mt-1" style={{ color: "#6B7280" }}>vkcgoldikshu Admin Panel</p>
         </div>
 
         <div className="rounded-2xl p-8 shadow-sm" style={{ background: "white", border: "1px solid #E5E7EB" }}>

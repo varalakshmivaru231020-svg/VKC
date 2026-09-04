@@ -4,7 +4,7 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import type { ProductData } from "@/lib/types/product";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "New Arrivals — VKC Gold" };
+export const metadata: Metadata = { title: "New Arrivals — vkcgoldikshu" };
 
 export default async function NewArrivalsPage() {
   let result: { products: ProductData[]; total: number; page: number; limit: number } = { products: [], total: 0, page: 1, limit: 24 };

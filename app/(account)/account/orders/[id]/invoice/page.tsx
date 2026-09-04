@@ -90,7 +90,7 @@ export default async function CustomerInvoicePage({ params }: { params: { id: st
 
   const returnsDays   = await getReturnsDays();
   const addr          = order.shippingAddress as any;
-  const storeName     = settings["store_name"]     || "VKC Gold";
+  const storeName     = settings["store_name"]     || "vkcgoldikshu";
   const storePhone    = settings["store_phone"]    || "";
   const storeEmail    = settings["store_email"]    || "";
   const storeAddress  = settings["store_address"]  || "";

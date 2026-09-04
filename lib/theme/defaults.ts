@@ -62,7 +62,7 @@ export const DEFAULT_THEME: ThemeSettings = {
   "tracking.label":   "0.08em",
 
   // ── General ───────────────────────────────────────────
-  "site.name":                "VKC Gold",
+  "site.name":                "vkcgoldikshu",
   "site.tagline":             "Sweetness of Nature, Strength of Tradition.",
   "site.announcement":        "Free shipping all over India · 100% natural, chemical-free jaggery",
   "site.announcement.active": "true",

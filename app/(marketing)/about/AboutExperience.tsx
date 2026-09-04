@@ -892,7 +892,7 @@ export default function AboutExperience({
 
       {/* ── 8 · LEADERSHIP ───────────────────────────────────────────────── */}
       <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
-        <SectionHeading eyebrow="Our Core Team" title="The family behind VKC Gold"
+        <SectionHeading eyebrow="Our Core Team" title="The family behind vkcgoldikshu"
           sub="A close-knit team carrying a 1988 legacy forward — with the same care for farmers, quality and trust." />
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {LEADERS.map((l, i) => (

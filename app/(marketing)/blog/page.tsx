@@ -5,7 +5,7 @@ import { SmartImage } from "@/components/ui/SmartImage";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Blog — VKC Gold" };
+export const metadata: Metadata = { title: "Blog — vkcgoldikshu" };
 
 export default async function BlogListPage() {
   const blogs = await db.blog.findMany({

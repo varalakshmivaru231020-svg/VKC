@@ -3,8 +3,8 @@ import { db } from "@/lib/db";
 import ContactClient from "./ContactClient";
 
 export const metadata: Metadata = {
-  title: "Contact Us — VKC Gold",
-  description: "Get in touch with VKC Gold — we're happy to help with orders, bulk enquiries and wholesale queries.",
+  title: "Contact Us — vkcgoldikshu",
+  description: "Get in touch with vkcgoldikshu — we're happy to help with orders, bulk enquiries and wholesale queries.",
 };
 
 export const dynamic = "force-dynamic";

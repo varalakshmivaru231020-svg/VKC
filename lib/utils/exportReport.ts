@@ -40,7 +40,7 @@ export async function exportPDF(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(139, 90, 43);
-  doc.text("VKC Gold", 14, 15);
+  doc.text("vkcgoldikshu", 14, 15);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(12);

@@ -49,7 +49,7 @@ const overlayV = {
 // ── Nav link text style (shared) ──────────────────────────────────────────────
 
 const NAV_LINK_CLS =
-  "flex items-center gap-1 px-4 h-11 text-[13px] font-medium font-body transition-all duration-150 relative whitespace-nowrap select-none";
+  "flex items-center gap-1 px-3 h-11 text-[13.5px] font-medium font-body transition-all duration-150 relative whitespace-nowrap select-none";
 
 // ── Header ────────────────────────────────────────────────────────────────────
 
@@ -63,7 +63,7 @@ interface HeaderProps {
   whatsappNumber?: string;
 }
 
-export function Header({ siteName = "VKC Gold", logoUrl, instagram, facebook, youtube, navCategories = [], whatsappNumber }: HeaderProps) {
+export function Header({ siteName = "vkcgoldikshu", logoUrl, instagram, facebook, youtube, navCategories = [], whatsappNumber }: HeaderProps) {
   const socialLinks = [
     { Icon: InstagramIcon, href: instagram, label: "Instagram" },
     { Icon: FacebookIcon,  href: facebook,  label: "Facebook" },
@@ -104,21 +104,24 @@ export function Header({ siteName = "VKC Gold", logoUrl, instagram, facebook, yo
   };
 
   // One logo element, rendered on the left for desktop and centred on mobile.
+  // Emblem + wordmark. The approved VKC emblem stays exactly as uploaded; the
+  // wordmark (site name, "vkcgoldikshu") carries the brand name so the header,
+  // products and domain read as one brand. The emblem is allowed to run a few
+  // pixels taller than the bar — its own artwork padding absorbs that.
   const logo = (
-    <Link href="/" className="group flex items-center" aria-label={siteName}>
-      {logoUrl ? (
+    <Link href="/" className="group flex items-center gap-2.5 sm:gap-3" aria-label={siteName}>
+      {logoUrl && (
         <img
           src={logoUrl}
-          alt={siteName}
-          className="transition-opacity duration-200 group-hover:opacity-75 object-contain h-[60px] lg:h-[98px] w-auto mix-blend-multiply"
-          style={{ maxWidth: 320 }}
+          alt=""
+          className="transition-opacity duration-200 group-hover:opacity-80 object-contain h-[62px] lg:h-[104px] w-auto mix-blend-multiply shrink-0"
+          style={{ maxWidth: 200 }}
         />
-      ) : (
-        <span className="tracking-wide transition-opacity duration-200 group-hover:opacity-75 leading-none"
-          style={{ fontFamily: "var(--font-heading)", fontWeight: "var(--weight-heading)", fontSize: "clamp(1.3rem, 2.2vw, 1.7rem)", color: "var(--color-primary)" }}>
-          {siteName}
-        </span>
       )}
+      <span className={logoUrl ? "hidden sm:block leading-none" : "leading-none"}
+        style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: "clamp(1.35rem, 1.9vw, 1.9rem)", letterSpacing: "-0.01em", color: "var(--color-text-primary)" }}>
+        {siteName}
+      </span>
     </Link>
   );
 
@@ -131,7 +134,7 @@ export function Header({ siteName = "VKC Gold", logoUrl, instagram, facebook, yo
         {/* ── Single-row bar: logo · nav · actions ── */}
         <div className="border-b" style={{ borderColor: "var(--color-parchment)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between gap-3 h-[72px] lg:h-[108px]">
+            <div className="flex items-center justify-between gap-3 h-[68px] lg:h-[100px]">
               {/* Left — hamburger (mobile) / logo (desktop) */}
               <div className="flex items-center gap-1 lg:min-w-0">
                 <button className={cn(iconBtnCls, "lg:hidden")} style={iconBtnStyle} {...iconHover}
@@ -185,7 +188,7 @@ export function Header({ siteName = "VKC Gold", logoUrl, instagram, facebook, yo
               </div>
 
               {/* Right — actions */}
-              <div className="flex items-center justify-end gap-1.5">
+              <div className="flex items-center justify-end gap-0.5 sm:gap-1">
                 <button onClick={() => setSearchOpen(true)} className={iconBtnCls} style={iconBtnStyle} {...iconHover} aria-label="Search">
                   <Search className="h-5 w-5" />
                 </button>

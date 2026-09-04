@@ -914,7 +914,7 @@ export default function OrderDetailClient({ order: initial }: { order: Order }) 
                       onClick={() => setRefundMethod("WALLET")}
                       icon={Wallet}
                       title="Store wallet"
-                      subtitle="Instant credit to your VKC Gold wallet"
+                      subtitle="Instant credit to your vkcgoldikshu wallet"
                     />
                   </div>
                 </div>

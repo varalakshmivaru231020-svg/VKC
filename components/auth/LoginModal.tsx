@@ -162,7 +162,7 @@ export function LoginModal() {
 
         <div className="px-5 sm:px-8 pt-5 sm:pt-8 pb-5 sm:pb-6 border-b text-center" style={{ borderColor: "var(--color-parchment)" }}>
           <p className="text-xs font-body font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-            VKC Gold
+            vkcgoldikshu
           </p>
           <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.45rem", color: "var(--color-text-primary)" }}>
             {stepTitle}

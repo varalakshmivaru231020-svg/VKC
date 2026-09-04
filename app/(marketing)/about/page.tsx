@@ -6,9 +6,9 @@ import AboutExperience from "./AboutExperience";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "About Us — VKC Cane Gold",
+  title: "About Us — vkcgoldikshu",
   description:
-    "VKC Cane Gold Foods makes pure, chemical-free jaggery and cane products in Mandya, Karnataka — farmer-first and 100% natural since 1988.",
+    "vkcgoldikshu (VKC Cane Gold Foods) makes pure, chemical-free jaggery and cane products in Mandya, Karnataka — farmer-first and 100% natural since 1988.",
 };
 
 export default async function AboutPage() {

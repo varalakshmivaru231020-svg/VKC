@@ -234,7 +234,7 @@ export default async function HomePage() {
       )}
 
       {/* ── FEATURED PRODUCTS ─────────────────────────────────────────────────── */}
-      <section className="py-16 lg:py-20" style={{ background: "var(--color-cream)" }}>
+      <section className="pt-10 pb-16 lg:pt-12 lg:pb-20" style={{ background: "var(--color-cream)" }}>
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 space-y-3">
             <span

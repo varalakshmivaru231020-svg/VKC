@@ -61,7 +61,7 @@ export const ABOUT_DEFAULTS: AboutContent = {
     "Pure, chemical-free jaggery and cane products from the sugarcane fields of Mandya, Karnataka.",
   storyHeading: "About Us",
   storyBody: [
-    "VKC Gold delivers the purest form of natural sweetness, straight from the sugarcane fields of Mandya, Karnataka. Established in 1988, we are a natural food processing enterprise dedicated to chemical-free, healthy jaggery products.",
+    "vkcgoldikshu delivers the purest form of natural sweetness, straight from the sugarcane fields of Mandya, Karnataka. Established in 1988, we are a natural food processing enterprise dedicated to chemical-free, healthy jaggery products.",
     "We work directly with local farmers on fair pricing, then combine traditional know-how with modern, eco-friendly machinery — sugarcane crushing, juice extraction, filtration, boiling and packaging — so that nothing is lost between the field and the finished product.",
     "Every product carries the same promise: no artificial colours, no artificial flavours, and no chemicals added. From pure jaggery cubes and natural powder to syrups, bars and festive gift hampers, we make natural sweetness part of everyday life.",
   ].join("\n\n"),
@@ -115,9 +115,9 @@ export const ABOUT_DEFAULTS: AboutContent = {
   homeEyebrow: "Our Heritage",
   homeHeading: "Rooted in\nMandya Since 1988",
   homeBody:
-    "Every VKC Gold product begins in the sugarcane fields of Mandya, with farmers we have worked alongside for decades. We pay fairly, process without chemicals, and let the cane speak for itself. Each batch is more than a sweetener — it is the taste of a district that has grown cane for generations.",
+    "Every vkcgoldikshu product begins in the sugarcane fields of Mandya, with farmers we have worked alongside for decades. We pay fairly, process without chemicals, and let the cane speak for itself. Each batch is more than a sweetener — it is the taste of a district that has grown cane for generations.",
   homeQuote:
-    "When you choose VKC Gold, you are not just choosing sweetness — you are supporting the farmer who grew it.",
+    "When you choose vkcgoldikshu, you are not just choosing sweetness — you are supporting the farmer who grew it.",
   homeCtaLabel: "Read Our Story",
 };
 

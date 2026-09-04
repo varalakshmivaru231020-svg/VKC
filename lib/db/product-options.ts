@@ -8,7 +8,7 @@ export interface ProductOptions {
 }
 
 // Empty by default — the fabric/weave/region/occasion lists from the previous
-// catalogue were removed for the VKC Gold (jaggery) catalogue. The admin can add their
+// catalogue were removed for the vkcgoldikshu (jaggery) catalogue. The admin can add their
 // own values under Settings → Product Options if any dropdowns are wanted.
 const DEFAULTS: ProductOptions = {
   fabrics:   [],

@@ -35,7 +35,7 @@ export function MaintenanceScreen({
               color: "var(--color-primary)",
             }}
           >
-            {siteName ?? "VKC Gold"}
+            {siteName ?? "vkcgoldikshu"}
           </p>
         )}
 

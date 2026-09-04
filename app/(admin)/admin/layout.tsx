@@ -263,7 +263,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-white font-bold text-sm">V</span>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold font-body truncate" style={{ color: "#111827" }}>VKC Gold</p>
+              <p className="text-sm font-semibold font-body truncate" style={{ color: "#111827" }}>vkcgoldikshu</p>
               <p className="text-[10px] font-body" style={{ color: "#9CA3AF" }}>Admin Panel</p>
             </div>
           </Link>

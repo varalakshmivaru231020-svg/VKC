@@ -83,7 +83,7 @@ export default async function InvoicePage({ params }: { params: { id: string } }
   if (!order) notFound();
 
   const addr          = order.shippingAddress as any;
-  const storeName     = settings["store_name"]     || "VKC Gold";
+  const storeName     = settings["store_name"]     || "vkcgoldikshu";
   const storePhone    = settings["store_phone"]    || "";
   const storeEmail    = settings["store_email"]    || "";
   const storeAddress  = settings["store_address"]  || "";

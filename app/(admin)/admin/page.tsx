@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { formatINR } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Admin Dashboard — VKC Gold" };
+export const metadata = { title: "Admin Dashboard — vkcgoldikshu" };
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   PENDING:    { bg: "#FEF3C7", text: "#92400E" },

@@ -51,7 +51,7 @@ interface FooterProps {
 }
 
 export function Footer({
-  siteName = "VKC Gold",
+  siteName = "vkcgoldikshu",
   tagline = "Sweetness of Nature, Strength of Tradition.",
   logoUrl,
   // No sample phone/email defaults — an unset value must render nothing rather

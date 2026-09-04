@@ -596,7 +596,7 @@ export default function CheckoutPage() {
           key:         data.keyId,
           amount:      data.amount,
           currency:    "INR",
-          name:        "VKC Gold",
+          name:        "vkcgoldikshu",
           order_id:    data.razorpayOrderId,
           prefill:     { name: data.customerName, contact: data.customerPhone },
           method:      "netbanking",
@@ -809,7 +809,7 @@ export default function CheckoutPage() {
           We've received your order and will email you once it ships. Estimated delivery: <span className="font-semibold" style={{ color: "var(--color-text-secondary)" }}>4–7 business days</span>.
         </p>
         <p className="text-sm font-body mb-7 max-w-md animate-fade-up" style={{ color: "var(--color-text-muted)", animationDelay: "0.4s" }}>
-          From our cane fields to your home — thank you for choosing VKC Gold.
+          From our cane fields to your home — thank you for choosing vkcgoldikshu.
         </p>
 
         <div className="flex gap-3 flex-wrap justify-center w-full max-w-md animate-fade-up" style={{ animationDelay: "0.45s" }}>

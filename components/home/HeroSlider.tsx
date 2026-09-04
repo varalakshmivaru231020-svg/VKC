@@ -46,9 +46,9 @@ function SplitHeading({ text, color, reduced, size = "lg" }: { text: string; col
       aria-label={text.replace(/\n/g, " ")}
       style={{
         fontFamily: "var(--font-heading)",
-        fontSize: size === "lg" ? "clamp(2.4rem, 5.6vw, 5.4rem)" : "clamp(2rem, 8vw, 2.8rem)",
+        fontSize: size === "lg" ? "clamp(2.1rem, 4.2vw, 4rem)" : "clamp(1.9rem, 7.5vw, 2.6rem)",
         fontWeight: 500,
-        lineHeight: 1,
+        lineHeight: 1.08,
         letterSpacing: "-0.025em",
         color,
         wordBreak: "break-word",
@@ -91,7 +91,7 @@ function SlideCopy({ s, onDark, reduced, compact = false }: { s: Slide; onDark: 
   const ink = onDark ? "#FFFFFF" : INK;
   const inkSoft = onDark ? "rgba(255,255,255,0.78)" : "rgba(28,20,16,0.72)";
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-xl">
       {s.tag && (
         <motion.div
           className={compact ? "flex items-center gap-3 mb-4" : "flex items-center gap-3 mb-6 sm:mb-8"}
@@ -281,20 +281,17 @@ export default function HeroSlider({ slides }: Props) {
           in-flow copy), so the whole banner is always visible — nothing is
           cropped on any screen. Slides without an image fall back to a
           viewport-based height. */}
-      <div className="relative" style={hasImage ? { minHeight: "clamp(260px, 36vw, 560px)" } : undefined}>
-        {hasImage ? (
-          /* Invisible in-flow copies of the slide image size the stage to the
-             image's own aspect ratio, capped so the hero never gets taller than
-             about two-thirds of the viewport. Above the cap the visible layer
-             letterboxes with object-fit: contain, so the whole image still
-             shows — shorter stage, nothing cropped. */
-          <>
-            <img aria-hidden src={s.imageUrl as string} alt="" className={`block w-full h-auto invisible pointer-events-none ${s.mobileImageUrl ? "hidden md:block" : ""}`} style={{ maxHeight: "clamp(380px, 68vh, 640px)" }} />
-            {s.mobileImageUrl && <img aria-hidden src={s.mobileImageUrl} alt="" className="block w-full h-auto invisible pointer-events-none md:hidden" style={{ maxHeight: "72vh" }} />}
-          </>
-        ) : (
-          <div aria-hidden style={{ minHeight: s.videoUrl ? "clamp(420px, 56vw, 820px)" : "clamp(520px, 80vh, 880px)" }} />
-        )}
+      <div className="relative">
+        {/* Stage sizer. Media slides get a fixed, viewport-relative height and
+            the image covers it edge to edge (no side bands); slides without
+            media keep a taller, colour-field layout. Heights live in the
+            <style> block above so they can differ by breakpoint. */}
+        <div aria-hidden className={hasMedia ? "vkc-hero-media-h" : "vkc-hero-plain-h"} />
+        <style dangerouslySetInnerHTML={{ __html:
+          ".vkc-hero-media-h{height:clamp(240px,46vh,420px)}" +
+          "@media(min-width:768px){.vkc-hero-media-h{height:clamp(460px,64vh,680px)}}" +
+          ".vkc-hero-plain-h{height:clamp(520px,80vh,880px)}"
+        }} />
 
         {/* Visual layers: crossfade, no zoom, so the image edges stay put. */}
         <AnimatePresence initial={false} custom={dir}>
@@ -311,27 +308,13 @@ export default function HeroSlider({ slides }: Props) {
               <video src={s.videoUrl} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
             ) : s.imageUrl ? (
               <>
-                {/* Blur-fill backdrop: when the stage is shorter than the image's
-                    own aspect ratio, the bands beside the letterboxed picture show
-                    a blurred, dimmed copy of the same image instead of flat colour. */}
-                <div
-                  aria-hidden
-                  className={`absolute inset-0 ${s.mobileImageUrl ? "hidden md:block" : ""}`}
-                  style={{ backgroundImage: `url("${s.imageUrl}")`, backgroundSize: "cover", backgroundPosition: "center", filter: "blur(30px) brightness(0.55) saturate(1.1)", transform: "scale(1.12)" }}
-                />
-                {s.mobileImageUrl && (
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 md:hidden"
-                    style={{ backgroundImage: `url("${s.mobileImageUrl}")`, backgroundSize: "cover", backgroundPosition: "center", filter: "blur(30px) brightness(0.55) saturate(1.1)", transform: "scale(1.12)" }}
-                  />
-                )}
+                {/* Full-bleed: the image covers the stage completely. */}
                 <div className={s.mobileImageUrl ? "hidden md:block absolute inset-0" : "absolute inset-0"}>
-                  <SmartImage src={s.imageUrl} alt={s.tag || s.heading} fill objectFit="contain" objectPosition="center" />
+                  <SmartImage src={s.imageUrl} alt={s.tag || s.heading} fill objectFit="cover" objectPosition="center" />
                 </div>
                 {s.mobileImageUrl && (
                   <div className="block md:hidden absolute inset-0">
-                    <SmartImage src={s.mobileImageUrl} alt={s.tag || s.heading} fill objectFit="contain" objectPosition="center" />
+                    <SmartImage src={s.mobileImageUrl} alt={s.tag || s.heading} fill objectFit="cover" objectPosition="center" />
                   </div>
                 )}
               </>
@@ -348,7 +331,9 @@ export default function HeroSlider({ slides }: Props) {
             {/* Readability scrim — desktop only, where copy sits over the image.
                 On phones the copy moves below the image so the artwork stays clean. */}
             {hasMedia && hasCopy && (
-              <div className="absolute inset-0 hidden md:block" style={{ background: "linear-gradient(100deg, rgba(10,6,3,0.66) 0%, rgba(10,6,3,0.36) 45%, rgba(10,6,3,0.04) 100%), linear-gradient(0deg, rgba(10,6,3,0.5) 0%, transparent 35%)" }} />
+              /* The copy owns the left ~45% of the stage: a firm dark gradient
+                 there keeps the headline off the product imagery. */
+              <div className="absolute inset-0 hidden md:block" style={{ background: "linear-gradient(90deg, rgba(20,10,3,0.84) 0%, rgba(20,10,3,0.72) 32%, rgba(20,10,3,0.28) 52%, rgba(20,10,3,0) 68%), linear-gradient(0deg, rgba(20,10,3,0.35) 0%, transparent 30%)" }} />
             )}
           </motion.div>
         </AnimatePresence>
@@ -358,7 +343,7 @@ export default function HeroSlider({ slides }: Props) {
         {/* Desktop copy: overlaid on the stage. Slides without media show copy on all sizes. */}
         {hasCopy && (
           <div className={`${hasMedia ? "hidden md:flex" : "flex"} absolute inset-0 z-10 flex-col justify-center`}>
-            <div className="max-w-[1400px] mx-auto w-full px-6 sm:px-10 lg:px-16 pt-10 pb-24 md:pb-28">
+            <div className="max-w-[1400px] mx-auto w-full px-6 sm:px-8 lg:px-8 pt-8 pb-24 md:pb-28">
               <AnimatePresence mode="wait" initial={true}>
                 <motion.div key={current} exit={{ opacity: 0, transition: { duration: 0.35 } }}>
                   <SlideCopy s={s} onDark={hasMedia} reduced={reduced} />
@@ -377,13 +362,6 @@ export default function HeroSlider({ slides }: Props) {
           </div>
         )}
 
-        {/* Scroll cue */}
-        <div className="absolute right-6 sm:right-10 lg:right-16 top-1/2 -translate-y-1/2 hidden lg:flex flex-col items-center gap-3 z-10 pointer-events-none">
-          <span className="font-body uppercase" style={{ fontSize: 10, letterSpacing: "0.3em", color: inkFaint, writingMode: "vertical-rl" }}>Scroll</span>
-          <span className="relative block w-px h-16 overflow-hidden" style={{ background: line }}>
-            <motion.span className="absolute left-0 top-0 w-px h-6" animate={reduced ? undefined : { y: [-24, 64] }} transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }} style={{ background: hasMedia ? "#FFFFFF" : GOLD.dark }} />
-          </span>
-        </div>
       </div>
 
       {/* ── Mobile copy + rail: below the full, uncropped image ───────────── */}
