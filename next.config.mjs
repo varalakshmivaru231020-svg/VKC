@@ -2,6 +2,9 @@
 const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
+  // Deploys build into a side directory and swap it in (scripts/deploy-server.sh),
+  // so the running server never reads a half-written .next.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   swcMinify: false,
   images: {
     remotePatterns: [

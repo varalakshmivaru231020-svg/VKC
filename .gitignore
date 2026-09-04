@@ -55,3 +55,6 @@ public/uploads/videos/
 web/public/uploads/products/
 web/public/uploads/reviews/
 web/public/uploads/videos/
+.next-build
+.next-previous
+.deployed-lock-hash
