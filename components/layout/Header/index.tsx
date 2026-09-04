@@ -114,7 +114,7 @@ export function Header({ siteName = "vkcgoldikshu", logoUrl, instagram, facebook
         <img
           src={logoUrl}
           alt=""
-          className="transition-opacity duration-200 group-hover:opacity-80 object-contain h-[62px] lg:h-[104px] w-auto mix-blend-multiply shrink-0"
+          className="transition-opacity duration-200 group-hover:opacity-80 object-contain h-[60px] lg:h-[94px] w-auto mix-blend-multiply shrink-0"
           style={{ maxWidth: 200 }}
         />
       )}
