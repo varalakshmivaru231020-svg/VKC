@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
+import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, Sprout, Handshake, Recycle, Cog, Heart, ShieldCheck,
   Sparkles, Globe2, Factory, BadgeCheck, MapPin, Phone,
@@ -57,16 +57,22 @@ function Reveal({
 function Words({ text, accent, className = "", style }: { text: string; accent?: string; className?: string; style?: React.CSSProperties }) {
   const reduced = useReducedMotion();
   const words = text.split(" ");
+  // Observe the (never-transformed) container, not the moving word. The word
+  // starts translated below its overflow-hidden wrapper, so observing it
+  // directly could report "never in view" at some zoom levels and leave the
+  // heading permanently invisible.
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.2 });
+  const shown = reduced || inView;
   return (
-    <span className={className} style={style} aria-label={text}>
+    <span ref={ref} className={className} style={style} aria-label={text}>
       {words.map((w, i) => (
-        <span key={i} className="inline-block overflow-hidden align-bottom" style={{ paddingBottom: "0.1em", marginBottom: "-0.1em" }}>
+        <span key={i} className="inline-block overflow-hidden align-bottom" style={{ paddingBottom: "0.12em", marginBottom: "-0.12em" }}>
           <motion.span
             aria-hidden
             className="inline-block"
             initial={reduced ? false : { y: "110%", opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
+            animate={shown ? { y: 0, opacity: 1 } : { y: "110%", opacity: 0 }}
             transition={{ duration: 0.85, ease: EASE, delay: 0.08 + i * 0.06 }}
             style={accent && w.replace(/[^\w']/g, "").toLowerCase() === accent.toLowerCase() ? { color: C.jaggeryLite, fontStyle: "italic" } : undefined}
           >
@@ -923,48 +929,6 @@ export default function AboutExperience({
             ))}
           </div>
         </div>
-      </section>
-
-      {/* ── 11 · LOOKING AHEAD ───────────────────────────────────────────── */}
-      <section className="max-w-[1100px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
-        <SectionHeading center eyebrow="Looking Ahead" title="Carrying Mandya's sweetness forward"
-          sub="As we grow into new markets, our purpose stays the same: a healthy, natural alternative to refined sugar — made with people and the planet in mind." />
-        {/* A postcard from Mandya: tilted paper that straightens on hover, with
-            a stamp seal — the one "object" on the page. */}
-        <Reveal delay={0.1}>
-          <motion.figure
-            initial={false}
-            animate={reduced ? { rotate: 0 } : { rotate: -1.6 }}
-            whileHover={reduced ? undefined : { rotate: 0, y: -6 }}
-            transition={{ type: "spring", stiffness: 120, damping: 14 }}
-            className="mt-16 relative mx-auto rounded-lg p-8 sm:p-12 lg:p-14 overflow-hidden"
-            style={{ background: C.ivory, border: `1px solid ${C.parchment}`, boxShadow: "0 30px 70px -30px rgba(58,31,10,0.35), 0 2px 0 rgba(255,255,255,0.8) inset", maxWidth: 960 }}
-          >
-            <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.07, mixBlendMode: "multiply" }} />
-            <div aria-hidden className="absolute left-0 top-0 bottom-0 w-[6px]" style={{ background: `repeating-linear-gradient(180deg, ${C.jaggery} 0 14px, ${C.green} 14px 28px)` }} />
-            <div className="relative grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-              <div className="lg:col-span-8">
-                <Quote className="h-8 w-8" style={{ color: C.jaggery }} />
-                <blockquote className="font-heading mt-5" style={{ fontSize: "clamp(1.6rem,3.2vw,2.5rem)", lineHeight: 1.22, letterSpacing: "-0.01em", color: C.ink }}>
-                  With every batch, we deliver more than sweetness — we deliver a story of purity, people and progress.
-                </blockquote>
-                <figcaption className="mt-8 flex items-center gap-4">
-                  <span className="font-heading italic" style={{ fontSize: 26, color: C.jaggeryDark }}>VKC Cane Gold Foods</span>
-                  <span className="h-px flex-1" style={{ background: C.parchment }} />
-                  <span className="font-body uppercase" style={{ fontSize: 11, letterSpacing: "0.18em", color: C.muted }}>Mandya, Karnataka</span>
-                </figcaption>
-              </div>
-              <div className="lg:col-span-4 lg:justify-self-end lg:pt-2">
-                <div className="relative">
-                  <Seal text="VKC CANE GOLD · MANDYA · 571807 · " size={150} color={C.jaggeryDark}>
-                    <div className="h-16 w-16 rounded-full grid place-items-center font-heading" style={{ border: `1.5px solid ${C.jaggery}`, color: C.jaggeryDark, fontSize: 15 }}>1988</div>
-                  </Seal>
-                  <div aria-hidden className="absolute -inset-2 rounded-full pointer-events-none" style={{ border: `1px dashed ${C.jaggery}55` }} />
-                </div>
-              </div>
-            </div>
-          </motion.figure>
-        </Reveal>
       </section>
 
       {/* ── 12 · CONTACT / CTA ───────────────────────────────────────────── */}

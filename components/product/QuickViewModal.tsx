@@ -9,6 +9,7 @@ import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import { formatINR, discountPercent } from "@/lib/utils/format";
 import { SmartImage } from "@/components/ui/SmartImage";
 import type { ProductVariantData } from "@/lib/types/product";
+import { productHasChosenColours } from "@/lib/utils/variantColour";
 
 export function QuickViewModal() {
   const { quickViewProduct, closeQuickView } = useUIStore();
@@ -76,6 +77,8 @@ export function QuickViewModal() {
   if (!quickViewProduct || !selectedVariant) return null;
 
   const p = quickViewProduct;
+  // Colour swatches only when the admin chose a colour; placeholder hexes stay hidden.
+  const hasColours = productHasChosenColours(p.variants);
   const v = selectedVariant;
   const primaryImage = v.images.find((i) => i.isPrimary) ?? v.images[0];
   const hasDiscount = v.originalPrice > v.salePrice;
@@ -136,7 +139,7 @@ export function QuickViewModal() {
           {/* Image Panel — compact height on mobile, tall on sm+ */}
           <div
             className="relative shrink-0 overflow-hidden sm:w-[45%] h-[45vw] sm:h-auto"
-            style={{ minHeight: undefined, background: v.colorHex + "18" }}
+            style={{ minHeight: undefined, background: hasColours ? v.colorHex + "18" : "var(--color-cream)" }}
           >
             <div className="absolute inset-0 sm:min-h-[380px]">
               {primaryImage ? (
@@ -158,7 +161,7 @@ export function QuickViewModal() {
             </div>
 
             {/* Color thumbnails */}
-            {p.variants.length > 1 && (
+            {hasColours && p.variants.length > 1 && (
               <div className="absolute bottom-2 left-2 flex gap-1.5 z-10">
                 {p.variants.map((variant) => (
                   <button
@@ -244,7 +247,7 @@ export function QuickViewModal() {
             )}
 
             {/* Color selector */}
-            {p.variants.length > 1 && (
+            {hasColours && p.variants.length > 1 && (
               <div>
                 <p className="text-xs font-body font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--color-text-muted)" }}>
                   Colour: <span style={{ color: "var(--color-text-primary)" }}>{v.colorName}</span>

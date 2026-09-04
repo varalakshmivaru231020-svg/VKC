@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { formatINR, discountPercent, savedAmount } from "@/lib/utils/format";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import type { ProductData, ProductVariantData } from "@/lib/types/product";
+import { productHasChosenColours } from "@/lib/utils/variantColour";
 import { Button } from "@/components/ui/button";
 import ProductReviews from "./ProductReviews";
 
@@ -383,10 +384,13 @@ export default function ProductDetailClient({ product, careInstructions, deliver
 
           <div className="gold-divider" />
 
-          {/* Colour selection */}
+          {/* Colour selection — only when the admin actually chose a colour
+              (name or code). Variants left on the placeholder swatch hide this
+              block entirely rather than showing a meaningless default. */}
+          {productHasChosenColours(product.variants) && (
           <div className="space-y-3">
             <p className="text-sm font-body font-semibold" style={{ color: "var(--color-text-primary)" }}>
-              Colour — <span style={{ color: "var(--color-primary)", fontWeight: 400 }}>{selectedVariant.colorName}</span>
+              Colour{selectedVariant.colorName ? <> — <span style={{ color: "var(--color-primary)", fontWeight: 400 }}>{selectedVariant.colorName}</span></> : null}
             </p>
             <div className="flex flex-wrap gap-3">
               {product.variants.map((v) => {
@@ -425,6 +429,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
               {product.variants.length} colour{product.variants.length !== 1 ? "s" : ""} available
             </p>
           </div>
+          )}
 
           {/* Product code */}
           {selectedVariant.sareeCode && (
@@ -443,7 +448,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
               <p className="text-sm font-body font-semibold" style={{ color: "var(--color-error)" }}>Out of Stock</p>
             ) : available <= 3 ? (
               <p className="text-sm font-body font-semibold" style={{ color: "var(--color-warning)" }}>
-                Only {available} left in this colour!
+                Only {available} left{productHasChosenColours(product.variants) ? " in this colour" : " in stock"}!
               </p>
             ) : (
               <p className="text-sm font-body" style={{ color: "var(--color-success)" }}>
