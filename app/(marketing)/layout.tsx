@@ -30,14 +30,9 @@ function buildNavCategories(categories: CategoryRow[], headerNavRaw: string | un
   try { navIds = headerNavRaw ? JSON.parse(headerNavRaw) : []; } catch { navIds = []; }
   navIds = navIds.filter((id) => byId.has(id));
 
-  if (navIds.length === 0) {
-    return categories
-      .filter((c) => !c.parentId)
-      .map((c) => ({
-        id: c.id, name: c.name, slug: c.slug,
-        children: categories.filter((ch) => ch.parentId === c.id).map((ch) => ({ id: ch.id, name: ch.name, slug: ch.slug })),
-      }));
-  }
+  // Only categories explicitly added in Admin → Settings → Header Nav appear
+  // in the menu. With nothing selected the menu shows just the fixed links.
+  if (navIds.length === 0) return [];
 
   const navIdSet = new Set(navIds);
   const topLevelIds = navIds.filter((id) => {

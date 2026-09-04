@@ -2512,7 +2512,7 @@ function NavTab() {
     <div className="space-y-5">
       <SectionCard title="Header Navigation Menu" icon={Navigation}>
         <p className="text-sm font-body mb-5" style={{ color: "#6B7280" }}>
-          Choose which categories appear in the header nav bar and set their order. Each item can show its subcategories as a mega menu. If empty, all top-level active categories are shown automatically.
+          Choose which categories appear in the header nav bar and set their order. Each item can show its subcategories as a mega menu. Nothing is shown until you add categories here.
         </p>
 
         {catsLoading ? (
@@ -2530,7 +2530,7 @@ function NavTab() {
                 <div className="border-2 border-dashed rounded-xl p-6 text-center" style={{ borderColor: "#E5E7EB" }}>
                   <Navigation className="h-8 w-8 mx-auto mb-2" style={{ color: "#E5E7EB" }} />
                   <p className="text-sm font-body" style={{ color: "#9CA3AF" }}>No items selected.</p>
-                  <p className="text-xs font-body mt-0.5" style={{ color: "#D1D5DB" }}>Add categories from the list below. If empty, all top-level categories are shown.</p>
+                  <p className="text-xs font-body mt-0.5" style={{ color: "#D1D5DB" }}>Add categories from the list below. None are shown in the header until you add them.</p>
                 </div>
               ) : (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
