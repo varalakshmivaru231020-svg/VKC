@@ -28,10 +28,8 @@ const C = {
 
 export function ShopByCategories({ categories, eyebrow = "Collections", heading = "Shop by Categories" }: { categories: HomeCategory[]; eyebrow?: string; heading?: string }) {
   if (!categories.length) return null;
-  const n = categories.length;
-  // Desktop columns follow the count so 3 or 4 tiles sit centred and large,
-  // while bigger catalogues wrap into a 5-up grid.
-  const cols = n <= 3 ? "lg:grid-cols-3" : n === 4 ? "lg:grid-cols-4" : "lg:grid-cols-5";
+  // A centred, wrapping row: one category sits in the middle, four sit in a
+  // line, and larger catalogues wrap into further centred rows.
 
   return (
     <section className="py-16 sm:py-20" style={{ background: C.ivory }} aria-labelledby="shop-by-categories-heading">
@@ -44,9 +42,9 @@ export function ShopByCategories({ categories, eyebrow = "Collections", heading 
           <span className="block mx-auto mt-5 h-[2px] w-16" style={{ background: `linear-gradient(90deg, transparent, ${C.jaggery}, transparent)` }} />
         </div>
 
-        <ul className={`mt-12 grid grid-cols-2 sm:grid-cols-3 ${cols} gap-x-6 gap-y-10 list-none m-0 p-0 justify-items-center`}>
+        <ul className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-10 lg:gap-x-10 list-none m-0 p-0">
           {categories.map((cat) => (
-            <li key={cat.id} className="w-full max-w-[300px]">
+            <li key={cat.id} className="w-[calc(50%-0.75rem)] sm:w-[220px] lg:w-[250px]">
               <Link href={`/category/${cat.slug}`} className="group block text-center" aria-label={`Shop ${cat.name}`}>
                 {/* Round tile: soft cream ring, image zooms gently on hover. */}
                 <div className="relative mx-auto aspect-square w-full rounded-full overflow-hidden transition-transform duration-500 group-hover:-translate-y-1.5"

@@ -1106,6 +1106,7 @@ function HomepageTab() {
       <SectionCard title="Blog Section — Title & Description" icon={LayoutGrid}>
         <p className="text-sm font-body mb-4" style={{ color: "#6B7280" }}>
           Heading shown above the latest blog posts on the home page. Leave a field empty to use the built-in wording.
+          The section appears only once at least one blog post is <strong>published</strong> under Content → Blogs.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -1125,7 +1126,8 @@ function HomepageTab() {
 
       <SectionCard title="Testimonials Section — Title" icon={LayoutGrid}>
         <p className="text-sm font-body mb-4" style={{ color: "#6B7280" }}>
-          The testimonials themselves are managed under Admin → Testimonials. These fields only change the section heading.
+          The testimonials themselves are managed under Content → Testimonials. These fields only change the section heading,
+          and the section appears on the home page only once at least one testimonial is added and marked active.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
