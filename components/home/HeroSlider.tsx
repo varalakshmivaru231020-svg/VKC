@@ -167,6 +167,15 @@ export default function HeroSlider({ slides }: Props) {
   const [paused, setPaused] = useState(false);
   const [hovering, setHovering] = useState(false);
   const [cycle, setCycle] = useState(0); // bumps to restart the progress bar
+  // Natural aspect ratio (w/h) of each slide image, read once it loads. The
+  // stage sizes itself from this so the composition is preserved instead of
+  // being forced into an arbitrary height. 3:2 is assumed until the image
+  // reports its real size, which avoids a layout jump for typical banners.
+  const [ratios, setRatios] = useState<Record<string, number>>({});
+  const noteRatio = (src: string) => (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+    if (w && h) setRatios((r) => (r[src] ? r : { ...r, [src]: w / h }));
+  };
   const touchX = useRef<number | null>(null);
   const count = slides.length;
 
@@ -282,16 +291,36 @@ export default function HeroSlider({ slides }: Props) {
           cropped on any screen. Slides without an image fall back to a
           viewport-based height. */}
       <div className="relative">
-        {/* Stage sizer. Media slides get a fixed, viewport-relative height and
-            the image covers it edge to edge (no side bands); slides without
-            media keep a taller, colour-field layout. Heights live in the
-            <style> block above so they can differ by breakpoint. */}
-        <div aria-hidden className={hasMedia ? "vkc-hero-media-h" : "vkc-hero-plain-h"} />
+        {/* Stage sizer.
+            Image slides: the stage keeps the image's own aspect ratio (read
+            from the file), so at full width the whole composition is shown.
+            On desktop the height is capped at 90% of the viewport; only when
+            that cap bites does object-fit: cover trim a thin band top and
+            bottom — never the sides. Phones use the mobile crop's ratio when
+            one is uploaded, otherwise the desktop image's, and show it whole
+            with the copy stacked underneath.
+            Video keeps a fixed cinematic height; colour-field slides a taller one. */}
+        <div
+          aria-hidden
+          className={hasImage ? "vkc-hero-media-h" : s.videoUrl ? "vkc-hero-video-h" : "vkc-hero-plain-h"}
+          style={hasImage ? ({
+            "--vkc-ar-desktop": ratios[s.imageUrl as string] ?? 1.5,
+            "--vkc-ar-mobile": ratios[(s.mobileImageUrl || s.imageUrl) as string] ?? (s.mobileImageUrl ? 0.8 : 1.5),
+          } as React.CSSProperties) : undefined}
+        />
         <style dangerouslySetInnerHTML={{ __html:
-          ".vkc-hero-media-h{height:clamp(240px,46vh,420px)}" +
-          "@media(min-width:768px){.vkc-hero-media-h{height:clamp(460px,64vh,680px)}}" +
+          ".vkc-hero-media-h{aspect-ratio:var(--vkc-ar-mobile,1.5);min-height:200px;max-height:70vh}" +
+          "@media(min-width:768px){.vkc-hero-media-h{aspect-ratio:var(--vkc-ar-desktop,1.5);min-height:440px;max-height:90vh}}" +
+          ".vkc-hero-video-h{height:clamp(420px,56vw,820px)}" +
           ".vkc-hero-plain-h{height:clamp(520px,80vh,880px)}"
         }} />
+        {/* Hidden loaders that report each image's natural size. */}
+        {hasImage && (
+          <>
+            <img src={s.imageUrl as string} alt="" aria-hidden className="hidden" onLoad={noteRatio(s.imageUrl as string)} />
+            {s.mobileImageUrl && <img src={s.mobileImageUrl} alt="" aria-hidden className="hidden" onLoad={noteRatio(s.mobileImageUrl)} />}
+          </>
+        )}
 
         {/* Visual layers: crossfade, no zoom, so the image edges stay put. */}
         <AnimatePresence initial={false} custom={dir}>
@@ -333,7 +362,7 @@ export default function HeroSlider({ slides }: Props) {
             {hasMedia && hasCopy && (
               /* The copy owns the left ~45% of the stage: a firm dark gradient
                  there keeps the headline off the product imagery. */
-              <div className="absolute inset-0 hidden md:block" style={{ background: "linear-gradient(90deg, rgba(20,10,3,0.84) 0%, rgba(20,10,3,0.72) 32%, rgba(20,10,3,0.28) 52%, rgba(20,10,3,0) 68%), linear-gradient(0deg, rgba(20,10,3,0.35) 0%, transparent 30%)" }} />
+              <div className="absolute inset-0 hidden md:block" style={{ background: "linear-gradient(90deg, rgba(20,10,3,0.70) 0%, rgba(20,10,3,0.52) 28%, rgba(20,10,3,0.16) 48%, rgba(20,10,3,0) 60%)" }} />
             )}
           </motion.div>
         </AnimatePresence>
