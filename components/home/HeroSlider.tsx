@@ -172,12 +172,29 @@ export default function HeroSlider({ slides }: Props) {
   // being forced into an arbitrary height. 3:2 is assumed until the image
   // reports its real size, which avoids a layout jump for typical banners.
   const [ratios, setRatios] = useState<Record<string, number>>({});
-  const noteRatio = (src: string) => (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
-    if (w && h) setRatios((r) => (r[src] ? r : { ...r, [src]: w / h }));
-  };
   const touchX = useRef<number | null>(null);
   const count = slides.length;
+
+  // Probe every slide image's natural size once on the client. Done with
+  // Image() objects rather than onLoad on rendered <img>s, because a cached
+  // file fires load before hydration attaches the handler and the ratio
+  // would never be recorded.
+  useEffect(() => {
+    const srcs = Array.from(new Set(slides.flatMap((sl) => [sl.imageUrl, sl.mobileImageUrl]).filter(Boolean))) as string[];
+    let cancelled = false;
+    const probes = srcs.map((src) => {
+      const img = new Image();
+      const record = () => {
+        if (cancelled || !img.naturalWidth || !img.naturalHeight) return;
+        setRatios((r) => (r[src] ? r : { ...r, [src]: img.naturalWidth / img.naturalHeight }));
+      };
+      img.onload = record;
+      img.src = src;
+      if (img.complete) record();
+      return img;
+    });
+    return () => { cancelled = true; probes.forEach((p) => { p.onload = null; }); };
+  }, [slides]);
 
   const go = useCallback(
     (idx: number, direction: 1 | -1) => {
@@ -314,13 +331,6 @@ export default function HeroSlider({ slides }: Props) {
           ".vkc-hero-video-h{height:clamp(420px,56vw,820px)}" +
           ".vkc-hero-plain-h{height:clamp(520px,80vh,880px)}"
         }} />
-        {/* Hidden loaders that report each image's natural size. */}
-        {hasImage && (
-          <>
-            <img src={s.imageUrl as string} alt="" aria-hidden className="hidden" onLoad={noteRatio(s.imageUrl as string)} />
-            {s.mobileImageUrl && <img src={s.mobileImageUrl} alt="" aria-hidden className="hidden" onLoad={noteRatio(s.mobileImageUrl)} />}
-          </>
-        )}
 
         {/* Visual layers: crossfade, no zoom, so the image edges stay put. */}
         <AnimatePresence initial={false} custom={dir}>
