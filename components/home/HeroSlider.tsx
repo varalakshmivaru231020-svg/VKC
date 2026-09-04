@@ -311,6 +311,21 @@ export default function HeroSlider({ slides }: Props) {
               <video src={s.videoUrl} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
             ) : s.imageUrl ? (
               <>
+                {/* Blur-fill backdrop: when the stage is shorter than the image's
+                    own aspect ratio, the bands beside the letterboxed picture show
+                    a blurred, dimmed copy of the same image instead of flat colour. */}
+                <div
+                  aria-hidden
+                  className={`absolute inset-0 ${s.mobileImageUrl ? "hidden md:block" : ""}`}
+                  style={{ backgroundImage: `url("${s.imageUrl}")`, backgroundSize: "cover", backgroundPosition: "center", filter: "blur(30px) brightness(0.55) saturate(1.1)", transform: "scale(1.12)" }}
+                />
+                {s.mobileImageUrl && (
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 md:hidden"
+                    style={{ backgroundImage: `url("${s.mobileImageUrl}")`, backgroundSize: "cover", backgroundPosition: "center", filter: "blur(30px) brightness(0.55) saturate(1.1)", transform: "scale(1.12)" }}
+                  />
+                )}
                 <div className={s.mobileImageUrl ? "hidden md:block absolute inset-0" : "absolute inset-0"}>
                   <SmartImage src={s.imageUrl} alt={s.tag || s.heading} fill objectFit="contain" objectPosition="center" />
                 </div>
