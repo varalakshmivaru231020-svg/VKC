@@ -16,6 +16,9 @@ LOG="$HOME/deploy-build.log"
 
 cd "$APP_DIR"
 
+# Next rewrites tsconfig.json during every build; drop that noise so the
+# pull can fast-forward.
+git checkout -- tsconfig.json 2>/dev/null || true
 if [[ "${1:-}" != "--no-pull" ]]; then
   git pull --ff-only origin main
 fi
