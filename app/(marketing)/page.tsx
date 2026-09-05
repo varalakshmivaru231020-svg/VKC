@@ -12,7 +12,6 @@ import { SmartImage } from "@/components/ui/SmartImage";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import { WhyChoose } from "@/components/home/WhyChoose";
 import { Testimonials, type TestimonialItem } from "@/components/home/Testimonials";
-import { HomeHighlights, type HighlightBlock } from "@/components/home/HomeHighlights";
 import { ShopByCategories } from "@/components/home/ShopByCategories";
 import { Legacy } from "@/components/home/Legacy";
 import { getActiveGalleryItems } from "@/lib/db/gallery";
@@ -140,37 +139,6 @@ export default async function HomePage() {
     .catch(() => [] as { key: string; value: string }[]);
   const homeCopy = (key: string, fallback: string) => homeCopyRows.find((r) => r.key === key)?.value?.trim() || fallback;
 
-  // Three highlight blocks under the testimonials. Pictures come from the
-  // catalogue's category images so they are always the brand's own.
-  const highlightCats = await db.category
-    .findMany({ where: { isActive: true, imageUrl: { not: null } }, select: { slug: true, name: true, imageUrl: true }, orderBy: { sortOrder: "asc" } })
-    .catch(() => [] as { slug: string; name: string; imageUrl: string | null }[]);
-  // Picture pool: category photos first, then featured products' primary
-  // images, so every block gets a real brand photo even while the catalogue
-  // has only a few categories with imagery.
-  const productPics = (featuredProducts as any[])
-    .map((p) => {
-      const v = p.variants?.[0];
-      const img = v?.images?.find((i: any) => i.isPrimary) ?? v?.images?.[0];
-      return img?.url ? { slug: p.slug as string, name: p.name as string, imageUrl: img.url as string } : null;
-    })
-    .filter(Boolean) as { slug: string; name: string; imageUrl: string | null }[];
-  const picPool = [...highlightCats, ...productPics.filter((pp) => !highlightCats.some((c) => c.imageUrl === pp.imageUrl))];
-  const used = new Set<string>();
-  const catImage = (preferred: string[], fallbackIndex: number) => {
-    const hit = highlightCats.find((c) => preferred.includes(c.slug) && !used.has(c.imageUrl ?? ""));
-    const pick = hit ?? picPool.filter((c) => !used.has(c.imageUrl ?? ""))[Math.min(fallbackIndex, Math.max(0, picPool.length - 1))] ?? null;
-    if (pick?.imageUrl) used.add(pick.imageUrl);
-    return pick;
-  };
-  const hl1 = catImage(["jaggery", "jaggery-cubes", "jaggery-powder"], 0);
-  const hl2 = catImage(["syrups", "jaggery-syrup", "bars-snacks"], 1);
-  const hl3 = catImage(["gift-boxes", "gift-box", "combos"], 2);
-  const highlights: HighlightBlock[] = [
-    { eyebrow: "From the field", title: "Cane grown by farmers we know", body: "Sugarcane from Mandya growers, bought directly at fair prices and crushed within hours of harvest.", href: "/about", cta: "Our story", imageUrl: hl1?.imageUrl ?? null, imageAlt: hl1?.name ?? "Jaggery" },
-    { eyebrow: "Made the honest way", title: "Boiled slow, nothing added", body: "Clarified naturally and boiled in small batches — no chemicals, preservatives or artificial colours, ever.", href: "/shop", cta: "Shop the range", imageUrl: hl2?.imageUrl ?? null, imageAlt: hl2?.name ?? "Jaggery products" },
-    { eyebrow: "For the occasion", title: "Gifts that taste of home", body: "Festive hampers, laddus and bars packed for celebrations and thoughtful gifting.", href: hl3 ? `/category/${hl3.slug}` : "/shop", cta: "Explore gifting", imageUrl: hl3?.imageUrl ?? null, imageAlt: hl3?.name ?? "Gift boxes" },
-  ];
 
   const facebookUrl = facebookSetting?.value || null;
   const galleryPhotos = galleryItems.filter((g) => g.type !== "VIDEO" && g.type !== "FACEBOOK").slice(0, 8);
@@ -508,9 +476,6 @@ export default async function HomePage() {
         eyebrow={homeCopy("home_testimonials_eyebrow", "Customer stories")}
         heading={homeCopy("home_testimonials_heading", "What our customers say")}
       />
-
-      {/* ── HIGHLIGHTS: three content blocks with catalogue imagery ─────────── */}
-      <HomeHighlights blocks={highlights} />
 
       {/* ── TRUST BADGES ─────────────────────────────────────────────────────── */}
       <section
