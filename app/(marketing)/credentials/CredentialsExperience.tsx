@@ -115,26 +115,24 @@ export default function CredentialsExperience() {
     <div className="vkc-about" style={{ background: C.ivory }}>
       <style dangerouslySetInnerHTML={{ __html: ".marketing-layout .vkc-about p{text-align:left;hyphens:none;text-justify:auto}" }} />
 
-      {/* Hero band */}
-      <section className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.bark} 0%, ${C.barkSoft} 100%)` }}>
-        <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.1, mixBlendMode: "overlay" }} />
-        <motion.div aria-hidden className="absolute -right-24 -top-24 h-[420px] w-[420px] rounded-full" animate={reduced ? undefined : { scale: [1, 1.1, 1] }} transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }} style={{ background: `radial-gradient(circle, ${C.jaggery}55, transparent 66%)`, filter: "blur(10px)" }} />
-        <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 pt-16 pb-16 sm:pt-20 sm:pb-20 grid lg:grid-cols-12 gap-10 items-end">
-          <Reveal className="lg:col-span-8">
-            <Eyebrow color={C.jaggeryLite}>Credentials</Eyebrow>
-            <h1 className="font-heading mt-5" style={{ fontSize: "clamp(2.4rem,5.6vw,4.6rem)", lineHeight: 1.02, letterSpacing: "-0.02em", color: C.ivory, maxWidth: 900 }}>
-              Registrations, compliance <span style={{ color: C.jaggeryLite, fontStyle: "italic" }}>and continuous learning</span>
+      {/* Header band — light, centred, single-line title (matches Gallery / Contact) */}
+      <section className="relative overflow-hidden border-b" style={{ background: C.cream, borderColor: C.parchment }}>
+        <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-20 text-center">
+          <Reveal>
+            <span className="font-body font-semibold uppercase" style={{ fontSize: 12, letterSpacing: "0.18em", color: C.jaggery }}>Credentials</span>
+            <h1 className="font-heading mt-3 mx-auto lg:whitespace-nowrap" style={{ fontSize: "clamp(1.9rem,3.4vw,3.2rem)", lineHeight: 1.1, letterSpacing: "-0.015em", color: C.ink }}>
+              Registrations, compliance and continuous learning
             </h1>
-            <p className="font-body mt-5" style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,251,244,0.78)", maxWidth: 640 }}>
-              We believe trust grows stronger when business values are supported by proper structure and compliance. Here is exactly where we stand — registrations, records and the learning behind them.
+            <p className="font-body mt-3 mx-auto" style={{ fontSize: 16.5, lineHeight: 1.7, color: C.muted, maxWidth: 680, textAlign: "center" }}>
+              We believe trust grows stronger when business values are supported by proper structure and compliance. Here is exactly where we stand.
             </p>
           </Reveal>
-          <Reveal delay={0.15} className="lg:col-span-4">
-            <div className="grid grid-cols-3 gap-4 lg:pl-8" style={{ borderLeft: "1px solid rgba(240,201,109,0.2)" }}>
+          <Reveal delay={0.15}>
+            <div className="mt-8 inline-flex items-center gap-8 sm:gap-12">
               {[["2", "Entities"], ["5", "Registrations"], ["6", "Courses"]].map(([n, l]) => (
-                <div key={l} className="pl-4 lg:pl-0">
-                  <div className="font-heading" style={{ fontSize: "clamp(2rem,4vw,3rem)", lineHeight: 1, color: C.jaggeryLite }}>{n}</div>
-                  <div className="font-body mt-1.5 uppercase" style={{ fontSize: 10.5, letterSpacing: "0.18em", color: "rgba(255,251,244,0.6)" }}>{l}</div>
+                <div key={l} className="text-center">
+                  <div className="font-heading" style={{ fontSize: "clamp(1.8rem,3vw,2.6rem)", lineHeight: 1, color: C.jaggeryDark }}>{n}</div>
+                  <div className="font-body mt-1.5 uppercase" style={{ fontSize: 10.5, letterSpacing: "0.18em", color: C.muted }}>{l}</div>
                 </div>
               ))}
             </div>

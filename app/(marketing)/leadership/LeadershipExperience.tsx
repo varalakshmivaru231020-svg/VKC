@@ -114,22 +114,20 @@ export default function LeadershipExperience({ bannerImage = null, bannerAlt = "
 
       {/* Header band — centred like the Contact page; an admin banner
           (Admin → Banners → "Leadership — Header Banner") sits behind it. */}
-      <section className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.bark} 0%, #5A3210 100%)` }} aria-label={bannerAlt || undefined}>
+      <section className="relative overflow-hidden border-b" style={{ background: C.cream, borderColor: C.parchment }} aria-label={bannerAlt || undefined}>
         {bannerImage && (
           <>
             <img src={bannerImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
             <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(58,31,10,0.78) 0%, rgba(58,31,10,0.62) 60%, rgba(58,31,10,0.82) 100%)" }} />
           </>
         )}
-        <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 pt-16 pb-16 sm:pt-24 sm:pb-24 text-center">
+        <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-20 text-center">
           <Reveal>
-            <span className="inline-flex items-center gap-3 font-body font-semibold uppercase" style={{ fontSize: 11.5, letterSpacing: "0.26em", color: C.jaggeryLite }}>
-              <span className="inline-block h-px w-7" style={{ background: C.jaggeryLite }} /> Our Core Team <span className="inline-block h-px w-7" style={{ background: C.jaggeryLite }} />
-            </span>
-            <h1 className="font-heading mt-5 mx-auto" style={{ fontSize: "clamp(2.4rem,5.6vw,4.6rem)", lineHeight: 1.02, letterSpacing: "-0.02em", color: C.ivory, maxWidth: 900 }}>
+            <span className="font-body font-semibold uppercase" style={{ fontSize: 12, letterSpacing: "0.18em", color: bannerImage ? C.jaggeryLite : C.jaggery }}>Our Core Team</span>
+            <h1 className="font-heading mt-3 mx-auto lg:whitespace-nowrap" style={{ fontSize: "clamp(2rem,3.6vw,3.4rem)", lineHeight: 1.1, letterSpacing: "-0.015em", color: bannerImage ? C.ivory : C.ink }}>
               The family behind VKC Gold Ikshu
             </h1>
-            <p className="font-body mt-5 mx-auto" style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,251,244,0.82)", maxWidth: 620, textAlign: "center" }}>
+            <p className="font-body mt-3 mx-auto" style={{ fontSize: 16.5, lineHeight: 1.7, color: bannerImage ? "rgba(255,251,244,0.85)" : C.muted, maxWidth: 640, textAlign: "center" }}>
               Founded in legacy by Late Shri B Ramachandra. Now led by Naveenchandra B R.
             </p>
           </Reveal>
