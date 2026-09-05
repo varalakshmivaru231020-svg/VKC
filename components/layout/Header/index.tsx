@@ -31,6 +31,7 @@ const NAV_AFTER = [
   { label: "Leadership", href: "/leadership" },
   { label: "Credentials", href: "/credentials" },
   { label: "Gallery",  href: "/gallery" },
+  { label: "Blogs",    href: "/blog" },
   { label: "Contact",  href: "/contact" },
 ];
 
@@ -51,7 +52,7 @@ const overlayV = {
 // ── Nav link text style (shared) ──────────────────────────────────────────────
 
 const NAV_LINK_CLS =
-  "flex items-center gap-1 px-3 h-11 text-[13.5px] font-medium font-body transition-all duration-150 relative whitespace-nowrap select-none";
+  "flex items-center gap-1 px-2.5 h-11 text-[13.5px] font-medium font-body transition-all duration-150 relative whitespace-nowrap select-none";
 
 // ── Header ────────────────────────────────────────────────────────────────────
 

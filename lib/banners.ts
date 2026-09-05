@@ -7,6 +7,8 @@ export const BANNER_POSITIONS: Record<string, string> = {
   shop_top: "Shop — Top",
   shop_banner: "Shop — Banner",
   about_banner: "About Us — Hero Banner",
+  leadership_banner: "Leadership — Header Banner",
+  credentials_banner: "Credentials — Header Banner",
 };
 
 export const BANNER_TYPES: Record<string, { label: string; color: string; bg: string }> = {
