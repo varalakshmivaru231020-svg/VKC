@@ -382,9 +382,9 @@ export default async function HomePage() {
                 <Link key={blog.id} href={`/blog/${blog.slug}`}
                   className="group rounded-2xl border overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5"
                   style={{ background: "white", borderColor: "var(--color-parchment)" }}>
-                  <div className="relative h-48 overflow-hidden" style={{ background: "var(--color-cream)" }}>
+                  <div className="relative overflow-hidden" style={{ background: "var(--color-cream)", aspectRatio: "4 / 3" }}>
                     {blog.imageUrl
-                      ? <SmartImage src={blog.imageUrl} alt={blog.title} fill objectFit="cover" className="group-hover:scale-105 transition-transform duration-300" />
+                      ? <div className="absolute inset-3 transition-transform duration-500 group-hover:scale-[1.04]"><SmartImage src={blog.imageUrl} alt={blog.title} fill objectFit="contain" /></div>
                       : <div className="w-full h-full flex items-center justify-center">
                           <Sparkles className="h-12 w-12 opacity-20" style={{ color: "var(--color-primary)" }} />
                         </div>}
@@ -396,7 +396,7 @@ export default async function HomePage() {
                     ))}
                     <h3 className="text-sm font-semibold font-body line-clamp-2 mb-2" style={{ color: "var(--color-text-primary)" }}>{blog.title}</h3>
                     {blog.excerpt && (
-                      <p className="text-xs font-body line-clamp-2 mb-3" style={{ color: "var(--color-text-muted)" }}>{blog.excerpt}</p>
+                      <p className="text-xs font-body line-clamp-2 mb-3" style={{ color: "var(--color-text-muted)", textAlign: "left", hyphens: "none" }}>{blog.excerpt}</p>
                     )}
                     <span className="inline-flex items-center gap-1 text-xs font-body font-semibold group-hover:gap-1.5 transition-all"
                       style={{ color: "var(--color-primary)" }}>

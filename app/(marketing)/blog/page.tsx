@@ -47,9 +47,9 @@ export default async function BlogListPage() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {blogs.map((b) => (
                   <Link key={b.id} href={`/blog/${b.slug}`} className="group flex flex-col rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ background: "white", border: `1px solid ${C.parchment}` }}>
-                    <div className="relative overflow-hidden" style={{ aspectRatio: "16 / 10", background: C.cream }}>
+                    <div className="relative overflow-hidden" style={{ aspectRatio: "4 / 3", background: C.cream }}>
                       {b.imageUrl
-                        ? <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.05]"><SmartImage src={b.imageUrl} alt={b.title} fill objectFit="cover" /></div>
+                        ? <div className="absolute inset-3 transition-transform duration-500 group-hover:scale-[1.04]"><SmartImage src={b.imageUrl} alt={b.title} fill objectFit="contain" /></div>
                         : <div className="absolute inset-0 grid place-items-center"><BookOpen className="h-10 w-10" style={{ color: C.parchment }} /></div>}
                     </div>
                     <div className="p-6 flex-1 flex flex-col">

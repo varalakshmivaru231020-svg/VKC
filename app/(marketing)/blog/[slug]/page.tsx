@@ -114,8 +114,8 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((b) => (
                 <Link key={b.id} href={`/blog/${b.slug}`} className="group flex flex-col rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ background: "white", border: `1px solid ${C.parchment}` }}>
-                  <div className="relative overflow-hidden" style={{ aspectRatio: "16 / 10", background: C.ivory }}>
-                    {b.imageUrl && <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.05]"><SmartImage src={b.imageUrl} alt={b.title} fill objectFit="cover" /></div>}
+                  <div className="relative overflow-hidden" style={{ aspectRatio: "4 / 3", background: C.ivory }}>
+                    {b.imageUrl && <div className="absolute inset-3 transition-transform duration-500 group-hover:scale-[1.04]"><SmartImage src={b.imageUrl} alt={b.title} fill objectFit="contain" /></div>}
                   </div>
                   <div className="p-6">
                     <div className="font-body" style={{ fontSize: 12.5, color: C.muted }}>{fmtDate(b.publishedAt ?? b.createdAt)}</div>
