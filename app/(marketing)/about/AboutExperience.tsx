@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { LegacyContinues, JourneyTimeline, BusinessIdentity, FounderTribute, HeritageToTechnology, MagneticLink, ScrollProgressBar } from "@/components/about/StoryChapters";
 import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, Sprout, Handshake, Recycle, Cog, Heart, ShieldCheck,
@@ -445,7 +444,6 @@ export default function AboutExperience({
 
   return (
     <div className="vkc-about" style={{ background: C.ivory }}>
-      <ScrollProgressBar />
       {/* The storefront globally justifies every <p>. Reset to a clean left rag here. */}
       <style dangerouslySetInnerHTML={{ __html:
         ".marketing-layout .vkc-about p{text-align:left;hyphens:none;text-justify:auto}" +
@@ -549,9 +547,55 @@ export default function AboutExperience({
 
       <Marquee items={["100% Natural", "Chemical-Free", "Farmer-First", "Made in Mandya", "Since 1988", "No Preservatives"]} />
 
-      {/* ── 2 · THE LEGACY CONTINUES + JOURNEY (scroll-driven chapters) ──── */}
-      <LegacyContinues />
-      <JourneyTimeline />
+      {/* ── 2 · OUR STORY (sticky split timeline) ────────────────────────── */}
+      <section id="story" className="max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
+          <div className="lg:col-span-5">
+            <div className="lg:sticky lg:top-28">
+              <SectionHeading eyebrow="Our Story" size="lg"
+                title="A crusher in 1988, a promise ever since"
+                sub="What began as a single sugarcane crusher has grown into a natural food-processing enterprise — without ever losing the values it started with." />
+              <Reveal delay={0.2}>
+                <div className="mt-10 rounded-lg p-6 flex items-center gap-5" style={{ background: C.cream, border: `1px solid ${C.parchment}` }}>
+                  <div className="h-14 w-14 rounded-full grid place-items-center shrink-0" style={{ background: C.bark, color: C.jaggeryLite }}>
+                    <Wheat className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="font-heading" style={{ fontSize: 22, color: C.ink }}>Three generations of cane</div>
+                    <div className="font-body mt-0.5" style={{ fontSize: 14, color: C.muted }}>One family, one district, one standard.</div>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+
+          <div className="lg:col-span-7 relative">
+            <div aria-hidden className="hidden sm:block absolute top-4 bottom-4" style={{ left: 27, width: 1, background: `linear-gradient(${C.jaggery}, ${C.green} 70%, transparent)` }} />
+            <div className="space-y-6">
+              {TIMELINE.map((s, i) => (
+                <Reveal key={s.title} delay={i * 0.08}>
+                  <div className="flex gap-5 sm:gap-8 group">
+                    <div className="shrink-0 relative">
+                      <div className="h-14 w-14 rounded-full grid place-items-center font-heading transition-transform duration-500 group-hover:scale-110"
+                        style={{ fontSize: 13, background: C.ivory, border: `1.5px solid ${C.jaggery}`, color: C.jaggeryDark, boxShadow: "0 8px 24px rgba(17,24,39,0.08)" }}>
+                        {String(i + 1).padStart(2, "0")}
+                      </div>
+                    </div>
+                    <div className={`${card} flex-1 p-7 sm:p-8 group-hover:-translate-y-1 group-hover:shadow-lg`} style={{ background: "white", borderColor: C.parchment }}>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-body font-bold uppercase" style={{ fontSize: 11, letterSpacing: "0.18em", color: C.jaggeryDark }}>{s.year}</span>
+                        <span className="h-px flex-1" style={{ background: C.parchment }} />
+                      </div>
+                      <h3 className="font-heading mt-3" style={{ fontSize: 26, lineHeight: 1.1, color: C.ink }}>{s.title}</h3>
+                      <p className="font-body mt-3" style={{ fontSize: 15.5, lineHeight: 1.75, color: C.ink2 }}>{s.body}</p>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── 3 · OUR PHILOSOPHY ───────────────────────────────────────────── */}
       <section style={{ background: C.cream }}>
@@ -605,12 +649,61 @@ export default function AboutExperience({
         </div>
       </section>
 
-      {/* ── 4 · BUSINESS IDENTITY (archive record) ───────────────────────── */}
-      <BusinessIdentity />
-
-      {/* ── 4b · FOUNDER TRIBUTE → HERITAGE / TECHNOLOGY TRANSITION ───────── */}
-      <FounderTribute />
-      <HeritageToTechnology />
+      {/* ── 4 · WHO WE ARE ───────────────────────────────────────────────── */}
+      <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <div className="lg:col-span-7">
+            <SectionHeading eyebrow="Who We Are" title="Founded in legacy. Led with purpose." />
+            <Reveal delay={0.15}>
+              <div className="mt-7 space-y-4 font-body" style={{ fontSize: 17, lineHeight: 1.8, color: C.ink2, maxWidth: 620 }}>
+                <p>VKC Gold Ikshu is built on the strong foundation of M/s Vairamudi Krupa Crusher, the long-standing proprietorship in Ballenahalli, Srirangapatna Taluk, Mandya — the original and most important base of our business journey. Inspired by the legacy of Late Shri B Ramachandra and led today by Mr. Naveenchandra B R, with the support of his brother Mr. Abhishek B R and mother Mrs. Pushpalatha, the business continues to grow with a clear focus on quality, trust and responsible progress.</p>
+                <p>While the proprietorship remains central to our operations and identity, the next phase of development is carried forward through VKC JAGGERY &amp; BEVERAGES PRIVATE LIMITED, incorporated on 12 December 2025, with technology upgradation and structured expansion at its heart.</p>
+              </div>
+              <div className="mt-8 flex flex-wrap gap-2.5">
+                {["Make in India", "Vocal for Local", "Rural Entrepreneurship", "MSME Registered"].map((t) => (
+                  <span key={t} className="font-body font-medium rounded-full px-4 py-2 transition-colors duration-300 hover:text-white" style={{ fontSize: 13, border: `1px solid ${C.jaggery}55`, color: C.jaggeryDark }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = C.jaggeryDark; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+          {/* Fact sheet: a dark ledger with dotted leaders and a rotating seal —
+              deliberately no cards here, so it reads as a document, not a grid. */}
+          <Reveal delay={0.1} className="lg:col-span-5">
+            <div className="relative mt-10 lg:mt-0">
+              <div className="absolute -top-14 right-2 sm:right-6 z-10">
+                <Seal text="MADE IN MANDYA · SINCE 1988 · " size={136} color={C.jaggeryLite}>
+                  <div className="h-11 w-11 rounded-full grid place-items-center" style={{ background: C.jaggery, color: C.bark }}>
+                    <Wheat className="h-5 w-5" />
+                  </div>
+                </Seal>
+              </div>
+              <dl className="relative rounded-lg p-7 sm:p-9 pt-16 sm:pt-16 overflow-hidden" style={{ background: `linear-gradient(160deg, ${C.bark}, ${C.barkSoft})`, color: C.ivory }}>
+                <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.1, mixBlendMode: "overlay" }} />
+                <div className="relative font-body font-semibold uppercase mb-2" style={{ fontSize: 10.5, letterSpacing: "0.24em", color: C.jaggeryLite }}>Company fact sheet</div>
+                {[
+                  { icon: Handshake, k: "Founded", v: "1988 · M/s Vairamudi Krupa Crusher (proprietorship)" },
+                  { icon: Factory, k: "Company", v: "VKC JAGGERY & BEVERAGES PRIVATE LIMITED · inc. 12 Dec 2025" },
+                  { icon: BadgeCheck, k: "CIN", v: "U10722KA2025PTC212254" },
+                  { icon: BadgeCheck, k: "Registration", v: "MSME / Udyam KR-21-0019065 · GST" },
+                  { icon: MapPin, k: "Location", v: "Ballenahalli, Srirangapatna Taluk, Mandya — 571807" },
+                  { icon: Sprout, k: "Sourcing", v: "Cane from local Mandya farmers" },
+                ].map((b) => (
+                  <div key={b.k} className="group relative grid grid-cols-[auto_1fr] sm:grid-cols-[auto_auto_1fr_auto] items-baseline gap-x-4 py-4" style={{ borderTop: "1px solid rgba(255,214,92,0.14)" }}>
+                    <b.icon className="h-4 w-4 self-center transition-colors duration-300" style={{ color: "rgba(255,214,92,0.6)" }} />
+                    <dt className="font-body font-semibold uppercase transition-colors duration-300 group-hover:text-[#FFD65C]" style={{ fontSize: 11, letterSpacing: "0.16em", color: "rgba(255,251,244,0.6)" }}>{b.k}</dt>
+                    <span aria-hidden className="hidden sm:block self-center h-px" style={{ borderTop: "1px dotted rgba(255,214,92,0.35)" }} />
+                    <dd className="font-body col-start-2 sm:col-start-4 sm:text-right transition-transform duration-300 group-hover:-translate-x-1" style={{ fontSize: 14.5, lineHeight: 1.5, color: C.ivory }}>{b.v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
       {/* ── 5 · PROCESS + TECHNOLOGY ─────────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.bark}, ${C.barkSoft})` }}>
@@ -783,13 +876,13 @@ export default function AboutExperience({
                   Questions about our jaggery, bulk orders, or machinery? We'd love to hear from you.
                 </p>
                 <div className="mt-9 flex flex-wrap gap-3">
-                  <MagneticLink><Link href="/contact" className="group inline-flex items-center gap-3 pl-7 pr-2 rounded-full font-body font-semibold text-sm"
+                  <Link href="/contact" className="group inline-flex items-center gap-3 pl-7 pr-2 rounded-full font-body font-semibold text-sm transition-transform duration-300 hover:-translate-y-0.5"
                     style={{ height: 52, background: C.bark, color: C.ivory }}>
                     Talk to Us
                     <span className="grid place-items-center h-9 w-9 rounded-full transition-transform duration-300 group-hover:rotate-45" style={{ background: C.jaggery, color: C.bark }}>
                       <ArrowUpRight className="h-4 w-4" />
                     </span>
-                  </Link></MagneticLink>
+                  </Link>
                   <a href={whatsappHref} target={whatsappDigits ? "_blank" : undefined} rel={whatsappDigits ? "noopener noreferrer" : undefined}
                     className="inline-flex items-center gap-2 px-7 rounded-full font-body font-semibold text-sm transition-colors duration-300"
                     style={{ height: 52, border: `1px solid ${C.bark}66`, color: C.bark, background: "rgba(255,251,244,0.25)" }}>
