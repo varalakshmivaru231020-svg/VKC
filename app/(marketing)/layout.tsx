@@ -98,6 +98,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
         logoUrl={siteSettings["store_logo"] || null}
         phone={siteSettings["store_phone"]}
         email={siteSettings["store_email"]}
+        address={siteSettings["store_address"]}
         whatsappNumber={siteSettings["whatsapp_number"]}
         instagram={siteSettings["social_instagram"]}
         facebook={siteSettings["social_facebook"]}

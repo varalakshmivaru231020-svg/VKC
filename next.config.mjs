@@ -6,6 +6,12 @@ const nextConfig = {
   // so the running server never reads a half-written .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   swcMinify: false,
+  async redirects() {
+    return [
+      { source: "/quality-compliance", destination: "/credentials#learning", permanent: true },
+      { source: "/registrations", destination: "/credentials#registrations", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },

@@ -150,8 +150,8 @@ export default function LeadershipExperience() {
         {/* Compliance & learning */}
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           {[
-            { href: "/quality-compliance", eyebrow: "Quality, Learning & Compliance", title: "Continuous learning in food safety and compliance", desc: "Training records in FSSAI regulations, food labelling, licensing, FSSC awareness and jaggery business development — presented as learning, not as licences." },
-            { href: "/registrations", eyebrow: "Registrations & Compliance", title: "A business framework built on proper structure", desc: "Company incorporation, enterprise registration and the operating records that support our journey." },
+            { href: "/credentials#learning", eyebrow: "Quality, Learning & Compliance", title: "Continuous learning in food safety and compliance", desc: "Training records in FSSAI regulations, food labelling, licensing, FSSC awareness and jaggery business development — presented as learning, not as licences." },
+            { href: "/credentials#registrations", eyebrow: "Registrations & Compliance", title: "A business framework built on proper structure", desc: "Company incorporation, enterprise registration and the operating records that support our journey." },
           ].map((c, i) => (
             <Reveal key={c.href} delay={i * 0.08}>
               <Link href={c.href} className="group block h-full rounded-lg p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ background: "white", border: `1px solid ${C.parchment}` }}>

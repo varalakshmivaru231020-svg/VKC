@@ -29,6 +29,7 @@ const NAV_AFTER = [
   { label: "Shop",     href: "/shop" },
   { label: "About Us", href: "/about" },
   { label: "Leadership", href: "/leadership" },
+  { label: "Credentials", href: "/credentials" },
   { label: "Gallery",  href: "/gallery" },
   { label: "Contact",  href: "/contact" },
 ];

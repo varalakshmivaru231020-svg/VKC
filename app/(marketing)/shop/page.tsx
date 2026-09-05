@@ -125,7 +125,7 @@ export default async function ShopPage({ searchParams }: Props) {
               <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h1)", fontWeight: "var(--weight-heading)", color: bannerImg ? "white" : "var(--color-text-primary)" }}>
                 Our Products
               </h1>
-              <p className="text-body-sm mt-2 font-body" style={{ color: bannerImg ? "rgba(255,255,255,0.8)" : "var(--color-text-muted)" }}>
+              <p className="text-body-sm mt-4 font-body max-w-3xl mx-auto px-4" style={{ color: bannerImg ? "rgba(255,255,255,0.8)" : "var(--color-text-muted)", textAlign: "justify", textAlignLast: "center", hyphens: "none", lineHeight: 1.7 }}>
                 Our product direction is inspired by natural sweetness, rooted values, and a growing commitment to quality-led development — a dependable identity in jaggery and value-added natural sweeteners, built on trust, authenticity and customer confidence.
               </p>
             </div>
