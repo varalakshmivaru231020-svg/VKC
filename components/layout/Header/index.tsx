@@ -26,13 +26,12 @@ export interface NavCategory {
 const NAV_BEFORE = [{ label: "Home", href: "/" }];
 
 const NAV_AFTER = [
-  { label: "Shop",     href: "/shop" },
-  { label: "About Us", href: "/about" },
+  { label: "About Us",   href: "/about" },
   { label: "Leadership", href: "/leadership" },
-  { label: "Credentials", href: "/credentials" },
-  { label: "Gallery",  href: "/gallery" },
-  { label: "Blogs",    href: "/blog" },
-  { label: "Contact",  href: "/contact" },
+  { label: "Shop",       href: "/shop" },
+  { label: "Blogs",      href: "/blog" },
+  { label: "Gallery",    href: "/gallery" },
+  { label: "Contact",    href: "/contact" },
 ];
 
 // ── Animation variants ─────────────────────────────────────────────────────────

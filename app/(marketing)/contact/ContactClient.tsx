@@ -12,9 +12,10 @@ interface Props {
   hoursWeekend: string;
   whatsappNumber: string;
   mapsUrl: string;
+  mapEmbedUrl?: string;
 }
 
-const topics = ["Order Query", "Product Question", "Styling Advice", "Wholesale / Bulk", "Return / Exchange", "Other"];
+const topics = ["Order Query", "Product Question", "Bulk / Wholesale", "Corporate Gifting", "Return / Exchange", "Other"];
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -27,6 +28,7 @@ export default function ContactClient({
   hoursWeekend,
   whatsappNumber,
   mapsUrl,
+  mapEmbedUrl = "",
 }: Props) {
   // Only show a card when the detail is actually configured — an empty card is
   // better than one inviting customers to call a number that isn't the store's.
@@ -312,6 +314,34 @@ export default function ContactClient({
           </div>
         </div>
       </div>
+      {/* ── MAP ── */}
+      {mapEmbedUrl && (
+        <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-20" aria-label="Our location on the map">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+            <div>
+              <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "var(--color-gold-dark)" }}>Find us</span>
+              <h2 className="mt-2" style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.6rem,3vw,2.3rem)", lineHeight: 1.1, color: "var(--color-text-primary)", fontWeight: 500 }}>Visit us in Mandya</h2>
+              {address && <p className="mt-2 text-sm font-body" style={{ color: "var(--color-text-muted)", textAlign: "left", hyphens: "none" }}>{address}{city ? `, ${city}` : ""}</p>}
+            </div>
+            {mapsUrl && (
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 h-11 px-5 rounded-full text-sm font-body font-semibold transition-colors" style={{ border: "1px solid var(--color-gold)", color: "var(--color-gold-dark)" }}>
+                <MapPin className="h-4 w-4" /> Open in Google Maps
+              </a>
+            )}
+          </div>
+          <div className="relative rounded-2xl overflow-hidden border" style={{ borderColor: "var(--color-parchment)", background: "var(--color-cream)", aspectRatio: "16 / 7", minHeight: 320 }}>
+            <iframe
+              src={mapEmbedUrl}
+              title="VKC Gold Ikshu on Google Maps"
+              className="absolute inset-0 h-full w-full"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -278,21 +278,23 @@ export default function CredentialsExperience() {
       {/* Growth note + CTA */}
       <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-24">
         <Reveal>
-          <div className="rounded-lg p-8 sm:p-12 grid lg:grid-cols-12 gap-8 items-center" style={{ background: C.cream, border: `1px solid ${C.parchment}` }}>
-            <div className="lg:col-span-8">
-              <Eyebrow>Next phase</Eyebrow>
-              <h2 className="font-heading mt-4" style={{ fontSize: "clamp(1.7rem,3vw,2.5rem)", lineHeight: 1.1, color: C.ink }}>Technology upgradation and modernisation</h2>
-              <p className="font-body mt-4" style={{ fontSize: 15.5, lineHeight: 1.75, color: C.ink2, maxWidth: 680 }}>
-                VKC Gold Ikshu is progressing toward the proposed 50 TCD fully automatic, thermic-fluid-based jaggery and sugarcane juice processing project — strengthening production efficiency, process consistency, product quality and infrastructure capability, in line with future-ready manufacturing standards.
-              </p>
-            </div>
-            <div className="lg:col-span-4 lg:justify-self-end flex flex-col gap-3">
-              <Link href="/contact" className="group inline-flex items-center gap-3 pl-6 pr-2 rounded-full font-body font-semibold text-sm" style={{ height: 50, background: C.bark, color: C.ivory }}>
-                Business enquiries
-                <span className="grid place-items-center h-8 w-8 rounded-full transition-transform duration-300 group-hover:translate-x-1" style={{ background: C.jaggery, color: C.bark }}><ArrowRight className="h-4 w-4" /></span>
+          <div className="rounded-lg p-8 sm:p-12" style={{ background: C.cream, border: `1px solid ${C.parchment}` }}>
+            <Eyebrow>Next phase</Eyebrow>
+            <h2 className="font-heading mt-4" style={{ fontSize: "clamp(1.7rem,3vw,2.5rem)", lineHeight: 1.1, color: C.ink }}>Technology upgradation and modernisation</h2>
+            <p className="font-body mt-4" style={{ fontSize: 15.5, lineHeight: 1.75, color: C.ink2, maxWidth: 760 }}>
+              VKC Gold Ikshu is progressing toward the proposed 50 TCD fully automatic, thermic-fluid-based jaggery and sugarcane juice processing project — strengthening production efficiency, process consistency, product quality and infrastructure capability, in line with future-ready manufacturing standards.
+            </p>
+            {/* Buttons below the copy. On hover a gold fill sweeps in from the left. */}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/contact" className="group relative inline-flex items-center gap-3 pl-6 pr-2 rounded-full font-body font-semibold text-sm overflow-hidden" style={{ height: 50, background: C.bark, color: C.ivory }}>
+                <span aria-hidden className="absolute inset-0 -translate-x-full transition-transform duration-500 ease-out group-hover:translate-x-0" style={{ background: C.jaggery }} />
+                <span className="relative transition-colors duration-500 group-hover:text-[#3A1F0A]">Business enquiries</span>
+                <span className="relative grid place-items-center h-8 w-8 rounded-full transition-all duration-500 group-hover:translate-x-1 group-hover:bg-[#3A1F0A] group-hover:text-[#FFD65C]" style={{ background: C.jaggery, color: C.bark }}><ArrowRight className="h-4 w-4" /></span>
               </Link>
-              <Link href="/leadership" className="inline-flex items-center justify-center gap-2 rounded-full font-body font-semibold text-sm" style={{ height: 46, border: `1px solid ${C.jaggery}66`, color: C.jaggeryDark }}>
-                Meet the leadership <ArrowRight className="h-4 w-4" />
+              <Link href="/leadership" className="group relative inline-flex items-center gap-2 px-6 rounded-full font-body font-semibold text-sm overflow-hidden" style={{ height: 50, border: `1px solid ${C.jaggery}88`, color: C.jaggeryDark }}>
+                <span aria-hidden className="absolute inset-0 -translate-x-full transition-transform duration-500 ease-out group-hover:translate-x-0" style={{ background: C.jaggeryDark }} />
+                <span className="relative transition-colors duration-500 group-hover:text-[#FFFBF4]">Meet the leadership</span>
+                <ArrowRight className="relative h-4 w-4 transition-all duration-500 group-hover:translate-x-1 group-hover:text-[#FFFBF4]" />
               </Link>
             </div>
           </div>

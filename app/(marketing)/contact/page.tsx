@@ -9,6 +9,11 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+// Google Maps place for the registered office. Admin → Settings can override with
+// store_maps_url (link) and store_map_embed (iframe src) if the pin ever moves.
+const DEFAULT_MAP_LINK = "https://www.google.com/maps?cid=5977066381174680787";
+const DEFAULT_MAP_EMBED = "https://www.google.com/maps?cid=5977066381174680787&output=embed";
+
 export default async function ContactPage() {
   const rows = await db.siteSetting.findMany({
     where: {
@@ -16,7 +21,7 @@ export default async function ContactPage() {
         in: [
           "store_phone", "store_email", "store_address", "store_city",
           "store_hours_weekday", "store_hours_weekend",
-          "whatsapp_number", "store_maps_url",
+          "whatsapp_number", "store_maps_url", "store_map_embed",
         ],
       },
     },
@@ -37,7 +42,8 @@ export default async function ContactPage() {
       hoursWeekday={s.store_hours_weekday ?? ""}
       hoursWeekend={s.store_hours_weekend ?? ""}
       whatsappNumber={s.whatsapp_number ?? ""}
-      mapsUrl={s.store_maps_url ?? ""}
+      mapsUrl={s.store_maps_url || DEFAULT_MAP_LINK}
+      mapEmbedUrl={s.store_map_embed || DEFAULT_MAP_EMBED}
     />
   );
 }
