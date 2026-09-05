@@ -94,11 +94,11 @@ export function Legacy() {
           {/* Right: story + points */}
           <div className="lg:col-span-7">
             <Reveal delay={0.1}>
-              <div className="space-y-5 font-body" style={{ fontSize: 17, lineHeight: 1.8, color: C.ink2, textAlign: "left", hyphens: "none" }}>
-                <p>
+              <div className="space-y-5 font-body" style={{ fontSize: 17, lineHeight: 1.8, color: C.ink2 }}>
+                <p style={{ textAlign: "left", hyphens: "none" }}>
                   Our journey is inspired by the vision of Late Shri B Ramachandra, whose values of discipline, sincerity and purity laid the foundation for our family’s jaggery tradition. What began as a legacy rooted in honest effort and agricultural connection continues today through a new generation of leadership. At VKC Gold Ikshu, we do not see tradition as something old and static; we see it as a living promise that must stay genuine while growing stronger with time.
                 </p>
-                <p>
+                <p style={{ textAlign: "left", hyphens: "none" }}>
                   Today, Naveenchandra B R carries this legacy forward with a clear focus on quality, compliance and long-term brand building. The aim is simple but powerful: preserve the trust earned through values, while building a future-ready business in natural sweeteners and jaggery-based products. That blend of heritage and direction is what gives VKC Gold Ikshu its identity.
                 </p>
               </div>
