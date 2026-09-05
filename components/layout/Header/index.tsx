@@ -28,6 +28,7 @@ const NAV_BEFORE = [{ label: "Home", href: "/" }];
 const NAV_AFTER = [
   { label: "About Us",   href: "/about" },
   { label: "Leadership", href: "/leadership" },
+  { label: "Credentials", href: "/credentials" },
   { label: "Shop",       href: "/shop" },
   { label: "Blogs",      href: "/blog" },
   { label: "Gallery",    href: "/gallery" },
