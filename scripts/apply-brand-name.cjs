@@ -25,7 +25,7 @@ const db = new PrismaClient();
 
 const SETTINGS = [
   ["site.name",    "vkcgoldikshu",                                  "Site Name",    "general", "text"],
-  ["site.tagline", "Sweetness of Nature, Strength of Tradition.",   "Tagline",      "general", "text"],
+  ["site.tagline", "Rooted in Legacy. Led with Purpose.",            "Tagline",      "general", "text"],
   ["store_name",   "vkcgoldikshu",                                  "Store Name",   "general", "text"],
 ];
 

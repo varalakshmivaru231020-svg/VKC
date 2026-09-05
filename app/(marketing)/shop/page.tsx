@@ -121,12 +121,12 @@ export default async function ShopPage({ searchParams }: Props) {
           >
             {bannerImg && <div className="absolute inset-0 bg-black/45 pointer-events-none" />}
             <div className="relative z-10">
-              <p className="text-label mb-2" style={{ color: bannerImg ? "var(--color-gold)" : "var(--color-gold)" }}>Explore</p>
+              <p className="text-label mb-2" style={{ color: bannerImg ? "var(--color-gold)" : "var(--color-gold)" }}>Crafted with purpose. Rooted in purity.</p>
               <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h1)", fontWeight: "var(--weight-heading)", color: bannerImg ? "white" : "var(--color-text-primary)" }}>
-                All Products
+                Our Products
               </h1>
               <p className="text-body-sm mt-2 font-body" style={{ color: bannerImg ? "rgba(255,255,255,0.8)" : "var(--color-text-muted)" }}>
-                {result.total > 0 ? `${result.total} products curated for you` : "Pure cane jaggery from Mandya"}
+                Our product direction is inspired by natural sweetness, rooted values, and a growing commitment to quality-led development — a dependable identity in jaggery and value-added natural sweeteners, built on trust, authenticity and customer confidence.
               </p>
             </div>
           </div>

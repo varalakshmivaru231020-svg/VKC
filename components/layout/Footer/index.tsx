@@ -134,8 +134,11 @@ export function Footer({
               {/* Gold accent */}
               <div className="mt-2 h-0.5 w-12" style={{ background: "linear-gradient(90deg, var(--color-gold), transparent)" }} />
             </div>
-            <p className="text-sm leading-relaxed max-w-[240px] font-body" style={{ color: "var(--color-text-muted)" }}>
+            <p className="text-sm leading-relaxed max-w-[320px] font-body" style={{ color: "var(--color-text-secondary)", textAlign: "left", hyphens: "none" }}>
               {tagline}
+            </p>
+            <p className="text-[13px] leading-relaxed max-w-[320px] font-body" style={{ color: "var(--color-text-muted)", textAlign: "left", hyphens: "none" }}>
+              VKC Gold Ikshu is a legacy-inspired brand shaped by the values of Late Shri B Ramachandra and led today by Naveenchandra B R. We stand for purity, trust and responsible growth. Our present business growth is carried forward through VKC JAGGERY &amp; BEVERAGES PRIVATE LIMITED.
             </p>
             {/* Social */}
             <div className="flex gap-2.5">

@@ -84,14 +84,18 @@ export default function ContactClient({
             color: "var(--color-text-primary)",
           }}
         >
-          Get in Touch
+          Contact Us
         </h1>
         <p
-          className="mt-3 text-base font-body max-w-md mx-auto"
-          style={{ color: "var(--color-text-muted)" }}
+          className="mt-3 text-base font-body max-w-2xl mx-auto"
+          style={{ color: "var(--color-text-muted)", textAlign: "center", hyphens: "none" }}
         >
-          Questions about an order, styling advice, or just want to say hello?
-          We're here for you.
+          We welcome enquiries from customers, retailers, distributors and business partners who value
+          authenticity, quality and long-term trust. Whether you are looking for product information,
+          supply partnerships or business discussions, our team will be happy to connect with you.
+        </p>
+        <p className="mt-5 italic" style={{ fontFamily: "var(--font-heading)", fontSize: "1.35rem", color: "var(--color-primary)", textAlign: "center" }}>
+          Let’s build trusted relationships, one honest conversation at a time.
         </p>
       </div>
 

@@ -440,10 +440,10 @@ function Seal({ text, size = 150, color = C.jaggeryDark, children }: { text: str
 
 /* ── Data ─────────────────────────────────────────────────────────────────── */
 const TIMELINE = [
-  { year: "1988", title: "Vairamudi Krupa Crusher", body: "Mr. Ramachandra B sets up a sugarcane crusher in Mandya, turning locally grown cane into honest, unrefined sweetness for the community around him." },
-  { year: "Growth", title: "A trusted local name", body: "Over the decades the crusher earns a reputation for purity and fair dealing with farmers — the foundation everything else is built on." },
-  { year: "Today", title: "VKC Cane Gold Foods Pvt. Ltd.", body: "The family enterprise is formalised as a natural food-processing company, combining traditional jaggery-making with modern, energy-efficient machinery." },
-  { year: "Ahead", title: "From Mandya to the world", body: "A healthy, chemical-free alternative to refined sugar — carrying Mandya's jaggery heritage to new markets." },
+  { year: "1988", title: "M/s Vairamudi Krupa Crusher", body: "Late Shri B Ramachandra sets up a sugarcane crusher in Mandya — the proprietorship that remains the original and most important base of our business journey." },
+  { year: "Growth", title: "A trusted local name", body: "Over the decades the crusher earns a reputation for purity, hard work and fair dealing with farmers — the values that still shape everything we do." },
+  { year: "2025", title: "VKC JAGGERY & BEVERAGES PRIVATE LIMITED", body: "Incorporated on 12 December 2025 (CIN U10722KA2025PTC212254) to carry the next phase of structured growth, while the proprietorship stays central to our identity and operations." },
+  { year: "Ahead", title: "Technology upgradation", body: "A proposed 50 TCD fully automatic, thermic-fluid-based jaggery and sugarcane juice processing project — for production efficiency, process consistency and future-ready manufacturing standards." },
 ];
 
 /* Philosophy: three pillars, straight from the mission statement. */
@@ -470,10 +470,16 @@ const VALUES = [
 ];
 
 const LEADERS = [
-  { name: "Mr. Ramachandra B", role: "Founder & Chairman (Honorary)", photo: "/images/team/ramachandra-b.webp", bio: "Senior advisor and mentor ensuring traditional quality." },
-  { name: "Mr. Naveenchandra B R", role: "Managing Director", photo: "/images/team/naveenchandra-b-r.webp", bio: "Leads operations, finance, and strategic growth." },
-  { name: "Mr. Abhishek B R", role: "Director — Operations", photo: "/images/team/abhishek-b-r.webp", bio: "Oversees production, modernization, and vendor coordination." },
-  { name: "Mrs. Pushpalatha", role: "Director — Quality & Administration", photo: "/images/team/pushpalatha.webp", bio: "Ensures hygiene, packaging, and internal audits." },
+  { name: "Late Shri B Ramachandra", role: "Founder · In Loving Memory", photo: "/images/team/ramachandra-b.webp", bio: "The visionary strength behind our family legacy, whose values of hard work, integrity and perseverance laid the foundation for our business journey." },
+  { name: "Mr. Naveenchandra B R", role: "Managing Director", photo: "/images/team/naveenchandra-b-r.webp", bio: "Following the legacy of Late Shri B Ramachandra, he now leads both the proprietorship and the private limited company with a clear focus on continuity, growth and modernisation." },
+  { name: "Mr. Abhishek B R", role: "Director", photo: "/images/team/abhishek-b-r.webp", bio: "Contributes to the growth of the business with dedication, energy and a progressive approach — supporting the family legacy with commitment and operational focus." },
+  { name: "Mrs. Pushpalatha", role: "Promoter Director", photo: "/images/team/pushpalatha.webp", bio: "A pillar of strength in our family journey, standing with unwavering support through every challenge and preserving the unity, resilience and values behind our legacy." },
+];
+
+/* Managing Director's profile, shown beneath the team. */
+const MD_PROFILE = [
+  "Naveenchandra B R now leads the VKC legacy forward with a clear commitment to purity, trust and long-term growth. Carrying the values established by Late Shri B Ramachandra, he represents the next chapter of the business with a practical, disciplined and forward-looking approach. His leadership is focused on preserving what matters most — credibility, quality and relationships — while building a stronger and more structured future for the brand.",
+  "Under his direction, the business continues to strengthen its foundation through formal registrations, quality awareness, and ongoing learning in food safety, compliance and product-related knowledge. This leadership style reflects both continuity and progress: loyal to the roots, but unafraid to modernise where needed.",
 ];
 
 const PROCESS = [
@@ -538,7 +544,7 @@ export default function AboutExperience({
           below md when one was uploaded. Without a banner, the designed hero
           below takes over. */}
       {hasBanner && desktopBanner && (
-        <section ref={heroRef} className="relative" style={{ background: C.bark }} aria-label={bannerAlt || "About VKC Cane Gold Foods"}>
+        <section ref={heroRef} className="relative" style={{ background: C.bark }} aria-label={bannerAlt || "About VKC Gold Ikshu"}>
           <img
             src={desktopBanner}
             alt={bannerAlt}
@@ -582,7 +588,7 @@ export default function AboutExperience({
               </h1>
               <Reveal delay={0.35}>
                 <p className="font-body mt-7" style={{ fontSize: "clamp(1.05rem,1.4vw,1.25rem)", lineHeight: 1.7, color: "rgba(255,251,244,0.8)", maxWidth: 600 }}>
-                  VKC Cane Gold Foods crafts pure, chemical-free jaggery and cane products
+                  VKC Gold Ikshu crafts pure, chemical-free jaggery and cane products
                   straight from the sugarcane fields of Mandya, Karnataka — rooted in a
                   farmer-first tradition that began in 1988.
                 </p>
@@ -732,11 +738,11 @@ export default function AboutExperience({
       <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-7">
-            <SectionHeading eyebrow="Who We Are" title="A Mandya family enterprise, rooted in the soil" />
+            <SectionHeading eyebrow="Who We Are" title="Founded in legacy. Led with purpose." />
             <Reveal delay={0.15}>
               <div className="mt-7 space-y-4 font-body" style={{ fontSize: 17, lineHeight: 1.8, color: C.ink2, maxWidth: 620 }}>
-                <p>VKC Cane Gold Foods Pvt. Ltd. is a natural food-processing company from Ballenahalli, Srirangapatna Taluk, in the Mandya district of Karnataka — the heart of India's sugarcane country.</p>
-                <p>As a registered MSME with GST compliance, we're proud to build in India and buy local — championing rural entrepreneurship and creating value close to where our cane is grown.</p>
+                <p>VKC Gold Ikshu is built on the strong foundation of M/s Vairamudi Krupa Crusher, the long-standing proprietorship in Ballenahalli, Srirangapatna Taluk, Mandya — the original and most important base of our business journey. Inspired by the legacy of Late Shri B Ramachandra and led today by Mr. Naveenchandra B R, with the support of his brother Mr. Abhishek B R and mother Mrs. Pushpalatha, the business continues to grow with a clear focus on quality, trust and responsible progress.</p>
+                <p>While the proprietorship remains central to our operations and identity, the next phase of development is carried forward through VKC JAGGERY &amp; BEVERAGES PRIVATE LIMITED, incorporated on 12 December 2025, with technology upgradation and structured expansion at its heart.</p>
               </div>
               <div className="mt-8 flex flex-wrap gap-2.5">
                 {["Make in India", "Vocal for Local", "Rural Entrepreneurship", "MSME Registered"].map((t) => (
@@ -764,11 +770,12 @@ export default function AboutExperience({
                 <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.1, mixBlendMode: "overlay" }} />
                 <div className="relative font-body font-semibold uppercase mb-2" style={{ fontSize: 10.5, letterSpacing: "0.24em", color: C.jaggeryLite }}>Company fact sheet</div>
                 {[
+                  { icon: Handshake, k: "Founded", v: "1988 · M/s Vairamudi Krupa Crusher (proprietorship)" },
+                  { icon: Factory, k: "Company", v: "VKC JAGGERY & BEVERAGES PRIVATE LIMITED · inc. 12 Dec 2025" },
+                  { icon: BadgeCheck, k: "CIN", v: "U10722KA2025PTC212254" },
+                  { icon: BadgeCheck, k: "Registration", v: "MSME / Udyam KR-21-0019065 · GST" },
                   { icon: MapPin, k: "Location", v: "Ballenahalli, Srirangapatna Taluk, Mandya — 571807" },
-                  { icon: BadgeCheck, k: "Registration", v: "MSME / Udyam · GST compliant" },
                   { icon: Sprout, k: "Sourcing", v: "Cane from local Mandya farmers" },
-                  { icon: Factory, k: "Production", v: "Chemical-free, modern processing" },
-                  { icon: Handshake, k: "Founded", v: "1988 · Vairamudi Krupa Crusher" },
                 ].map((b) => (
                   <div key={b.k} className="group relative grid grid-cols-[auto_1fr] sm:grid-cols-[auto_auto_1fr_auto] items-baseline gap-x-4 py-4" style={{ borderTop: "1px solid rgba(255,214,92,0.14)" }}>
                     <b.icon className="h-4 w-4 self-center transition-colors duration-300" style={{ color: "rgba(255,214,92,0.6)" }} />
@@ -842,7 +849,7 @@ export default function AboutExperience({
                 <div className="mt-4"><Eyebrow color={C.jaggeryLite}>Our Vision</Eyebrow></div>
               </div>
               <p className="lg:col-span-9 font-heading" style={{ fontSize: "clamp(1.8rem,3.6vw,3.1rem)", lineHeight: 1.12, letterSpacing: "-0.015em" }}>
-                <Words text="To make VKC Cane Gold Foods Pvt Ltd a trusted global brand representing Mandya's heritage of purity, health, and sweetness." />
+                <Words text="To make VKC Gold Ikshu a trusted global brand representing Mandya's heritage of purity, health, and sweetness." />
               </p>
             </div>
           </Spotlight>
@@ -892,11 +899,44 @@ export default function AboutExperience({
 
       {/* ── 8 · LEADERSHIP ───────────────────────────────────────────────── */}
       <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
-        <SectionHeading eyebrow="Our Core Team" title="The family behind vkcgoldikshu"
-          sub="A close-knit team carrying a 1988 legacy forward — with the same care for farmers, quality and trust." />
+        <SectionHeading eyebrow="Our Core Team" title="The family behind VKC Gold Ikshu"
+          sub="Founded in legacy by Late Shri B Ramachandra. Now led by Naveenchandra B R." />
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {LEADERS.map((l, i) => (
             <TeamCard key={l.name} index={i} {...l} />
+          ))}
+        </div>
+
+        {/* Managing Director's profile */}
+        <Reveal delay={0.1}>
+          <div className="mt-12 rounded-lg p-8 sm:p-10 grid lg:grid-cols-12 gap-8" style={{ background: C.cream, border: `1px solid ${C.parchment}` }}>
+            <div className="lg:col-span-4">
+              <Eyebrow>Leadership profile</Eyebrow>
+              <h3 className="font-heading mt-4" style={{ fontSize: "clamp(1.6rem,2.6vw,2.2rem)", lineHeight: 1.1, color: C.ink }}>Naveenchandra B R</h3>
+              <div className="font-body mt-1.5 uppercase" style={{ fontSize: 11.5, letterSpacing: "0.16em", color: C.jaggeryDark }}>Managing Director</div>
+            </div>
+            <div className="lg:col-span-8 space-y-4 font-body" style={{ fontSize: 16, lineHeight: 1.8, color: C.ink2 }}>
+              {MD_PROFILE.map((p) => <p key={p.slice(0, 24)}>{p}</p>)}
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Compliance & learning — full detail lives on two CMS pages */}
+        <div className="mt-6 grid gap-5 md:grid-cols-2">
+          {[
+            { href: "/quality-compliance", eyebrow: "Quality, Learning & Compliance", title: "Continuous learning in food safety and compliance", desc: "Training records in FSSAI regulations, food labelling, licensing, FSSC awareness and jaggery business development — presented as learning, not as licences." },
+            { href: "/registrations", eyebrow: "Registrations & Compliance", title: "A business framework built on proper structure", desc: "Company incorporation, enterprise registration and the operating records that support our journey." },
+          ].map((c, i) => (
+            <Reveal key={c.href} delay={i * 0.08}>
+              <Link href={c.href} className="group block h-full rounded-lg p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ background: "white", border: `1px solid ${C.parchment}` }}>
+                <Eyebrow>{c.eyebrow}</Eyebrow>
+                <h3 className="font-heading mt-4" style={{ fontSize: 24, lineHeight: 1.12, color: C.ink }}>{c.title}</h3>
+                <p className="font-body mt-3" style={{ fontSize: 14.5, lineHeight: 1.7, color: C.ink2 }}>{c.desc}</p>
+                <span className="mt-5 inline-flex items-center gap-2 font-body font-semibold" style={{ fontSize: 13.5, color: C.jaggeryDark }}>
+                  Read more <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </span>
+              </Link>
+            </Reveal>
           ))}
         </div>
       </section>
