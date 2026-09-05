@@ -14,6 +14,7 @@ import { WhyChoose } from "@/components/home/WhyChoose";
 import { Testimonials, type TestimonialItem } from "@/components/home/Testimonials";
 import { HomeHighlights, type HighlightBlock } from "@/components/home/HomeHighlights";
 import { ShopByCategories } from "@/components/home/ShopByCategories";
+import { Legacy } from "@/components/home/Legacy";
 import { getActiveGalleryItems } from "@/lib/db/gallery";
 import { EventGallery } from "@/components/events/EventGallery";
 
@@ -225,7 +226,10 @@ export default async function HomePage() {
           ))}
         </section>
       )}
-      {/* ── SHOP BY CATEGORIES — round tiles right under the hero ─────────── */}
+      {/* ── OUR LEGACY — directly below the banner ─────────────────────────── */}
+      <Legacy />
+
+      {/* ── SHOP BY CATEGORIES ────────────────────────────────────────────── */}
       <ShopByCategories categories={homeCategories} />
 
       {/* ── FEATURED PRODUCTS ─────────────────────────────────────────────────── */}
