@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
@@ -47,14 +47,17 @@ function ScrollWords({ text, progress, from, to, className = "", style, out }: {
   return (
     <motion.p className={className} style={{ ...style, opacity: fade }}>
       {words.map((w, i) => (
-        <ScrollWord key={i} word={w} progress={progress} from={from + ((to - from) * i) / words.length} to={from + ((to - from) * (i + 1)) / words.length} />
+        <Fragment key={i}>
+          {i > 0 && " "}
+          <ScrollWord word={w} progress={progress} from={from + ((to - from) * i) / words.length} to={from + ((to - from) * (i + 1)) / words.length} />
+        </Fragment>
       ))}
     </motion.p>
   );
 }
 function ScrollWord({ word, progress, from, to }: { word: string; progress: MotionValue<number>; from: number; to: number }) {
   const opacity = useTransform(progress, [from, to], [0.12, 1]);
-  return <motion.span className="inline-block mr-[0.28em]" style={{ opacity }}>{word}</motion.span>;
+  return <motion.span className="inline-block" style={{ opacity }}>{word}</motion.span>;
 }
 
 /** Page-level reading progress, a hairline of gold at the very top. */
@@ -101,8 +104,8 @@ export function LegacyContinues() {
 
       <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 pt-28 pb-24 sm:pt-40 sm:pb-32 grid lg:grid-cols-12 gap-12 lg:gap-16">
         {/* Oversized typography, revealed line by line */}
-        <div className="lg:col-span-6 lg:pr-12">
-          <h2 id="legacy-continues-heading" className="font-heading" style={{ fontSize: "clamp(3.2rem,9vw,8.5rem)", lineHeight: 0.92, letterSpacing: "-0.03em", color: C.ivory }}>
+        <div className="lg:col-span-6 min-w-0">
+          <h2 id="legacy-continues-heading" className="font-heading" style={{ fontSize: "clamp(3rem,6.2vw,6rem)", lineHeight: 0.92, letterSpacing: "-0.03em", color: C.ivory }}>
             {words.map((w, i) => (
               <LegacyWord key={w} word={w} progress={p} from={0.12 + i * 0.09} to={0.22 + i * 0.09} accent={i === 2} />
             ))}
