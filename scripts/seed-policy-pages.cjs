@@ -105,11 +105,17 @@ const HELP_LINKS = [
 (async () => {
   for (const p of PAGES) {
     const existing = await db.page.findUnique({ where: { slug: p.slug } });
-    if (existing && existing.metaTitle !== SEED_MARK) { console.log(`${p.slug.padEnd(10)} kept (edited in admin)`); continue; }
+    const metaTitle = p.title; // the page template appends the site name itself
+    if (existing) {
+      // Never overwrite admin edits. Only repair the old marker that leaked into the <title>.
+      if (existing.metaTitle === SEED_MARK || existing.metaTitle === `${p.title} — vkcgoldikshu`) { await db.page.update({ where: { slug: p.slug }, data: { metaTitle } }); console.log(`${p.slug.padEnd(20)} title repaired`); }
+      else console.log(`${p.slug.padEnd(20)} kept (edited in admin)`);
+      continue;
+    }
     await db.page.upsert({
       where: { slug: p.slug },
       update: { title: p.title, content: p.content, metaDesc: p.metaDesc, isActive: true },
-      create: { slug: p.slug, title: p.title, content: p.content, metaDesc: p.metaDesc, metaTitle: SEED_MARK, isActive: true, sortOrder: 60 },
+      create: { slug: p.slug, title: p.title, content: p.content, metaDesc: p.metaDesc, metaTitle, isActive: true, sortOrder: 60 },
     });
     console.log(`${p.slug.padEnd(10)} ${existing ? "refreshed" : "created"}`);
   }
