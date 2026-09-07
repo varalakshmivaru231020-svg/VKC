@@ -44,7 +44,7 @@ export function Legacy() {
       {/* soft warm glow */}
       <motion.div aria-hidden className="absolute -left-40 top-10 h-[520px] w-[520px] rounded-full pointer-events-none" animate={reduced ? undefined : { y: [0, 18, 0] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} style={{ background: `radial-gradient(circle, ${C.jaggery}22, transparent 66%)`, filter: "blur(24px)" }} />
 
-      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+      <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-28">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
 
           {/* Left: heading, pull quote, portraits */}
@@ -126,7 +126,7 @@ export function Legacy() {
                 Our identity comes from a rare balance: respect for traditional values, paired with a modern commitment to quality systems, compliance awareness and responsible growth.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/about" className="group relative inline-flex items-center gap-3 pl-6 pr-2 rounded-full font-body font-semibold text-sm overflow-hidden" style={{ height: 48, background: C.bark, color: C.ivory }}>
+                <Link href="#story" className="group relative inline-flex items-center gap-3 pl-6 pr-2 rounded-full font-body font-semibold text-sm overflow-hidden" style={{ height: 48, background: C.bark, color: C.ivory }}>
                   <span aria-hidden className="absolute inset-0 -translate-x-full transition-transform duration-500 ease-out group-hover:translate-x-0" style={{ background: C.jaggery }} />
                   <span className="relative transition-colors duration-500 group-hover:text-[#3A1F0A]">Our story</span>
                   <span className="relative grid place-items-center h-8 w-8 rounded-full transition-all duration-500 group-hover:translate-x-1 group-hover:bg-[#3A1F0A] group-hover:text-[#FFD65C]" style={{ background: C.jaggery, color: C.bark }}><ArrowRight className="h-4 w-4" /></span>

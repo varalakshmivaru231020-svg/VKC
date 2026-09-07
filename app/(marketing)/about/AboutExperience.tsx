@@ -9,6 +9,7 @@ import {
   Sparkles, Globe2, Factory, BadgeCheck, MapPin, Phone,
   Mail, MessageCircle, Target, Eye, Wheat, Leaf, Scale, Quote,
 } from "lucide-react";
+import { Legacy } from "@/components/about/Legacy";
 
 /* ── Deep-green & jaggery-gold palette (layered on the site tokens) ───────── */
 const C = {
@@ -546,6 +547,9 @@ export default function AboutExperience({
       )}
 
       <Marquee items={["100% Natural", "Chemical-Free", "Farmer-First", "Made in Mandya", "Since 1988", "No Preservatives"]} />
+
+      {/* ── 1b · OUR LEGACY — founder, values, and the hand-over to today ── */}
+      <Legacy />
 
       {/* ── 2 · OUR STORY (sticky split timeline) ────────────────────────── */}
       <section id="story" className="max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
