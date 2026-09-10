@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
 import {
-  ArrowRight, ArrowUpRight, Sprout, Handshake, Recycle, Cog, Heart, ShieldCheck,
-  Sparkles, Globe2, Factory, BadgeCheck, MapPin, Phone,
+  ArrowRight, ArrowUpRight, Sprout, Handshake, Recycle, Heart, ShieldCheck,
+  Sparkles, Globe2, BadgeCheck, MapPin, Phone,
   Mail, MessageCircle, Target, Eye, Wheat, Leaf, Scale, Quote,
 } from "lucide-react";
 import { Legacy } from "@/components/about/Legacy";
@@ -720,36 +720,6 @@ export default function AboutExperience({
               reader scrolls, lighting each badge as it passes. */}
           <ProcessSteps steps={PROCESS} />
 
-          {/* Dealer "ticket": perforated edge and a slowly turning cog. */}
-          <Reveal delay={0.1}>
-            <div className="mt-20 relative grid lg:grid-cols-12 rounded-lg overflow-hidden" style={{ background: "rgba(255,251,244,0.05)", border: "1px solid rgba(255,214,92,0.25)", backdropFilter: "blur(6px)" }}>
-              <div className="lg:col-span-3 relative p-8 sm:p-10 grid place-items-center" style={{ background: "rgba(255,214,92,0.08)" }}>
-                <motion.div animate={reduced ? undefined : { rotate: 360 }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-                  className="h-20 w-20 rounded-full grid place-items-center" style={{ background: C.jaggery, color: C.bark, boxShadow: "0 16px 40px rgba(201,139,46,0.35)" }}>
-                  <Cog className="h-9 w-9" />
-                </motion.div>
-                {/* perforation */}
-                <div aria-hidden className="hidden lg:block absolute right-0 top-0 bottom-0 w-px" style={{ borderRight: "2px dashed rgba(255,214,92,0.35)" }} />
-                <span aria-hidden className="hidden lg:block absolute -right-3 -top-3 h-6 w-6 rounded-full" style={{ background: C.bark }} />
-                <span aria-hidden className="hidden lg:block absolute -right-3 -bottom-3 h-6 w-6 rounded-full" style={{ background: C.bark }} />
-              </div>
-              <div className="lg:col-span-9 p-8 sm:p-10 grid lg:grid-cols-12 gap-6 items-center">
-                <div className="lg:col-span-8">
-                  <div className="font-body font-semibold uppercase" style={{ fontSize: 10.5, letterSpacing: "0.24em", color: C.jaggeryLite }}>Machinery partnership</div>
-                  <h3 className="font-heading mt-3" style={{ fontSize: "clamp(1.5rem,2.4vw,2rem)", lineHeight: 1.15, color: C.ivory }}>Jagadish Engineering Works, Gujarat</h3>
-                  <p className="font-body mt-3" style={{ fontSize: 15.5, lineHeight: 1.75, color: "rgba(255,251,244,0.78)" }}>
-                    Beyond our own production, VKC is the <strong style={{ color: C.jaggeryLite }}>authorized Karnataka dealer</strong> for
-                    Jagadish Engineering Works — bringing proven, energy-efficient jaggery-processing machinery to producers across the state.
-                  </p>
-                </div>
-                <div className="lg:col-span-4 lg:justify-self-end">
-                  <span className="inline-flex items-center gap-2 font-body font-semibold rounded-full px-4 py-2.5" style={{ fontSize: 13, background: "rgba(255,214,92,0.14)", color: C.jaggeryLite, border: "1px solid rgba(255,214,92,0.3)" }}>
-                    <Factory className="h-4 w-4" /> Authorized Karnataka Dealer
-                  </span>
-                </div>
-              </div>
-            </div>
-          </Reveal>
         </div>
       </section>
 
