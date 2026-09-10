@@ -57,7 +57,7 @@ export default function AboutExperience({
   phone?: string;
   whatsapp?: string;
   email?: string;
-  /** Admin → Banners, position "about_banner". Sits behind the hero copy, dimmed. */
+  /** Admin → Banners, position "about_banner". Shown full-width, uncropped, above the hero copy. */
   bannerImage?: string | null;
   bannerImageMobile?: string | null;
   bannerAlt?: string;
@@ -88,18 +88,20 @@ export default function AboutExperience({
       }} />
 
       {/* ── 01 · HERO — deep brown ───────────────────────────────────────── */}
-      <section ref={heroRef} className="relative overflow-hidden" style={{ background: C.espresso, minHeight: heroMin }} aria-labelledby="about-heading">
-        {desktopBanner && (
-          <>
-            <img src={desktopBanner} alt="" aria-hidden className={`absolute inset-0 h-full w-full object-cover ${hasSeparateMobileBanner ? "hidden md:block" : ""}`} />
-            {hasSeparateMobileBanner && mobileBanner && <img src={mobileBanner} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover md:hidden" />}
-            <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(27,14,5,0.82) 0%, rgba(27,14,5,0.7) 55%, rgba(27,14,5,0.9) 100%)" }} />
-          </>
-        )}
+      {/* An uploaded banner (Admin → Banners → "About Us — Hero Banner") carries
+          its own artwork and words, so it is shown whole — full width, at its
+          own aspect ratio, never cropped — and the copy band follows it rather
+          than sitting on top of it. Without a banner the band is the hero. */}
+      {desktopBanner && (
+        <section className="relative" style={{ background: C.espresso }} aria-label={bannerAlt || "About VKC Gold Ikshu"}>
+          <img src={desktopBanner} alt={bannerAlt} className={`block w-full h-auto ${hasSeparateMobileBanner ? "hidden md:block" : ""}`} />
+          {hasSeparateMobileBanner && mobileBanner && <img src={mobileBanner} alt={bannerAlt} className="block w-full h-auto md:hidden" />}
+        </section>
+      )}
+      <section ref={heroRef} className="relative overflow-hidden" style={{ background: C.espresso, minHeight: desktopBanner ? undefined : heroMin }} aria-labelledby="about-heading">
         <Atmosphere opacity={0.14} />
-        {bannerAlt && <span className="sr-only">{bannerAlt}</span>}
 
-        <motion.div className="relative w-full max-w-[1240px] mx-auto px-5 sm:px-8 pt-24 pb-20 sm:pt-28 sm:pb-24 flex flex-col justify-end" style={{ y: copyY, opacity: copyOpacity, minHeight: heroMin }}>
+        <motion.div className={`relative w-full max-w-[1240px] mx-auto px-5 sm:px-8 flex flex-col justify-end ${desktopBanner ? "pt-16 pb-16 sm:pt-20 sm:pb-20" : "pt-24 pb-20 sm:pt-28 sm:pb-24"}`} style={{ y: copyY, opacity: copyOpacity, minHeight: desktopBanner ? undefined : heroMin }}>
           <Reveal y={16}><Eyebrow color={C.jaggeryLite}>About VKC Gold Ikshu</Eyebrow></Reveal>
           <h1 id="about-heading" className="font-heading mt-7" style={{ fontSize: "clamp(2.8rem,7.6vw,6.6rem)", lineHeight: 0.98, letterSpacing: "-0.03em", color: C.ivory, maxWidth: 960 }}>
             <span className="block"><Words text="Rooted in Legacy." /></span>
@@ -122,12 +124,14 @@ export default function AboutExperience({
           </Reveal>
         </motion.div>
 
-        {/* Scroll cue */}
+        {/* Scroll cue (only when the band is the full hero) */}
+        {!desktopBanner && (
         <div className="absolute bottom-7 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 pointer-events-none">
           <span className="relative block w-px h-12 overflow-hidden" style={{ background: "rgba(255,251,244,0.2)" }}>
             <motion.span className="absolute left-0 top-0 w-px h-5" animate={reduced ? undefined : { y: [-20, 48] }} transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }} style={{ background: C.jaggeryLite }} />
           </span>
         </div>
+        )}
       </section>
 
       {/* ── 02 · A LEGACY THAT CONTINUES — warm ivory ────────────────────── */}
