@@ -24,6 +24,7 @@ export const C = {
   ink:         "#2B1708",
   ink2:        "#5C3A1E",
   muted:       "#8A6A4E",
+  sage:        "#6B7F5A",
 };
 
 export const EASE = [0.22, 1, 0.36, 1] as const;
