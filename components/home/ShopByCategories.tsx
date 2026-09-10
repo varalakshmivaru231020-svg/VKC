@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { FramedImage } from "@/components/ui/FramedImage";
+import { SmartImage } from "@/components/ui/SmartImage";
 
 /**
- * "Shop by Categories" — round image tiles under the hero.
+ * "Shop by Categories" — four circular category images under the hero.
+ *
+ * Each image IS the circle: the photo is clipped to a disc (cover, centred),
+ * with no ring or panel behind it, so it reads as one round picture rather
+ * than a square sitting inside a frame. Cards share one structure — image,
+ * title, arrow — with two lines reserved for the title so a wrapped name
+ * doesn't push its arrow out of line with the others.
  *
  * Categories come from Admin → Categories. Admin → Settings → Homepage can
  * pin and order a subset; otherwise every active category with an image is
@@ -28,8 +34,6 @@ const C = {
 
 export function ShopByCategories({ categories, eyebrow = "Collections", heading = "Shop by Categories" }: { categories: HomeCategory[]; eyebrow?: string; heading?: string }) {
   if (!categories.length) return null;
-  // A centred, wrapping row: one category sits in the middle, four sit in a
-  // line, and larger catalogues wrap into further centred rows.
 
   return (
     <section className="py-16 sm:py-20" style={{ background: C.ivory }} aria-labelledby="shop-by-categories-heading">
@@ -42,19 +46,21 @@ export function ShopByCategories({ categories, eyebrow = "Collections", heading 
           <span className="block mx-auto mt-5 h-[2px] w-16" style={{ background: `linear-gradient(90deg, transparent, ${C.jaggery}, transparent)` }} />
         </div>
 
-        <ul className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-10 lg:gap-x-10 list-none m-0 p-0">
+        {/* Desktop: four across. Tablet and phones: two across. Every cell is the
+            same width, so all four discs are exactly the same size. */}
+        <ul className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-10 sm:gap-x-8 lg:gap-x-10 justify-items-center list-none m-0 p-0">
           {categories.map((cat) => (
-            <li key={cat.id} className="w-[calc(50%-0.75rem)] sm:w-[240px] lg:w-[280px]">
-              <Link href={`/category/${cat.slug}`} className="group block text-center" aria-label={`Shop ${cat.name}`}>
-                {/* Round tile: soft cream ring. The disc is filled edge to edge with a
-                    blurred copy of the artwork, and the whole sharp image sits inside it
-                    (11% in, so even a 3:4 packshot's corners stay within the circle) —
-                    a clean circle, nothing cropped, whatever shape the upload is. */}
-                <div className="relative mx-auto aspect-square w-full rounded-full overflow-hidden transition-transform duration-500 group-hover:-translate-y-1.5"
-                  style={{ background: C.cream, boxShadow: `0 0 0 6px ${C.ivory}, 0 0 0 7px ${C.parchment}, 0 24px 48px -28px rgba(58,31,10,0.45)`, WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}>
+            <li key={cat.id} className="w-full flex justify-center min-w-0">
+              <Link href={`/category/${cat.slug}`} className="group flex w-full flex-col items-center text-center" style={{ maxWidth: "clamp(220px, 20vw, 300px)" }} aria-label={`Shop ${cat.name}`}>
+                {/* The circular image. Square wrapper, clipped to a disc; the photo
+                    fills it (cover, centred) and zooms gently inside it on hover while
+                    the disc itself stays put. The radial mask keeps Safari clipping the
+                    scaled image to the circle. */}
+                <div className="relative w-full aspect-square rounded-full overflow-hidden"
+                  style={{ background: C.cream, boxShadow: "0 18px 40px -28px rgba(58,31,10,0.4)", WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}>
                   {cat.imageUrl ? (
-                    <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.05]">
-                      <FramedImage src={cat.imageUrl} alt={cat.name} inset="11%" feather="corners" />
+                    <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-[1.05]">
+                      <SmartImage src={cat.imageUrl} alt={cat.name} fill objectFit="cover" objectPosition="center" />
                     </div>
                   ) : (
                     <div className="absolute inset-0 grid place-items-center p-6">
@@ -62,10 +68,19 @@ export function ShopByCategories({ categories, eyebrow = "Collections", heading 
                     </div>
                   )}
                 </div>
-                <div className="mt-5 inline-flex items-center gap-1.5 font-body font-semibold transition-colors duration-300 group-hover:text-[#9A5B0B]" style={{ fontSize: 15.5, color: C.ink }}>
-                  {cat.name}
-                  <ArrowRight className="h-3.5 w-3.5 opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" style={{ color: C.jaggeryDark }} />
+
+                {/* Title: top-aligned in a two-line slot, so single-line names sit on
+                    the same line as the first line of a wrapped one, and the arrow
+                    row below lands at the same height on every card. */}
+                <div className="mt-4 flex w-full items-start justify-center font-body font-semibold text-[14px] sm:text-[15.5px]"
+                  style={{ lineHeight: 1.3, minHeight: "2.6em", color: C.ink }}>
+                  <span className="transition-colors duration-300 group-hover:text-[#9A5B0B]">{cat.name}</span>
                 </div>
+
+                {/* Arrow row. */}
+                <span className="mt-4 inline-flex items-center gap-1.5 font-body font-semibold uppercase" style={{ fontSize: 11, letterSpacing: "0.16em", color: C.jaggeryDark }}>
+                  Shop <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                </span>
               </Link>
             </li>
           ))}
