@@ -132,7 +132,10 @@ final _router = GoRouter(
     // Editorial + store pages
     GoRoute(path: '/journal', builder: (_, __) => const BlogListScreen()),
     GoRoute(path: '/journal/:slug', builder: (_, s) => BlogDetailScreen(slug: s.pathParameters['slug']!)),
-    GoRoute(path: '/about', builder: (_, __) => const AboutScreen()),
+    // About Us and Leadership are the website's own pages, shown in-app so the
+    // story reads exactly as it does on vkcgoldikshu.com and is edited in one place.
+    GoRoute(path: '/about', builder: (_, __) => const WebPageScreen(title: 'About Us', path: '/about')),
+    GoRoute(path: '/leadership', builder: (_, __) => const WebPageScreen(title: 'Leadership', path: '/leadership')),
     GoRoute(path: '/contact', builder: (_, __) => const ContactScreen()),
     GoRoute(path: '/video-booking', builder: (_, __) => const VideoBookingScreen()),
     // Website pages the mobile API doesn't serve (gallery, stories, policies)

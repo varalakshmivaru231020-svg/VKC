@@ -273,6 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: () => context.push('/pages/gallery?title=Gallery')),
         _section('The House'),
         _row(context, Icons.storefront_outlined, 'About Us', 'Natural since 1988', onTap: () => context.push('/about')),
+        _row(context, Icons.groups_outlined, 'Leadership', 'The family behind VKC Gold', onTap: () => context.push('/leadership')),
         _row(context, Icons.chat_bubble_outline, 'Contact Us', 'Call, WhatsApp or visit', onTap: () => context.push('/contact')),
         // Policy rows appear only for the documents the store has actually
         // published (via /v1/app-config → legal). The website's /shipping,

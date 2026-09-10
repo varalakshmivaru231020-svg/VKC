@@ -6,7 +6,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../ecom/ecom_api.dart';
 import '../ecom/ecom_config.dart';
 import '../ecom/ecom_models.dart' hide Banner;
-import '../ecom/ecom_models.dart' as ecom show Banner;
 import '../theme.dart';
 import '../widgets.dart';
 
@@ -29,6 +28,7 @@ String? _appRoute(String path) {
   if (p == '/blog') return '/journal';
   if (segs.length == 2 && segs.first == 'blog') return '/journal/${segs[1]}';
   if (p == '/about') return '/about';
+  if (p == '/leadership') return '/leadership';
   if (p == '/contact') return '/contact';
   if (p == '/track-order') return '/track-order';
   if (p == '/cart' || p == '/wishlist') return p;
@@ -499,10 +499,10 @@ class _PopupDialog extends StatelessWidget {
   }
 }
 
-// ── Website pages in-app (gallery, policies) ─────────────────────────────────
-/// A page of vkcgoldikshu.com shown inside the app. Used for the
-/// content the mobile API doesn't serve — the gallery and the policy pages —
-/// so the customer reads the store's real words, not a copy that can drift.
+// ── Website pages in-app (about, leadership, gallery, policies) ──────────────
+/// A page of vkcgoldikshu.com shown inside the app. Used for the content the
+/// mobile API doesn't serve — About Us, Leadership, the gallery and the policy
+/// pages — so the customer reads the store's real words, not a copy that can drift.
 class WebPageScreen extends StatefulWidget {
   final String title;
   final String path;
@@ -604,187 +604,6 @@ class _WebPageScreenState extends State<WebPageScreen> {
       ),
     );
   }
-}
-
-// ── About ────────────────────────────────────────────────────────────────────
-/// The house, from the store's own /v1/app-config record and its about banner.
-class AboutScreen extends StatefulWidget {
-  const AboutScreen({super.key});
-  @override
-  State<AboutScreen> createState() => _AboutScreenState();
-}
-
-class _AboutScreenState extends State<AboutScreen> {
-  ecom.Banner? _banner;
-
-  @override
-  void initState() {
-    super.initState();
-    // A missing banner just means the page falls back to the silk header.
-    EcomApi.I.banners(position: 'about_banner').then((list) {
-      if (mounted && list.isNotEmpty) setState(() => _banner = list.first);
-    }).ignore();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: VlColors.canvas,
-      floatingActionButton: const VideoCallFab(),
-      body: SafeArea(
-        child: ValueListenableBuilder<StoreConfig>(
-          valueListenable: storeConfig,
-          builder: (context, cfg, _) => Column(children: [
-            TopBar(title: 'About', onBack: () => context.canPop() ? context.pop() : context.go('/profile')),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: 30),
-                children: [
-                  if ((_banner?.image ?? '').isNotEmpty)
-                    AspectRatio(aspectRatio: 16 / 9, child: NetImage(url: _banner!.image, radius: 0))
-                  else
-                    const AspectRatio(aspectRatio: 16 / 9, child: Silk(palette: 0, radius: 0)),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      // Every line here is the store's own, from its About
-                      // page — kept in step with ABOUT_DEFAULTS in
-                      // lib/settings/about.ts on the web side.
-                      Text("MANDYA'S PRIDE SINCE 1988", style: VlText.upper(9, color: VlColors.red, letter: 0.22)),
-                      const SizedBox(height: 8),
-                      Text('Sweetness of Nature,\nStrength of Tradition.', style: VlText.display(30, height: 1.15)),
-                      if (cfg.tagline.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(cfg.tagline, style: VlText.display(17, color: VlColors.muted, style: FontStyle.italic)),
-                      ],
-                      const DoubleRule(margin: EdgeInsets.symmetric(vertical: 20)),
-                      Text(
-                        'VKC Gold delivers the purest form of natural sweetness, straight from the sugarcane '
-                        'fields of Mandya, Karnataka. Established in 1988, we are a natural food processing '
-                        'enterprise dedicated to chemical-free, healthy jaggery products.',
-                        style: VlText.body(14, color: VlColors.ink2, height: 1.75),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'We work directly with local farmers on fair pricing, then combine traditional know-how '
-                        'with modern, eco-friendly machinery — sugarcane crushing, juice extraction, filtration, '
-                        'boiling and packaging — so that nothing is lost between the field and the finished product.',
-                        style: VlText.body(14, color: VlColors.ink2, height: 1.75),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Every product carries the same promise: no artificial colours, no artificial flavours, '
-                        'and no chemicals added. From pure jaggery cubes and natural powder to syrups, bars and '
-                        'festive gift hampers, we make natural sweetness part of everyday life.',
-                        style: VlText.body(14, color: VlColors.ink2, height: 1.75),
-                      ),
-                      const SizedBox(height: 22),
-                      Text('WHAT WE STAND FOR', style: VlText.upper(9, letter: 0.22)),
-                      const SizedBox(height: 12),
-                      _value('Support to Local Farmers',
-                          'We empower rural communities around Mandya with fair pricing, buying cane directly from the farmers who grow it.'),
-                      _value('Purity and Quality First',
-                          '100% natural production with no preservatives, no artificial colours or flavours, and no chemicals added at any stage.'),
-                      _value('Innovation with Tradition',
-                          'Time-honoured jaggery-making combined with modern machinery and hygienic processing, for consistent quality in every batch.'),
-                      _value('Sustainable Growth',
-                          'Eco-friendly manufacturing that reduces waste, as we grow towards becoming a trusted global brand for Mandya’s sweetness.'),
-                      const DoubleRule(margin: EdgeInsets.symmetric(vertical: 20)),
-                      _fact(Icons.storefront_outlined, 'Karnataka store', cfg.storeAddress),
-                      _fact(Icons.business_outlined, 'Registered office',
-                          'VKC Cane Gold Foods Pvt. Ltd., Ballenahalli Village, Srirangapatna Taluk, Mandya District, Karnataka – 571807'),
-                      if (cfg.phone.isNotEmpty) _fact(Icons.call_outlined, 'Call us', cfg.phone),
-                      if (cfg.email.isNotEmpty) _fact(Icons.mail_outline, 'Write to us', cfg.email),
-                      // The GST line is gone until the new entity's number is
-                      // confirmed — the one here belonged to the old business.
-                      const SizedBox(height: 12),
-                      // "Our Story" pointed at a stories page the site no
-                      // longer has, so Contact stands on its own.
-                      _linkBtn('CONTACT', () => context.push('/contact')),
-                      // The website closes its About page with this block —
-                      // its words, its two calls to action.
-                      const DoubleRule(margin: EdgeInsets.symmetric(vertical: 22)),
-                      Text('TASTE THE DIFFERENCE', style: VlText.upper(9, color: VlColors.red, letter: 0.22)),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Browse our range of chemical-free jaggery products — made with care, from cane '
-                        'grown by farmers we know by name.',
-                        style: VlText.body(14, color: VlColors.ink2, height: 1.75),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(children: [
-                        Expanded(child: _linkBtn('SHOP ALL', () => context.push('/listing'))),
-                        const SizedBox(width: 10),
-                        Expanded(child: _linkBtn('GET IN TOUCH', () => context.push('/contact'))),
-                      ]),
-                      const SizedBox(height: 22),
-                      Center(
-                        child: Column(children: [
-                          Lozenge(color: VlColors.rule2),
-                          const SizedBox(height: 8),
-                          Text('VKC GOLD', style: VlText.upper(8, color: VlColors.muted2, letter: 0.3)),
-                        ]),
-                      ),
-                    ]),
-                  ),
-                ],
-              ),
-            ),
-          ]),
-        ),
-      ),
-    );
-  }
-
-  /// One of the store's stated values, in its own words.
-  Widget _value(String title, String body) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Lozenge(color: VlColors.red, size: 5),
-            const SizedBox(width: 8),
-            Text(title, style: VlText.ui(13, weight: FontWeight.w600)),
-          ]),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.only(left: 13),
-            child: Text(body, style: VlText.body(12, color: VlColors.muted, height: 1.6)),
-          ),
-        ]),
-      );
-
-  Widget _fact(IconData ic, String label, String value) {
-    if (value.trim().isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(color: VlColors.cream, borderRadius: BorderRadius.circular(8)),
-          child: Icon(ic, size: 15, color: VlColors.redDeep),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label.toUpperCase(), style: VlText.upper(8, color: VlColors.muted, letter: 0.2)),
-            const SizedBox(height: 3),
-            Text(value, style: VlText.body(12, color: VlColors.ink2, height: 1.5)),
-          ]),
-        ),
-      ]),
-    );
-  }
-
-  Widget _linkBtn(String label, VoidCallback onTap) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 13),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(VlRadii.md), border: Border.all(color: VlColors.rule2)),
-          child: Text(label, style: VlText.ui(11, weight: FontWeight.w600, letter: 0.12)),
-        ),
-      );
 }
 
 // ── Contact ──────────────────────────────────────────────────────────────────
