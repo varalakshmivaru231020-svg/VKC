@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { ArrowLeft, ArrowRight, Clock3 } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { FramedImage } from "@/components/ui/FramedImage";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -115,7 +116,7 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
               {related.map((b) => (
                 <Link key={b.id} href={`/blog/${b.slug}`} className="group flex flex-col rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ background: "white", border: `1px solid ${C.parchment}` }}>
                   <div className="relative overflow-hidden" style={{ aspectRatio: "4 / 3", background: C.ivory }}>
-                    {b.imageUrl && <div className="absolute inset-3 transition-transform duration-500 group-hover:scale-[1.04]"><SmartImage src={b.imageUrl} alt={b.title} fill objectFit="contain" /></div>}
+                    {b.imageUrl && <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04]"><FramedImage src={b.imageUrl} alt={b.title} feather="sides" /></div>}
                   </div>
                   <div className="p-6">
                     <div className="font-body" style={{ fontSize: 12.5, color: C.muted }}>{fmtDate(b.publishedAt ?? b.createdAt)}</div>

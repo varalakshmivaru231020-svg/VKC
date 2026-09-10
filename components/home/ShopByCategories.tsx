@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { SmartImage } from "@/components/ui/SmartImage";
+import { FramedImage } from "@/components/ui/FramedImage";
 
 /**
  * "Shop by Categories" — round image tiles under the hero.
@@ -46,15 +46,15 @@ export function ShopByCategories({ categories, eyebrow = "Collections", heading 
           {categories.map((cat) => (
             <li key={cat.id} className="w-[calc(50%-0.75rem)] sm:w-[240px] lg:w-[280px]">
               <Link href={`/category/${cat.slug}`} className="group block text-center" aria-label={`Shop ${cat.name}`}>
-                {/* Round tile: soft cream ring, the artwork fills the whole circle (cover)
-                    so it reads as a clean disc rather than a photo sitting inside a ring.
-                    Portrait uploads lose a little of their top and bottom to the crop —
-                    square category images with the product centred show best here. */}
+                {/* Round tile: soft cream ring. The disc is filled edge to edge with a
+                    blurred copy of the artwork, and the whole sharp image sits inside it
+                    (11% in, so even a 3:4 packshot's corners stay within the circle) —
+                    a clean circle, nothing cropped, whatever shape the upload is. */}
                 <div className="relative mx-auto aspect-square w-full rounded-full overflow-hidden transition-transform duration-500 group-hover:-translate-y-1.5"
-                  style={{ background: C.cream, boxShadow: `0 0 0 6px ${C.ivory}, 0 0 0 7px ${C.parchment}, 0 24px 48px -28px rgba(58,31,10,0.45)` }}>
+                  style={{ background: C.cream, boxShadow: `0 0 0 6px ${C.ivory}, 0 0 0 7px ${C.parchment}, 0 24px 48px -28px rgba(58,31,10,0.45)`, WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}>
                   {cat.imageUrl ? (
-                    <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.06]">
-                      <SmartImage src={cat.imageUrl} alt={cat.name} fill objectFit="cover" objectPosition="center" />
+                    <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.05]">
+                      <FramedImage src={cat.imageUrl} alt={cat.name} inset="11%" feather="corners" />
                     </div>
                   ) : (
                     <div className="absolute inset-0 grid place-items-center p-6">

@@ -9,6 +9,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import HeroSlider from "@/components/home/HeroSlider";
 import { PopupBanner } from "@/components/home/PopupBanner";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { FramedImage } from "@/components/ui/FramedImage";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import { WhyChoose } from "@/components/home/WhyChoose";
 import { Testimonials, type TestimonialItem } from "@/components/home/Testimonials";
@@ -353,7 +354,7 @@ export default async function HomePage() {
                   style={{ background: "white", borderColor: "var(--color-parchment)" }}>
                   <div className="relative overflow-hidden" style={{ background: "var(--color-cream)", aspectRatio: "4 / 3" }}>
                     {blog.imageUrl
-                      ? <div className="absolute inset-3 transition-transform duration-500 group-hover:scale-[1.04]"><SmartImage src={blog.imageUrl} alt={blog.title} fill objectFit="contain" /></div>
+                      ? <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04]"><FramedImage src={blog.imageUrl} alt={blog.title} feather="sides" /></div>
                       : <div className="w-full h-full flex items-center justify-center">
                           <Sparkles className="h-12 w-12 opacity-20" style={{ color: "var(--color-primary)" }} />
                         </div>}
