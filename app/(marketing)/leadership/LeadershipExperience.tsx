@@ -21,7 +21,7 @@ const C = {
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const LEADERS = [
-  { name: "Late Shri B Ramachandra", role: "Founder · In Loving Memory", photo: "/images/team/ramachandra-b.webp", bio: "The visionary strength behind our family legacy, whose values of hard work, integrity and perseverance laid the foundation for our business journey." },
+  { name: "Late Shri B Ramachandra", role: "Founder · In Loving Memory", photo: "/images/team/ramachandra-b.webp", bio: "The visionary strength behind our family legacy, whose values of hard work, integrity and perseverance laid the foundation for our business journey.", href: "/founder", cta: "Read the tribute" },
   { name: "Mr. Naveenchandra B R", role: "Managing Director", photo: "/images/team/naveenchandra-b-r.webp", bio: "Following the legacy of Late Shri B Ramachandra, he now leads both the proprietorship and the private limited company with a clear focus on continuity, growth and modernisation." },
   { name: "Mr. Abhishek B R", role: "Director", photo: "/images/team/abhishek-b-r.webp", bio: "Contributes to the growth of the business with dedication, energy and a progressive approach — supporting the family legacy with commitment and operational focus." },
   { name: "Mrs. Pushpalatha", role: "Promoter Director", photo: "/images/team/pushpalatha.webp", bio: "A pillar of strength in our family journey, standing with unwavering support through every challenge and preserving the unity, resilience and values behind our legacy." },
@@ -54,7 +54,7 @@ function Eyebrow({ children, color = C.jaggeryDark }: { children: React.ReactNod
    The whole portrait is shown (object-fit: contain in a 3:4 frame) — nothing
    is cropped and nothing sits over the face. The card tilts gently with the
    cursor; the photo drifts a few pixels the other way for depth. */
-function TeamCard({ name, role, photo, bio, index }: { name: string; role: string; photo: string; bio: string; index: number }) {
+function TeamCard({ name, role, photo, bio, index, href, cta }: { name: string; role: string; photo: string; bio: string; index: number; href?: string; cta?: string }) {
   const reduced = useReducedMotion();
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -101,6 +101,11 @@ function TeamCard({ name, role, photo, bio, index }: { name: string; role: strin
           <div className="font-body mt-1.5 uppercase" style={{ fontSize: 10.5, letterSpacing: "0.16em", color: C.jaggeryDark }}>{role}</div>
           <p className="font-body mt-3" style={{ fontSize: 14.5, lineHeight: 1.65, color: C.ink2, textAlign: "left", hyphens: "none" }}>{bio}</p>
           <span className="block mt-4 h-[2px] w-8 origin-left transition-transform duration-500 group-hover:scale-x-[3]" style={{ background: C.jaggery }} />
+          {href && cta && (
+            <Link href={href} className="mt-4 inline-flex items-center gap-2 font-body font-semibold" style={{ fontSize: 13.5, color: C.jaggeryDark }}>
+              {cta} <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          )}
         </div>
       </motion.div>
     </motion.div>

@@ -17,6 +17,7 @@ const DEFAULT_SHOP_LINKS: FooterLink[] = [
 const DEFAULT_HELP_LINKS: FooterLink[] = [
   { label: "About Us",          href: "/about" },
   { label: "Leadership",        href: "/leadership" },
+  { label: "Our Founder",       href: "/founder" },
   { label: "Credentials",       href: "/credentials" },
   { label: "Contact Us",        href: "/contact" },
   { label: "Shipping Policy",   href: "/shipping" },

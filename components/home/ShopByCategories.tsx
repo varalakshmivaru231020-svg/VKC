@@ -69,11 +69,12 @@ export function ShopByCategories({ categories, eyebrow = "Collections", heading 
                   )}
                 </div>
 
-                {/* Title: top-aligned in a two-line slot, so single-line names sit on
-                    the same line as the first line of a wrapped one, and the arrow
-                    row below lands at the same height on every card. */}
-                <div className="mt-4 flex w-full items-start justify-center font-body font-semibold text-[14px] sm:text-[15.5px]"
-                  style={{ lineHeight: 1.3, minHeight: "2.6em", color: C.ink }}>
+                {/* Title: top-aligned in a fixed slot (three lines on phones, two from
+                    sm up), so single-line names sit on the same line as the first line
+                    of a wrapped one, and the arrow row lands at the same height on
+                    every card. */}
+                <div className="mt-4 flex w-full items-start justify-center font-body font-semibold text-[14px] sm:text-[15.5px] min-h-[3.9em] sm:min-h-[2.6em]"
+                  style={{ lineHeight: 1.3, color: C.ink }}>
                   <span className="transition-colors duration-300 group-hover:text-[#9A5B0B]">{cat.name}</span>
                 </div>
 
