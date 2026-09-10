@@ -146,10 +146,12 @@ function ValuesList() {
 }
 
 /* One half of the Heritage → Future split: a real photograph when the admin
-   has uploaded one, otherwise a typographic panel with the facts. */
+   has uploaded one, otherwise a typographic panel with the facts. Only the
+   photograph version reserves height — the text panel fits its content, so
+   there is no empty space waiting for an image that is not there yet. */
 function SplitPanel({ image, dark, label, title, facts }: { image: string | null; dark: boolean; label: string; title: string; facts: string[] }) {
   return (
-    <div className="relative overflow-hidden flex items-end" style={{ background: dark ? C.bark : C.cream, minHeight: "clamp(420px, 42vw, 600px)" }}>
+    <div className="relative overflow-hidden flex items-end" style={{ background: dark ? C.bark : C.cream, minHeight: image ? "clamp(420px, 42vw, 600px)" : undefined }}>
       {image ? (
         <>
           <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -158,7 +160,7 @@ function SplitPanel({ image, dark, label, title, facts }: { image: string | null
       ) : (
         dark && <Atmosphere glow={false} opacity={0.1} />
       )}
-      <div className="relative p-8 sm:p-12">
+      <div className="relative p-8 sm:p-12 lg:p-14">
         <Eyebrow color={image || dark ? C.jaggeryLite : C.jaggeryDark}>{label}</Eyebrow>
         <h3 className="font-heading mt-4" style={{ fontSize: "clamp(1.8rem,3.2vw,2.8rem)", lineHeight: 1.08, letterSpacing: "-0.02em", color: image || dark ? C.ivory : C.ink }}>{title}</h3>
         <ul className="mt-5 space-y-2 list-none m-0 p-0 font-body" style={{ fontSize: 14.5, lineHeight: 1.6, color: image || dark ? "rgba(255,251,244,0.8)" : C.ink2 }}>
