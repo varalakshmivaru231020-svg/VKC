@@ -7,10 +7,10 @@ import { ArrowRight, BadgeCheck, Mail, MessageCircle, Phone } from "lucide-react
 import { Atmosphere, C, Eyebrow, MILESTONES, Portrait, Reveal, SectionHeading, Words } from "@/components/about/heritage";
 
 /**
- * About Us — who we are. A heritage story told in eight movements, each on its
- * own ground (deep brown → ivory → dark brown → cream → ivory → dark brown →
- * ivory → deep brown), so the page reads as a journey rather than one flat
- * panel. The founder has his own page (/founder) and the family today has
+ * About Us — who we are. A heritage story told in ten movements, each on its
+ * own ground (deep brown → ivory → dark brown → cream → ivory → cream → ivory
+ * → dark brown → ivory → deep brown), so the page reads as a journey rather
+ * than one flat panel. The founder has his own page (/founder) and the family today has
  * theirs (/leadership); this page introduces both without repeating them.
  */
 
@@ -23,6 +23,23 @@ const PRINCIPLES = [
 ];
 
 const EQUATION = ["Traditional Values", "Modern Quality Systems", "Compliance Awareness", "Responsible Growth"];
+
+/* Philosophy: three pillars, straight from the mission statement. */
+const PHILOSOPHY = [
+  { t: "Fair Pricing", d: "Honest, dependable rates paid directly to the farmers who grow our cane — so rural livelihoods share in the value they create." },
+  { t: "Transparent Transactions", d: "Clear, straightforward dealings that farmers and customers can trust, every single time. No middlemen, no surprises." },
+  { t: "Modern, Chemical-Free Production", d: "Energy-efficient, high-recovery systems built with Jagadish Machinery (Gujarat) — modernised, yet true to our ancestral values." },
+];
+
+const VISION = "To make VKC Gold Ikshu a trusted global brand representing Mandya’s heritage of purity, health, and sweetness.";
+
+const MISSION = [
+  { t: "Farmer Empowerment", d: "Fair prices and direct partnerships that strengthen rural communities around Mandya." },
+  { t: "Chemical-Free Production", d: "100% natural processing with nothing artificial added, ever." },
+  { t: "Innovation & Quality", d: "Modern machinery and consistent quality in every batch we make." },
+  { t: "Sustainable Growth", d: "Eco-friendly manufacturing that reduces waste as we grow." },
+  { t: "Global Expansion", d: "Taking Mandya’s natural sweetness to markets across India and beyond." },
+];
 
 /* Primary and secondary buttons, dark and light variants. */
 function ButtonPrimary({ href, children, dark = true }: { href: string; children: React.ReactNode; dark?: boolean }) {
@@ -268,7 +285,70 @@ export default function AboutExperience({
         </div>
       </section>
 
-      {/* ── 06 · TRADITION × MODERN BUSINESS — dark brown ────────────────── */}
+      {/* ── 06 · OUR PHILOSOPHY — warm cream ─────────────────────────────── */}
+      <section style={{ background: C.cream }}>
+        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-28">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-end">
+            <div className="lg:col-span-6">
+              <SectionHeading eyebrow="Our philosophy" title="Sustainability begins at the roots — with farmers." accent="farmers." />
+            </div>
+            <Reveal delay={0.15} className="lg:col-span-6">
+              <div className="space-y-4 font-body" style={{ fontSize: 16.5, lineHeight: 1.8, color: C.ink2 }}>
+                <p>Our mission is to empower rural communities by ensuring fair pricing, transparent transactions, and access to modern, chemical-free production systems.</p>
+                <p>By collaborating with Jagadish Machinery (Gujarat) and adopting energy-efficient, high-recovery systems, we’ve modernised our process while staying true to our ancestral values.</p>
+              </div>
+            </Reveal>
+          </div>
+          <div className="mt-14 grid md:grid-cols-3 gap-x-10 gap-y-10">
+            {PHILOSOPHY.map((p, i) => (
+              <Reveal key={p.t} delay={i * 0.08}>
+                <div className="pt-6 h-full" style={{ borderTop: `1px solid ${C.jaggery}66` }}>
+                  <div className="font-heading" style={{ fontSize: "clamp(2.6rem,4.5vw,3.6rem)", lineHeight: 1, color: `${C.jaggery}99`, letterSpacing: "-0.03em" }}>0{i + 1}</div>
+                  <h3 className="font-heading mt-5" style={{ fontSize: 26, lineHeight: 1.1, color: C.ink }}>{p.t}</h3>
+                  <p className="font-body mt-3" style={{ fontSize: 15, lineHeight: 1.7, color: C.ink2 }}>{p.d}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 07 · VISION & MISSION — ivory, the vision on a dark panel ─────── */}
+      <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-28" aria-labelledby="vision-heading">
+        <Reveal>
+          <div className="relative overflow-hidden rounded-lg p-10 sm:p-16 lg:p-20" style={{ background: `linear-gradient(135deg, ${C.bark}, ${C.barkSoft})`, color: C.ivory }}>
+            <Atmosphere glow={false} opacity={0.12} />
+            <div className="relative grid lg:grid-cols-12 gap-8 items-start">
+              <div className="lg:col-span-3"><Eyebrow color={C.jaggeryLite}>Our vision</Eyebrow></div>
+              <h2 id="vision-heading" className="lg:col-span-9 font-heading m-0" style={{ fontSize: "clamp(1.7rem,3.4vw,2.9rem)", lineHeight: 1.14, letterSpacing: "-0.015em", color: C.ivory }}>
+                <Words text={VISION} accent="purity" />
+              </h2>
+            </div>
+          </div>
+        </Reveal>
+        <div className="mt-16 sm:mt-20 grid lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-4">
+            <div className="lg:sticky lg:top-28">
+              <SectionHeading eyebrow="Our mission" title="Five things we get up for" accent="five" />
+            </div>
+          </div>
+          <div className="lg:col-span-8">
+            {MISSION.map((m, i) => (
+              <Reveal key={m.t} delay={i * 0.05}>
+                <div className="group grid grid-cols-[auto_1fr] items-start gap-5 sm:gap-8 py-6 sm:py-7" style={{ borderTop: `1px solid ${C.parchment}`, borderBottom: i === MISSION.length - 1 ? `1px solid ${C.parchment}` : "none" }}>
+                  <span className="font-heading tabular-nums pt-1" style={{ fontSize: 15, color: C.jaggeryDark, width: 28 }}>0{i + 1}</span>
+                  <div>
+                    <h3 className="font-heading transition-transform duration-500 group-hover:translate-x-2" style={{ fontSize: "clamp(1.35rem,2.2vw,1.85rem)", lineHeight: 1.1, color: C.ink }}>{m.t}</h3>
+                    <p className="font-body mt-1.5" style={{ fontSize: 14.5, lineHeight: 1.65, color: C.ink2, maxWidth: 520 }}>{m.d}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 08 · TRADITION × MODERN BUSINESS — dark brown ────────────────── */}
       <section className="relative overflow-hidden" style={{ background: `radial-gradient(120% 120% at 80% 0%, ${C.barkSoft}, ${C.bark})` }}>
         <Atmosphere glow={false} opacity={0.1} />
         <div className="relative max-w-[1100px] mx-auto px-5 sm:px-8 py-24 sm:py-32 text-center">
@@ -298,7 +378,7 @@ export default function AboutExperience({
         </div>
       </section>
 
-      {/* ── 07 · A FORMAL FOUNDATION — clean ivory ───────────────────────── */}
+      {/* ── 09 · A FORMAL FOUNDATION — clean ivory ───────────────────────── */}
       <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-28">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-7">
@@ -334,7 +414,7 @@ export default function AboutExperience({
         </div>
       </section>
 
-      {/* ── 08 · FINAL CTA — deep brown ──────────────────────────────────── */}
+      {/* ── 10 · FINAL CTA — deep brown ──────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ background: C.espresso }}>
         <Atmosphere opacity={0.14} />
         <div className="relative max-w-[1100px] mx-auto px-5 sm:px-8 py-24 sm:py-32 text-center">

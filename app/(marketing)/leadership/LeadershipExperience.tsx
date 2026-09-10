@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useInView, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Atmosphere, C, Eyebrow, Reveal, SectionHeading, Words } from "@/components/about/heritage";
 
@@ -64,13 +64,11 @@ function PortraitCard({ name, role, photo, bio, index }: { name: string; role: s
         <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7">
           <div className="font-heading" style={{ fontSize: "clamp(1.5rem,2.4vw,2rem)", lineHeight: 1.1, color: C.ivory }}>{name}</div>
           <div className="font-body mt-1.5 uppercase" style={{ fontSize: 10.5, letterSpacing: "0.18em", color: C.jaggeryLite }}>{role}</div>
-          <div className="grid transition-[grid-template-rows,opacity] duration-500 ease-out [grid-template-rows:0fr] opacity-0 group-hover:[grid-template-rows:1fr] group-hover:opacity-100">
-            <div className="overflow-hidden">
-              <p className="font-body pt-3" style={{ fontSize: 14, lineHeight: 1.65, color: "rgba(255,251,244,0.86)" }}>{bio}</p>
-              <span aria-hidden className="mt-3 inline-flex items-center gap-2 font-body font-semibold uppercase" style={{ fontSize: 10.5, letterSpacing: "0.16em", color: C.jaggeryLite }}>
-                The family legacy <ArrowRight className="h-3.5 w-3.5" />
-              </span>
-            </div>
+          <div className="overflow-hidden max-h-0 opacity-0 transition-all duration-500 ease-out group-hover:max-h-56 group-hover:opacity-100 group-focus-within:max-h-56 group-focus-within:opacity-100">
+            <p className="font-body pt-3" style={{ fontSize: 14, lineHeight: 1.65, color: "rgba(255,251,244,0.86)" }}>{bio}</p>
+            <span aria-hidden className="mt-3 inline-flex items-center gap-2 font-body font-semibold uppercase" style={{ fontSize: 10.5, letterSpacing: "0.16em", color: C.jaggeryLite }}>
+              The family legacy <ArrowRight className="h-3.5 w-3.5" />
+            </span>
           </div>
         </div>
       </article>
@@ -117,47 +115,33 @@ function Handover() {
   );
 }
 
-/* Four words; the one in play lights up and reveals what it means as the
-   reader scrolls through the section. */
-function ValuesScroller() {
-  const ref = useRef<HTMLDivElement>(null);
+/* Four words. Each row lights up — and its meaning slides in — while it is
+   the row in view, and dims again as the reader moves on, so the page reads
+   one value at a time without any scroll-jacking. */
+function ValueRow({ index, word, meaning }: { index: number; word: string; meaning: string }) {
+  const ref = useRef<HTMLLIElement>(null);
   const reduced = useReducedMotion();
-  const [active, setActive] = useState(0);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 70%", "end 70%"] });
-  useMotionValueEvent(scrollYProgress, "change", (p) => {
-    const i = Math.min(VALUES.length - 1, Math.max(0, Math.floor(p * VALUES.length)));
-    if (i !== active) setActive(i);
-  });
+  const inView = useInView(ref, { amount: 0.6, margin: "-10% 0px -10% 0px" });
+  const on = reduced || inView;
   return (
-    <div ref={ref} className="relative" style={{ minHeight: reduced ? undefined : `${VALUES.length * 60}vh` }}>
-      <div className="lg:sticky lg:top-24 grid lg:grid-cols-12 gap-10 lg:gap-16 items-start py-6">
-        <ol className="lg:col-span-6 list-none m-0 p-0 space-y-2 sm:space-y-3">
-          {VALUES.map((v, i) => (
-            <li key={v.w}>
-              <button type="button" onClick={() => setActive(i)} className="group flex items-baseline gap-5 text-left transition-colors duration-500"
-                style={{ color: i === active ? C.ivory : "rgba(255,251,244,0.28)" }} aria-pressed={i === active}>
-                <span className="font-body tabular-nums" style={{ fontSize: 12, letterSpacing: "0.16em", color: i === active ? C.sage : "rgba(255,251,244,0.28)" }}>0{i + 1}</span>
-                <span className="font-heading uppercase" style={{ fontSize: "clamp(2rem,5vw,4.4rem)", lineHeight: 1, letterSpacing: "-0.02em" }}>{v.w}</span>
-              </button>
-              {/* On small screens the meaning sits under its word. */}
-              <p className="lg:hidden font-body mt-2 mb-6 pl-9 transition-opacity duration-500" style={{ fontSize: 15, lineHeight: 1.7, color: "rgba(255,251,244,0.78)", opacity: i === active || reduced ? 1 : 0.55 }}>{v.d}</p>
-            </li>
-          ))}
-        </ol>
-        <div className="hidden lg:block lg:col-span-6 lg:pt-3">
-          <div className="relative min-h-[180px]">
-            {VALUES.map((v, i) => (
-              <motion.p key={v.w} className="absolute inset-x-0 top-0 font-body m-0" aria-hidden={i !== active}
-                initial={false} animate={{ opacity: i === active ? 1 : 0, y: i === active ? 0 : 12 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                style={{ fontSize: "clamp(1.1rem,1.5vw,1.35rem)", lineHeight: 1.7, color: "rgba(255,251,244,0.84)", pointerEvents: i === active ? "auto" : "none" }}>
-                {v.d}
-              </motion.p>
-            ))}
-          </div>
-          <span aria-hidden className="block mt-8 h-px w-16" style={{ background: C.sage }} />
-        </div>
+    <li ref={ref} className="grid lg:grid-cols-12 gap-4 lg:gap-10 items-start py-8 sm:py-10" style={{ borderTop: "1px solid rgba(255,214,92,0.16)" }}>
+      <div className="lg:col-span-5 flex items-baseline gap-5 transition-colors duration-500" style={{ color: on ? C.ivory : "rgba(255,251,244,0.3)" }}>
+        <span className="font-body tabular-nums" style={{ fontSize: 12, letterSpacing: "0.16em", color: on ? C.sage : "rgba(255,251,244,0.3)" }}>0{index + 1}</span>
+        <span className="font-heading uppercase" style={{ fontSize: "clamp(2rem,4.6vw,4rem)", lineHeight: 1, letterSpacing: "-0.02em" }}>{word}</span>
       </div>
-    </div>
+      <motion.p className="lg:col-span-7 font-body m-0 lg:pt-3" initial={false} animate={{ opacity: on ? 1 : 0.35, x: on || reduced ? 0 : 14 }} transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        style={{ fontSize: "clamp(1rem,1.35vw,1.25rem)", lineHeight: 1.7, color: "rgba(255,251,244,0.84)", maxWidth: 560 }}>
+        {meaning}
+      </motion.p>
+    </li>
+  );
+}
+
+function ValuesList() {
+  return (
+    <ol className="list-none m-0 p-0 mt-4" style={{ borderBottom: "1px solid rgba(255,214,92,0.16)" }}>
+      {VALUES.map((v, i) => <ValueRow key={v.w} index={i} word={v.w} meaning={v.d} />)}
+    </ol>
   );
 }
 
@@ -165,7 +149,7 @@ function ValuesScroller() {
    has uploaded one, otherwise a typographic panel with the facts. */
 function SplitPanel({ image, dark, label, title, facts }: { image: string | null; dark: boolean; label: string; title: string; facts: string[] }) {
   return (
-    <div className="relative overflow-hidden min-h-[420px] lg:min-h-[560px] flex items-end" style={{ background: dark ? C.bark : C.cream }}>
+    <div className="relative overflow-hidden flex items-end" style={{ background: dark ? C.bark : C.cream, minHeight: "clamp(420px, 42vw, 600px)" }}>
       {image ? (
         <>
           <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -284,16 +268,14 @@ export default function LeadershipExperience({ bannerImage = null, bannerAlt = "
       </section>
 
       {/* ── 5 · VALUES ───────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ background: `linear-gradient(160deg, ${C.bark}, ${C.barkSoft})` }} aria-labelledby="values-heading">
+      <section className="relative" style={{ background: `linear-gradient(160deg, ${C.bark}, ${C.barkSoft})` }} aria-labelledby="values-heading">
         <Atmosphere glow={false} opacity={0.1} />
         <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-28">
           <Reveal><Eyebrow color={C.sage}>What the leadership stands on</Eyebrow></Reveal>
           <h2 id="values-heading" className="font-heading mt-5" style={{ fontSize: "clamp(2.1rem,4.4vw,3.6rem)", lineHeight: 1.04, letterSpacing: "-0.02em", color: C.ivory }}>
             <Words text="Leadership rooted in values." accent="values." />
           </h2>
-          <div className="mt-8">
-            <ValuesScroller />
-          </div>
+          <ValuesList />
         </div>
       </section>
 
