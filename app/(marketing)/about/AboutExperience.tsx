@@ -22,7 +22,13 @@ const PRINCIPLES = [
   { n: "04", t: "Learning & Compliance", d: "Strengthening our knowledge through food safety, industry training, and responsible business practices." },
 ];
 
-const EQUATION = ["Traditional Values", "Modern Quality Systems", "Compliance Awareness", "Responsible Growth"];
+/* What the business is made of — the four things the family names, one line each. */
+const FOUNDATIONS = [
+  { t: "Traditional Values", d: "The discipline, sincerity and purity the family began with, kept as the standard." },
+  { t: "Modern Quality Systems", d: "Modern machinery and consistent processes, for the same quality in every batch." },
+  { t: "Compliance Awareness", d: "Formal registrations and ongoing learning in food safety, labelling and compliance." },
+  { t: "Responsible Growth", d: "Building something lasting, without losing what made it trusted." },
+];
 
 /* Philosophy: three pillars, straight from the mission statement. */
 const PHILOSOPHY = [
@@ -349,32 +355,49 @@ export default function AboutExperience({
       </section>
 
       {/* ── 08 · TRADITION × MODERN BUSINESS — dark brown ────────────────── */}
+      {/* The heading and the two statements on the left; on the right, the four
+          things the business is made of as a numbered ledger with thin gold
+          rules, closing on the name. Editorial, not an equation. */}
       <section className="relative overflow-hidden" style={{ background: `radial-gradient(120% 120% at 80% 0%, ${C.barkSoft}, ${C.bark})` }}>
         <Atmosphere glow={false} opacity={0.1} />
-        <div className="relative max-w-[1100px] mx-auto px-5 sm:px-8 py-24 sm:py-32 text-center">
-          <SectionHeading light center eyebrow="Tradition × modern business" title="Tradition gives us our roots. Discipline shapes our future." accent="Discipline" />
-          <Reveal delay={0.2}>
-            <div className="mt-8 mx-auto space-y-4 font-body" style={{ fontSize: "clamp(1.05rem,1.4vw,1.2rem)", lineHeight: 1.75, color: "rgba(255,251,244,0.8)", maxWidth: 640 }}>
-              <p style={{ textAlign: "center" }}>At VKC Gold Ikshu, trust is not a marketing word — it is the base of everything we do.</p>
-              <p style={{ textAlign: "center" }}>We are guided by legacy, strengthened by discipline, and driven by a desire to build something lasting.</p>
+        <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 py-24 sm:py-32">
+          <SectionHeading light size="lg" eyebrow="Tradition × modern business" title="Tradition gives us our roots. Discipline shapes our future." accent="Discipline" />
+          <div className="mt-14 sm:mt-16 grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+            <div className="lg:col-span-5">
+              <Reveal delay={0.1}>
+                <span aria-hidden className="block h-[2px] w-12 mb-7" style={{ background: C.jaggery }} />
+                <p className="font-heading" style={{ fontSize: "clamp(1.45rem,2.3vw,1.95rem)", lineHeight: 1.3, color: C.ivory }}>
+                  At VKC Gold Ikshu, trust is not a marketing word — it is <span style={{ color: C.jaggeryLite, fontStyle: "italic" }}>the base of everything we do</span>.
+                </p>
+                <p className="font-body mt-6" style={{ fontSize: 17, lineHeight: 1.8, color: "rgba(255,251,244,0.78)", maxWidth: 460 }}>
+                  We are guided by legacy, strengthened by discipline, and driven by a desire to build something lasting.
+                </p>
+              </Reveal>
             </div>
-          </Reveal>
-
-          {/* The equation. */}
-          <Reveal delay={0.3}>
-            <div className="mt-14 flex flex-wrap items-center justify-center gap-x-5 gap-y-4">
-              {EQUATION.map((t, i) => (
-                <span key={t} className="inline-flex items-center gap-5">
-                  {i > 0 && <span aria-hidden className="font-heading" style={{ fontSize: 26, color: C.jaggery }}>×</span>}
-                  <span className="font-body font-semibold uppercase rounded-full px-5 py-3" style={{ fontSize: 12, letterSpacing: "0.16em", color: C.jaggeryLite, border: "1px solid rgba(255,214,92,0.3)", background: "rgba(255,251,244,0.05)" }}>{t}</span>
-                </span>
-              ))}
+            <div className="lg:col-span-7">
+              <ol className="list-none m-0 p-0">
+                {FOUNDATIONS.map((f, i) => (
+                  <Reveal key={f.t} delay={0.1 + i * 0.08}>
+                    <li className="grid grid-cols-[auto_1fr] gap-5 sm:gap-8 py-6 sm:py-7" style={{ borderTop: "1px solid rgba(255,214,92,0.18)" }}>
+                      <span className="font-heading pt-1 tabular-nums" style={{ fontSize: 14, letterSpacing: "0.1em", color: C.jaggery, width: 32 }}>0{i + 1}</span>
+                      <div>
+                        <div className="font-heading" style={{ fontSize: "clamp(1.5rem,2.6vw,2.2rem)", lineHeight: 1.1, letterSpacing: "-0.01em", color: C.ivory }}>{f.t}</div>
+                        <p className="font-body mt-2" style={{ fontSize: 14.5, lineHeight: 1.65, color: "rgba(255,251,244,0.66)", maxWidth: 480 }}>{f.d}</p>
+                      </div>
+                    </li>
+                  </Reveal>
+                ))}
+              </ol>
+              <Reveal delay={0.45}>
+                <div className="pt-8 sm:pt-10" style={{ borderTop: `1px solid ${C.jaggery}` }}>
+                  <div className="font-body font-semibold uppercase" style={{ fontSize: 11, letterSpacing: "0.22em", color: C.jaggeryLite }}>Together</div>
+                  <div className="font-heading mt-3" style={{ fontSize: "clamp(2rem,4.4vw,3.6rem)", lineHeight: 1, letterSpacing: "-0.025em", color: C.ivory }}>
+                    VKC Gold <span style={{ color: C.jaggeryLite, fontStyle: "italic" }}>Ikshu</span>
+                  </div>
+                </div>
+              </Reveal>
             </div>
-            <div aria-hidden className="mt-8 font-heading" style={{ fontSize: 34, lineHeight: 1, color: C.jaggery }}>=</div>
-            <div className="mt-5 font-heading" style={{ fontSize: "clamp(2.4rem,6vw,5rem)", lineHeight: 1, letterSpacing: "-0.03em", color: C.ivory }}>
-              VKC Gold <span style={{ color: C.jaggeryLite, fontStyle: "italic" }}>Ikshu</span>
-            </div>
-          </Reveal>
+          </div>
         </div>
       </section>
 
