@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
 import {
-  ArrowRight, ArrowUpRight, Sprout, Handshake, Recycle, Heart, ShieldCheck,
-  Sparkles, Globe2, BadgeCheck, MapPin, Phone,
+  ArrowRight, ArrowUpRight, Sprout, Handshake, Recycle, Cog, Heart, ShieldCheck,
+  Sparkles, Globe2, Factory, BadgeCheck, MapPin, Phone,
   Mail, MessageCircle, Target, Eye, Wheat, Leaf, Scale, Quote,
 } from "lucide-react";
 import { Legacy } from "@/components/about/Legacy";
