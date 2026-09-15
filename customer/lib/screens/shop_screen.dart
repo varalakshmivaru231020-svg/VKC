@@ -216,67 +216,97 @@ class _ProductListingState extends State<ProductListing> {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      if (widget.showHeader) _header(),
+      _header(),
       _toolbar(),
       Expanded(child: _body()),
     ]);
   }
 
+  /// Marketplace-style top bar: a back arrow on a pushed listing, the search
+  /// field carrying the current query or category, and the cart.
   Widget _header() {
-    final count = _loading ? null : '${_total > 0 ? _total : _items.length} product${(_total > 0 ? _total : _items.length) == 1 ? '' : 's'}';
-    if (widget.asTab) {
-      return TabHeader(
-        title: 'Shop',
-        subtitle: count ?? 'The full VKC Gold Ikshu range',
-        actions: [TopBar.action(Icons.search_rounded, () => context.push('/search'), tooltip: 'Search')],
-      );
-    }
-    return TopBar(
-      title: _title,
-      onBack: () => context.canPop() ? context.pop() : context.go('/shop'),
-      actions: [
-        TopBar.action(Icons.search_rounded, () => context.push('/search'), tooltip: 'Search'),
+    final q = (widget.q ?? '').trim();
+    final hint = q.isNotEmpty ? q : (_fixedCategory ? _title : 'Search jaggery, syrups, gift boxes…');
+    return Container(
+      color: VkColors.canvas,
+      padding: EdgeInsets.fromLTRB(widget.asTab ? 20 : 8, 10, 8, 10),
+      child: Row(children: [
+        if (!widget.asTab) ...[
+          TopBar.action(Icons.arrow_back_rounded, () => context.canPop() ? context.pop() : context.go('/shop'), tooltip: 'Back'),
+          const SizedBox(width: 2),
+        ],
+        Expanded(
+          child: Semantics(
+            button: true,
+            label: 'Search products',
+            child: PressScale(
+              onTap: () => context.push(q.isNotEmpty ? '/search?q=${Uri.encodeComponent(q)}' : '/search'),
+              scale: 0.985,
+              child: Container(
+                height: 46,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: VkColors.paper,
+                  borderRadius: BorderRadius.circular(VkRadii.md),
+                  border: Border.all(color: q.isNotEmpty || _fixedCategory ? VkColors.primary : VkColors.rule, width: q.isNotEmpty || _fixedCategory ? 1.5 : 1),
+                ),
+                child: Row(children: [
+                  const Icon(Icons.search_rounded, size: 20, color: VkColors.ink),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(hint, maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: VkText.ui(13.5, color: q.isNotEmpty || _fixedCategory ? VkColors.ink : VkColors.muted, weight: q.isNotEmpty || _fixedCategory ? FontWeight.w600 : FontWeight.w400)),
+                  ),
+                ]),
+              ),
+            ),
+          ),
+        ),
         const SizedBox(width: 4),
         InkResponse(
           onTap: () => context.go('/cart'),
           radius: 24,
-          child: const SizedBox(width: 44, height: 44, child: Center(child: CartIconBadge(size: 22))),
+          child: const SizedBox(width: 44, height: 44, child: Center(child: CartIconBadge(size: 23))),
         ),
-      ],
+      ]),
     );
   }
 
-  /// One calm bar: the category pills scroll on the left, and a single
-  /// Filter button on the right opens sort, availability and price together.
-  /// On a fixed-category listing the pills give way to the product count.
+  /// Quick pills: Sort & Filter opens everything; Price, Category and In
+  /// stock each change one thing on the spot.
   Widget _toolbar() {
     final showCats = !_fixedCategory && _cats.isNotEmpty;
-    final count = _total > 0 ? _total : _items.length;
+    final catLabel = _catSlug == null ? 'Category' : (_cats.cast<EcomCategory?>().firstWhere((c) => c!.slug == _catSlug, orElse: () => null)?.name ?? 'Category');
     return Container(
       decoration: const BoxDecoration(color: VkColors.canvas, border: Border(bottom: BorderSide(color: VkColors.rule))),
-      padding: const EdgeInsets.fromLTRB(0, 6, 12, 8),
-      child: Row(children: [
-        Expanded(
-          child: showCats
-              ? SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.only(left: 20, right: 8),
-                  child: Row(children: [
-                    VkChip(label: 'All', selected: _catSlug == null, onTap: () => _pickCat(null)),
-                    for (final c in _cats) ...[
-                      const SizedBox(width: 8),
-                      VkChip(label: c.name, selected: _catSlug == c.slug, onTap: () => _pickCat(c.slug)),
-                    ],
-                  ]),
-                )
-              : Padding(
-                  padding: const EdgeInsets.only(left: 20),
-                  child: Text(_loading ? 'LOADING…' : '$count PRODUCT${count == 1 ? '' : 'S'}', style: VkText.upper(9, color: VkColors.muted, letter: 0.16)),
-                ),
-        ),
-        _FilterButton(count: _filterCount, onTap: _openFilters),
-      ]),
+      padding: const EdgeInsets.only(top: 4, bottom: 10),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(children: [
+          _Pill(icon: Icons.tune_rounded, label: _filterCount == 0 ? 'Sort & Filter' : 'Sort & Filter · $_filterCount', active: _filterCount > 0, onTap: _openFilters),
+          const SizedBox(width: 8),
+          _Pill(label: _priceActive ? _priceLabel : 'Price', chevron: true, active: _priceActive, onTap: _openPrice),
+          if (showCats) ...[
+            const SizedBox(width: 8),
+            _Pill(label: catLabel, chevron: true, active: _catSlug != null, onTap: _openCategory),
+          ],
+          const SizedBox(width: 8),
+          _Pill(label: 'In stock', active: _inStock, onTap: () {
+            setState(() => _inStock = !_inStock);
+            _load();
+          }),
+        ]),
+      ),
     );
+  }
+
+  String get _priceLabel {
+    final lo = _price.start.round();
+    final hi = _price.end.round();
+    if (lo == 0) return 'Under ₹${inr(hi)}';
+    if (hi >= _priceCap) return '₹${inr(lo)}+';
+    return '₹${inr(lo)} – ₹${inr(hi)}';
   }
 
   void _pickCat(String? slug) {
@@ -302,6 +332,44 @@ class _ProductListingState extends State<ProductListing> {
     _load();
   }
 
+  Future<void> _openPrice() async {
+    final result = await showModalBottomSheet<RangeValues>(
+      context: context,
+      backgroundColor: VkColors.canvas,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => _PriceSheet(price: _price),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _price = result);
+    _load();
+  }
+
+  Future<void> _openCategory() async {
+    final picked = await showModalBottomSheet<String?>(
+      context: context,
+      backgroundColor: VkColors.canvas,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => _SheetFrame(
+        title: 'Category',
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          for (final c in [null, ..._cats])
+            ListTile(
+              onTap: () => Navigator.pop(ctx, c?.slug ?? ''),
+              leading: c == null
+                  ? const Icon(Icons.grid_view_rounded, size: 20, color: VkColors.primaryDeep)
+                  : SizedBox(width: 32, height: 32, child: ClipOval(child: NetImage(url: c.imageUrl, radius: 0, seed: paletteFor(c.slug), placeholderIcon: Icons.grass_rounded))),
+              title: Text(c?.name ?? 'All categories', style: VkText.ui(14, weight: (c?.slug) == _catSlug ? FontWeight.w600 : FontWeight.w400)),
+              trailing: Icon((c?.slug) == _catSlug ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                  color: (c?.slug) == _catSlug ? VkColors.primary : VkColors.rule2),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            ),
+        ]),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    _pickCat(picked.isEmpty ? null : picked);
+  }
+
   Widget _body() {
     if (_loading && _items.isEmpty) return const ProductGridSkeleton(count: 6);
     if (_error != null && _items.isEmpty) return StateView.error(_error, onRetry: _load);
@@ -321,8 +389,7 @@ class _ProductListingState extends State<ProductListing> {
       child: CustomScrollView(
         controller: _scroll,
         slivers: [
-          if (!widget.showHeader || widget.asTab)
-            SliverToBoxAdapter(
+          SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
                 child: Text('${_total > 0 ? _total : _items.length} PRODUCTS', style: VkText.upper(9, color: VkColors.muted, letter: 0.16)),
@@ -394,33 +461,87 @@ class _SheetFrame extends StatelessWidget {
       );
 }
 
-/// The Filter button: a tune icon with a small count when something is set.
-class _FilterButton extends StatelessWidget {
-  final int count;
+/// A toolbar pill: optional leading icon, label, optional chevron; filled
+/// dark when active.
+class _Pill extends StatelessWidget {
+  final IconData? icon;
+  final String label;
+  final bool chevron;
+  final bool active;
   final VoidCallback onTap;
-  const _FilterButton({required this.count, required this.onTap});
+  const _Pill({this.icon, required this.label, this.chevron = false, this.active = false, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    final on = count > 0;
+    final fg = active ? Colors.white : VkColors.ink;
     return Semantics(
       button: true,
-      label: on ? 'Filters, $count applied' : 'Filters and sort',
+      selected: active,
+      label: label,
       child: PressScale(
         onTap: onTap,
         child: Container(
-          height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          height: 38,
+          padding: EdgeInsets.only(left: icon != null ? 12 : 14, right: chevron ? 10 : 14),
           decoration: BoxDecoration(
-            color: on ? VkColors.primaryInk : VkColors.paper,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: on ? VkColors.primaryInk : VkColors.rule),
+            color: active ? VkColors.primaryInk : VkColors.paper,
+            borderRadius: BorderRadius.circular(VkRadii.md),
+            border: Border.all(color: active ? VkColors.primaryInk : VkColors.rule),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.tune_rounded, size: 16, color: on ? Colors.white : VkColors.ink),
-            const SizedBox(width: 6),
-            Text(on ? 'Filters · $count' : 'Filter', style: VkText.ui(12.5, weight: FontWeight.w600, color: on ? Colors.white : VkColors.ink)),
+            if (icon != null) ...[Icon(icon, size: 17, color: fg), const SizedBox(width: 7)],
+            Text(label, style: VkText.ui(13, weight: FontWeight.w600, color: fg)),
+            if (chevron) ...[const SizedBox(width: 4), Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: fg)],
           ]),
         ),
+      ),
+    );
+  }
+}
+
+/// Just the price range, applied on its own.
+class _PriceSheet extends StatefulWidget {
+  final RangeValues price;
+  const _PriceSheet({required this.price});
+  @override
+  State<_PriceSheet> createState() => _PriceSheetState();
+}
+
+class _PriceSheetState extends State<_PriceSheet> {
+  late RangeValues _price = widget.price;
+  @override
+  Widget build(BuildContext context) {
+    final lo = _price.start.round();
+    final hi = _price.end.round();
+    return _SheetFrame(
+      title: 'Price',
+      footer: Row(children: [
+        Expanded(child: OutlineButton(label: 'Any price', height: 48, onTap: () => Navigator.pop(context, const RangeValues(0, _priceCap)))),
+        const SizedBox(width: 10),
+        Expanded(flex: 2, child: PrimaryButton(label: 'Apply', height: 48, onTap: () => Navigator.pop(context, _price))),
+      ]),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text(lo == 0 ? 'Any' : '₹${inr(lo)}', style: VkText.ui(14, weight: FontWeight.w600)),
+            Text(hi >= _priceCap ? '₹${inr(_priceCap)}+' : '₹${inr(hi)}', style: VkText.ui(14, weight: FontWeight.w600)),
+          ]),
+          RangeSlider(
+            values: _price,
+            min: 0,
+            max: _priceCap,
+            divisions: 50,
+            activeColor: VkColors.primary,
+            inactiveColor: VkColors.rule2,
+            labels: RangeLabels('₹${inr(lo)}', hi >= _priceCap ? '₹${inr(_priceCap)}+' : '₹${inr(hi)}'),
+            onChanged: (v) => setState(() => _price = v),
+          ),
+          const SizedBox(height: 6),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final cap in const [200, 500, 1000, 2000])
+              VkChip(label: 'Under ₹${inr(cap)}', selected: lo == 0 && hi == cap, onTap: () => setState(() => _price = RangeValues(0, cap.toDouble()))),
+          ]),
+        ]),
       ),
     );
   }

@@ -1,210 +1,314 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../ecom/ecom_adapter.dart';
 import '../ecom/ecom_api.dart';
 import '../ecom/ecom_models.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
-/// Categories tab — every category the admin panel publishes, as a
-/// discovery grid. Tap → that category's products.
+/// Categories tab, marketplace style: a rail of categories down the left,
+/// and on the right the products of the one selected as round tiles. The
+/// first rail entry, Popular, shows the store's featured products.
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
   @override
   State<CategoriesScreen> createState() => _CategoriesScreenState();
 }
 
+const _popularKey = '__popular__';
+
 class _CategoriesScreenState extends State<CategoriesScreen> {
   List<EcomCategory> _cats = const [];
-  bool _loading = true;
-  Object? _error;
+  bool _loadingCats = true;
+  Object? _catsError;
+
+  String _selected = _popularKey;
+  final Map<String, List<Product>> _products = {};
+  final Set<String> _loadingKeys = {};
+  final Map<String, Object> _errors = {};
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _loadCats();
+    _loadProducts(_popularKey);
   }
 
-  Future<void> _load({bool force = false}) async {
-    if (_cats.isEmpty && mounted) setState(() => _loading = true);
+  Future<void> _loadCats({bool force = false}) async {
+    if (_cats.isEmpty && mounted) setState(() => _loadingCats = true);
     try {
       final cats = await EcomApi.I.categories(force: force);
       if (!mounted) return;
       setState(() {
         _cats = cats;
-        _error = null;
-        _loading = false;
+        _catsError = null;
+        _loadingCats = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e;
-        _loading = false;
+        _catsError = e;
+        _loadingCats = false;
       });
     }
   }
 
-  void _open(EcomCategory c) => context.push('/listing?cat=${c.slug}&title=${Uri.encodeComponent(c.name)}');
+  Future<void> _loadProducts(String key, {bool force = false}) async {
+    if (!force && _products.containsKey(key)) return;
+    if (_loadingKeys.contains(key)) return;
+    setState(() {
+      _loadingKeys.add(key);
+      _errors.remove(key);
+    });
+    try {
+      ProductPage page;
+      if (key == _popularKey) {
+        page = await EcomApi.I.products(isFeatured: true, limit: 24);
+        if (page.products.isEmpty) page = await EcomApi.I.products(sort: 'newest', limit: 24);
+      } else {
+        page = await EcomApi.I.products(categorySlug: key, limit: 30);
+      }
+      if (!mounted) return;
+      setState(() => _products[key] = productsFromEcom(page.products));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _errors[key] = e);
+    } finally {
+      if (mounted) setState(() => _loadingKeys.remove(key));
+    }
+  }
+
+  void _select(String key) {
+    if (_selected == key) return;
+    setState(() => _selected = key);
+    _loadProducts(key);
+  }
+
+  EcomCategory? get _selectedCat => _selected == _popularKey ? null : _cats.cast<EcomCategory?>().firstWhere((c) => c!.slug == _selected, orElse: () => null);
 
   @override
   Widget build(BuildContext context) {
     return Column(children: [
       TabHeader(
         title: 'Categories',
-        subtitle: 'Everything we make, by range',
-        actions: [TopBar.action(Icons.search_rounded, () => context.push('/search'), tooltip: 'Search')],
+        actions: [
+          TopBar.action(Icons.search_rounded, () => context.push('/search'), tooltip: 'Search'),
+          TopBar.action(Icons.favorite_border_rounded, () => context.push('/wishlist'), tooltip: 'Wishlist'),
+          InkResponse(
+            onTap: () => context.go('/cart'),
+            radius: 24,
+            child: const SizedBox(width: 44, height: 44, child: Center(child: CartIconBadge(size: 22))),
+          ),
+        ],
       ),
-      Expanded(child: _body()),
+      const Divider(height: 1, color: VkColors.rule),
+      Expanded(
+        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          _Rail(
+            cats: _cats,
+            loading: _loadingCats,
+            selected: _selected,
+            onSelect: _select,
+          ),
+          Expanded(child: _pane()),
+        ]),
+      ),
     ]);
   }
 
-  Widget _body() {
-    if (_loading && _cats.isEmpty) return const _CategoriesSkeleton();
-    if (_error != null && _cats.isEmpty) return StateView.error(_error, onRetry: () => _load(force: true));
-    if (_cats.isEmpty) {
-      return StateView(
-        icon: Icons.grid_view_outlined,
-        title: 'No categories yet',
-        body: 'Browse the full range instead.',
-        cta: 'All products',
-        onCta: () => context.go('/shop'),
-      );
+  Widget _pane() {
+    if (_catsError != null && _cats.isEmpty && _selected != _popularKey) {
+      return StateView.error(_catsError, onRetry: () => _loadCats(force: true));
     }
+    final key = _selected;
+    final cat = _selectedCat;
+    final items = _products[key];
+    final loading = _loadingKeys.contains(key) && items == null;
+    final error = _errors[key];
+    final kicker = cat == null ? 'Popular' : 'Category';
+    final title = cat == null ? 'Featured on VKC Gold Ikshu' : cat.name;
+
     return RefreshIndicator(
       color: VkColors.primary,
-      onRefresh: () => _load(force: true),
-      child: CustomScrollView(slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-          sliver: SliverToBoxAdapter(child: _AllProductsCard(onTap: () => context.go('/shop'))),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 14,
-              crossAxisSpacing: 14,
-              childAspectRatio: 1,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, i) => FadeSlideIn(
-                delay: Duration(milliseconds: 40 * (i % 6)),
-                child: _CategoryCard(category: _cats[i], onTap: () => _open(_cats[i])),
-              ),
-              childCount: _cats.length,
-            ),
-          ),
-        ),
-      ]),
-    );
-  }
-}
-
-class _AllProductsCard extends StatelessWidget {
-  final VoidCallback onTap;
-  const _AllProductsCard({required this.onTap});
-  @override
-  Widget build(BuildContext context) => PressScale(
-        onTap: onTap,
-        scale: 0.985,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [VkColors.primaryInk, VkColors.primaryDeep]),
-            borderRadius: BorderRadius.circular(VkRadii.lg),
-          ),
-          child: Row(children: [
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('THE FULL RANGE', style: VkText.upper(8.5, color: VkColors.amberSoft, letter: 0.2)),
-                const SizedBox(height: 4),
-                Text('All products', style: VkText.display(22, color: Colors.white)),
-                const SizedBox(height: 2),
-                Text('Jaggery, syrups, snacks and gift boxes', style: VkText.body(11.5, color: Colors.white.withValues(alpha: 0.75))),
-              ]),
-            ),
-            Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(color: VkColors.amber, shape: BoxShape.circle),
-              child: const Icon(Icons.arrow_forward_rounded, size: 20, color: VkColors.primaryInk),
-            ),
+      onRefresh: () async {
+        await Future.wait([_loadCats(force: true), _loadProducts(key, force: true)]);
+      },
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+        children: [
+          Row(children: [
+            Text(kicker.toUpperCase(), style: VkText.upper(9, color: VkColors.muted, letter: 0.2)),
+            const SizedBox(width: 10),
+            const Expanded(child: Divider(height: 1, color: VkColors.rule)),
           ]),
-        ),
-      );
-}
-
-/// A category on the Categories tab: the photograph fills the tile and the
-/// name and count sit on a soft foot gradient — one clean picture, no frame.
-class _CategoryCard extends StatelessWidget {
-  final EcomCategory category;
-  final VoidCallback onTap;
-  const _CategoryCard({required this.category, required this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    final c = category;
-    final count = c.productCount;
-    return PressScale(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(color: VkColors.cream, borderRadius: BorderRadius.circular(VkRadii.lg)),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(fit: StackFit.expand, children: [
-          NetImage(url: c.imageUrl, radius: 0, seed: paletteFor(c.slug), placeholderIcon: Icons.grass_rounded),
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: [0.45, 1],
-                colors: [Colors.transparent, Color(0xCC2B1708)],
-              ),
+          const SizedBox(height: 8),
+          Text(title, style: VkText.display(21, height: 1.1)),
+          const SizedBox(height: 14),
+          if (loading)
+            _TileGridSkeleton()
+          else if (error != null && (items == null || items.isEmpty))
+            StateView.error(error, onRetry: () => _loadProducts(key, force: true))
+          else if (items == null || items.isEmpty)
+            StateView(
+              icon: Icons.inventory_2_outlined,
+              title: 'Nothing here yet',
+              body: cat == null ? 'Featured products will appear here.' : 'No products in ${cat.name} right now.',
+              cta: 'Browse all products',
+              onCta: () => context.go('/shop'),
+            )
+          else ...[
+            _TileGrid(items: items),
+            const SizedBox(height: 18),
+            OutlineButton(
+              label: cat == null ? 'View all products' : 'View all in ${cat.name}',
+              height: 44,
+              onTap: () => cat == null ? context.go('/shop') : context.push('/listing?cat=${cat.slug}&title=${Uri.encodeComponent(cat.name)}'),
             ),
-          ),
-          Positioned(
-            left: 14,
-            right: 14,
-            bottom: 12,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text(c.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.ui(14, weight: FontWeight.w700, color: Colors.white, height: 1.2)),
-              const SizedBox(height: 3),
-              Row(children: [
-                Expanded(
-                  child: Text(
-                    count == null ? 'Explore' : (count == 1 ? '1 product' : '$count products'),
-                    style: VkText.body(11, color: Colors.white.withValues(alpha: 0.8)),
-                  ),
-                ),
-                const Icon(Icons.arrow_forward_rounded, size: 15, color: VkColors.amber),
-              ]),
-            ]),
-          ),
-        ]),
+          ],
+        ],
       ),
     );
   }
 }
 
-class _CategoriesSkeleton extends StatelessWidget {
-  const _CategoriesSkeleton();
+/// The left rail: Popular first, then every category as a round picture with
+/// its name. The selected entry carries a brand bar on its left edge.
+class _Rail extends StatelessWidget {
+  final List<EcomCategory> cats;
+  final bool loading;
+  final String selected;
+  final ValueChanged<String> onSelect;
+  const _Rail({required this.cats, required this.loading, required this.selected, required this.onSelect});
+
   @override
-  Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 28),
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          const Skeleton(height: 96, radius: VkRadii.lg),
-          const SizedBox(height: 12),
-          GridView.count(
-            crossAxisCount: 2,
-            mainAxisSpacing: 14,
-            crossAxisSpacing: 14,
-            childAspectRatio: 1,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: List.generate(4, (_) => const Skeleton(radius: VkRadii.lg)),
+  Widget build(BuildContext context) => Container(
+        width: 100,
+        decoration: const BoxDecoration(color: VkColors.paper, border: Border(right: BorderSide(color: VkColors.rule))),
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 24),
+          children: [
+            _RailItem(
+              selected: selected == _popularKey,
+              onTap: () => onSelect(_popularKey),
+              label: 'Popular',
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(color: VkColors.amberSoft, shape: BoxShape.circle),
+                child: const Icon(Icons.star_rounded, size: 28, color: VkColors.amber),
+              ),
+            ),
+            if (loading && cats.isEmpty)
+              for (var i = 0; i < 4; i++)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+                  child: Column(children: [Skeleton(width: 56, height: 56, radius: 28), SizedBox(height: 8), Skeleton(width: 48, height: 10)]),
+                ),
+            for (final c in cats)
+              _RailItem(
+                selected: selected == c.slug,
+                onTap: () => onSelect(c.slug),
+                label: c.name,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(color: VkColors.cream, shape: BoxShape.circle),
+                  clipBehavior: Clip.antiAlias,
+                  child: NetImage(url: c.imageUrl, radius: 0, seed: paletteFor(c.slug), placeholderIcon: Icons.grass_rounded),
+                ),
+              ),
+          ],
+        ),
+      );
+}
+
+class _RailItem extends StatelessWidget {
+  final bool selected;
+  final VoidCallback onTap;
+  final String label;
+  final Widget child;
+  const _RailItem({required this.selected, required this.onTap, required this.label, required this.child});
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: InkWell(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: VkMotion.base,
+            curve: VkMotion.curve,
+            decoration: BoxDecoration(
+              color: selected ? VkColors.canvas : Colors.transparent,
+              border: Border(
+                left: BorderSide(color: selected ? VkColors.primary : Colors.transparent, width: 3),
+                bottom: const BorderSide(color: VkColors.rule),
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(6, 14, 8, 14),
+            child: Column(children: [
+              child,
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: VkText.ui(11, weight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? VkColors.primary : VkColors.ink2, height: 1.2),
+              ),
+            ]),
           ),
-        ],
+        ),
+      );
+}
+
+/// Products as round pictures with the name beneath, three to a row.
+class _TileGrid extends StatelessWidget {
+  final List<Product> items;
+  const _TileGrid({required this.items});
+  @override
+  Widget build(BuildContext context) => GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 14, crossAxisSpacing: 10, mainAxisExtent: 124),
+        itemCount: items.length,
+        itemBuilder: (context, i) {
+          final p = items[i];
+          return PressScale(
+            onTap: () => context.push('/product/${p.id}'),
+            child: Column(children: [
+              Container(
+                width: 76,
+                height: 76,
+                decoration: BoxDecoration(
+                  color: VkColors.cream,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: VkColors.rule),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: NetImage(url: p.image, radius: 0, seed: p.palette),
+              ),
+              const SizedBox(height: 8),
+              Text(p.name, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.ui(11.5, weight: FontWeight.w500, height: 1.25)),
+            ]),
+          );
+        },
+      );
+}
+
+class _TileGridSkeleton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => GridView.count(
+        crossAxisCount: 3,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 10,
+        childAspectRatio: 0.85,
+        children: List.generate(9, (_) => const Column(children: [Skeleton(width: 76, height: 76, radius: 38), SizedBox(height: 8), Skeleton(width: 64, height: 10)])),
       );
 }
