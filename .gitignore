@@ -61,3 +61,4 @@ web/public/uploads/videos/
 
 # Firebase service account (push notifications) — never commit
 firebase-service-account.json
+customer/android/app/google-services.json

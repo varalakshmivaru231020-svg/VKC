@@ -54,7 +54,7 @@ class ProfileScreen extends StatelessWidget {
                     _RowSpec(Icons.login_rounded, 'Sign in', 'Orders, wishlist & faster checkout', () => context.push('/login')),
                 ]),
                 const SizedBox(height: 20),
-                Center(child: Text('VKC GOLD IKSHU · v1.4.0', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
+                Center(child: Text('VKC GOLD IKSHU · v1.4.1', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
               ],
             ),
           ),

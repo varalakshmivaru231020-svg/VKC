@@ -30,7 +30,7 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         // Matches the Android app registered in the Firebase console (push notifications).
-        applicationId = "com.vkcgoldikshu.vkc_customer"
+        applicationId = "com.vkcgoldikshu_customer"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
