@@ -58,3 +58,6 @@ web/public/uploads/videos/
 .next-build
 .next-previous
 .deployed-lock-hash
+
+# Firebase service account (push notifications) — never commit
+firebase-service-account.json
