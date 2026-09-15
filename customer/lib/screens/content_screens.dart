@@ -30,7 +30,9 @@ String? _appRoute(String path) {
   if (segs.length == 2 && (segs.first == 'shop' || segs.first == 'product')) return '/product/${segs[1]}';
   if (p == '/blog') return '/journal';
   if (segs.length == 2 && segs.first == 'blog') return '/journal/${segs[1]}';
-  if (p == '/about' || p == '/leadership' || p == '/contact' || p == '/track-order' || p == '/gallery') return p;
+  // About and Leadership are read on the website itself, so they fall through
+  // to the browser below.
+  if (p == '/contact' || p == '/track-order' || p == '/gallery') return p;
   if (p == '/cart' || p == '/wishlist') return p;
   if (p == '/account/orders') return '/orders';
   if (p == '/account/addresses') return '/addresses';

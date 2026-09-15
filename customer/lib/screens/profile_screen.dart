@@ -7,6 +7,7 @@ import '../ecom/ecom_config.dart';
 import '../ecom/ecom_models.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'content_screens.dart';
 
 /// Profile tab: the account card, the customer's shopping, the store's
 /// content pages and help. Deliberately short.
@@ -36,8 +37,9 @@ class ProfileScreen extends StatelessWidget {
                 ]),
                 _Group(title: 'Explore VKC Gold Ikshu', rows: [
                   _RowSpec(Icons.photo_library_outlined, 'Gallery', 'Our unit, fields and farmers', () => context.push('/gallery')),
-                  _RowSpec(Icons.auto_stories_outlined, 'About Us', 'Natural jaggery since 1988', () => context.push('/about')),
-                  _RowSpec(Icons.groups_outlined, 'Leadership', 'The people behind VKC', () => context.push('/leadership')),
+                  _RowSpec(Icons.auto_stories_outlined, 'About Us', 'Our story, on vkcgoldikshu.com', () => openExternal(context, '$kSiteBase/about')),
+                  _RowSpec(Icons.groups_outlined, 'Leadership', 'The people behind VKC', () => openExternal(context, '$kSiteBase/leadership')),
+                  _RowSpec(Icons.verified_outlined, 'Credentials', 'Registrations and certifications', () => openExternal(context, '$kSiteBase/credentials')),
                   _RowSpec(Icons.menu_book_outlined, 'Blog', 'Stories from the cane fields', () => context.push('/journal')),
                 ]),
                 _Group(title: 'Help', rows: [
@@ -52,7 +54,7 @@ class ProfileScreen extends StatelessWidget {
                     _RowSpec(Icons.login_rounded, 'Sign in', 'Orders, wishlist & faster checkout', () => context.push('/login')),
                 ]),
                 const SizedBox(height: 20),
-                Center(child: Text('VKC GOLD IKSHU · v1.2.0', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
+                Center(child: Text('VKC GOLD IKSHU · v1.2.1', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
               ],
             ),
           ),
@@ -61,15 +63,14 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  /// The policies the website publishes, read inside the app like About and
-  /// Leadership. Shipping and Returns are live pages on the site; Privacy and
-  /// Terms appear as soon as their URLs are set in Admin → Settings → Legal.
+  /// The policies the website publishes, opened on vkcgoldikshu.com in the
+  /// phone's browser. Privacy and Terms appear as soon as their URLs are set
+  /// in Admin → Settings → Legal.
   List<_RowSpec> _policyRows(BuildContext context) {
     final cfg = storeConfig.value;
-    void page(String slug, String title) => context.push('/pages/$slug?title=${Uri.encodeComponent(title)}');
     return [
-      _RowSpec(Icons.local_shipping_outlined, 'Shipping Policy', 'Dispatch times and delivery', () => page('shipping', 'Shipping Policy')),
-      _RowSpec(Icons.assignment_return_outlined, 'Return & Exchange', 'How returns work', () => page('returns', 'Return & Exchange')),
+      _RowSpec(Icons.local_shipping_outlined, 'Shipping Policy', 'Dispatch times and delivery', () => openExternal(context, '$kSiteBase/shipping')),
+      _RowSpec(Icons.assignment_return_outlined, 'Return & Exchange', 'How returns work', () => openExternal(context, '$kSiteBase/returns')),
       if (cfg.privacyUrl.isNotEmpty) _RowSpec(Icons.shield_outlined, 'Privacy Policy', '', () => openExternal(context, cfg.privacyUrl)),
       if (cfg.termsUrl.isNotEmpty) _RowSpec(Icons.gavel_outlined, 'Terms & Conditions', '', () => openExternal(context, cfg.termsUrl)),
     ];
