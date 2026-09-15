@@ -52,26 +52,121 @@ Future<void> openExternal(BuildContext context, String url) async {
   }
 }
 
-/// A brief note in the bar above the bottom navigation: an optional icon,
-/// one line of text (cut with an ellipsis, never wrapped) and an optional
-/// action. Three seconds, then gone.
+/// The app's note bar — "Added to cart", "Removed from cart", "Saved to
+/// wishlist". Drawn on the root overlay rather than as a Scaffold snackbar:
+/// the tab stack keeps several Scaffolds alive at once, and a snackbar shown
+/// on one tab was being drawn by another tab's scaffold, mid-screen, and
+/// outliving its timer. Here there is exactly one bar, 16px in from the
+/// sides, 12px above the bottom navigation (or the safe area on pushed
+/// pages), one line, optional icon and action, gone after three seconds or
+/// a swipe down. A new note replaces the current one.
+OverlayEntry? _toastEntry;
+Timer? _toastTimer;
+
+void _dismissToast() {
+  _toastTimer?.cancel();
+  _toastTimer = null;
+  final e = _toastEntry;
+  _toastEntry = null;
+  if (e != null && e.mounted) e.remove();
+}
+
 void toast(BuildContext context, String message, {String? action, VoidCallback? onAction, IconData? icon}) {
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(
-      content: Row(children: [
-        if (icon != null) ...[Icon(icon, size: 18, color: VkColors.cream), const SizedBox(width: 10)],
-        Expanded(child: Text(message, maxLines: 1, overflow: TextOverflow.ellipsis)),
-      ]),
-      padding: EdgeInsets.only(left: 18, right: action == null ? 18 : 6, top: action == null ? 16 : 6, bottom: action == null ? 16 : 6),
-      duration: const Duration(seconds: 3),
-      dismissDirection: DismissDirection.down,
-      action: action == null
-          ? null
-          : SnackBarAction(label: action, textColor: VkColors.saffron, onPressed: onAction ?? () {}),
-    ));
+  final overlay = Overlay.maybeOf(context, rootOverlay: true);
+  if (overlay == null) return;
+  _dismissToast();
+  const tabRoots = {'/home', '/categories', '/shop', '/cart', '/profile'};
+  String path = '';
+  try {
+    path = GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+  } catch (_) {}
+  final bottom = MediaQuery.paddingOf(context).bottom + (tabRoots.contains(path) ? 62 + 12 : 12);
+  final entry = OverlayEntry(
+    builder: (_) => _ToastBar(
+      message: message,
+      icon: icon,
+      action: action,
+      bottom: bottom,
+      onAction: () {
+        _dismissToast();
+        onAction?.call();
+      },
+      onDismiss: _dismissToast,
+    ),
+  );
+  _toastEntry = entry;
+  overlay.insert(entry);
+  _toastTimer = Timer(const Duration(seconds: 3), _dismissToast);
 }
+
+class _ToastBar extends StatefulWidget {
+  final String message;
+  final IconData? icon;
+  final String? action;
+  final double bottom;
+  final VoidCallback onAction;
+  final VoidCallback onDismiss;
+  const _ToastBar({required this.message, this.icon, this.action, required this.bottom, required this.onAction, required this.onDismiss});
+  @override
+  State<_ToastBar> createState() => _ToastBarState();
+}
+
+class _ToastBarState extends State<_ToastBar> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 240))..forward();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final curve = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    return Positioned(
+      left: 16,
+      right: 16,
+      bottom: widget.bottom,
+      child: FadeTransition(
+        opacity: curve,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero).animate(curve),
+          child: GestureDetector(
+            onVerticalDragEnd: (d) {
+              if ((d.primaryVelocity ?? 0) > 0) widget.onDismiss();
+            },
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                height: 56,
+                padding: EdgeInsets.only(left: 18, right: widget.action == null ? 18 : 6),
+                decoration: BoxDecoration(
+                  color: VkColors.ink,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [BoxShadow(color: VkColors.ink.withValues(alpha: 0.28), blurRadius: 18, offset: const Offset(0, 8))],
+                ),
+                child: Row(children: [
+                  if (widget.icon != null) ...[Icon(widget.icon, size: 18, color: VkColors.cream), const SizedBox(width: 10)],
+                  Expanded(
+                    child: Text(widget.message, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.ui(13, color: Colors.white, weight: FontWeight.w500)),
+                  ),
+                  if (widget.action != null)
+                    TextButton(
+                      onPressed: widget.onAction,
+                      style: TextButton.styleFrom(foregroundColor: VkColors.saffron, padding: const EdgeInsets.symmetric(horizontal: 12), minimumSize: const Size(44, 40)),
+                      child: Text(widget.action!.toUpperCase(), style: VkText.ui(12.5, weight: FontWeight.w700, color: VkColors.saffron, letter: 0.06)),
+                    ),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 // ── Brand ────────────────────────────────────────────────────────────────────
 
