@@ -526,7 +526,7 @@ class _ProductScreenState extends State<ProductScreen> {
         if (mounted) setState(() => _justAdded = false);
       });
       final router = GoRouter.of(context);
-      toast(context, '${p.name} added to cart', action: 'VIEW CART', onAction: () => router.go('/cart'));
+      toast(context, 'Added to cart', action: 'VIEW CART', onAction: () => router.go('/cart'));
     }
   }
 

@@ -137,13 +137,16 @@ ThemeData vkTheme() {
     splashColor: VkColors.primary.withValues(alpha: 0.08),
     highlightColor: VkColors.primary.withValues(alpha: 0.04),
     dividerColor: VkColors.rule,
+    // Toasts: a small dark pill above the bottom bar, one line, gone in two
+    // seconds — a note, not a banner.
     snackBarTheme: SnackBarThemeData(
       backgroundColor: VkColors.ink,
-      contentTextStyle: VkText.body(13, color: Colors.white),
-      actionTextColor: VkColors.amberSoft,
+      contentTextStyle: VkText.ui(12.5, color: Colors.white, weight: FontWeight.w500),
+      actionTextColor: VkColors.amber,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(VkRadii.md)),
-      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 84),
+      elevation: 2,
+      shape: const StadiumBorder(),
+      insetPadding: const EdgeInsets.fromLTRB(40, 0, 40, 92),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: VkColors.canvas,

@@ -51,14 +51,20 @@ Future<void> openExternal(BuildContext context, String url) async {
   }
 }
 
+/// A brief note at the foot of the screen: one line, a small pill, optional
+/// action. Long messages are cut with an ellipsis rather than wrapping.
 void toast(BuildContext context, String message, {String? action, VoidCallback? onAction}) {
   if (!context.mounted) return;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(
-      content: Text(message),
+      content: Text(message, maxLines: 1, overflow: TextOverflow.ellipsis),
+      padding: EdgeInsets.only(left: 18, right: action == null ? 18 : 4, top: action == null ? 11 : 2, bottom: action == null ? 11 : 2),
       duration: const Duration(seconds: 2),
-      action: action == null ? null : SnackBarAction(label: action, onPressed: onAction ?? () {}),
+      dismissDirection: DismissDirection.down,
+      action: action == null
+          ? null
+          : SnackBarAction(label: action, textColor: VkColors.amber, onPressed: onAction ?? () {}),
     ));
 }
 

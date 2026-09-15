@@ -276,7 +276,7 @@ class _CartScreenState extends State<CartScreen> {
   void _removeLine(CartItem it) {
     EcomCart.I.remove(it.variantId);
     if (!mounted) return;
-    toast(context, '${it.productName} removed', action: 'UNDO', onAction: () => EcomCart.I.add(it));
+    toast(context, 'Removed from cart', action: 'UNDO', onAction: () => EcomCart.I.add(it));
   }
 
   Widget _offersStrip() {
