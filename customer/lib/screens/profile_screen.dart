@@ -54,7 +54,7 @@ class ProfileScreen extends StatelessWidget {
                     _RowSpec(Icons.login_rounded, 'Sign in', 'Orders, wishlist & faster checkout', () => context.push('/login')),
                 ]),
                 const SizedBox(height: 20),
-                Center(child: Text('VKC GOLD IKSHU · v1.2.3', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
+                Center(child: Text('VKC GOLD IKSHU · v1.2.4', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
               ],
             ),
           ),
@@ -63,16 +63,16 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  /// The policies the website publishes, opened on vkcgoldikshu.com in the
-  /// phone's browser. Privacy and Terms appear as soon as their URLs are set
-  /// in Admin → Settings → Legal.
+  /// The policies, each opened on vkcgoldikshu.com in the phone's browser.
+  /// Privacy and Terms use the URLs from Admin → Settings → Legal when set,
+  /// otherwise the site's own /privacy and /terms pages.
   List<_RowSpec> _policyRows(BuildContext context) {
     final cfg = storeConfig.value;
     return [
       _RowSpec(Icons.local_shipping_outlined, 'Shipping Policy', 'Dispatch times and delivery', () => openExternal(context, '$kSiteBase/shipping')),
       _RowSpec(Icons.assignment_return_outlined, 'Return & Exchange', 'How returns work', () => openExternal(context, '$kSiteBase/returns')),
-      if (cfg.privacyUrl.isNotEmpty) _RowSpec(Icons.shield_outlined, 'Privacy Policy', '', () => openExternal(context, cfg.privacyUrl)),
-      if (cfg.termsUrl.isNotEmpty) _RowSpec(Icons.gavel_outlined, 'Terms & Conditions', '', () => openExternal(context, cfg.termsUrl)),
+      _RowSpec(Icons.shield_outlined, 'Privacy Policy', 'How we handle your data', () => openExternal(context, cfg.privacyUrl.isNotEmpty ? cfg.privacyUrl : '$kSiteBase/privacy')),
+      _RowSpec(Icons.gavel_outlined, 'Terms & Conditions', 'The terms of buying from us', () => openExternal(context, cfg.termsUrl.isNotEmpty ? cfg.termsUrl : '$kSiteBase/terms')),
     ];
   }
 
