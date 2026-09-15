@@ -804,3 +804,15 @@ model Testimonial {
   @@index([isActive, sortOrder])
   @@map("testimonials")
 }
+
+/// Newsletter sign-ups from the website footer and the app home screen.
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique @db.VarChar(200)
+  source    String   @default("website") @db.VarChar(40)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("newsletter_subscribers")
+}

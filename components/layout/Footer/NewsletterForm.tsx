@@ -9,9 +9,17 @@ export function NewsletterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    // TODO: wire up to email API
-    setStatus("success");
-    setEmail("");
+    try {
+      const res = await fetch("/api/v1/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "website" }),
+      });
+      setStatus(res.ok ? "success" : "error");
+      if (res.ok) setEmail("");
+    } catch {
+      setStatus("error");
+    }
     setTimeout(() => setStatus("idle"), 4000);
   };
 
@@ -31,7 +39,7 @@ export function NewsletterForm() {
         className="h-11 px-6 rounded-xs text-sm font-semibold transition-colors shrink-0 cursor-pointer"
         style={{ background: "var(--color-gold)", color: "#FFFFFF", fontFamily: "var(--font-body)" }}
       >
-        {status === "success" ? "Subscribed!" : "Subscribe"}
+        {status === "success" ? "Subscribed!" : status === "error" ? "Try again" : "Subscribe"}
       </button>
     </form>
   );
