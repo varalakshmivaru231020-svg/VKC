@@ -555,11 +555,16 @@ class EcomApi {
     final r = await _dio.get('/wishlist');
     return (r.data['items'] as List? ?? const [])
         .map((it) {
+          // The API nests the product under its variant, with the price, stock
+          // and images on the variant. The product parser reads those from a
+          // variants list, so fold the variant back under the product.
           final variant = ((it as Map)['variant'] as Map?)?.cast<String, dynamic>() ?? const {};
-          final product = (variant['product'] as Map?)?.cast<String, dynamic>();
+          final product = (variant['product'] as Map?)?.cast<String, dynamic>() ?? const {};
+          final bare = Map<String, dynamic>.from(variant)..remove('product');
+          final merged = <String, dynamic>{...product, 'variants': [bare]};
           return WishlistEntry(
             variantId: (variant['id'] as String?) ?? (it['variantId'] as String?) ?? '',
-            product: EcomProduct.fromJson((product ?? const {}).cast<String, dynamic>()),
+            product: EcomProduct.fromJson(merged),
           );
         })
         .where((e) => e.product.id.isNotEmpty && e.variantId.isNotEmpty)
