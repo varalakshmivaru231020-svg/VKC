@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { sendOrderConfirmationWhatsApp } from "@/lib/whatsapp";
+import { notifyOrderStatus } from "@/lib/push";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth();
@@ -220,11 +221,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         await tx.order.update({ where: { id: params.id }, data });
       });
       const updated = await db.order.findUnique({ where: { id: params.id } });
+      if (updated) notifyOrderStatus(updated).catch(() => {});
       return NextResponse.json({ order: updated });
     }
   }
 
   const order = await db.order.update({ where: { id: params.id }, data });
+  if (status) notifyOrderStatus(order).catch(() => {});
 
   if (status === "CONFIRMED") {
     sendOrderConfirmationWhatsApp(order).catch(() => {});

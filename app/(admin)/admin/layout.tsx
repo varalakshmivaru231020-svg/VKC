@@ -119,6 +119,7 @@ const navGroups: NavGroupDef[] = [
     items: [
       { href: "/admin/blogs",           label: "Blogs",           icon: BookOpen },
       { href: "/admin/testimonials",    label: "Testimonials",    icon: MessageSquareQuote },
+      { href: "/admin/notifications",   label: "Push Notifications", icon: Bell },
       { href: "/admin/gallery",         label: "Gallery",         icon: Image },
       { href: "/admin/videos",          label: "Videos",          icon: Video },
       { href: "/admin/facebook-videos", label: "Facebook Videos", icon: Facebook },

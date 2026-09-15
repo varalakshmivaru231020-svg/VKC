@@ -414,6 +414,12 @@ class EcomApi {
         return AboutContent.fromJson((r.data as Map).cast<String, dynamic>());
       });
 
+  /// Registers this phone for push (POST /devices). Called at launch, on token
+  /// refresh and whenever sign-in changes, so the token follows the customer.
+  Future<void> registerDevice(String token) async {
+    await _dio.post('/devices', data: {'token': token, 'platform': 'android'});
+  }
+
   /// Newsletter sign-up (POST /newsletter) — the list the website footer feeds.
   Future<void> subscribe(String email) async {
     await _dio.post('/newsletter', data: {'email': email, 'source': 'app'});

@@ -816,3 +816,31 @@ model NewsletterSubscriber {
 
   @@map("newsletter_subscribers")
 }
+
+/// A phone that can receive push notifications (Firebase Cloud Messaging).
+model DeviceToken {
+  id         String   @id @default(cuid())
+  token      String   @unique @db.VarChar(512)
+  platform   String   @default("android") @db.VarChar(20)
+  userId     String?
+  appVersion String?  @db.VarChar(40)
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@map("device_tokens")
+}
+
+/// A notification sent to every phone from Admin → Push Notifications.
+model PushCampaign {
+  id          String   @id @default(cuid())
+  title       String   @db.VarChar(80)
+  body        String   @db.VarChar(240)
+  link        String?  @db.VarChar(500)
+  sentCount   Int      @default(0)
+  failedCount Int      @default(0)
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@map("push_campaigns")
+}

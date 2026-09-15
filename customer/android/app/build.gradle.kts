@@ -5,6 +5,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Firebase (push notifications) switches on only when the Firebase console's
+// google-services.json is beside this file; the build works without it.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.vkcgold.vkc_customer"
     compileSdk = flutter.compileSdkVersion

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'ecom/ecom_api.dart';
 import 'ecom/ecom_cart.dart';
 import 'ecom/ecom_config.dart';
 import 'ecom/ecom_wishlist.dart';
 import 'ecom/recent_searches.dart';
+import 'push.dart';
 import 'screens/address_screens.dart';
 import 'screens/auth_screens.dart';
 import 'screens/cart_screens.dart';
@@ -39,6 +41,22 @@ void main() {
   // draws from its own loading state while these land in the background.
   _bootstrap();
   runApp(const VkcApp());
+  // Push notifications: registers the phone and opens the tapped route. Inert
+  // on builds without Firebase config.
+  Push.I.init(onOpen: _openPushRoute);
+}
+
+void _openPushRoute(String route) {
+  if (route.startsWith('http')) {
+    launchUrl(Uri.parse(route), mode: LaunchMode.externalApplication);
+    return;
+  }
+  final path = Uri.tryParse(route)?.path ?? route;
+  if (shellRoutes.contains(path)) {
+    _router.go(route);
+  } else {
+    _router.push(route);
+  }
 }
 
 Future<void> _bootstrap() async {
