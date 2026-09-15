@@ -177,53 +177,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Logo + bell, then the search bar. Compact on purpose: Home is a shop.
+/// Logo on the left; search and notifications on the right. One row, so the
+/// banners start right under the brand.
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader();
   @override
   Widget build(BuildContext context) => Container(
         color: VkColors.canvas,
-        padding: const EdgeInsets.fromLTRB(VkSpace.page, 10, 12, 10),
-        child: Column(children: [
-          Row(children: [
-            const Expanded(child: BrandLogo(height: 40, animate: true)),
-            TopBar.action(Icons.notifications_none_rounded, () => context.push('/notifications'), tooltip: 'Notifications'),
-          ]),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: _SearchBar(onTap: () => context.push('/search')),
-          ),
+        padding: const EdgeInsets.fromLTRB(VkSpace.page, 10, 8, 8),
+        child: Row(children: [
+          const Expanded(child: BrandLogo(height: 40, animate: true)),
+          TopBar.action(Icons.search_rounded, () => context.push('/search'), tooltip: 'Search'),
+          TopBar.action(Icons.notifications_none_rounded, () => context.push('/notifications'), tooltip: 'Notifications'),
         ]),
-      );
-}
-
-class _SearchBar extends StatelessWidget {
-  final VoidCallback onTap;
-  const _SearchBar({required this.onTap});
-  @override
-  Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: 'Search products',
-        child: PressScale(
-          onTap: onTap,
-          scale: 0.985,
-          child: Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: VkColors.paper,
-              borderRadius: BorderRadius.circular(VkRadii.md),
-              border: Border.all(color: VkColors.rule),
-              boxShadow: [BoxShadow(color: VkColors.ink.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
-            ),
-            child: Row(children: [
-              const Icon(Icons.search_rounded, size: 20, color: VkColors.muted),
-              const SizedBox(width: 10),
-              Expanded(child: Text('Search jaggery, syrups, gift boxes…', style: VkText.ui(13, color: VkColors.muted, weight: FontWeight.w400))),
-            ]),
-          ),
-        ),
       );
 }
 
@@ -273,7 +239,7 @@ class _HomeBody extends StatelessWidget {
         const _WhyVkc(),
         if (d.blogs.isNotEmpty) ...[
           SectionHead(kicker: 'From the blog', title: 'Stories from the cane fields', action: 'View all', onAction: () => context.push('/journal')),
-          _BlogStrip(posts: d.blogs),
+          _BlogList(posts: d.blogs),
         ],
         if (d.testimonials.isNotEmpty) ...[
           const SectionHead(kicker: 'Customer stories', title: 'What our customers say'),
@@ -284,9 +250,9 @@ class _HomeBody extends StatelessWidget {
           _GalleryStrip(items: d.gallery),
         ],
         for (final b in d.bottomBanners) _PromoBanner(banner: b),
-        _TrustStrip(returnsDays: about?.returnsDays ?? 0),
-        const SizedBox(height: 8),
-        Center(child: Text('VKC GOLD IKSHU · MANDYA · SINCE 1988', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
+        _TrustBand(returnsDays: about?.returnsDays ?? 0),
+        const _Newsletter(),
+        const _HomeFooter(),
       ],
     );
   }
@@ -487,13 +453,14 @@ class _CategoryStrip extends StatelessWidget {
   const _CategoryStrip({required this.categories});
   @override
   Widget build(BuildContext context) => SizedBox(
-        height: 96 + 8 + 34,
+        height: 88 + 9 + 34,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           itemCount: categories.length,
           separatorBuilder: (_, __) => const SizedBox(width: 12),
           itemBuilder: (_, i) => CategoryTile(
+            width: 88,
             category: categories[i],
             onTap: () => context.push('/listing?cat=${categories[i].slug}&title=${Uri.encodeComponent(categories[i].name)}'),
           ),
@@ -604,8 +571,10 @@ class _HeritageCard extends StatelessWidget {
   }
 }
 
-/// The five reasons the website gives, as compact cards.
-class _WhyVkc extends StatelessWidget {
+/// The five reasons the website gives — one at a time, as a slider the
+/// customer can page through (it also advances on its own), so each reason
+/// gets read rather than skimmed.
+class _WhyVkc extends StatefulWidget {
   const _WhyVkc();
   static const _reasons = [
     (Icons.eco_outlined, '100% Natural', 'No chemicals, preservatives or artificial colours — just cane, heat and time.'),
@@ -615,72 +584,383 @@ class _WhyVkc extends StatelessWidget {
     (Icons.workspace_premium_outlined, 'Trusted since 1988', 'Three decades of purity, one batch at a time.'),
   ];
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const SectionHead(kicker: 'Why VKC', title: 'Why choose VKC Gold Ikshu'),
-        SizedBox(
-          height: 150,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _reasons.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+  State<_WhyVkc> createState() => _WhyVkcState();
+}
+
+class _WhyVkcState extends State<_WhyVkc> {
+  late final PageController _ctrl = PageController(viewportFraction: 0.9);
+  Timer? _auto;
+  int _page = 0;
+  bool _touching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _auto = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || _touching || !_ctrl.hasClients) return;
+      _ctrl.animateToPage((_page + 1) % _WhyVkc._reasons.length, duration: const Duration(milliseconds: 600), curve: Curves.easeInOutCubic);
+    });
+  }
+
+  @override
+  void dispose() {
+    _auto?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reasons = _WhyVkc._reasons;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const SectionHead(kicker: 'Why VKC', title: 'Why choose VKC Gold Ikshu'),
+      SizedBox(
+        height: 176,
+        child: Listener(
+          onPointerDown: (_) => _touching = true,
+          onPointerUp: (_) => _touching = false,
+          onPointerCancel: (_) => _touching = false,
+          child: PageView.builder(
+            controller: _ctrl,
+            padEnds: false,
+            itemCount: reasons.length,
+            onPageChanged: (i) => setState(() => _page = i),
             itemBuilder: (_, i) {
-              final r = _reasons[i];
-              return Container(
-                width: 190,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: VkColors.primaryInk,
-                  borderRadius: BorderRadius.circular(VkRadii.lg),
+              final r = reasons[i];
+              return Padding(
+                padding: EdgeInsets.only(left: i == 0 ? 20 : 6, right: i == reasons.length - 1 ? 20 : 6),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                  decoration: BoxDecoration(color: VkColors.primaryInk, borderRadius: BorderRadius.circular(VkRadii.lg)),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(color: VkColors.amber, shape: BoxShape.circle),
+                        child: Icon(r.$1, size: 20, color: VkColors.primaryInk),
+                      ),
+                      const Spacer(),
+                      Text('0${i + 1} / 0${reasons.length}', style: VkText.mono(10, color: Colors.white.withValues(alpha: 0.55))),
+                    ]),
+                    const Spacer(),
+                    Text(r.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.display(20, color: Colors.white, height: 1.1)),
+                    const SizedBox(height: 6),
+                    Text(r.$3, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.body(12.5, color: Colors.white.withValues(alpha: 0.78), height: 1.45)),
+                  ]),
                 ),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: const BoxDecoration(color: VkColors.amber, shape: BoxShape.circle),
-                    child: Icon(r.$1, size: 18, color: VkColors.primaryInk),
-                  ),
-                  const Spacer(),
-                  Text(r.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.ui(13, weight: FontWeight.w600, color: Colors.white)),
-                  const SizedBox(height: 4),
-                  Text(r.$3, maxLines: 3, overflow: TextOverflow.ellipsis, style: VkText.body(11, color: Colors.white.withValues(alpha: 0.72), height: 1.4)),
-                ]),
               );
             },
           ),
         ),
-      ]);
+      ),
+      const SizedBox(height: 12),
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        for (var i = 0; i < reasons.length; i++)
+          AnimatedContainer(
+            duration: VkMotion.base,
+            curve: VkMotion.curve,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            width: i == _page ? 18 : 6,
+            height: 6,
+            decoration: BoxDecoration(color: i == _page ? VkColors.primary : VkColors.rule2, borderRadius: BorderRadius.circular(3)),
+          ),
+      ]),
+    ]);
+  }
 }
 
-class _BlogStrip extends StatelessWidget {
+/// The latest posts, one per row — picture on the left, date and title on
+/// the right — so each is whole on screen rather than half a card peeking in.
+class _BlogList extends StatelessWidget {
   final List<BlogPost> posts;
-  const _BlogStrip({required this.posts});
+  const _BlogList({required this.posts});
   @override
-  Widget build(BuildContext context) => SizedBox(
-        height: 236,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: posts.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemBuilder: (_, i) {
-            final p = posts[i];
-            return PressScale(
-              onTap: () => context.push('/journal/${p.slug}'),
-              child: SizedBox(
-                width: 236,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  SizedBox(height: 132, width: 236, child: NetImage(url: p.imageUrl, radius: VkRadii.md, seed: i, placeholderIcon: Icons.menu_book_outlined)),
-                  const SizedBox(height: 10),
-                  if (p.publishedAt != null)
-                    Text(DateFormat('d MMM yyyy').format(p.publishedAt!.toLocal()).toUpperCase(),
-                        style: VkText.upper(8, color: VkColors.primary, letter: 0.16)),
-                  const SizedBox(height: 4),
-                  Text(p.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.ui(13, weight: FontWeight.w600, height: 1.3)),
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(children: [
+          for (var i = 0; i < posts.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            PressScale(
+              onTap: () => context.push('/journal/${posts[i].slug}'),
+              scale: 0.985,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: VkColors.paper,
+                  borderRadius: BorderRadius.circular(VkRadii.lg),
+                  border: Border.all(color: VkColors.rule),
+                ),
+                child: Row(children: [
+                  SizedBox(width: 92, height: 92, child: NetImage(url: posts[i].imageUrl, radius: VkRadii.md, seed: i, placeholderIcon: Icons.menu_book_outlined)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                      if (posts[i].publishedAt != null)
+                        Text(DateFormat('d MMM yyyy').format(posts[i].publishedAt!.toLocal()).toUpperCase(), style: VkText.upper(8, color: VkColors.primary, letter: 0.16)),
+                      const SizedBox(height: 5),
+                      Text(posts[i].title, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.ui(14, weight: FontWeight.w600, height: 1.3)),
+                      const SizedBox(height: 8),
+                      Row(children: [
+                        Text('Read more', style: VkText.ui(12, weight: FontWeight.w600, color: VkColors.primary)),
+                        const SizedBox(width: 2),
+                        const Icon(Icons.arrow_forward_rounded, size: 14, color: VkColors.primary),
+                      ]),
+                    ]),
+                  ),
                 ]),
               ),
-            );
-          },
+            ),
+          ],
+        ]),
+      );
+}
+
+/// The four promises the store makes, on one calm band rather than four
+/// floating cards. Returns default to the website's seven days when the store
+/// has not set a number of its own.
+class _TrustBand extends StatelessWidget {
+  final int returnsDays;
+  const _TrustBand({required this.returnsDays});
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<StoreConfig>(
+        valueListenable: storeConfig,
+        builder: (context, cfg, _) {
+          final days = returnsDays > 0 ? returnsDays : 7;
+          final items = <(IconData, String, String)>[
+            (Icons.eco_outlined, '100% Natural', 'No chemicals or preservatives'),
+            (Icons.local_shipping_outlined, 'Free shipping', 'On orders above ₹${inr(cfg.freeShippingThreshold)}'),
+            (Icons.autorenew_rounded, '$days-day returns', 'Easy return & exchange'),
+            (Icons.lock_outline_rounded, 'Secure payment', 'Safe, encrypted checkout'),
+          ];
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, VkSpace.section, 20, 0),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              decoration: BoxDecoration(color: VkColors.cream, borderRadius: BorderRadius.circular(VkRadii.lg)),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 14, crossAxisSpacing: 14, mainAxisExtent: 52),
+                itemCount: items.length,
+                itemBuilder: (_, i) {
+                  final t = items[i];
+                  return Row(children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(color: VkColors.paper, shape: BoxShape.circle),
+                      child: Icon(t.$1, size: 18, color: VkColors.primaryDeep),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(t.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.ui(12.5, weight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Text(t.$3, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.body(10.5, color: VkColors.muted, height: 1.3)),
+                      ]),
+                    ),
+                  ]);
+                },
+              ),
+            ),
+          );
+        },
+      );
+}
+
+/// "Sweetness in your inbox" — the same sign-up the website footer offers,
+/// feeding the same list (POST /v1/newsletter).
+class _Newsletter extends StatefulWidget {
+  const _Newsletter();
+  @override
+  State<_Newsletter> createState() => _NewsletterState();
+}
+
+class _NewsletterState extends State<_Newsletter> {
+  final _email = TextEditingController();
+  bool _sending = false;
+  String? _done;
+  String? _error;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final value = _email.text.trim();
+    final ok = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$').hasMatch(value);
+    if (!ok) {
+      setState(() => _error = 'Enter a valid email address');
+      return;
+    }
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      await EcomApi.I.subscribe(value);
+      if (!mounted) return;
+      setState(() {
+        _done = 'You are on the list. Thank you!';
+        _email.clear();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = 'Could not subscribe right now. Please try again.');
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+          decoration: BoxDecoration(color: VkColors.primaryInk, borderRadius: BorderRadius.circular(VkRadii.lg)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('STAY IN THE LOOP', style: VkText.upper(8.5, color: VkColors.amberSoft, letter: 0.2)),
+            const SizedBox(height: 6),
+            Text('Sweetness in your inbox', style: VkText.display(22, color: Colors.white, height: 1.08)),
+            const SizedBox(height: 6),
+            Text('New arrivals, exclusive offers and jaggery recipes — straight to your inbox.',
+                style: VkText.body(12.5, color: Colors.white.withValues(alpha: 0.75), height: 1.45)),
+            const SizedBox(height: 14),
+            if (_done != null)
+              Row(children: [
+                const Icon(Icons.check_circle_rounded, size: 18, color: VkColors.amber),
+                const SizedBox(width: 8),
+                Expanded(child: Text(_done!, style: VkText.ui(13, color: Colors.white, weight: FontWeight.w600))),
+              ])
+            else ...[
+              Row(children: [
+                Expanded(
+                  child: Container(
+                    height: 46,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(VkRadii.md),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+                    ),
+                    alignment: Alignment.centerLeft,
+                    child: TextField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submit(),
+                      style: VkText.ui(13.5, color: Colors.white),
+                      cursorColor: VkColors.amber,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        border: InputBorder.none,
+                        hintText: 'Your email address',
+                        hintStyle: VkText.ui(13.5, color: Colors.white.withValues(alpha: 0.5), weight: FontWeight.w400),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PrimaryButton(label: _sending ? 'Sending…' : 'Subscribe', expanded: false, height: 46, color: VkColors.amber, onTap: _sending ? null : _submit),
+              ]),
+              if (_error != null) ...[
+                const SizedBox(height: 8),
+                Text(_error!, style: VkText.body(11.5, color: VkColors.amberSoft)),
+              ],
+            ],
+          ]),
+        ),
+      );
+}
+
+/// The app's footer: who we are, how to reach us, the pages that matter —
+/// the same information the website's footer carries, read from the store's
+/// own settings so it never drifts.
+class _HomeFooter extends StatelessWidget {
+  const _HomeFooter();
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<StoreConfig>(
+        valueListenable: storeConfig,
+        builder: (context, cfg, _) {
+          void page(String slug, String title) => context.push('/pages/$slug?title=${Uri.encodeComponent(title)}');
+          final links = <(String, VoidCallback)>[
+            ('About Us', () => context.push('/about')),
+            ('Leadership', () => context.push('/leadership')),
+            ('Contact Us', () => context.push('/contact')),
+            ('Shipping Policy', () => page('shipping', 'Shipping Policy')),
+            ('Return & Exchange', () => page('returns', 'Return & Exchange')),
+            if (cfg.privacyUrl.isNotEmpty) ('Privacy Policy', () => openExternal(context, cfg.privacyUrl)),
+            if (cfg.termsUrl.isNotEmpty) ('Terms & Conditions', () => openExternal(context, cfg.termsUrl)),
+          ];
+          final socials = <(IconData, String)>[
+            if (cfg.instagram.isNotEmpty) (Icons.camera_alt_outlined, cfg.instagram),
+            if (cfg.facebook.isNotEmpty) (Icons.facebook_rounded, cfg.facebook),
+            if (cfg.youtube.isNotEmpty) (Icons.play_circle_outline_rounded, cfg.youtube),
+          ];
+          final phoneDigits = cfg.phone.replaceAll(RegExp(r'[^\d+]'), '');
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const DoubleRule(),
+              const SizedBox(height: 18),
+              const BrandLogo(height: 34),
+              const SizedBox(height: 10),
+              Text(
+                cfg.tagline.isNotEmpty ? cfg.tagline : 'Pure, chemical-free jaggery and cane products from Mandya, Karnataka — made the way the family always has.',
+                style: VkText.body(12.5, color: VkColors.ink2, height: 1.55),
+              ),
+              const SizedBox(height: 16),
+              Wrap(spacing: 18, runSpacing: 8, children: [
+                for (final l in links)
+                  InkWell(
+                    onTap: l.$2,
+                    child: Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text(l.$1, style: VkText.ui(12.5, weight: FontWeight.w600, color: VkColors.ink))),
+                  ),
+              ]),
+              const SizedBox(height: 16),
+              if (cfg.storeAddress.isNotEmpty) _footerLine(Icons.location_on_outlined, cfg.storeAddress),
+              if (cfg.phone.isNotEmpty) _footerLine(Icons.call_outlined, cfg.phone, onTap: () => openExternal(context, 'tel:$phoneDigits')),
+              if (cfg.whatsapp.isNotEmpty) _footerLine(Icons.chat_outlined, 'WhatsApp', onTap: () => openExternal(context, 'https://wa.me/${cfg.whatsapp.replaceAll(RegExp(r'\D'), '')}')),
+              if (cfg.email.isNotEmpty) _footerLine(Icons.mail_outline_rounded, cfg.email, onTap: () => openExternal(context, 'mailto:${cfg.email}')),
+              if (socials.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(children: [
+                  for (final s in socials)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: InkResponse(
+                        onTap: () => openExternal(context, s.$2),
+                        radius: 22,
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(color: VkColors.paper, shape: BoxShape.circle, border: Border.all(color: VkColors.rule)),
+                          child: Icon(s.$1, size: 18, color: VkColors.primaryDeep),
+                        ),
+                      ),
+                    ),
+                ]),
+              ],
+              const SizedBox(height: 22),
+              Center(child: Text('© ${DateTime.now().year} VKC GOLD IKSHU · MANDYA · SINCE 1988', style: VkText.upper(8, color: VkColors.muted2, letter: 0.2))),
+            ]),
+          );
+        },
+      );
+
+  Widget _footerLine(IconData icon, String text, {VoidCallback? onTap}) => InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Icon(icon, size: 16, color: VkColors.primaryDeep),
+            const SizedBox(width: 10),
+            Expanded(child: Text(text, style: VkText.body(12.5, color: VkColors.ink2, height: 1.45))),
+          ]),
         ),
       );
 }
@@ -761,57 +1041,3 @@ class _GalleryStrip extends StatelessWidget {
       );
 }
 
-/// The promises the store actually makes, read from its own settings.
-class _TrustStrip extends StatelessWidget {
-  final int returnsDays;
-  const _TrustStrip({required this.returnsDays});
-  @override
-  Widget build(BuildContext context) => ValueListenableBuilder<StoreConfig>(
-        valueListenable: storeConfig,
-        builder: (context, cfg, _) {
-          final items = <(IconData, String, String)>[
-            (Icons.eco_outlined, '100% Natural', 'No chemicals or preservatives'),
-            (Icons.local_shipping_outlined, 'Free shipping', 'On orders above ₹${inr(cfg.freeShippingThreshold)}'),
-            if (returnsDays > 0) (Icons.autorenew_rounded, '$returnsDays-day returns', 'No questions asked'),
-            (Icons.lock_outline_rounded, 'Secure payment', 'Safe, encrypted checkout'),
-          ];
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, VkSpace.section, 20, 16),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10, mainAxisExtent: 78),
-              itemCount: items.length,
-              itemBuilder: (_, i) {
-                final t = items[i];
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: VkColors.paper,
-                    border: Border.all(color: VkColors.rule),
-                    borderRadius: BorderRadius.circular(VkRadii.md),
-                  ),
-                  child: Row(children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: const BoxDecoration(color: VkColors.cream, shape: BoxShape.circle),
-                      child: Icon(t.$1, size: 18, color: VkColors.primaryDeep),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(t.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.ui(12, weight: FontWeight.w600)),
-                        const SizedBox(height: 2),
-                        Text(t.$3, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.body(10.5, color: VkColors.muted, height: 1.3)),
-                      ]),
-                    ),
-                  ]),
-                );
-              },
-            ),
-          );
-        },
-      );
-}

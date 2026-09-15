@@ -88,7 +88,7 @@ class _ProductListingState extends State<ProductListing> {
   int _request = 0;
 
   bool get _priceActive => _price.start > 0 || _price.end < _priceCap;
-  int get _filterCount => (_inStock ? 1 : 0) + (_priceActive ? 1 : 0);
+  int get _filterCount => (_inStock ? 1 : 0) + (_priceActive ? 1 : 0) + (_sort != 'newest' ? 1 : 0);
   bool get _fixedCategory => widget.cat != null;
 
   @override
@@ -246,36 +246,36 @@ class _ProductListingState extends State<ProductListing> {
     );
   }
 
-  /// Sort + filter buttons, then the category chips (when the category is
-  /// not already fixed by the route).
+  /// One calm bar: the category pills scroll on the left, and a single
+  /// Filter button on the right opens sort, availability and price together.
+  /// On a fixed-category listing the pills give way to the product count.
   Widget _toolbar() {
     final showCats = !_fixedCategory && _cats.isNotEmpty;
-    final sortLabel = _sorts.firstWhere((s) => s.id == _sort, orElse: () => _sorts.first).label;
+    final count = _total > 0 ? _total : _items.length;
     return Container(
       decoration: const BoxDecoration(color: VkColors.canvas, border: Border(bottom: BorderSide(color: VkColors.rule))),
-      padding: const EdgeInsets.only(top: 6, bottom: 10),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(children: [
-          VkChip(
-            label: _filterCount == 0 ? 'Filters' : 'Filters · $_filterCount',
-            icon: Icons.tune_rounded,
-            selected: _filterCount > 0,
-            onTap: _openFilters,
-          ),
-          const SizedBox(width: 8),
-          VkChip(label: sortLabel, icon: Icons.swap_vert_rounded, onTap: _openSort),
-          if (showCats) ...[
-            Container(width: 1, height: 22, margin: const EdgeInsets.symmetric(horizontal: 10), color: VkColors.rule2),
-            VkChip(label: 'All', selected: _catSlug == null, onTap: () => _pickCat(null)),
-            for (final c in _cats) ...[
-              const SizedBox(width: 8),
-              VkChip(label: c.name, selected: _catSlug == c.slug, onTap: () => _pickCat(c.slug)),
-            ],
-          ],
-        ]),
-      ),
+      padding: const EdgeInsets.fromLTRB(0, 6, 12, 8),
+      child: Row(children: [
+        Expanded(
+          child: showCats
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.only(left: 20, right: 8),
+                  child: Row(children: [
+                    VkChip(label: 'All', selected: _catSlug == null, onTap: () => _pickCat(null)),
+                    for (final c in _cats) ...[
+                      const SizedBox(width: 8),
+                      VkChip(label: c.name, selected: _catSlug == c.slug, onTap: () => _pickCat(c.slug)),
+                    ],
+                  ]),
+                )
+              : Padding(
+                  padding: const EdgeInsets.only(left: 20),
+                  child: Text(_loading ? 'LOADING…' : '$count PRODUCT${count == 1 ? '' : 'S'}', style: VkText.upper(9, color: VkColors.muted, letter: 0.16)),
+                ),
+        ),
+        _FilterButton(count: _filterCount, onTap: _openFilters),
+      ]),
     );
   }
 
@@ -285,38 +285,19 @@ class _ProductListingState extends State<ProductListing> {
     _load();
   }
 
-  Future<void> _openSort() async {
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) => _SheetFrame(
-        title: 'Sort by',
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          for (final s in _sorts)
-            ListTile(
-              onTap: () => Navigator.pop(ctx, s.id),
-              title: Text(s.label, style: VkText.ui(14, weight: s.id == _sort ? FontWeight.w600 : FontWeight.w400)),
-              trailing: Icon(s.id == _sort ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
-                  color: s.id == _sort ? VkColors.primary : VkColors.rule2),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-            ),
-        ]),
-      ),
-    );
-    if (picked == null || picked == _sort || !mounted) return;
-    setState(() => _sort = picked);
-    _load();
-  }
-
   Future<void> _openFilters() async {
-    final result = await showModalBottomSheet<(bool, RangeValues)>(
+    final result = await showModalBottomSheet<_FilterResult>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => _FilterSheet(inStock: _inStock, price: _price),
+      backgroundColor: VkColors.canvas,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => _FilterSheet(sort: _sort, inStock: _inStock, price: _price),
     );
     if (result == null || !mounted) return;
     setState(() {
-      _inStock = result.$1;
-      _price = result.$2;
+      _sort = result.sort;
+      _inStock = result.inStock;
+      _price = result.price;
     });
     _load();
   }
@@ -413,15 +394,57 @@ class _SheetFrame extends StatelessWidget {
       );
 }
 
-class _FilterSheet extends StatefulWidget {
+/// The Filter button: a tune icon with a small count when something is set.
+class _FilterButton extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+  const _FilterButton({required this.count, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    final on = count > 0;
+    return Semantics(
+      button: true,
+      label: on ? 'Filters, $count applied' : 'Filters and sort',
+      child: PressScale(
+        onTap: onTap,
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: on ? VkColors.primaryInk : VkColors.paper,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: on ? VkColors.primaryInk : VkColors.rule),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.tune_rounded, size: 16, color: on ? Colors.white : VkColors.ink),
+            const SizedBox(width: 6),
+            Text(on ? 'Filters · $count' : 'Filter', style: VkText.ui(12.5, weight: FontWeight.w600, color: on ? Colors.white : VkColors.ink)),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterResult {
+  final String sort;
   final bool inStock;
   final RangeValues price;
-  const _FilterSheet({required this.inStock, required this.price});
+  const _FilterResult(this.sort, this.inStock, this.price);
+}
+
+/// Sort, availability and price in one sheet, applied together.
+class _FilterSheet extends StatefulWidget {
+  final String sort;
+  final bool inStock;
+  final RangeValues price;
+  const _FilterSheet({required this.sort, required this.inStock, required this.price});
   @override
   State<_FilterSheet> createState() => _FilterSheetState();
 }
 
 class _FilterSheetState extends State<_FilterSheet> {
+  late String _sort = widget.sort;
   late bool _inStock = widget.inStock;
   late RangeValues _price = widget.price;
 
@@ -430,24 +453,31 @@ class _FilterSheetState extends State<_FilterSheet> {
     final lo = _price.start.round();
     final hi = _price.end.round();
     return _SheetFrame(
-      title: 'Filters',
+      title: 'Filter & sort',
       footer: Row(children: [
         Expanded(
           child: OutlineButton(
             label: 'Reset',
             height: 48,
             onTap: () => setState(() {
+              _sort = 'newest';
               _inStock = false;
               _price = const RangeValues(0, _priceCap);
             }),
           ),
         ),
         const SizedBox(width: 10),
-        Expanded(flex: 2, child: PrimaryButton(label: 'Show products', height: 48, onTap: () => Navigator.pop(context, (_inStock, _price)))),
+        Expanded(flex: 2, child: PrimaryButton(label: 'Show products', height: 48, onTap: () => Navigator.pop(context, _FilterResult(_sort, _inStock, _price)))),
       ]),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('SORT BY', style: VkText.upper(9, letter: 0.18)),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final s in _sorts) VkChip(label: s.label, selected: s.id == _sort, onTap: () => setState(() => _sort = s.id)),
+          ]),
+          const SizedBox(height: 18),
           Text('AVAILABILITY', style: VkText.upper(9, letter: 0.18)),
           SwitchListTile.adaptive(
             value: _inStock,

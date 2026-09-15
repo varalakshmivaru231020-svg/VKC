@@ -414,6 +414,11 @@ class EcomApi {
         return AboutContent.fromJson((r.data as Map).cast<String, dynamic>());
       });
 
+  /// Newsletter sign-up (POST /newsletter) — the list the website footer feeds.
+  Future<void> subscribe(String email) async {
+    await _dio.post('/newsletter', data: {'email': email, 'source': 'app'});
+  }
+
   Future<CouponResult> validateCoupon(String code, num subtotal) async {
     final r = await _dio.post('/coupons/validate', data: {'code': code, 'subtotal': subtotal});
     return CouponResult.fromJson((r.data as Map).cast<String, dynamic>());

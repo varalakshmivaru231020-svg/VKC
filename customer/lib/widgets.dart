@@ -1184,12 +1184,13 @@ class _AddButton extends StatelessWidget {
       );
 }
 
-/// Category card for the Home strip: square image, name under it.
+/// A category as a round photograph with its name beneath — the same
+/// treatment the website's Shop by Categories uses.
 class CategoryTile extends StatelessWidget {
   final EcomCategory category;
   final VoidCallback onTap;
   final double width;
-  const CategoryTile({super.key, required this.category, required this.onTap, this.width = 96});
+  const CategoryTile({super.key, required this.category, required this.onTap, this.width = 88});
   @override
   Widget build(BuildContext context) => PressScale(
         onTap: onTap,
@@ -1200,19 +1201,19 @@ class CategoryTile extends StatelessWidget {
               width: width,
               height: width,
               decoration: BoxDecoration(
-                color: VkColors.paper,
-                borderRadius: BorderRadius.circular(VkRadii.lg),
-                border: Border.all(color: VkColors.rule),
+                color: VkColors.cream,
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: VkColors.ink.withValues(alpha: 0.08), blurRadius: 14, offset: const Offset(0, 6))],
               ),
-              padding: const EdgeInsets.all(1),
-              child: NetImage(url: category.imageUrl, radius: VkRadii.lg - 1, seed: paletteFor(category.slug), placeholderIcon: Icons.grass_rounded),
+              clipBehavior: Clip.antiAlias,
+              child: NetImage(url: category.imageUrl, radius: 0, seed: paletteFor(category.slug), placeholderIcon: Icons.grass_rounded),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 9),
             Text(category.name,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: VkText.ui(11.5, weight: FontWeight.w500, height: 1.25)),
+                style: VkText.ui(11.5, weight: FontWeight.w600, height: 1.25)),
           ]),
         ),
       );

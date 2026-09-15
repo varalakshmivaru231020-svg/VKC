@@ -86,7 +86,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               crossAxisCount: 2,
               mainAxisSpacing: 14,
               crossAxisSpacing: 14,
-              childAspectRatio: 0.8,
+              childAspectRatio: 1,
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => FadeSlideIn(
@@ -136,6 +136,8 @@ class _AllProductsCard extends StatelessWidget {
       );
 }
 
+/// A category on the Categories tab: the photograph fills the tile and the
+/// name and count sit on a soft foot gradient — one clean picture, no frame.
 class _CategoryCard extends StatelessWidget {
   final EcomCategory category;
   final VoidCallback onTap;
@@ -147,29 +149,35 @@ class _CategoryCard extends StatelessWidget {
     return PressScale(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
-          color: VkColors.paper,
-          border: Border.all(color: VkColors.rule),
-          borderRadius: BorderRadius.circular(VkRadii.lg),
-        ),
+        decoration: BoxDecoration(color: VkColors.cream, borderRadius: BorderRadius.circular(VkRadii.lg)),
         clipBehavior: Clip.antiAlias,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-            child: NetImage(url: c.imageUrl, radius: 0, seed: paletteFor(c.slug), placeholderIcon: Icons.grass_rounded),
+        child: Stack(fit: StackFit.expand, children: [
+          NetImage(url: c.imageUrl, radius: 0, seed: paletteFor(c.slug), placeholderIcon: Icons.grass_rounded),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0.45, 1],
+                colors: [Colors.transparent, Color(0xCC2B1708)],
+              ),
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(c.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.ui(13, weight: FontWeight.w600, height: 1.25)),
-              const SizedBox(height: 4),
+          Positioned(
+            left: 14,
+            right: 14,
+            bottom: 12,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text(c.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.ui(14, weight: FontWeight.w700, color: Colors.white, height: 1.2)),
+              const SizedBox(height: 3),
               Row(children: [
                 Expanded(
                   child: Text(
                     count == null ? 'Explore' : (count == 1 ? '1 product' : '$count products'),
-                    style: VkText.body(11, color: VkColors.muted),
+                    style: VkText.body(11, color: Colors.white.withValues(alpha: 0.8)),
                   ),
                 ),
-                const Icon(Icons.arrow_forward_rounded, size: 14, color: VkColors.primary),
+                const Icon(Icons.arrow_forward_rounded, size: 15, color: VkColors.amber),
               ]),
             ]),
           ),
@@ -192,7 +200,7 @@ class _CategoriesSkeleton extends StatelessWidget {
             crossAxisCount: 2,
             mainAxisSpacing: 14,
             crossAxisSpacing: 14,
-            childAspectRatio: 0.8,
+            childAspectRatio: 1,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: List.generate(4, (_) => const Skeleton(radius: VkRadii.lg)),

@@ -33,7 +33,6 @@ class ProfileScreen extends StatelessWidget {
                   _RowSpec(Icons.favorite_outline_rounded, 'Wishlist', 'Products you saved', () => context.push('/wishlist')),
                   _RowSpec(Icons.shopping_bag_outlined, 'Cart', 'Ready to check out', () => context.go('/cart')),
                   if (loggedIn) _RowSpec(Icons.location_on_outlined, 'Address Book', 'Delivery addresses', () => context.push('/addresses')),
-                  _RowSpec(Icons.pin_drop_outlined, 'Track an order', 'With your order number', () => context.push('/track-order')),
                 ]),
                 _Group(title: 'Explore VKC Gold Ikshu', rows: [
                   _RowSpec(Icons.photo_library_outlined, 'Gallery', 'Our unit, fields and farmers', () => context.push('/gallery')),
@@ -53,7 +52,7 @@ class ProfileScreen extends StatelessWidget {
                     _RowSpec(Icons.login_rounded, 'Sign in', 'Orders, wishlist & faster checkout', () => context.push('/login')),
                 ]),
                 const SizedBox(height: 20),
-                Center(child: Text('VKC GOLD IKSHU · v1.1.0', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
+                Center(child: Text('VKC GOLD IKSHU · v1.2.0', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
               ],
             ),
           ),
@@ -62,13 +61,17 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  /// The policies the website publishes, read inside the app like About and
+  /// Leadership. Shipping and Returns are live pages on the site; Privacy and
+  /// Terms appear as soon as their URLs are set in Admin → Settings → Legal.
   List<_RowSpec> _policyRows(BuildContext context) {
     final cfg = storeConfig.value;
+    void page(String slug, String title) => context.push('/pages/$slug?title=${Uri.encodeComponent(title)}');
     return [
-      if (cfg.shippingPolicyUrl.isNotEmpty) _RowSpec(Icons.local_shipping_outlined, 'Shipping Policy', '', () => openExternal(context, cfg.shippingPolicyUrl)),
-      if (cfg.returnsPolicyUrl.isNotEmpty) _RowSpec(Icons.assignment_return_outlined, 'Return & Exchange', '', () => openExternal(context, cfg.returnsPolicyUrl)),
+      _RowSpec(Icons.local_shipping_outlined, 'Shipping Policy', 'Dispatch times and delivery', () => page('shipping', 'Shipping Policy')),
+      _RowSpec(Icons.assignment_return_outlined, 'Return & Exchange', 'How returns work', () => page('returns', 'Return & Exchange')),
       if (cfg.privacyUrl.isNotEmpty) _RowSpec(Icons.shield_outlined, 'Privacy Policy', '', () => openExternal(context, cfg.privacyUrl)),
-      if (cfg.termsUrl.isNotEmpty) _RowSpec(Icons.gavel_outlined, 'Terms', '', () => openExternal(context, cfg.termsUrl)),
+      if (cfg.termsUrl.isNotEmpty) _RowSpec(Icons.gavel_outlined, 'Terms & Conditions', '', () => openExternal(context, cfg.termsUrl)),
     ];
   }
 
