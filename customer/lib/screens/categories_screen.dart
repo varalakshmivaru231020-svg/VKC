@@ -158,15 +158,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               cta: 'Browse all products',
               onCta: () => context.go('/shop'),
             )
-          else ...[
-            _TileGrid(items: items),
-            const SizedBox(height: 18),
-            OutlineButton(
-              label: cat == null ? 'View all products' : 'View all in ${cat.name}',
-              height: 44,
-              onTap: () => cat == null ? context.go('/shop') : context.push('/listing?cat=${cat.slug}&title=${Uri.encodeComponent(cat.name)}'),
+          else
+            _TileGrid(
+              items: items,
+              onViewAll: () => cat == null ? context.go('/shop') : context.push('/listing?cat=${cat.slug}&title=${Uri.encodeComponent(cat.name)}'),
             ),
-          ],
         ],
       ),
     );
@@ -264,18 +260,35 @@ class _RailItem extends StatelessWidget {
       );
 }
 
-/// Products as round pictures with the name beneath, three to a row.
+/// Products as round pictures with the name beneath, three to a row, ending
+/// with a round View All tile that opens the full listing.
 class _TileGrid extends StatelessWidget {
   final List<Product> items;
-  const _TileGrid({required this.items});
+  final VoidCallback onViewAll;
+  const _TileGrid({required this.items, required this.onViewAll});
   @override
   Widget build(BuildContext context) => GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         padding: EdgeInsets.zero,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 14, crossAxisSpacing: 10, mainAxisExtent: 124),
-        itemCount: items.length,
+        itemCount: items.length + 1,
         itemBuilder: (context, i) {
+          if (i == items.length) {
+            return PressScale(
+              onTap: onViewAll,
+              child: Column(children: [
+                Container(
+                  width: 76,
+                  height: 76,
+                  decoration: const BoxDecoration(color: VkColors.amberSoft, shape: BoxShape.circle),
+                  child: const Icon(Icons.arrow_forward_rounded, size: 30, color: VkColors.primaryDeep),
+                ),
+                const SizedBox(height: 8),
+                Text('View All', textAlign: TextAlign.center, style: VkText.ui(11.5, weight: FontWeight.w600, color: VkColors.primaryDeep)),
+              ]),
+            );
+          }
           final p = items[i];
           return PressScale(
             onTap: () => context.push('/product/${p.id}'),

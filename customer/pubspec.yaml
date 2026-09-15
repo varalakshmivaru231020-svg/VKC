@@ -1,7 +1,7 @@
 name: vkc_customer
 description: "VKC Gold Ikshu customer shopping app — pure cane jaggery from Mandya."
 publish_to: 'none'
-version: 1.2.2+6
+version: 1.2.3+7
 
 environment:
   sdk: ^3.9.2
