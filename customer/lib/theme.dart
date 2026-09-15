@@ -11,8 +11,9 @@ import 'package:google_fonts/google_fonts.dart';
 class VkColors {
   // ── Brand ─────────────────────────────────────────────────────────────────
   /// Burnt jaggery — the one CTA colour, the active tab, the price accent.
-  static const primary = Color(0xFFB4561A);
-  static const primaryDeep = Color(0xFF7E3A0C);
+  static const primary = Color(0xFFB65F1E);
+  /// Pressed / active shade of [primary].
+  static const primaryDeep = Color(0xFF8F4517);
   /// Bark — the darkest brand tone; used for hero overlays and dark cards.
   static const primaryInk = Color(0xFF3A1F0A);
   static const primarySoft = Color(0xFFFBE8D9);
@@ -23,19 +24,19 @@ class VkColors {
   static const amberSoft = Color(0xFFFFF0CC);
 
   /// Cane leaf green — trust, stock, success.
-  static const leaf = Color(0xFF487A38);
+  static const leaf = Color(0xFF477D3B);
   static const leafSoft = Color(0xFFEBF5E9);
 
   // ── Warm neutrals ────────────────────────────────────────────────────────
-  static const canvas = Color(0xFFFFFBF4); // ivory page background
+  static const canvas = Color(0xFFFCF8F2); // cream page background
   static const paper = Color(0xFFFFFFFF); // cards, sheets
   static const cream = Color(0xFFFBF1DE);
   static const cream2 = Color(0xFFF3E3C4);
-  static const ink = Color(0xFF2B1708);
+  static const ink = Color(0xFF352216);
   static const ink2 = Color(0xFF5C3A1E);
   static const muted = Color(0xFF8A6A4E);
-  static const muted2 = Color(0xFFB59B84);
-  static const rule = Color(0xFFF0DCB6);
+  static const muted2 = Color(0xFF9A8068);
+  static const rule = Color(0xFFE8D7B8);
   static const rule2 = Color(0xFFE1C79B);
 
   // ── Accent + status ───────────────────────────────────────────────────────
@@ -46,6 +47,10 @@ class VkColors {
   static const error = Color(0xFFC42B2B);
   /// Discount badges, fixed: a saving has to read as a saving at a glance.
   static const sale = Color(0xFFC8102E);
+  /// Sold-out badge.
+  static const soldOut = Color(0xFF3A281C);
+  /// Snackbar action text.
+  static const saffron = Color(0xFFD98A24);
 }
 
 /// Colours that never change, for brand furniture (splash, badges).
@@ -137,16 +142,17 @@ ThemeData vkTheme() {
     splashColor: VkColors.primary.withValues(alpha: 0.08),
     highlightColor: VkColors.primary.withValues(alpha: 0.04),
     dividerColor: VkColors.rule,
-    // Toasts: a small dark pill above the bottom bar, one line, gone in two
-    // seconds — a note, not a banner.
+    // Snackbar: one compact bar just above the bottom navigation — 16px in
+    // from the sides, dark brown, white text, saffron action — never over the
+    // cards. Slides up and fades; gone in three seconds.
     snackBarTheme: SnackBarThemeData(
       backgroundColor: VkColors.ink,
-      contentTextStyle: VkText.ui(12.5, color: Colors.white, weight: FontWeight.w500),
-      actionTextColor: VkColors.amber,
+      contentTextStyle: VkText.ui(13, color: Colors.white, weight: FontWeight.w500),
+      actionTextColor: VkColors.saffron,
       behavior: SnackBarBehavior.floating,
-      elevation: 2,
-      shape: const StadiumBorder(),
-      insetPadding: const EdgeInsets.fromLTRB(40, 0, 40, 92),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 84),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: VkColors.canvas,

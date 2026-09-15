@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -51,20 +52,24 @@ Future<void> openExternal(BuildContext context, String url) async {
   }
 }
 
-/// A brief note at the foot of the screen: one line, a small pill, optional
-/// action. Long messages are cut with an ellipsis rather than wrapping.
-void toast(BuildContext context, String message, {String? action, VoidCallback? onAction}) {
+/// A brief note in the bar above the bottom navigation: an optional icon,
+/// one line of text (cut with an ellipsis, never wrapped) and an optional
+/// action. Three seconds, then gone.
+void toast(BuildContext context, String message, {String? action, VoidCallback? onAction, IconData? icon}) {
   if (!context.mounted) return;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(
-      content: Text(message, maxLines: 1, overflow: TextOverflow.ellipsis),
-      padding: EdgeInsets.only(left: 18, right: action == null ? 18 : 4, top: action == null ? 11 : 2, bottom: action == null ? 11 : 2),
-      duration: const Duration(seconds: 2),
+      content: Row(children: [
+        if (icon != null) ...[Icon(icon, size: 18, color: VkColors.cream), const SizedBox(width: 10)],
+        Expanded(child: Text(message, maxLines: 1, overflow: TextOverflow.ellipsis)),
+      ]),
+      padding: EdgeInsets.only(left: 18, right: action == null ? 18 : 6, top: action == null ? 16 : 6, bottom: action == null ? 16 : 6),
+      duration: const Duration(seconds: 3),
       dismissDirection: DismissDirection.down,
       action: action == null
           ? null
-          : SnackBarAction(label: action, textColor: VkColors.amber, onPressed: onAction ?? () {}),
+          : SnackBarAction(label: action, textColor: VkColors.saffron, onPressed: onAction ?? () {}),
     ));
 }
 
@@ -877,7 +882,7 @@ Future<void> toggleWishlist(BuildContext context, Product product) async {
     final on = await Wishlist.I.toggle(variantId, product: product.source);
     if (context.mounted && on) {
       final router = GoRouter.of(context);
-      toast(context, 'Saved to wishlist', action: 'VIEW', onAction: () => router.push('/wishlist'));
+      toast(context, 'Saved to wishlist', icon: Icons.favorite_rounded, action: 'VIEW', onAction: () => router.push('/wishlist'));
     }
   } catch (e) {
     if (context.mounted) toast(context, ecomError(e, 'Could not update wishlist'));
@@ -901,7 +906,7 @@ bool quickAddToCart(BuildContext context, Product product) {
     return false;
   }
   final router = GoRouter.of(context);
-  toast(context, 'Added to cart', action: 'VIEW CART', onAction: () => router.go('/cart'));
+  toast(context, 'Added to cart', icon: Icons.check_circle_rounded, action: 'VIEW CART', onAction: () => router.go('/cart'));
   return true;
 }
 
@@ -1107,9 +1112,10 @@ class ProductCard extends StatelessWidget {
               Positioned(left: 8, top: 8, child: VkBadge('New', color: VkColors.leaf)),
             if (p.soldOut)
               Positioned(
-                left: 8,
+                left: 0,
+                right: 0,
                 bottom: 8,
-                child: VkBadge('Sold out', color: VkColors.ink.withValues(alpha: 0.85)),
+                child: Center(child: VkBadge('Sold out', color: VkColors.soldOut)),
               ),
             if (onFav != null)
               Positioned(
@@ -1124,9 +1130,9 @@ class ProductCard extends StatelessWidget {
               ),
             if (onAdd != null && !p.soldOut)
               Positioned(
-                right: 6,
-                bottom: 6,
-                child: _AddButton(variantId: p.variantId, onTap: onAdd!),
+                right: 8,
+                bottom: 8,
+                child: _AddButton(onTap: onAdd!),
               ),
           ]),
         ),
@@ -1152,41 +1158,61 @@ class ProductCard extends StatelessWidget {
   }
 }
 
-/// Round quick-add button; shows a tick while the variant is in the cart.
-class _AddButton extends StatelessWidget {
-  final String? variantId;
+/// Round quick-add button: a 44px burnt-saffron circle with a cart-plus icon.
+/// After a tap it shows a tick for a moment, then returns to the cart icon.
+class _AddButton extends StatefulWidget {
   final VoidCallback onTap;
-  const _AddButton({required this.variantId, required this.onTap});
+  const _AddButton({required this.onTap});
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<List<CartItem>>(
-        valueListenable: EcomCart.I.items,
-        builder: (_, items, __) {
-          final inCart = variantId != null && items.any((i) => i.variantId == variantId);
-          return Semantics(
-            button: true,
-            label: inCart ? 'In cart, add one more' : 'Add to cart',
-            child: GestureDetector(
-              onTap: onTap,
-              behavior: HitTestBehavior.opaque,
-              child: AnimatedContainer(
-                duration: VkMotion.base,
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: inCart ? VkColors.leaf : VkColors.primary,
-                  shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.16), blurRadius: 8, offset: const Offset(0, 3))],
-                ),
-                child: AnimatedSwitcher(
-                  duration: VkMotion.base,
-                  transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
-                  child: Icon(inCart ? Icons.check_rounded : Icons.add_shopping_cart_rounded,
-                      key: ValueKey(inCart), size: 17, color: Colors.white),
-                ),
-              ),
+  State<_AddButton> createState() => _AddButtonState();
+}
+
+class _AddButtonState extends State<_AddButton> {
+  bool _pressed = false;
+  bool _added = false;
+  Timer? _reset;
+
+  @override
+  void dispose() {
+    _reset?.cancel();
+    super.dispose();
+  }
+
+  void _tap() {
+    widget.onTap();
+    _reset?.cancel();
+    setState(() => _added = true);
+    _reset = Timer(const Duration(milliseconds: 1400), () {
+      if (mounted) setState(() => _added = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: 'Add to cart',
+        child: GestureDetector(
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTapCancel: () => setState(() => _pressed = false),
+          onTap: _tap,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: VkMotion.fast,
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: _pressed ? VkColors.primaryDeep : VkColors.primary,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: VkColors.primaryDeep.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
             ),
-          );
-        },
+            child: AnimatedSwitcher(
+              duration: VkMotion.base,
+              transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
+              child: Icon(_added ? Icons.check_rounded : Icons.add_shopping_cart_rounded, key: ValueKey(_added), size: 20, color: Colors.white),
+            ),
+          ),
+        ),
       );
 }
 

@@ -261,10 +261,10 @@ class VkBottomNav extends StatelessWidget {
           AnimatedContainer(
             duration: VkMotion.base,
             curve: VkMotion.curve,
-            width: active ? 44 : 32,
-            height: 28,
+            width: active ? 40 : 32,
+            height: 26,
             decoration: BoxDecoration(
-              color: active ? VkColors.primarySoft : Colors.transparent,
+              color: active ? VkColors.primaryTint : Colors.transparent,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Center(
