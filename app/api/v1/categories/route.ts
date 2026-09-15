@@ -7,6 +7,9 @@ export const dynamic = "force-dynamic";
  * Returns the full category tree (active only). Mobile uses this for the
  * shop drawer and category drill-down.
  *
+ * Each category carries `productCount` — the number of active products in it —
+ * so the app's Categories screen can show "12 products" without a second call.
+ *
  * Query params:
  *   ?flat=1   → return a flat list instead of a tree
  */
@@ -15,14 +18,17 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const flat = url.searchParams.get("flat") === "1";
 
-    const all = await db.category.findMany({
+    const rows = await db.category.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: {
         id: true, name: true, slug: true, parentId: true,
         description: true, imageUrl: true, sortOrder: true,
+        _count: { select: { products: { where: { isActive: true } } } },
       },
     });
+
+    const all = rows.map(({ _count, ...c }) => ({ ...c, productCount: _count.products }));
 
     if (flat) return NextResponse.json({ categories: all });
 
