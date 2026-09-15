@@ -154,7 +154,7 @@ function SplitPanel({ image, dark, label, title, facts }: { image: string | null
     <div className="relative overflow-hidden flex items-end" style={{ background: dark ? C.bark : C.cream, minHeight: image ? "clamp(420px, 42vw, 600px)" : undefined }}>
       {image ? (
         <>
-          <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
           <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(27,14,5,0.05) 30%, rgba(27,14,5,0.85) 100%)" }} />
         </>
       ) : (
@@ -288,9 +288,12 @@ export default function LeadershipExperience({ bannerImage = null, bannerAlt = "
         </div>
         <h2 id="heritage-future-heading" className="sr-only">Heritage and future</h2>
         <div className="grid lg:grid-cols-2">
-          <SplitPanel dark image={heritageImage} label="Where we began" title="1988. A crusher in Mandya."
+          {/* Until the admin uploads the two banner-slot photographs, the panels
+              carry the real portraits already on the site: the founder for where
+              the business began, the Managing Director for where it is going. */}
+          <SplitPanel dark image={heritageImage ?? PEOPLE.founder.photo} label="Where we began" title="1988. A crusher in Mandya."
             facts={["M/s Vairamudi Krupa Crusher, set up by Late Shri B Ramachandra", "Fair dealing with the farmers who grow the cane", "Purity as the standard, not a slogan"]} />
-          <SplitPanel dark={false} image={futureImage} label="Where we're going" title="A structured, future-ready business."
+          <SplitPanel dark={false} image={futureImage ?? PEOPLE.md.photo} label="Where we're going" title="A structured, future-ready business."
             facts={["VKC Jaggery & Beverages Private Limited, incorporated 2025", "A proposed 50 TCD automatic jaggery and cane-juice processing unit", "Ongoing learning in food safety, labelling and compliance"]} />
         </div>
       </section>
