@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+
 import '../ecom/ecom_adapter.dart';
 import '../ecom/ecom_api.dart';
 import '../ecom/ecom_cart.dart';
@@ -9,22 +11,7 @@ import '../ecom/ecom_wishlist.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
-String _stripHtml(String? s) => (s ?? '')
-    .replaceAll(RegExp(r'<[^>]*>'), ' ')
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&amp;', '&')
-    .replaceAll(RegExp(r'\s+'), ' ')
-    .trim();
-
-Color? _hex(String? h) {
-  if (h == null || h.isEmpty) return null;
-  var s = h.replaceAll('#', '').trim();
-  if (s.length == 6) s = 'FF$s';
-  final v = int.tryParse(s, radix: 16);
-  return v == null ? null : Color(v);
-}
-
-/// Real product detail, bound to vkcgold_ecom `/v1/products/:slug`.
+/// Product detail, bound to `/v1/products/:slug` (+ its reviews).
 class ProductScreen extends StatefulWidget {
   final String id; // slug
   const ProductScreen({super.key, required this.id});
@@ -35,17 +22,27 @@ class ProductScreen extends StatefulWidget {
 class _ProductScreenState extends State<ProductScreen> {
   EcomProduct? _p;
   List<EcomProduct> _related = const [];
+  ReviewPage? _reviews;
   bool _loading = true;
-  String? _error;
+  Object? _error;
 
   int _variant = 0;
   int _img = 0;
-  String _tab = 'Details';
+  int _qty = 1;
+  bool _expanded = false;
+  bool _justAdded = false;
+  final _pager = PageController();
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _pager.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -56,422 +53,495 @@ class _ProductScreenState extends State<ProductScreen> {
     try {
       final (product, related) = await EcomApi.I.productBySlug(widget.id);
       if (!mounted) return;
+      // Land on the first variant that is actually buyable.
+      final firstInStock = product.variants.indexWhere((v) => v.availableQty > 0);
       setState(() {
         _p = product;
         _related = related;
+        _variant = firstInStock < 0 ? 0 : firstInStock;
+        _qty = 1;
         _loading = false;
       });
-    } catch (_) {
+      _loadReviews(product.slug.isNotEmpty ? product.slug : widget.id);
+    } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Could not load this product.';
+        _error = e;
         _loading = false;
       });
     }
   }
 
-  /// The chosen colour. Clamped, so a reload that returns fewer variants than
-  /// the one the customer had selected can't index out of range.
+  Future<void> _loadReviews(String slug) async {
+    try {
+      final r = await EcomApi.I.reviews(slug, limit: 3);
+      if (mounted) setState(() => _reviews = r);
+    } catch (_) {
+      // Reviews are a bonus; the page is complete without them.
+    }
+  }
+
+  /// The chosen variant, clamped so a reload with fewer variants can't index
+  /// out of range.
   ProductVariant get _sel {
     final vs = _p!.variants;
     if (vs.isEmpty) return _p!.primaryVariant;
     return vs[_variant.clamp(0, vs.length - 1)];
   }
 
+  List<String> get _images {
+    final own = _sel.images.map((i) => i.url).toList();
+    return own.isNotEmpty ? own : _p!.allImages;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Scaffold(backgroundColor: VlColors.canvas, body: const DetailSkeleton(heroHeight: 440));
+      return const Scaffold(backgroundColor: VkColors.canvas, body: DetailSkeleton(heroHeight: 380));
     }
-    if (_error != null || _p == null) {
+    final p = _p;
+    if (_error != null || p == null) {
       return Scaffold(
-        backgroundColor: VlColors.canvas,
+        backgroundColor: VkColors.canvas,
         body: SafeArea(
           child: Column(children: [
-            TopBar(title: 'Product', onBack: () => context.pop()),
-            Expanded(
-              child: Center(
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Text(_error ?? 'Not found', style: VlText.body(13, color: VlColors.muted)),
-                  const SizedBox(height: 12),
-                  TextButton(onPressed: _load, child: Text('Retry', style: VlText.ui(13, color: VlColors.red))),
-                ]),
-              ),
-            ),
+            TopBar(title: 'Product', onBack: () => context.canPop() ? context.pop() : context.go('/shop')),
+            Expanded(child: StateView.error(_error, onRetry: _load, title: "Couldn't load this product")),
           ]),
         ),
       );
     }
 
-    final p = _p!;
     final v = _sel;
-    final images = v.images;
+    final images = _images;
+    final canBuy = v.availableQty > 0;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
-      backgroundColor: VlColors.canvas,
-      // Lifted clear of this screen's sticky ADD TO CART / BUY NOW bar.
-      floatingActionButton: const VideoCallFab(liftAbove: 78),
+      backgroundColor: VkColors.canvas,
       body: Stack(children: [
         ListView(
-          padding: const EdgeInsets.only(bottom: 92),
+          padding: EdgeInsets.only(bottom: 96 + bottomInset),
           children: [
-            // hero gallery
-            SizedBox(
-              height: 440,
-              child: Stack(children: [
-                Positioned.fill(
-                  child: images.isEmpty
-                      ? Silk(palette: 0, radius: 0)
-                      : PageView.builder(
-                          itemCount: images.length,
-                          onPageChanged: (i) => setState(() => _img = i),
-                          itemBuilder: (_, i) => NetImage(url: images[i].url, radius: 0),
-                        ),
-                ),
-                Positioned(
-                  right: 16,
-                  bottom: 20,
-                  child: GestureDetector(
-                    onTap: _toggleWishlist,
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(color: VlColors.paper, shape: BoxShape.circle),
-                      // Reads the shared wishlist, so the heart matches the
-                      // cards the customer just came from.
-                      child: ValueListenableBuilder<Set<String>>(
-                        valueListenable: Wishlist.I.variantIds,
-                        builder: (context, ids, _) {
-                          final on = ids.contains(_sel.id);
-                          return Icon(on ? Icons.favorite : Icons.favorite_border, size: 18, color: on ? VlColors.red : VlColors.ink);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                if (images.length > 1)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 20,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(images.length, (i) {
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: i == _img ? 22 : 6,
-                          height: 6,
-                          decoration: BoxDecoration(color: i == _img ? Colors.white : Colors.white54, borderRadius: BorderRadius.circular(3)),
-                        );
-                      }),
-                    ),
-                  ),
-              ]),
-            ),
-            // title
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text([p.category?.name, v.sareeCode].whereType<String>().where((s) => s.isNotEmpty).join(' · ').toUpperCase(),
-                    style: VlText.upper(9, color: VlColors.muted, letter: 0.22)),
-                const SizedBox(height: 8),
-                Text(p.name, style: VlText.display(26)),
-                const SizedBox(height: 12),
-                Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                  PriceRow(value: v.salePrice.toDouble(), mrp: v.hasDiscount ? v.originalPrice.toDouble() : null, size: 26),
-                  if (v.hasDiscount) ...[
-                    const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(color: VlColors.redSoft, borderRadius: BorderRadius.circular(4)),
-                      child: Text('${v.discountPercent}% OFF', style: VlText.ui(11, weight: FontWeight.w600, color: VlColors.red)),
-                    ),
-                  ],
-                ]),
-                const SizedBox(height: 6),
-                Text(v.availableQty > 0 ? 'IN STOCK · INCL. ALL TAXES' : 'OUT OF STOCK',
-                    style: VlText.upper(9, color: v.availableQty > 0 ? VlColors.green : VlColors.red, letter: 0.18)),
-              ]),
-            ),
-            const DoubleRule(margin: EdgeInsets.fromLTRB(20, 0, 20, 14)),
-            if (p.variants.length > 1) _variants(p),
-            _tabs(p, v),
+            _gallery(images),
+            _titleBlock(p, v),
+            if (_showVariants(p)) _variants(p),
+            _quantity(v),
+            const DoubleRule(margin: EdgeInsets.fromLTRB(20, 20, 20, 0)),
+            _description(p),
+            _details(p, v),
+            if ((_reviews?.total ?? 0) > 0) _reviewsBlock(_reviews!),
             if (_related.isNotEmpty) ...[
-              SectionHead(kicker: const Text('PAIRS WELL WITH'), title: 'You might also love'),
-              SizedBox(
-                height: 300,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  itemCount: _related.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
-                  itemBuilder: (_, i) => SizedBox(
-                    width: 150,
-                    child: ProductCard(
-                      p: productFromEcom(_related[i]),
-                      onTap: () => context.push('/product/${_related[i].slug}'),
-                    ),
-                  ),
-                ),
-              ),
+              const SectionHead(kicker: 'Pairs well with', title: 'You might also like'),
+              _relatedRow(),
             ],
+            const SizedBox(height: 12),
           ],
         ),
-        // floating top bar
         Positioned(
-          top: MediaQuery.of(context).padding.top + 8,
-          left: 16,
-          right: 16,
+          top: MediaQuery.paddingOf(context).top + 8,
+          left: 12,
+          right: 12,
           child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            _floatBtn(Icons.arrow_back, () => context.pop()),
+            TopBar.action(Icons.arrow_back_rounded, () => context.canPop() ? context.pop() : context.go('/shop'), tooltip: 'Back'),
             Row(children: [
-              _floatBtn(Icons.ios_share_rounded, _share),
-              const SizedBox(width: 10),
-              _cartBtn(),
+              TopBar.action(Icons.ios_share_rounded, _share, tooltip: 'Share'),
+              ValueListenableBuilder<Set<String>>(
+                valueListenable: Wishlist.I.variantIds,
+                builder: (_, ids, __) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: WishHeart(on: ids.contains(v.id), onTap: _toggleWishlist, size: 40, onImage: false),
+                ),
+              ),
+              InkResponse(
+                onTap: () => context.go('/cart'),
+                radius: 24,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(color: VkColors.paper, shape: BoxShape.circle, border: Border.all(color: VkColors.rule)),
+                  child: const Center(child: CartIconBadge(size: 19)),
+                ),
+              ),
             ]),
           ]),
         ),
-        // sticky CTA
-        Positioned(left: 0, right: 0, bottom: 0, child: _cta(p, v)),
+        Positioned(left: 0, right: 0, bottom: 0, child: _cta(p, v, canBuy)),
       ]),
     );
   }
 
-  Widget _variants(EcomProduct p) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text.rich(TextSpan(style: VlText.upper(9, color: VlColors.muted, letter: 0.22), children: [
-            const TextSpan(text: 'COLOUR · '),
-            TextSpan(text: _sel.colorName.toUpperCase(), style: VlText.upper(9, color: VlColors.ink, letter: 0.22)),
-          ])),
-          const SizedBox(height: 10),
-          Wrap(spacing: 10, runSpacing: 10, children: List.generate(p.variants.length, (i) {
-            final vr = p.variants[i];
-            final on = i == _variant;
-            final c = _hex(vr.colorHex);
-            // A sold-out colour is still selectable (so its photos can be
-            // seen) but says so, instead of silently disabling BUY NOW.
-            final out = vr.availableQty <= 0;
-            return GestureDetector(
-              onTap: () => setState(() {
-                _variant = i;
-                _img = 0;
-              }),
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: on ? VlColors.ink : VlColors.rule2, width: on ? 2 : 1),
-                ),
-                child: Stack(alignment: Alignment.center, children: [
-                  Opacity(
-                    opacity: out ? 0.4 : 1,
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: c ?? VlColors.cream,
-                        image: (c == null && vr.images.isNotEmpty)
-                            ? DecorationImage(image: NetworkImage(vr.images.first.url), fit: BoxFit.cover)
-                            : null,
-                      ),
+  // ── Gallery ───────────────────────────────────────────────────────────────
+  Widget _gallery(List<String> images) {
+    final width = MediaQuery.sizeOf(context).width;
+    return SizedBox(
+      height: width,
+      child: Stack(children: [
+        Positioned.fill(
+          child: ColoredBox(
+            color: VkColors.paper,
+            child: images.isEmpty
+                ? const PlaceholderTile(radius: 0)
+                : PageView.builder(
+                    controller: _pager,
+                    itemCount: images.length,
+                    onPageChanged: (i) => setState(() => _img = i),
+                    itemBuilder: (_, i) => Hero(
+                      tag: i == 0 ? 'product-${_p!.slug}' : 'product-${_p!.slug}-$i',
+                      child: NetImage(url: images[i], radius: 0, fit: BoxFit.cover),
                     ),
                   ),
-                  if (out)
-                    Transform.rotate(
-                      angle: -0.7,
-                      child: Container(width: 34, height: 1.5, color: VlColors.ink.withValues(alpha: 0.6)),
-                    ),
-                ]),
-              ),
-            );
-          })),
-          if (_sel.availableQty <= 0 && p.variants.length > 1) ...[
-            const SizedBox(height: 8),
-            Text('${_sel.colorName.toUpperCase()} IS SOLD OUT — TRY ANOTHER COLOUR',
-                style: VlText.upper(9, color: VlColors.red, letter: 0.16)),
-          ],
-        ]),
-      );
-
-  Widget _tabs(EcomProduct p, ProductVariant v) {
-    final tabs = ['Details', 'Weave'];
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: VlColors.rule))),
-        child: Row(children: [
-          for (final t in tabs)
-            GestureDetector(
-              onTap: () => setState(() => _tab = t),
-              child: Container(
-                margin: const EdgeInsets.only(right: 22),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: _tab == t ? VlColors.red : Colors.transparent, width: 2))),
-                child: Text(t, style: VlText.ui(13, weight: _tab == t ? FontWeight.w600 : FontWeight.w400, color: _tab == t ? VlColors.ink : VlColors.muted)),
-              ),
-            ),
-        ]),
-      ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
-        child: _tab == 'Weave' ? _specs(p, v) : _details(p),
-      ),
-    ]);
-  }
-
-  Widget _details(EcomProduct p) {
-    final body = _stripHtml(p.description).isNotEmpty ? _stripHtml(p.description) : _stripHtml(p.shortDesc);
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(body.isEmpty ? 'Pure, chemical-free cane jaggery from VKC Gold.' : body,
-          style: VlText.body(13, color: VlColors.muted, height: 1.6)),
-      if (p.occasions.isNotEmpty) ...[
-        const SizedBox(height: 12),
-        Wrap(spacing: 8, runSpacing: 8, children: p.occasions
-            .map((o) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(color: VlColors.cream, borderRadius: BorderRadius.circular(999)),
-                  child: Text(o, style: VlText.ui(11, color: VlColors.redDeep)),
-                ))
-            .toList()),
-      ],
-    ]);
-  }
-
-  Widget _specs(EcomProduct p, ProductVariant v) {
-    final specs = <(String, String?)>[
-      ('Fabric', p.fabric),
-      ('Weave', p.weaveType),
-      ('Region', p.regionOfOrigin),
-      ('Colour', v.colorName),
-      ('Product code', v.sareeCode),
-      ('Care', p.careInstructions),
-    ].where((s) => s.$2 != null && s.$2!.isNotEmpty).toList();
-    if (specs.isEmpty) {
-      return Text('Details coming soon.', style: VlText.body(13, color: VlColors.muted));
-    }
-    return Column(
-      children: specs
-          .map((s) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  SizedBox(width: 110, child: Text(s.$1.toUpperCase(), style: VlText.upper(9, color: VlColors.muted2, letter: 0.18))),
-                  Expanded(child: Text(s.$2!, style: VlText.ui(13))),
-                ]),
-              ))
-          .toList(),
-    );
-  }
-
-  Widget _floatBtn(IconData ic, VoidCallback onTap) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(color: VlColors.paper.withValues(alpha: 0.92), shape: BoxShape.circle),
-          child: Icon(ic, size: 16, color: VlColors.ink),
-        ),
-      );
-
-  Widget _cartBtn() => ValueListenableBuilder(
-        valueListenable: EcomCart.I.items,
-        builder: (context, _, __) => GestureDetector(
-          // go, not push: /cart lives inside the ShellRoute, and pushing a
-          // second copy of that shell collides with the existing page key.
-          onTap: () => context.go('/cart'),
-          child: Stack(clipBehavior: Clip.none, children: [
-            _floatBtn(Icons.shopping_bag_outlined, () => context.go('/cart')),
-            if (EcomCart.I.count > 0)
-              Positioned(
-                top: -4,
-                right: -4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                  decoration: BoxDecoration(color: VlColors.red, shape: BoxShape.circle),
-                  child: Text('${EcomCart.I.count}', style: VlText.ui(9, weight: FontWeight.w600, color: Colors.white)),
-                ),
-              ),
-          ]),
-        ),
-      );
-
-  Widget _cta(EcomProduct p, ProductVariant v) {
-    final canBuy = v.availableQty > 0;
-    return Container(
-      decoration: BoxDecoration(color: VlColors.paper, border: Border(top: BorderSide(color: VlColors.rule))),
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
-      child: Row(children: [
-        // flex 3:5 — BUY NOW stays dominant, but the icon + "ADD TO CART"
-        // label still needs ~104dp or the row overflows.
-        Expanded(
-          flex: 3,
-          child: GestureDetector(
-            onTap: canBuy ? () => _addToCart(p, v, toast: true) : null,
-            child: Opacity(
-              opacity: canBuy ? 1 : 0.5,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(VlRadii.md), border: Border.all(color: VlColors.rule2)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.shopping_bag_outlined, size: 15, color: VlColors.ink),
-                  const SizedBox(width: 6),
-                  Text('ADD TO CART', style: VlText.ui(12, weight: FontWeight.w600, letter: 0.1)),
-                ]),
-              ),
-            ),
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          flex: 5,
-          child: GestureDetector(
-            onTap: canBuy
-                ? () {
-                    _addToCart(p, v);
-                    context.go('/cart');
-                  }
-                : null,
-            child: Opacity(
-              opacity: canBuy ? 1 : 0.5,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: VlColors.red, borderRadius: BorderRadius.circular(VlRadii.md)),
-                child: Text(canBuy ? 'BUY NOW' : 'SOLD OUT', style: VlText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
-              ),
+        if (images.length > 1)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 16,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(images.length, (i) {
+                return AnimatedContainer(
+                  duration: VkMotion.base,
+                  curve: VkMotion.curve,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _img ? 20 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: i == _img ? VkColors.primary : VkColors.ink.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                );
+              }),
             ),
           ),
-        ),
       ]),
     );
   }
 
-  void _addToCart(EcomProduct p, ProductVariant v, {bool toast = false}) {
-    EcomCart.I.add(CartItem.of(p, v));
-    if (toast && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${p.name} added to cart'), duration: const Duration(seconds: 1)));
+  // ── Title / price / stock ────────────────────────────────────────────────
+  Widget _titleBlock(EcomProduct p, ProductVariant v) {
+    final reviews = _reviews;
+    final left = v.availableQty;
+    final String stockText;
+    final Color stockColor;
+    if (left <= 0) {
+      stockText = 'Out of stock';
+      stockColor = VkColors.error;
+    } else if (left <= 5) {
+      stockText = 'Only $left left';
+      stockColor = VkColors.warning;
+    } else {
+      stockText = 'In stock';
+      stockColor = VkColors.leaf;
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          if ((p.category?.name ?? '').isNotEmpty)
+            Flexible(
+              child: GestureDetector(
+                onTap: () => context.push('/listing?cat=${p.category!.slug}&title=${Uri.encodeComponent(p.category!.name)}'),
+                child: Text(p.category!.name.toUpperCase(),
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.upper(9, color: VkColors.primary, letter: 0.18)),
+              ),
+            ),
+          if (p.isNew) ...[const SizedBox(width: 8), const VkBadge('New', color: VkColors.leaf)],
+        ]),
+        const SizedBox(height: 8),
+        Text(p.name, style: VkText.display(27, height: 1.1)),
+        if (reviews != null && reviews.total > 0) ...[
+          const SizedBox(height: 8),
+          Row(children: [
+            RatingStars(rating: reviews.average, size: 15),
+            const SizedBox(width: 6),
+            Text('${reviews.average.toStringAsFixed(1)} · ${reviews.total} review${reviews.total == 1 ? '' : 's'}',
+                style: VkText.body(12, color: VkColors.muted)),
+          ]),
+        ],
+        const SizedBox(height: 12),
+        Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          PriceRow(value: v.salePrice.toDouble(), mrp: v.hasDiscount ? v.originalPrice.toDouble() : null, size: 26),
+          if (v.hasDiscount) ...[
+            const SizedBox(width: 10),
+            VkBadge('${v.discountPercent}% OFF', color: VkBrand.sale),
+          ],
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          Container(width: 7, height: 7, decoration: BoxDecoration(color: stockColor, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(stockText, style: VkText.ui(11.5, weight: FontWeight.w600, color: stockColor)),
+          const SizedBox(width: 8),
+          Text('· Inclusive of all taxes', style: VkText.body(11.5, color: VkColors.muted2)),
+        ]),
+      ]),
+    );
+  }
+
+  // ── Variants ─────────────────────────────────────────────────────────────
+  bool _showVariants(EcomProduct p) => p.variants.length > 1 && p.variants.any((v) => v.label.isNotEmpty);
+
+  Widget _variants(EcomProduct p) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('CHOOSE AN OPTION', style: VkText.upper(9, color: VkColors.muted, letter: 0.18)),
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (var i = 0; i < p.variants.length; i++) _variantChip(p.variants[i], i),
+          ]),
+        ]),
+      );
+
+  Widget _variantChip(ProductVariant vr, int i) {
+    final on = i == _variant;
+    final out = vr.availableQty <= 0;
+    final label = vr.label.isNotEmpty ? vr.label : 'Option ${i + 1}';
+    return Material(
+      color: on ? VkColors.ink : VkColors.paper,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(VkRadii.sm),
+        side: BorderSide(color: on ? VkColors.ink : VkColors.rule2),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => setState(() {
+          _variant = i;
+          _img = 0;
+          _qty = 1;
+          if (_pager.hasClients) _pager.jumpToPage(0);
+        }),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(label,
+                style: VkText.ui(12.5, weight: FontWeight.w600, color: on ? Colors.white : VkColors.ink)
+                    .copyWith(decoration: out ? TextDecoration.lineThrough : null)),
+            Text(
+              out ? 'Sold out' : '₹${inr(vr.salePrice)}',
+              style: VkText.body(11, color: on ? Colors.white70 : (out ? VkColors.error : VkColors.muted)),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // ── Quantity ─────────────────────────────────────────────────────────────
+  Widget _quantity(ProductVariant v) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+        child: Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('QUANTITY', style: VkText.upper(9, color: VkColors.muted, letter: 0.18)),
+              if (v.availableQty > 0 && v.availableQty < 10) ...[
+                const SizedBox(height: 2),
+                Text('Up to ${v.availableQty} available', style: VkText.body(11, color: VkColors.muted2)),
+              ],
+            ]),
+          ),
+          QtyStepper(
+            value: _qty,
+            max: v.availableQty > 0 ? v.availableQty : 1,
+            onChanged: (n) => setState(() => _qty = n),
+          ),
+        ]),
+      );
+
+  // ── Description + details ────────────────────────────────────────────────
+  Widget _description(EcomProduct p) {
+    final full = stripHtml(p.description);
+    final body = full.isNotEmpty ? full : stripHtml(p.shortDesc);
+    if (body.isEmpty) return const SizedBox.shrink();
+    final long = body.length > 260 || body.split('\n').length > 5;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('About this product', style: VkText.display(20)),
+        const SizedBox(height: 8),
+        AnimatedSize(
+          duration: VkMotion.slow,
+          curve: VkMotion.curve,
+          alignment: Alignment.topCenter,
+          child: Text(
+            body,
+            maxLines: _expanded || !long ? null : 5,
+            overflow: _expanded || !long ? TextOverflow.visible : TextOverflow.ellipsis,
+            style: VkText.body(13.5, color: VkColors.ink2, height: 1.65),
+          ),
+        ),
+        if (long)
+          TextButton(
+            onPressed: () => setState(() => _expanded = !_expanded),
+            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(44, 36), alignment: Alignment.centerLeft),
+            child: Text(_expanded ? 'Read less' : 'Read more', style: VkText.ui(12.5, weight: FontWeight.w600, color: VkColors.primary)),
+          ),
+      ]),
+    );
+  }
+
+  Widget _details(EcomProduct p, ProductVariant v) {
+    final specs = <(String, String?)>[
+      ('Category', p.category?.name),
+      ('Product code', v.sareeCode),
+      ('Origin', p.regionOfOrigin),
+      ('Storage & care', p.careInstructions),
+    ].where((s) => (s.$2 ?? '').trim().isNotEmpty).toList();
+    final tags = [...p.tags, ...p.occasions].where((t) => t.trim().isNotEmpty).toList();
+    if (specs.isEmpty && tags.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: VkColors.paper, borderRadius: BorderRadius.circular(VkRadii.md), border: Border.all(color: VkColors.rule)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('DETAILS', style: VkText.upper(9, color: VkColors.muted, letter: 0.18)),
+          const SizedBox(height: 10),
+          for (final s in specs)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                SizedBox(width: 110, child: Text(s.$1, style: VkText.body(12, color: VkColors.muted))),
+                Expanded(child: Text(s.$2!.trim(), style: VkText.ui(12.5, weight: FontWeight.w500, height: 1.4))),
+              ]),
+            ),
+          if (tags.isNotEmpty)
+            Wrap(spacing: 6, runSpacing: 6, children: [
+              for (final t in tags)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(color: VkColors.cream, borderRadius: BorderRadius.circular(999)),
+                  child: Text(t, style: VkText.ui(10.5, color: VkColors.primaryDeep)),
+                ),
+            ]),
+        ]),
+      ),
+    );
+  }
+
+  // ── Reviews ──────────────────────────────────────────────────────────────
+  Widget _reviewsBlock(ReviewPage r) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Expanded(child: Text('Customer reviews', style: VkText.display(20))),
+            Text(r.average.toStringAsFixed(1), style: VkText.display(26, color: VkColors.primary)),
+            const SizedBox(width: 6),
+            Padding(padding: const EdgeInsets.only(bottom: 5), child: RatingStars(rating: r.average, size: 14)),
+          ]),
+          const SizedBox(height: 10),
+          for (final rv in r.reviews)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: VkColors.paper, borderRadius: BorderRadius.circular(VkRadii.md), border: Border.all(color: VkColors.rule)),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  RatingStars(rating: rv.rating.toDouble(), size: 13),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(rv.author, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.ui(12, weight: FontWeight.w600))),
+                  if (rv.createdAt != null)
+                    Text(DateFormat('d MMM yyyy').format(rv.createdAt!.toLocal()), style: VkText.mono(10, color: VkColors.muted2)),
+                ]),
+                if ((rv.title ?? '').trim().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(rv.title!.trim(), style: VkText.ui(13, weight: FontWeight.w600)),
+                ],
+                if ((rv.body ?? '').trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(rv.body!.trim(), style: VkText.body(12.5, color: VkColors.ink2, height: 1.5)),
+                ],
+              ]),
+            ),
+        ]),
+      );
+
+  Widget _relatedRow() => SizedBox(
+        height: 160 + productCardTextHeight(context),
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: _related.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemBuilder: (_, i) {
+            final rp = productFromEcom(_related[i]);
+            return SizedBox(
+              width: 160,
+              child: ProductCard(
+                key: ValueKey(rp.variantId ?? rp.id),
+                p: rp,
+                onFav: () => toggleWishlist(context, rp),
+                onAdd: () => quickAddToCart(context, rp),
+                onTap: () => context.push('/product/${rp.id}'),
+              ),
+            );
+          },
+        ),
+      );
+
+  // ── Sticky CTA ───────────────────────────────────────────────────────────
+  Widget _cta(EcomProduct p, ProductVariant v, bool canBuy) => Container(
+        decoration: BoxDecoration(
+          color: VkColors.paper,
+          border: const Border(top: BorderSide(color: VkColors.rule)),
+          boxShadow: [BoxShadow(color: VkColors.ink.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, -4))],
+        ),
+        padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.paddingOf(context).bottom),
+        child: Row(children: [
+          Expanded(
+            flex: 5,
+            child: OutlineButton(
+              label: _justAdded ? 'Added' : 'Add to cart',
+              icon: _justAdded ? Icons.check_rounded : Icons.add_shopping_cart_rounded,
+              color: _justAdded ? VkColors.leaf : VkColors.ink,
+              onTap: canBuy ? () => _addToCart(p, v, toastIt: true) : null,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 6,
+            child: PrimaryButton(
+              label: canBuy ? 'Buy now' : 'Sold out',
+              onTap: canBuy
+                  ? () {
+                      _addToCart(p, v);
+                      context.go('/cart');
+                    }
+                  : null,
+            ),
+          ),
+        ]),
+      );
+
+  void _addToCart(EcomProduct p, ProductVariant v, {bool toastIt = false}) {
+    final ok = EcomCart.I.add(CartItem.of(p, v, quantity: _qty));
+    if (!mounted) return;
+    if (!ok) {
+      toast(context, 'Only ${v.availableQty} left in stock');
+      return;
+    }
+    if (toastIt) {
+      setState(() => _justAdded = true);
+      Future<void>.delayed(const Duration(milliseconds: 1400), () {
+        if (mounted) setState(() => _justAdded = false);
+      });
+      final router = GoRouter.of(context);
+      toast(context, '${p.name} added to cart', action: 'VIEW CART', onAction: () => router.go('/cart'));
     }
   }
 
-  /// Shares the product's own page on the store site — the same URL the website
-  /// serves at `/shop/<slug>`, so whoever receives it lands on the real
-  /// product rather than the app's internal route.
+  /// Shares the product's own page on the store site — the same URL the
+  /// website serves at `/shop/<slug>`.
   Future<void> _share() async {
     final p = _p;
     if (p == null) return;
     final slug = p.slug.isNotEmpty ? p.slug : widget.id;
     final url = '${EcomApi.host}/shop/$slug';
-    final v = _sel;
-    final price = v.salePrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ',');
     final box = context.findRenderObject() as RenderBox?;
     await SharePlus.instance.share(
       ShareParams(
-        text: '${p.name} — ₹$price\n$url',
+        text: '${p.name} — ₹${inr(_sel.salePrice)}\n$url',
         subject: p.name,
-        // iPad needs an anchor for the share sheet; harmless elsewhere.
         sharePositionOrigin: box == null ? null : box.localToGlobal(Offset.zero) & box.size,
       ),
     );
@@ -483,11 +553,13 @@ class _ProductScreenState extends State<ProductScreen> {
       return;
     }
     try {
-      await Wishlist.I.toggle(_sel.id, product: _p);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ecomError(e, 'Could not update wishlist'))));
+      final on = await Wishlist.I.toggle(_sel.id, product: _p);
+      if (mounted && on) {
+        final router = GoRouter.of(context);
+        toast(context, 'Saved to wishlist', action: 'VIEW', onAction: () => router.push('/wishlist'));
       }
+    } catch (e) {
+      if (mounted) toast(context, ecomError(e, 'Could not update wishlist'));
     }
   }
 }

@@ -1,7 +1,7 @@
 name: vkc_customer
-description: "VKC Gold customer shopping app — pure cane jaggery."
+description: "VKC Gold Ikshu customer shopping app — pure cane jaggery from Mandya."
 publish_to: 'none'
-version: 1.0.1+2
+version: 1.1.0+3
 
 environment:
   sdk: ^3.9.2
@@ -14,13 +14,14 @@ dependencies:
   dio: ^5.7.0
   intl: ^0.19.0
   shimmer: ^3.0.0
-  webview_flutter: ^4.10.0        # embed YouTube / Instagram / Facebook live
+  webview_flutter: ^4.10.0        # About Us / Leadership website pages, hosted payment pages
   google_fonts: ^6.2.1            # Cormorant Garamond + Poppins + Inter
   flutter_secure_storage: ^9.2.2  # ecom auth tokens (access + refresh)
   url_launcher: ^6.3.1            # courier tracking, WhatsApp/call/mail, socials
   razorpay_flutter: ^1.4.5        # native Razorpay checkout (store admin toggle)
   share_plus: ^12.0.2
-  web_socket_channel: ^3.0.3
+  cached_network_image: ^3.4.1    # disk + memory image cache for products, banners, gallery
+  shared_preferences: ^2.3.3      # local cart + recent searches
 
 dev_dependencies:
   flutter_test:
@@ -29,3 +30,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/brand/

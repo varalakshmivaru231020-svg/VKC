@@ -65,7 +65,7 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VlColors.canvas,
+      backgroundColor: VkColors.canvas,
       body: SafeArea(
         child: Column(children: [
           TopBar(
@@ -75,7 +75,7 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
               if (_o != null)
                 InkResponse(
                   onTap: () => context.push('/orders/${_o!.id}/invoice'),
-                  child: SizedBox(width: 36, height: 36, child: Icon(Icons.receipt_long_outlined, size: 18, color: VlColors.muted)),
+                  child: SizedBox(width: 36, height: 36, child: Icon(Icons.receipt_long_outlined, size: 18, color: VkColors.muted)),
                 ),
             ],
           ),
@@ -93,11 +93,11 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.wifi_off, size: 34, color: VlColors.red),
+            Icon(Icons.wifi_off, size: 34, color: VkColors.primary),
             const SizedBox(height: 12),
-            Text(_error ?? 'Not found', textAlign: TextAlign.center, style: VlText.body(13, color: VlColors.muted)),
+            Text(_error ?? 'Not found', textAlign: TextAlign.center, style: VkText.body(13, color: VkColors.muted)),
             const SizedBox(height: 12),
-            TextButton(onPressed: _load, child: Text('Retry', style: VlText.ui(13, color: VlColors.red))),
+            TextButton(onPressed: _load, child: Text('Retry', style: VkText.ui(13, color: VkColors.primary))),
           ]),
         ),
       );
@@ -105,7 +105,7 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
     final o = _o!;
     final steps = orderTimeline(o);
     return RefreshIndicator(
-      color: VlColors.red,
+      color: VkColors.primary,
       onRefresh: _load,
       child: ListView(
         padding: const EdgeInsets.only(bottom: 28),
@@ -113,11 +113,11 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(o.orderNumber, style: VlText.upper(9, color: VlColors.red, letter: 0.22)),
+              Text(o.orderNumber, style: VkText.upper(9, color: VkColors.primary, letter: 0.22)),
               const SizedBox(height: 6),
-              Text(orderStatusLook(o.status).label, style: VlText.display(22)),
+              Text(orderStatusLook(o.status).label, style: VkText.display(22)),
               const SizedBox(height: 4),
-              Text('Placed ${_fmt(o.createdAt)}', style: VlText.body(12, color: VlColors.muted)),
+              Text('Placed ${_fmt(o.createdAt)}', style: VkText.body(12, color: VkColors.muted)),
             ]),
           ),
           _statusBanner(o),
@@ -138,12 +138,12 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
   Widget _statusBanner(EcomOrder o) {
     final delivered = o.isDelivered;
     final cancelled = o.status == 'CANCELLED';
-    final bg = cancelled ? VlColors.redSoft : (delivered ? const Color(0xFFEAF4EF) : VlColors.cream);
-    final fg = cancelled ? VlColors.red : (delivered ? VlColors.green : VlColors.redDeep);
+    final bg = cancelled ? VkColors.primarySoft : (delivered ? const Color(0xFFEAF4EF) : VkColors.cream);
+    final fg = cancelled ? VkColors.primary : (delivered ? VkColors.green : VkColors.primaryDeep);
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 4),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(VlRadii.md)),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(VkRadii.md)),
       child: Row(children: [
         Container(
           width: 38,
@@ -154,10 +154,10 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Payment · ${o.paymentStatus}', style: VlText.ui(13, weight: FontWeight.w600, color: VlColors.ink)),
+            Text('Payment · ${o.paymentStatus}', style: VkText.ui(13, weight: FontWeight.w600, color: VkColors.ink)),
             const SizedBox(height: 2),
             Text(o.paymentMethod == null ? 'We’ll notify you at every step' : 'Method · ${o.paymentMethod!.toUpperCase()}',
-                style: VlText.mono(9, color: VlColors.muted)),
+                style: VkText.mono(9, color: VkColors.muted)),
           ]),
         ),
       ]),
@@ -170,18 +170,18 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
           onTap: (it.productSlug ?? '').isEmpty ? null : () => context.push('/product/${it.productSlug}'),
           child: Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: VlColors.paper, border: Border.all(color: VlColors.rule), borderRadius: BorderRadius.circular(VlRadii.md)),
+            decoration: BoxDecoration(color: VkColors.paper, border: Border.all(color: VkColors.rule), borderRadius: BorderRadius.circular(VkRadii.md)),
             child: Row(children: [
-              SizedBox(width: 56, height: 70, child: NetImage(url: it.imageUrl, radius: VlRadii.sm)),
+              SizedBox(width: 56, height: 70, child: NetImage(url: it.imageUrl, radius: VkRadii.sm)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(it.productName, maxLines: 2, overflow: TextOverflow.ellipsis, style: VlText.ui(13, weight: FontWeight.w500)),
+                  Text(it.productName, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.ui(13, weight: FontWeight.w500)),
                   const SizedBox(height: 2),
-                  Text('Qty ${it.quantity} · ${it.variantColor}', style: VlText.mono(10, color: VlColors.muted)),
+                  Text('Qty ${it.quantity} · ${it.variantColor}', style: VkText.mono(10, color: VkColors.muted)),
                 ]),
               ),
-              Text('₹${_inr(it.totalPrice)}', style: VlText.ui(13, weight: FontWeight.w600)),
+              Text('₹${_inr(it.totalPrice)}', style: VkText.ui(13, weight: FontWeight.w600)),
             ]),
           ),
         ),
@@ -192,8 +192,8 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
     final when = o.cancelledAt != null ? ' on ${_fmt(o.cancelledAt)}' : '';
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: VlColors.redSoft, borderRadius: BorderRadius.circular(VlRadii.md)),
-      child: Text('This order is ${look.label.toLowerCase()}$when.', style: VlText.body(13, color: VlColors.redDeep)),
+      decoration: BoxDecoration(color: VkColors.primarySoft, borderRadius: BorderRadius.circular(VkRadii.md)),
+      child: Text('This order is ${look.label.toLowerCase()}$when.', style: VkText.body(13, color: VkColors.primaryDeep)),
     );
   }
 
@@ -201,21 +201,21 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
         padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
         child: Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: VlColors.paper, border: Border.all(color: VlColors.rule), borderRadius: BorderRadius.circular(VlRadii.md)),
+          decoration: BoxDecoration(color: VkColors.paper, border: Border.all(color: VkColors.rule), borderRadius: BorderRadius.circular(VkRadii.md)),
           child: Row(children: [
-            Icon(Icons.local_shipping_outlined, size: 15, color: VlColors.red),
+            Icon(Icons.local_shipping_outlined, size: 15, color: VkColors.primary),
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(o.courierPartner ?? 'Courier', style: VlText.ui(12, weight: FontWeight.w600)),
+                Text(o.courierPartner ?? 'Courier', style: VkText.ui(12, weight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text('AWB ${o.trackingNumber}', style: VlText.mono(10, color: VlColors.muted)),
+                Text('AWB ${o.trackingNumber}', style: VkText.mono(10, color: VkColors.muted)),
               ]),
             ),
             if ((o.trackingUrl ?? '').isNotEmpty)
               GestureDetector(
                 onTap: () => launchUrl(Uri.parse(o.trackingUrl!), mode: LaunchMode.externalApplication),
-                child: Text('TRACK', style: VlText.upper(9, color: VlColors.red, letter: 0.18)),
+                child: Text('TRACK', style: VkText.upper(9, color: VkColors.primary, letter: 0.18)),
               ),
           ]),
         ),
@@ -228,22 +228,22 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: VlColors.paper, border: Border.all(color: VlColors.rule), borderRadius: BorderRadius.circular(VlRadii.md)),
+        decoration: BoxDecoration(color: VkColors.paper, border: Border.all(color: VkColors.rule), borderRadius: BorderRadius.circular(VkRadii.md)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Icon(Icons.location_on_outlined, size: 14, color: VlColors.red),
+            Icon(Icons.location_on_outlined, size: 14, color: VkColors.primary),
             const SizedBox(width: 8),
-            Text('DELIVERY ADDRESS', style: VlText.upper(9, letter: 0.2)),
+            Text('DELIVERY ADDRESS', style: VkText.upper(9, letter: 0.2)),
           ]),
           const SizedBox(height: 8),
-          Text(s('fullName'), style: VlText.ui(12, weight: FontWeight.w600)),
+          Text(s('fullName'), style: VkText.ui(12, weight: FontWeight.w600)),
           const SizedBox(height: 2),
           Text(
             '${s('addressLine1')}${line2.isNotEmpty ? ', $line2' : ''}, ${s('city')}, ${s('state')} — ${s('pincode')}',
-            style: VlText.body(12, color: VlColors.muted, height: 1.5),
+            style: VkText.body(12, color: VkColors.muted, height: 1.5),
           ),
           const SizedBox(height: 2),
-          Text(s('phone'), style: VlText.mono(10, color: VlColors.muted)),
+          Text(s('phone'), style: VkText.mono(10, color: VkColors.muted)),
         ]),
       ),
     );
@@ -253,13 +253,13 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
         child: Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: VlColors.paper, border: Border.all(color: VlColors.rule), borderRadius: BorderRadius.circular(VlRadii.md)),
+          decoration: BoxDecoration(color: VkColors.paper, border: Border.all(color: VkColors.rule), borderRadius: BorderRadius.circular(VkRadii.md)),
           child: Column(children: [
             _row('Subtotal', '₹${_inr(o.subtotal)}'),
             if (o.discountAmount > 0) _row('Discount', '−₹${_inr(o.discountAmount)}'),
             _row('Shipping', o.shippingAmount == 0 ? 'FREE' : '₹${_inr(o.shippingAmount)}'),
             if (o.walletAmountUsed > 0) _row('Wallet', '−₹${_inr(o.walletAmountUsed)}'),
-            Divider(color: VlColors.rule),
+            Divider(color: VkColors.rule),
             _row('Total', '₹${_inr(o.totalAmount)}', bold: true),
           ]),
         ),
@@ -268,8 +268,8 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
   Widget _row(String k, String v, {bool bold = false}) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(k, style: VlText.ui(bold ? 14 : 12, weight: bold ? FontWeight.w600 : FontWeight.w400, color: bold ? VlColors.ink : VlColors.muted)),
-          Text(v, style: VlText.ui(bold ? 16 : 12, weight: bold ? FontWeight.w600 : FontWeight.w500)),
+          Text(k, style: VkText.ui(bold ? 14 : 12, weight: bold ? FontWeight.w600 : FontWeight.w400, color: bold ? VkColors.ink : VkColors.muted)),
+          Text(v, style: VkText.ui(bold ? 16 : 12, weight: bold ? FontWeight.w600 : FontWeight.w500)),
         ]),
       );
 
@@ -284,7 +284,7 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('NEED SOMETHING ELSE?', style: VlText.upper(9, letter: 0.22)),
+        Text('NEED SOMETHING ELSE?', style: VkText.upper(9, letter: 0.22)),
         const SizedBox(height: 10),
         Wrap(spacing: 8, runSpacing: 8, children: buttons),
       ]),
@@ -302,20 +302,20 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
-            color: VlColors.paper,
-            borderRadius: BorderRadius.circular(VlRadii.md),
-            border: Border.all(color: danger ? VlColors.red : VlColors.rule2),
+            color: VkColors.paper,
+            borderRadius: BorderRadius.circular(VkRadii.md),
+            border: Border.all(color: danger ? VkColors.primary : VkColors.rule2),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             SizedBox(
               width: 13,
               height: 13,
               child: busy
-                  ? CircularProgressIndicator(strokeWidth: 1.6, color: danger ? VlColors.red : VlColors.ink)
-                  : Icon(ic, size: 13, color: danger ? VlColors.red : VlColors.ink),
+                  ? CircularProgressIndicator(strokeWidth: 1.6, color: danger ? VkColors.primary : VkColors.ink)
+                  : Icon(ic, size: 13, color: danger ? VkColors.primary : VkColors.ink),
             ),
             const SizedBox(width: 7),
-            Text(busy ? 'ADDING…' : label, style: VlText.upper(9, color: danger ? VlColors.red : VlColors.ink, letter: 0.16)),
+            Text(busy ? 'ADDING…' : label, style: VkText.upper(9, color: danger ? VkColors.primary : VkColors.ink, letter: 0.16)),
           ]),
         ),
       ),
@@ -375,8 +375,8 @@ class _EcomOrderDetailScreenState extends State<EcomOrderDetailScreen> {
     final result = await showModalBottomSheet<({String reason, String remark})>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: VlColors.canvas,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(VlRadii.xl))),
+      backgroundColor: VkColors.canvas,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(VkRadii.xl))),
       builder: (_) => _ReasonSheet(isReturn: isReturn),
     );
     if (result == null || !mounted) return;
@@ -441,15 +441,15 @@ class _ReasonSheetState extends State<_ReasonSheet> {
       padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: VlColors.rule2, borderRadius: BorderRadius.circular(2)))),
+          Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: VkColors.rule2, borderRadius: BorderRadius.circular(2)))),
           const SizedBox(height: 16),
-          Text(widget.isReturn ? 'Request a return' : 'Cancel this order', style: VlText.display(22)),
+          Text(widget.isReturn ? 'Request a return' : 'Cancel this order', style: VkText.display(22)),
           const SizedBox(height: 4),
           Text(
             widget.isReturn
                 ? 'Tell us what went wrong and we’ll arrange the pickup.'
                 : 'Let us know why — it helps us do better.',
-            style: VlText.body(12, color: VlColors.muted, height: 1.5),
+            style: VkText.body(12, color: VkColors.muted, height: 1.5),
           ),
           const SizedBox(height: 16),
           ...reasons.map((r) => GestureDetector(
@@ -462,30 +462,30 @@ class _ReasonSheetState extends State<_ReasonSheet> {
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   child: Row(children: [
                     Icon(_reason == r ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                        size: 17, color: _reason == r ? VlColors.red : VlColors.rule2),
+                        size: 17, color: _reason == r ? VkColors.primary : VkColors.rule2),
                     const SizedBox(width: 10),
-                    Expanded(child: Text(r, style: VlText.ui(13, weight: _reason == r ? FontWeight.w600 : FontWeight.w400))),
+                    Expanded(child: Text(r, style: VkText.ui(13, weight: _reason == r ? FontWeight.w600 : FontWeight.w400))),
                   ]),
                 ),
               )),
           if (_showError)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('Choose a reason', style: VlText.body(11, color: VlColors.red)),
+              child: Text('Choose a reason', style: VkText.body(11, color: VkColors.primary)),
             ),
           const SizedBox(height: 10),
           TextField(
             controller: _remark,
             maxLines: 3,
-            style: VlText.ui(13),
+            style: VkText.ui(13),
             decoration: InputDecoration(
               hintText: 'Anything else we should know? (optional)',
-              hintStyle: VlText.body(12, color: VlColors.muted2),
+              hintStyle: VkText.body(12, color: VkColors.muted2),
               filled: true,
-              fillColor: VlColors.paper,
+              fillColor: VkColors.paper,
               contentPadding: const EdgeInsets.all(14),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VlRadii.md), borderSide: BorderSide(color: VlColors.rule)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VlRadii.md), borderSide: BorderSide(color: VlColors.red)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VkRadii.md), borderSide: BorderSide(color: VkColors.rule)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VkRadii.md), borderSide: BorderSide(color: VkColors.primary)),
             ),
           ),
           const SizedBox(height: 14),
@@ -501,16 +501,16 @@ class _ReasonSheetState extends State<_ReasonSheet> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 15),
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: VlColors.red, borderRadius: BorderRadius.circular(VlRadii.md)),
+              decoration: BoxDecoration(color: VkColors.primary, borderRadius: BorderRadius.circular(VkRadii.md)),
               child: Text(widget.isReturn ? 'REQUEST RETURN' : 'CANCEL ORDER',
-                  style: VlText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
+                  style: VkText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
             ),
           ),
           const SizedBox(height: 6),
           Center(
             child: TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(widget.isReturn ? 'Not now' : 'Keep my order', style: VlText.ui(12, color: VlColors.muted)),
+              child: Text(widget.isReturn ? 'Not now' : 'Keep my order', style: VkText.ui(12, color: VkColors.muted)),
             ),
           ),
         ]),

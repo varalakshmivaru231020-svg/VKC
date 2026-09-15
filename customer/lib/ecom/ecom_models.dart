@@ -1,6 +1,7 @@
-// Models mirroring the vkcgold_ecom `/api/v1/*` JSON, adapted from that
-// project's own Flutter app so the shapes match exactly. Ecommerce screens use
-// these; the Live screens keep using the salesproject (VL Group) models.
+// Models mirroring the vkcgoldikshu `/api/v1/*` JSON. Every image field is
+// passed through [mediaUrl] so the site-relative paths the admin panel saves
+// become loadable URLs.
+import 'ecom_env.dart';
 
 // ── Catalog ──────────────────────────────────────────────────────────────────
 class CategoryRef {
@@ -14,6 +15,9 @@ class EcomCategory {
   final String id, name, slug;
   final String? parentId, description, imageUrl;
   final int sortOrder;
+
+  /// Active products in the category, when the API reports it.
+  final int? productCount;
   final List<EcomCategory> children;
   const EcomCategory({
     required this.id,
@@ -23,6 +27,7 @@ class EcomCategory {
     this.parentId,
     this.description,
     this.imageUrl,
+    this.productCount,
     this.children = const [],
   });
   factory EcomCategory.fromJson(Map<String, dynamic> j) => EcomCategory(
@@ -31,7 +36,8 @@ class EcomCategory {
         slug: j["slug"] as String? ?? "",
         parentId: j["parentId"] as String?,
         description: j["description"] as String?,
-        imageUrl: j["imageUrl"] as String?,
+        imageUrl: mediaUrl(j["imageUrl"]),
+        productCount: (j["productCount"] as num?)?.toInt(),
         sortOrder: (j["sortOrder"] as num?)?.toInt() ?? 0,
         children: (j["children"] as List? ?? const [])
             .map((c) => EcomCategory.fromJson((c as Map).cast<String, dynamic>()))
@@ -47,7 +53,7 @@ class ProductImage {
   const ProductImage({required this.id, required this.url, required this.sortOrder, required this.isPrimary, this.altText});
   factory ProductImage.fromJson(Map<String, dynamic> j) => ProductImage(
         id: j["id"] as String? ?? "",
-        url: j["url"] as String? ?? "",
+        url: mediaUrl(j["url"]) ?? "",
         altText: j["altText"] as String?,
         sortOrder: (j["sortOrder"] as num?)?.toInt() ?? 0,
         isPrimary: j["isPrimary"] == true,
@@ -56,6 +62,7 @@ class ProductImage {
 
 class ProductVariant {
   final String id, productId;
+  /// The variant's label ("500 g", "1 kg"). The API field is a legacy name.
   final String colorName;
   final String? colorHex, colorHex2, sareeCode, barcode;
   final num costPrice, salePrice, originalPrice;
@@ -83,7 +90,10 @@ class ProductVariant {
 
   bool get hasDiscount => originalPrice > salePrice;
   int get discountPercent => hasDiscount ? (((originalPrice - salePrice) / originalPrice) * 100).round() : 0;
-  int get availableQty => stockQty - reservedQty;
+  int get availableQty => (stockQty - reservedQty).clamp(0, 1 << 30);
+
+  /// Variant label for chips; falls back to the product code.
+  String get label => colorName.trim().isNotEmpty ? colorName.trim() : (sareeCode ?? '').trim();
 
   factory ProductVariant.fromJson(Map<String, dynamic> j) => ProductVariant(
         id: j["id"] as String? ?? "",
@@ -102,6 +112,7 @@ class ProductVariant {
         isActive: j["isActive"] != false,
         images: (j["images"] as List? ?? const [])
             .map((i) => ProductImage.fromJson((i as Map).cast<String, dynamic>()))
+            .where((i) => i.url.isNotEmpty)
             .toList(),
       );
 }
@@ -131,6 +142,7 @@ class EcomProduct {
   final String? videoUrl;
   final List<ProductVariant> variants;
   final List<ProductAttribute> attributes;
+  final DateTime? createdAt;
 
   const EcomProduct({
     required this.id,
@@ -151,6 +163,7 @@ class EcomProduct {
     this.occasions = const [],
     this.tags = const [],
     this.videoUrl,
+    this.createdAt,
   });
 
   ProductVariant get primaryVariant => variants.isNotEmpty
@@ -160,14 +173,39 @@ class EcomProduct {
           costPrice: 0, salePrice: 0, originalPrice: 0,
           stockQty: 0, reservedQty: 0, sortOrder: 0, isActive: false);
 
-  num get price => primaryVariant.salePrice;
-  num get mrp => primaryVariant.originalPrice;
+  /// The variant a card stands for: the first one in stock, else the first.
+  ProductVariant get displayVariant {
+    for (final v in variants) {
+      if (v.availableQty > 0) return v;
+    }
+    return primaryVariant;
+  }
+
+  num get price => displayVariant.salePrice;
+  num get mrp => displayVariant.originalPrice;
   bool get inStock => variants.any((v) => v.availableQty > 0);
+  int get availableQty => variants.fold(0, (s, v) => s + v.availableQty);
+
+  /// Added within the last 30 days.
+  bool get isNew => createdAt != null && DateTime.now().difference(createdAt!).inDays <= 30;
+
   String? get image {
     for (final v in variants) {
       if (v.images.isNotEmpty) return v.images.first.url;
     }
     return null;
+  }
+
+  /// Every photo across variants, primary first, de-duplicated.
+  List<String> get allImages {
+    final seen = <String>{};
+    final out = <String>[];
+    for (final v in variants) {
+      for (final i in v.images) {
+        if (seen.add(i.url)) out.add(i.url);
+      }
+    }
+    return out;
   }
 
   factory EcomProduct.fromJson(Map<String, dynamic> j) => EcomProduct(
@@ -187,6 +225,7 @@ class EcomProduct {
         isActive: j["isActive"] != false,
         isFeatured: j["isFeatured"] == true,
         videoUrl: j["videoUrl"] as String?,
+        createdAt: DateTime.tryParse("${j["createdAt"] ?? ''}"),
         variants: (j["variants"] as List? ?? const [])
             .map((v) => ProductVariant.fromJson((v as Map).cast<String, dynamic>()))
             .toList(),
@@ -253,11 +292,11 @@ class HeroSlide {
         ctaSecHref: j["ctaSecHref"] as String?,
         bgColor: j["bgColor"] as String?,
         imageBg: j["imageBg"] as String?,
-        imageUrl: j["imageUrl"] as String?,
+        imageUrl: mediaUrl(j["imageUrl"]),
       );
 }
 
-// ── Editorial (blogs, banners, popups) ───────────────────────────────────────
+// ── Editorial (blogs, banners, popups, gallery, testimonials, story) ─────────
 class BlogPost {
   final String id, title, slug;
   final String? excerpt, imageUrl, content;
@@ -278,7 +317,7 @@ class BlogPost {
         title: j["title"] as String? ?? "",
         slug: j["slug"] as String? ?? "",
         excerpt: j["excerpt"] as String?,
-        imageUrl: j["imageUrl"] as String?,
+        imageUrl: mediaUrl(j["imageUrl"]),
         content: j["content"] as String?,
         tags: (j["tags"] as List? ?? const []).map((t) => "$t").toList(),
         publishedAt: DateTime.tryParse("${j["publishedAt"] ?? j["createdAt"]}"),
@@ -306,8 +345,8 @@ class Banner {
         position: j["position"] as String? ?? "",
         title: j["title"] as String?,
         subtitle: j["subtitle"] as String?,
-        imageUrl: j["imageUrl"] as String?,
-        mobileImageUrl: j["mobileImageUrl"] as String?,
+        imageUrl: mediaUrl(j["imageUrl"]),
+        mobileImageUrl: mediaUrl(j["mobileImageUrl"]),
         linkUrl: j["linkUrl"] as String?,
         sortOrder: (j["sortOrder"] as num?)?.toInt() ?? 0,
       );
@@ -320,7 +359,7 @@ class Popup {
   const Popup({required this.id, this.imageUrl, this.linkUrl, this.startsAt, this.endsAt});
   factory Popup.fromJson(Map<String, dynamic> j) => Popup(
         id: j["id"] as String? ?? "",
-        imageUrl: j["imageUrl"] as String?,
+        imageUrl: mediaUrl(j["imageUrl"]),
         linkUrl: j["linkUrl"] as String?,
         startsAt: DateTime.tryParse("${j["startsAt"]}"),
         endsAt: DateTime.tryParse("${j["endsAt"]}"),
@@ -333,6 +372,167 @@ class Popup {
     if (startsAt != null && now.isBefore(startsAt!)) return false;
     if (endsAt != null && now.isAfter(endsAt!)) return false;
     return (imageUrl ?? '').isNotEmpty;
+  }
+}
+
+/// One photo or video from Admin → Gallery (GET /v1/gallery).
+class GalleryItem {
+  final String id;
+  final String type; // IMAGE | VIDEO | FACEBOOK
+  final String url;
+  final String? caption;
+  const GalleryItem({required this.id, required this.type, required this.url, this.caption});
+
+  bool get isVideo => type == 'VIDEO' || type == 'FACEBOOK';
+
+  /// YouTube id when the URL is a YouTube link, for thumbnails and embeds.
+  String? get youtubeId {
+    final m = RegExp(r'(?:youtube\.com/(?:watch\?v=|shorts/|embed/)|youtu\.be/)([\w-]{6,})').firstMatch(url);
+    return m?.group(1);
+  }
+
+  String? get vimeoId => RegExp(r'vimeo\.com/(?:video/)?(\d+)').firstMatch(url)?.group(1);
+
+  bool get isFacebookVideo =>
+      RegExp(r'facebook\.com/.*/videos/|fb\.watch/|facebook\.com/reel/|facebook\.com/watch/?\?v=').hasMatch(url);
+
+  /// A page that plays the video inside the app's WebView, or null for a
+  /// direct file the WebView can play natively.
+  String? get embedUrl {
+    final yt = youtubeId;
+    if (yt != null) return 'https://www.youtube.com/embed/$yt?playsinline=1&rel=0';
+    final vm = vimeoId;
+    if (vm != null) return 'https://player.vimeo.com/video/$vm';
+    if (isFacebookVideo) {
+      return 'https://www.facebook.com/plugins/video.php?href=${Uri.encodeComponent(url)}&show_text=false';
+    }
+    return null;
+  }
+
+  /// Poster for a video tile: YouTube's own thumbnail when we have one.
+  String? get thumbnail {
+    if (!isVideo) return url;
+    final yt = youtubeId;
+    return yt == null ? null : 'https://img.youtube.com/vi/$yt/hqdefault.jpg';
+  }
+
+  factory GalleryItem.fromJson(Map<String, dynamic> j) {
+    final type = (j["type"] as String? ?? "IMAGE").toUpperCase();
+    final raw = j["url"] as String? ?? "";
+    // Video links are pages on other sites; only files and images are ours.
+    final url = type == 'IMAGE' || RegExp(r'\.(mp4|webm|ogg|mov)(\?.*)?$', caseSensitive: false).hasMatch(raw)
+        ? (mediaUrl(raw) ?? raw)
+        : raw;
+    return GalleryItem(id: j["id"] as String? ?? "", type: type, url: url, caption: j["caption"] as String?);
+  }
+}
+
+/// A customer quote from Admin → Testimonials (GET /v1/testimonials).
+class Testimonial {
+  final String id, name, quote;
+  final String? location, tag, avatarUrl;
+  final int rating;
+  const Testimonial({
+    required this.id,
+    required this.name,
+    required this.quote,
+    required this.rating,
+    this.location,
+    this.tag,
+    this.avatarUrl,
+  });
+  String get initial => name.trim().isEmpty ? 'V' : name.trim()[0].toUpperCase();
+  factory Testimonial.fromJson(Map<String, dynamic> j) => Testimonial(
+        id: j["id"] as String? ?? "",
+        name: j["name"] as String? ?? "",
+        quote: j["quote"] as String? ?? "",
+        rating: ((j["rating"] as num?)?.toInt() ?? 5).clamp(0, 5),
+        location: j["location"] as String?,
+        tag: j["tag"] as String?,
+        avatarUrl: mediaUrl(j["avatarUrl"]),
+      );
+}
+
+/// The brand story block (GET /v1/about) — the same copy the website's
+/// "Our Heritage" section and About page read from Admin → Settings → About.
+class AboutContent {
+  final String eyebrow, heading, body, quote, ctaLabel;
+  final String? storyImage;
+  final String captionTop, captionBottom;
+  final int returnsDays;
+  const AboutContent({
+    required this.eyebrow,
+    required this.heading,
+    required this.body,
+    required this.quote,
+    required this.ctaLabel,
+    required this.captionTop,
+    required this.captionBottom,
+    required this.returnsDays,
+    this.storyImage,
+  });
+  factory AboutContent.fromJson(Map<String, dynamic> j) {
+    final a = (j["about"] as Map?)?.cast<String, dynamic>() ?? j;
+    String s(String k, [String d = '']) {
+      final v = a[k];
+      return v is String && v.trim().isNotEmpty ? v.trim() : d;
+    }
+
+    return AboutContent(
+      eyebrow: s('homeEyebrow', 'Our Heritage'),
+      heading: s('homeHeading', 'Rooted in Mandya Since 1988').replaceAll('\n', ' '),
+      body: s('homeBody'),
+      quote: s('homeQuote'),
+      ctaLabel: s('homeCtaLabel', 'Read Our Story'),
+      captionTop: s('storyCaptionTop', '100% Natural'),
+      captionBottom: s('storyCaptionBottom', 'No chemicals, ever'),
+      storyImage: mediaUrl(a['storyImage']),
+      returnsDays: (j["returnsDays"] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+/// A published product review (GET /v1/products/:slug/reviews).
+class ProductReview {
+  final String id, author;
+  final int rating;
+  final String? title, body;
+  final List<String> images;
+  final DateTime? createdAt;
+  const ProductReview({
+    required this.id,
+    required this.author,
+    required this.rating,
+    this.title,
+    this.body,
+    this.images = const [],
+    this.createdAt,
+  });
+  factory ProductReview.fromJson(Map<String, dynamic> j) => ProductReview(
+        id: j["id"] as String? ?? "",
+        author: j["author"] as String? ?? "Customer",
+        rating: ((j["rating"] as num?)?.toInt() ?? 0).clamp(0, 5),
+        title: j["title"] as String?,
+        body: j["body"] as String?,
+        images: (j["images"] as List? ?? const []).map((u) => mediaUrl(u)).whereType<String>().toList(),
+        createdAt: DateTime.tryParse("${j["createdAt"] ?? ''}"),
+      );
+}
+
+class ReviewPage {
+  final List<ProductReview> reviews;
+  final double average;
+  final int total;
+  const ReviewPage({required this.reviews, required this.average, required this.total});
+  factory ReviewPage.fromJson(Map<String, dynamic> j) {
+    final summary = (j["summary"] as Map?)?.cast<String, dynamic>() ?? const {};
+    return ReviewPage(
+      reviews: (j["reviews"] as List? ?? const [])
+          .map((r) => ProductReview.fromJson((r as Map).cast<String, dynamic>()))
+          .toList(),
+      average: ((summary["averageRating"] as num?) ?? 0).toDouble(),
+      total: (summary["totalReviews"] as num?)?.toInt() ?? 0,
+    );
   }
 }
 
@@ -349,6 +549,9 @@ class CartItem {
   final String? imageUrl;
   final int stockQty;
 
+  /// The product slug, so a cart line can open its product page.
+  final String? productSlug;
+
   const CartItem({
     required this.productId,
     required this.variantId,
@@ -360,6 +563,7 @@ class CartItem {
     required this.stockQty,
     this.sareeCode,
     this.imageUrl,
+    this.productSlug,
   });
 
   CartItem copyWith({int? quantity}) => CartItem(
@@ -373,6 +577,7 @@ class CartItem {
         originalPrice: originalPrice,
         imageUrl: imageUrl,
         stockQty: stockQty,
+        productSlug: productSlug,
       );
 
   Map<String, dynamic> toJson() => {
@@ -386,6 +591,7 @@ class CartItem {
         "originalPrice": originalPrice,
         "imageUrl": imageUrl,
         "stockQty": stockQty,
+        "productSlug": productSlug,
       };
 
   factory CartItem.fromJson(Map<String, dynamic> j) => CartItem(
@@ -397,8 +603,9 @@ class CartItem {
         quantity: (j["quantity"] as num?)?.toInt() ?? 1,
         salePrice: (j["salePrice"] as num?) ?? 0,
         originalPrice: (j["originalPrice"] as num?) ?? 0,
-        imageUrl: j["imageUrl"] as String?,
+        imageUrl: mediaUrl(j["imageUrl"]),
         stockQty: (j["stockQty"] as num?)?.toInt() ?? 0,
+        productSlug: j["productSlug"] as String?,
       );
 
   /// Build a cart line from a product + chosen variant.
@@ -412,8 +619,12 @@ class CartItem {
         salePrice: v.salePrice,
         originalPrice: v.originalPrice,
         imageUrl: v.images.isNotEmpty ? v.images.first.url : p.image,
-        stockQty: v.stockQty,
+        stockQty: v.availableQty,
+        productSlug: p.slug,
       );
+
+  /// "500 g · VKC-101" — whatever the variant carries.
+  String get meta => [variantColor, sareeCode].where((s) => (s ?? '').trim().isNotEmpty).join(' · ');
 }
 
 // ── Wishlist ─────────────────────────────────────────────────────────────────
@@ -472,7 +683,7 @@ class OrderItem {
         productName: j["productName"] as String? ?? "",
         variantColor: j["variantColor"] as String? ?? "",
         sareeCode: j["sareeCode"] as String?,
-        imageUrl: j["imageUrl"] as String?,
+        imageUrl: mediaUrl(j["imageUrl"]),
         productSlug: j["productSlug"] as String?,
         quantity: (j["quantity"] as num?)?.toInt() ?? 1,
         unitPrice: num.tryParse("${j["unitPrice"]}") ?? 0,
@@ -653,9 +864,12 @@ class EcomUser {
     return phone?.isNotEmpty == true ? phone! : (email?.isNotEmpty == true ? email! : "Guest");
   }
 
+  /// True when the customer has given a name (not just a phone number).
+  bool get hasName => [firstName, lastName].any((p) => (p ?? '').trim().isNotEmpty);
+
   String get initials {
     final parts = [firstName, lastName].whereType<String>().where((p) => p.isNotEmpty).toList();
-    if (parts.isEmpty) return "U";
+    if (parts.isEmpty) return "V";
     return parts.map((p) => p[0].toUpperCase()).take(2).join();
   }
 

@@ -1,37 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'theme.dart';
-import 'screens/live_list_screen.dart';
-import 'screens/live_stream_screen.dart';
-import 'screens/orders_screen.dart';
-import 'screens/order_tracking_screen.dart';
-import 'screens/ecom_order_detail_screen.dart';
-import 'screens/account_screens.dart';
-import 'screens/shop_screens.dart';
-import 'screens/product_screens.dart';
-import 'screens/product_detail_screen.dart';
-import 'screens/cart_screens.dart';
-import 'widgets.dart';
-import 'screens/address_screens.dart';
-import 'screens/invoice_screen.dart';
-import 'screens/profile_screens.dart';
-import 'screens/content_screens.dart';
-import 'screens/track_order_screen.dart';
-import 'screens/auth_screens.dart';
+
 import 'ecom/ecom_api.dart';
 import 'ecom/ecom_cart.dart';
 import 'ecom/ecom_config.dart';
 import 'ecom/ecom_wishlist.dart';
+import 'ecom/recent_searches.dart';
+import 'screens/address_screens.dart';
+import 'screens/auth_screens.dart';
+import 'screens/cart_screens.dart';
+import 'screens/categories_screen.dart';
+import 'screens/content_screens.dart';
+import 'screens/ecom_order_detail_screen.dart';
+import 'screens/gallery_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/invoice_screen.dart';
+import 'screens/orders_screen.dart';
+import 'screens/product_detail_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/profile_screens.dart';
+import 'screens/search_screen.dart';
+import 'screens/shop_screen.dart';
+import 'screens/track_order_screen.dart';
+import 'screens/wishlist_screen.dart';
+import 'theme.dart';
+import 'widgets.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Last known store palette, straight from disk, before the first frame — so
-  // the app never opens in the shipped defaults and then changes colour.
-  await loadCachedTheme();
-  // Pull the store's admin theme + persisted auth in the background; the splash
-  // (2.4s) covers the fetch, and the app rebuilds via themeVersion when applied.
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: VkColors.paper,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  ));
+  // Nothing is awaited: the app opens on Home immediately and every screen
+  // draws from its own loading state while these land in the background.
   _bootstrap();
   runApp(const VkcApp());
+}
+
+Future<void> _bootstrap() async {
+  // The basket and search history live on the phone.
+  EcomCart.I.load();
+  RecentSearches.I.load();
+  // A restored session brings its wishlist with it, so hearts are already
+  // filled in on the first screen the customer sees; the local basket is
+  // mirrored up to the account.
+  EcomAuth.I.load().then((_) {
+    Wishlist.I.loadQuietly();
+    EcomCart.I.syncNow();
+  });
+  // Home's catalogue fetch starts now so the first paint is usually from
+  // memory rather than the network.
+  HomeRepo.I.prewarm();
+  _loadPaymentMethods();
+  // /app-config carries shipping rates, contact details and legal links.
+  // Retry a few times with backoff so a transient hiccup doesn't cost the
+  // session the store's real numbers.
+  for (var attempt = 0; attempt < 3; attempt++) {
+    final cfg = await EcomApi.I.appConfig();
+    if (cfg != null && cfg.isNotEmpty) {
+      storeConfig.value = StoreConfig(cfg);
+      return;
+    }
+    await Future<void>.delayed(Duration(milliseconds: 800 * (attempt + 1)));
+  }
 }
 
 Future<void> _loadPaymentMethods() async {
@@ -42,246 +77,208 @@ Future<void> _loadPaymentMethods() async {
   }
 }
 
-Future<void> _bootstrap() async {
-  // A restored session brings its wishlist with it, so hearts are already
-  // filled in on the first screen the customer sees.
-  EcomAuth.I.load().then((_) => Wishlist.I.loadQuietly());
-  // Home's catalogue, categories and banner, fetched under the splash instead
-  // of after it — the splash is dead time the network may as well use.
-  prewarmHome();
-  // The store's enabled payment methods, from the same endpoint the website
-  // checkout reads, so nothing advertises a method the admin has switched off.
-  _loadPaymentMethods();
-  // /app-config is fetched once at launch; a single failed or slow call used to
-  // leave the store on the default palette for the whole session. Retry a few
-  // times with backoff so a transient hiccup doesn't cost the admin theme.
-  for (var attempt = 0; attempt < 3; attempt++) {
-    final cfg = await EcomApi.I.appConfig();
-    if (cfg != null && cfg.isNotEmpty) {
-      // Shipping rates, payment availability and the contact block all come
-      // from the same document — publish it before theming so screens built
-      // during the splash already read the store's real numbers.
-      storeConfig.value = StoreConfig(cfg);
-    }
-    final theme = (cfg?['theme'] as Map?)?.cast<String, dynamic>();
-    final colors = (theme?['colors'] as Map?)?.cast<String, dynamic>();
-    if (colors != null && colors.isNotEmpty) {
-      applyAdminTheme(colors);
-      return;
-    }
-    await Future<void>.delayed(Duration(milliseconds: 800 * (attempt + 1)));
-  }
-}
+final _rootKey = GlobalKey<NavigatorState>();
+
+/// Tab roots. Anything else is a full-screen page pushed over the shell.
+const shellRoutes = {'/home', '/categories', '/shop', '/cart', '/profile'};
 
 final _router = GoRouter(
-  initialLocation: '/splash',
+  navigatorKey: _rootKey,
+  // The app opens on Home. There is no splash route, no onboarding and no
+  // login gate — a first launch and the hundredth look the same.
+  initialLocation: '/home',
   routes: [
-    // Onboarding + auth (full-screen, no bottom nav)
-    GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-    GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
-    GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-    ShellRoute(
-      builder: (context, state, child) => _Shell(location: state.uri.path, child: child),
-      routes: [
-        GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-        GoRoute(path: '/shop', builder: (_, __) => const CategoryScreen()),
-        GoRoute(path: '/live', builder: (_, __) => const LiveListScreen()),
-        GoRoute(path: '/cart', builder: (_, __) => const CartScreen()),
-        GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
-        GoRoute(path: '/orders', builder: (_, __) => const OrdersScreen()),
-        GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
-        GoRoute(path: '/wishlist', builder: (_, __) => const WishlistScreen()),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, shell) => AppShell(shell: shell),
+      branches: [
+        StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (_, __) => const HomeScreen())]),
+        StatefulShellBranch(routes: [GoRoute(path: '/categories', builder: (_, __) => const CategoriesScreen())]),
+        StatefulShellBranch(routes: [GoRoute(path: '/shop', builder: (_, __) => const ShopScreen())]),
+        StatefulShellBranch(routes: [GoRoute(path: '/cart', builder: (_, __) => const CartScreen())]),
+        StatefulShellBranch(routes: [GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen())]),
       ],
     ),
-    // Full-screen live view (no bottom nav)
-    GoRoute(path: '/live/:id', builder: (_, s) => LiveStreamScreen(liveId: s.pathParameters['id']!)),
-    // Ecom order detail + invoice (auth)
-    GoRoute(path: '/orders/:id', builder: (_, s) => EcomOrderDetailScreen(id: s.pathParameters['id']!)),
-    GoRoute(path: '/orders/:id/invoice', builder: (_, s) => InvoiceScreen(orderId: s.pathParameters['id']!)),
-    // Public order tracking by order number (no sign-in)
+    // ── Full-screen pages (root navigator, no bottom nav) ────────────────
+    GoRoute(path: '/login', parentNavigatorKey: _rootKey, builder: (_, __) => const LoginScreen()),
     GoRoute(
-      path: '/track-order',
-      builder: (_, s) => TrackOrderScreen(orderNumber: s.uri.queryParameters['order']),
+      path: '/search',
+      parentNavigatorKey: _rootKey,
+      builder: (_, s) => SearchScreen(initialQuery: s.uri.queryParameters['q']),
     ),
-    // Live-order tracking (VL Group, phone-gated) — separate path to avoid
-    // colliding with the ecom /orders/:id route.
-    GoRoute(
-      path: '/live-order/:orderNumber',
-      builder: (_, s) => OrderTrackingScreen(
-        orderNumber: s.pathParameters['orderNumber']!,
-        phone: s.uri.queryParameters['phone'] ?? '',
-      ),
-    ),
-    // Product listing + detail (full-screen, own sticky bars)
     GoRoute(
       path: '/listing',
+      parentNavigatorKey: _rootKey,
       builder: (_, s) => ListingScreen(
         cat: s.uri.queryParameters['cat'],
         q: s.uri.queryParameters['q'],
-        autofocus: s.uri.queryParameters['focus'] == '1',
         featured: s.uri.queryParameters['featured'] == '1',
+        title: s.uri.queryParameters['title'],
       ),
     ),
-    GoRoute(path: '/product/:id', builder: (_, s) => ProductScreen(id: s.pathParameters['id']!)),
-    // Address book (full-screen; pushed from Profile and from checkout)
-    GoRoute(path: '/addresses', builder: (_, __) => const AddressBookScreen()),
-    // Account pages pushed from Profile
-    GoRoute(path: '/profile/edit', builder: (_, __) => const EditProfileScreen()),
-    GoRoute(path: '/wallet', builder: (_, __) => const WalletScreen()),
-    GoRoute(path: '/reviews', builder: (_, __) => const ReviewsScreen()),
+    GoRoute(path: '/product/:id', parentNavigatorKey: _rootKey, builder: (_, s) => ProductScreen(id: s.pathParameters['id']!)),
+    GoRoute(path: '/wishlist', parentNavigatorKey: _rootKey, builder: (_, __) => const WishlistScreen()),
+    GoRoute(path: '/notifications', parentNavigatorKey: _rootKey, builder: (_, __) => const NotificationsScreen()),
+    // Orders + invoice (auth)
+    GoRoute(path: '/orders', parentNavigatorKey: _rootKey, builder: (_, __) => const OrdersScreen()),
+    GoRoute(path: '/orders/:id', parentNavigatorKey: _rootKey, builder: (_, s) => EcomOrderDetailScreen(id: s.pathParameters['id']!)),
+    GoRoute(path: '/orders/:id/invoice', parentNavigatorKey: _rootKey, builder: (_, s) => InvoiceScreen(orderId: s.pathParameters['id']!)),
+    // Public order tracking by order number (no sign-in)
+    GoRoute(
+      path: '/track-order',
+      parentNavigatorKey: _rootKey,
+      builder: (_, s) => TrackOrderScreen(orderNumber: s.uri.queryParameters['order']),
+    ),
+    // Account
+    GoRoute(path: '/addresses', parentNavigatorKey: _rootKey, builder: (_, __) => const AddressBookScreen()),
+    GoRoute(path: '/account/edit', parentNavigatorKey: _rootKey, builder: (_, __) => const EditProfileScreen()),
     // Editorial + store pages
-    GoRoute(path: '/journal', builder: (_, __) => const BlogListScreen()),
-    GoRoute(path: '/journal/:slug', builder: (_, s) => BlogDetailScreen(slug: s.pathParameters['slug']!)),
+    GoRoute(path: '/journal', parentNavigatorKey: _rootKey, builder: (_, __) => const BlogListScreen()),
+    GoRoute(path: '/journal/:slug', parentNavigatorKey: _rootKey, builder: (_, s) => BlogDetailScreen(slug: s.pathParameters['slug']!)),
+    GoRoute(path: '/gallery', parentNavigatorKey: _rootKey, builder: (_, __) => const GalleryScreen()),
     // About Us and Leadership are the website's own pages, shown in-app so the
-    // story reads exactly as it does on vkcgoldikshu.com and is edited in one place.
-    GoRoute(path: '/about', builder: (_, __) => const WebPageScreen(title: 'About Us', path: '/about')),
-    GoRoute(path: '/leadership', builder: (_, __) => const WebPageScreen(title: 'Leadership', path: '/leadership')),
-    GoRoute(path: '/contact', builder: (_, __) => const ContactScreen()),
-    GoRoute(path: '/video-booking', builder: (_, __) => const VideoBookingScreen()),
-    // Website pages the mobile API doesn't serve (gallery, stories, policies)
+    // story reads exactly as it does on vkcgoldikshu.com and is edited once.
+    GoRoute(path: '/about', parentNavigatorKey: _rootKey, builder: (_, __) => const WebPageScreen(title: 'About Us', path: '/about')),
+    GoRoute(path: '/leadership', parentNavigatorKey: _rootKey, builder: (_, __) => const WebPageScreen(title: 'Leadership', path: '/leadership')),
+    GoRoute(path: '/contact', parentNavigatorKey: _rootKey, builder: (_, __) => const ContactScreen()),
     GoRoute(
       path: '/pages/:page',
+      parentNavigatorKey: _rootKey,
       builder: (_, s) => WebPageScreen(
-        title: s.uri.queryParameters['title'] ?? 'VKC Gold',
+        title: s.uri.queryParameters['title'] ?? 'VKC Gold Ikshu',
         path: '/${s.pathParameters['page']}',
       ),
     ),
-    // Checkout flow (full-screen)
-    GoRoute(path: '/checkout', builder: (_, __) => const CheckoutScreen()),
-    GoRoute(path: '/order-success', builder: (_, s) => OrderSuccessScreen(orderNumber: s.uri.queryParameters['order'] ?? '')),
+    // Checkout flow
+    GoRoute(path: '/checkout', parentNavigatorKey: _rootKey, builder: (_, __) => const CheckoutScreen()),
+    GoRoute(
+      path: '/order-success',
+      parentNavigatorKey: _rootKey,
+      builder: (_, s) => OrderSuccessScreen(orderNumber: s.uri.queryParameters['order'] ?? ''),
+    ),
   ],
 );
 
 class VkcApp extends StatelessWidget {
   const VkcApp({super.key});
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<int>(
-        valueListenable: themeVersion,
-        builder: (context, _, __) => MaterialApp.router(
-          title: 'VKC Gold',
-          debugShowCheckedModeBanner: false,
-          theme: vlTheme(),
-          routerConfig: _router,
+  Widget build(BuildContext context) => MaterialApp.router(
+        title: 'VKC Gold Ikshu',
+        debugShowCheckedModeBanner: false,
+        theme: vkTheme(),
+        routerConfig: _router,
+        builder: (context, child) => MediaQuery(
+          // Respect the system font size but cap it so the layout holds.
+          data: MediaQuery.of(context).copyWith(
+            textScaler: MediaQuery.textScalerOf(context).clamp(minScaleFactor: 0.9, maxScaleFactor: 1.3),
+          ),
+          child: child ?? const SizedBox.shrink(),
         ),
       );
 }
 
-class _Shell extends StatelessWidget {
-  final Widget child;
-  final String location;
-  const _Shell({required this.child, required this.location});
+/// The five-tab shell. Each tab keeps its own navigation state and scroll
+/// position; the system back button returns to Home before leaving the app.
+class AppShell extends StatelessWidget {
+  final StatefulNavigationShell shell;
+  const AppShell({super.key, required this.shell});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: VlColors.canvas,
-      // Keep every bottom-nav screen below the status bar/notch (the bottom
-      // inset is handled by the nav bar itself).
-      body: SafeArea(bottom: false, child: child),
-      // Video Shopping is one tap from anywhere in the shell. Cart is the one
-      // exception — its sticky CHECKOUT bar owns the bottom of the screen.
-      floatingActionButton: location == '/cart' ? null : const VideoCallFab(),
-      bottomNavigationBar: _BottomNav(location: location),
+    return PopScope(
+      canPop: shell.currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) shell.goBranch(0);
+      },
+      child: Scaffold(
+        backgroundColor: VkColors.canvas,
+        body: SafeArea(bottom: false, child: shell),
+        bottomNavigationBar: VkBottomNav(
+          index: shell.currentIndex,
+          onSelect: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+        ),
+      ),
     );
   }
 }
 
-/// Bottom nav with the center red Live FAB (ports BottomNav).
-class _BottomNav extends StatelessWidget {
-  final String location;
-  const _BottomNav({required this.location});
+class _NavItem {
+  final IconData icon, active;
+  final String label;
+  const _NavItem(this.icon, this.active, this.label);
+}
+
+const _navItems = [
+  _NavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
+  _NavItem(Icons.grid_view_outlined, Icons.grid_view_rounded, 'Categories'),
+  _NavItem(Icons.storefront_outlined, Icons.storefront_rounded, 'Shop'),
+  _NavItem(Icons.shopping_bag_outlined, Icons.shopping_bag_rounded, 'Cart'),
+  _NavItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+];
+
+/// Home | Categories | Shop | Cart | Profile.
+class VkBottomNav extends StatelessWidget {
+  final int index;
+  final ValueChanged<int> onSelect;
+  const VkBottomNav({super.key, required this.index, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: VlColors.paper, border: Border(top: BorderSide(color: VlColors.rule))),
+      decoration: BoxDecoration(
+        color: VkColors.paper,
+        border: const Border(top: BorderSide(color: VkColors.rule)),
+        boxShadow: [BoxShadow(color: VkColors.ink.withValues(alpha: 0.05), blurRadius: 14, offset: const Offset(0, -4))],
+      ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          // Tall enough for the center Live FAB column (54 circle + 4 gap +
-          // label); Transform.translate lifts it visually but it still has to
-          // fit the row's height.
-          height: 74,
-          child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            _item(context, Icons.home_outlined, 'Home', '/home'),
-            _item(context, Icons.grid_view_outlined, 'Shop', '/shop'),
-            _liveFab(context),
-            _item(context, Icons.shopping_bag_outlined, 'Cart', '/cart', badge: true),
-            _item(context, Icons.person_outline, 'Profile', '/profile'),
+          height: 62,
+          child: Row(children: [
+            for (var i = 0; i < _navItems.length; i++) Expanded(child: _tab(context, i)),
           ]),
         ),
       ),
     );
   }
 
-  Widget _item(BuildContext context, IconData ic, String label, String path, {bool badge = false}) {
-    final active = location == path;
-    return Expanded(
+  Widget _tab(BuildContext context, int i) {
+    final item = _navItems[i];
+    final active = index == i;
+    final color = active ? VkColors.primary : VkColors.muted;
+    final Widget icon = i == 3
+        ? CartIconBadge(icon: active ? item.active : item.icon, color: color, size: 23)
+        : Icon(active ? item.active : item.icon, size: 23, color: color);
+    return Semantics(
+      button: true,
+      selected: active,
+      label: item.label,
       child: InkResponse(
-        onTap: () => context.go(path),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            badge
-                ? ValueListenableBuilder(
-                    valueListenable: EcomCart.I.items,
-                    builder: (context, _, __) {
-                      final n = EcomCart.I.count;
-                      return Stack(clipBehavior: Clip.none, children: [
-                        Icon(ic, size: 22, color: active ? VlColors.red : VlColors.muted),
-                        if (n > 0)
-                          Positioned(
-                            top: -5,
-                            right: -8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                              decoration: BoxDecoration(color: VlColors.red, borderRadius: BorderRadius.circular(999)),
-                              constraints: const BoxConstraints(minWidth: 16),
-                              child: Text('$n', textAlign: TextAlign.center, style: VlText.ui(9, weight: FontWeight.w700, color: Colors.white)),
-                            ),
-                          ),
-                      ]);
-                    },
-                  )
-                : Icon(ic, size: 22, color: active ? VlColors.red : VlColors.muted),
-            const SizedBox(height: 4),
-            Text(label,
-                style: VlText.ui(10,
-                    weight: active ? FontWeight.w600 : FontWeight.w400,
-                    color: active ? VlColors.red : VlColors.muted,
-                    letter: 0.08)),
-            const SizedBox(height: 2),
-            Container(width: 4, height: 4, decoration: BoxDecoration(color: active ? VlColors.red : Colors.transparent, shape: BoxShape.circle)),
-          ]),
-        ),
-      ),
-    );
-  }
-
-  Widget _liveFab(BuildContext context) {
-    return Expanded(
-      child: InkResponse(
-        onTap: () => context.go('/live'),
-        child: Transform.translate(
-          offset: const Offset(0, -18),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                color: VlColors.red,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(color: VlColors.red.withValues(alpha: 0.35), blurRadius: 22, offset: const Offset(0, 8)),
-                  BoxShadow(color: VlColors.paper, blurRadius: 0, spreadRadius: 6),
-                ],
-              ),
-              child: const Icon(Icons.play_arrow, size: 24, color: Colors.white),
+        onTap: () => onSelect(i),
+        radius: 34,
+        highlightShape: BoxShape.rectangle,
+        containedInkWell: true,
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          AnimatedContainer(
+            duration: VkMotion.base,
+            curve: VkMotion.curve,
+            width: active ? 44 : 32,
+            height: 28,
+            decoration: BoxDecoration(
+              color: active ? VkColors.primarySoft : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
             ),
-            const SizedBox(height: 4),
-            Text('LIVE', style: VlText.ui(9, weight: FontWeight.w600, color: VlColors.red, letter: 0.16)),
-          ]),
-        ),
+            child: Center(
+              child: AnimatedSwitcher(
+                duration: VkMotion.base,
+                transitionBuilder: (c, a) => ScaleTransition(scale: Tween(begin: 0.85, end: 1.0).animate(a), child: FadeTransition(opacity: a, child: c)),
+                child: KeyedSubtree(key: ValueKey(active), child: icon),
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(item.label,
+              style: VkText.ui(10, weight: active ? FontWeight.w600 : FontWeight.w500, color: color, letter: 0.02)),
+        ]),
       ),
     );
   }

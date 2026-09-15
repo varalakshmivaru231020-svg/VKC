@@ -14,15 +14,14 @@ Product _p({
   required String name,
   required double price,
   double? mrp,
-  String weave = 'JAGGERY',
+  String category = 'JAGGERY',
 }) =>
     Product(
       id: id,
       name: name,
-      weave: weave,
+      category: category,
       price: price,
       mrp: mrp,
-      palette: 0,
       variantId: 'v-$id',
     );
 
@@ -97,8 +96,8 @@ void main() {
 
     testWidgets('each card keeps its own name, price and discount', (tester) async {
       await tester.pumpWidget(grid([
-        _p(id: 'a', name: 'Alpha Jaggery', price: 6000, mrp: 6500, weave: 'SUB CAT 1'),
-        _p(id: 'b', name: 'Beta Jaggery', price: 8999, mrp: 9998, weave: 'JAGGERY'),
+        _p(id: 'a', name: 'Alpha Jaggery', price: 6000, mrp: 6500, category: 'SUB CAT 1'),
+        _p(id: 'b', name: 'Beta Jaggery', price: 8999, mrp: 9998, category: 'JAGGERY'),
       ]));
       await tester.pump();
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Matches VlColors.redInk, the Dart splash background, so the cold-start
-         window doesn't flash white before Flutter draws its first frame. -->
-    <color name="vl_splash_background">#4A0C18</color>
+    <!-- Brand ivory: the launch window and adaptive-icon background. -->
+    <color name="ic_launcher_background">#FFFBF4</color>
+    <color name="brand_canvas">#FFFBF4</color>
 </resources>

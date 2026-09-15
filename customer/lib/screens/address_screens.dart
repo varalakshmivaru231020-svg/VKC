@@ -46,8 +46,8 @@ Future<Address?> showAddressSheet(
     showModalBottomSheet<Address>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: VlColors.canvas,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(VlRadii.xl))),
+      backgroundColor: VkColors.canvas,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(VkRadii.xl))),
       builder: (_) => AddressSheet(existing: existing, defaultOnSave: defaultOnSave),
     );
 
@@ -146,13 +146,13 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VlColors.paper,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(VlRadii.md)),
-        title: Text('Delete address?', style: VlText.display(20)),
-        content: Text('${a.fullName} · ${a.oneLine}', style: VlText.body(13, color: VlColors.muted, height: 1.5)),
+        backgroundColor: VkColors.paper,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(VkRadii.md)),
+        title: Text('Delete address?', style: VkText.display(20)),
+        content: Text('${a.fullName} · ${a.oneLine}', style: VkText.body(13, color: VkColors.muted, height: 1.5)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Keep', style: VlText.ui(12, color: VlColors.muted))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('Delete', style: VlText.ui(12, color: VlColors.red, weight: FontWeight.w600))),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Keep', style: VkText.ui(12, color: VkColors.muted))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('Delete', style: VkText.ui(12, color: VkColors.primary, weight: FontWeight.w600))),
         ],
       ),
     );
@@ -177,7 +177,7 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
   Widget build(BuildContext context) {
     final loggedIn = EcomAuth.I.isLoggedIn;
     return Scaffold(
-      backgroundColor: VlColors.canvas,
+      backgroundColor: VkColors.canvas,
       body: SafeArea(bottom: false, child: _body(loggedIn)),
     );
   }
@@ -194,7 +194,7 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
           if (loggedIn && !(_loading && _addresses.isEmpty))
             InkResponse(
               onTap: _load,
-              child: SizedBox(width: 36, height: 36, child: Icon(Icons.refresh, size: 18, color: VlColors.muted)),
+              child: SizedBox(width: 36, height: 36, child: Icon(Icons.refresh, size: 18, color: VkColors.muted)),
             ),
         ],
       ),
@@ -207,13 +207,13 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
 
   Widget _signInPrompt() => Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.location_on_outlined, size: 40, color: VlColors.red),
+          Icon(Icons.location_on_outlined, size: 40, color: VkColors.primary),
           const SizedBox(height: 14),
-          Text('Sign in to manage addresses', style: VlText.display(22)),
+          Text('Sign in to manage addresses', style: VkText.display(22)),
           const SizedBox(height: 6),
-          Text('Saved addresses make checkout one tap.', style: VlText.body(13, color: VlColors.muted)),
+          Text('Saved addresses make checkout one tap.', style: VkText.body(13, color: VkColors.muted)),
           const SizedBox(height: 16),
-          TextButton(onPressed: () => context.push('/login'), child: Text('Sign in', style: VlText.ui(13, color: VlColors.red))),
+          TextButton(onPressed: () => context.push('/login'), child: Text('Sign in', style: VkText.ui(13, color: VkColors.primary))),
         ]),
       );
 
@@ -228,7 +228,7 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
       return _state(Icons.location_on_outlined, 'No saved addresses', 'Add the address your orders should travel to.', 'ADD ADDRESS', _add);
     }
     return RefreshIndicator(
-      color: VlColors.red,
+      color: VkColors.primary,
       onRefresh: _load,
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
@@ -252,19 +252,19 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 32),
         children: [
           const SizedBox(height: 90),
-          Icon(icon, size: 40, color: VlColors.red),
+          Icon(icon, size: 40, color: VkColors.primary),
           const SizedBox(height: 14),
-          Text(title, textAlign: TextAlign.center, style: VlText.display(22)),
+          Text(title, textAlign: TextAlign.center, style: VkText.display(22)),
           const SizedBox(height: 6),
-          Text(body, textAlign: TextAlign.center, style: VlText.body(13, color: VlColors.muted, height: 1.6)),
+          Text(body, textAlign: TextAlign.center, style: VkText.body(13, color: VkColors.muted, height: 1.6)),
           const SizedBox(height: 20),
           Center(
             child: GestureDetector(
               onTap: onCta,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 13),
-                decoration: BoxDecoration(color: VlColors.red, borderRadius: BorderRadius.circular(VlRadii.md)),
-                child: Text(cta, style: VlText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
+                decoration: BoxDecoration(color: VkColors.primary, borderRadius: BorderRadius.circular(VkRadii.md)),
+                child: Text(cta, style: VkText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
               ),
             ),
           ),
@@ -272,7 +272,7 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
       );
 
   Widget _stickyAdd() => Container(
-        decoration: BoxDecoration(color: VlColors.paper, border: Border(top: BorderSide(color: VlColors.rule))),
+        decoration: BoxDecoration(color: VkColors.paper, border: Border(top: BorderSide(color: VkColors.rule))),
         child: SafeArea(
           top: false,
           child: Padding(
@@ -283,11 +283,11 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: VlColors.red, borderRadius: BorderRadius.circular(VlRadii.md)),
+                decoration: BoxDecoration(color: VkColors.primary, borderRadius: BorderRadius.circular(VkRadii.md)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   const Icon(Icons.add, size: 15, color: Colors.white),
                   const SizedBox(width: 8),
-                  Text('ADD NEW ADDRESS', style: VlText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
+                  Text('ADD NEW ADDRESS', style: VkText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
                 ]),
               ),
             ),
@@ -342,10 +342,10 @@ class AddressCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
           decoration: BoxDecoration(
-            color: VlColors.paper,
-            borderRadius: BorderRadius.circular(VlRadii.md),
+            color: VkColors.paper,
+            borderRadius: BorderRadius.circular(VkRadii.md),
             border: Border.all(
-              color: selectable && selected ? VlColors.red : VlColors.rule,
+              color: selectable && selected ? VkColors.primary : VkColors.rule,
               width: selectable && selected ? 1.5 : 1,
             ),
           ),
@@ -354,38 +354,38 @@ class AddressCard extends StatelessWidget {
               if ((a.label ?? '').isNotEmpty) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(border: Border.all(color: VlColors.red), borderRadius: BorderRadius.circular(3)),
-                  child: Text(a.label!.toUpperCase(), style: VlText.upper(9, color: VlColors.red, letter: 0.18)),
+                  decoration: BoxDecoration(border: Border.all(color: VkColors.primary), borderRadius: BorderRadius.circular(3)),
+                  child: Text(a.label!.toUpperCase(), style: VkText.upper(9, color: VkColors.primary, letter: 0.18)),
                 ),
                 const SizedBox(width: 8),
               ],
-              Flexible(child: Text(a.fullName, overflow: TextOverflow.ellipsis, style: VlText.ui(13, weight: FontWeight.w600))),
+              Flexible(child: Text(a.fullName, overflow: TextOverflow.ellipsis, style: VkText.ui(13, weight: FontWeight.w600))),
               if (a.isDefault) ...[
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: VlColors.red, borderRadius: BorderRadius.circular(3)),
-                  child: Text('DEFAULT', style: VlText.upper(8, color: Colors.white, letter: 0.18)),
+                  decoration: BoxDecoration(color: VkColors.primary, borderRadius: BorderRadius.circular(3)),
+                  child: Text('DEFAULT', style: VkText.upper(8, color: Colors.white, letter: 0.18)),
                 ),
               ],
               const Spacer(),
               if (busy)
-                SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: VlColors.red))
+                SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: VkColors.primary))
               else if (selectable)
                 Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                    size: 18, color: selected ? VlColors.red : VlColors.rule2),
+                    size: 18, color: selected ? VkColors.primary : VkColors.rule2),
             ]),
             const SizedBox(height: 6),
-            Text(a.oneLine, style: VlText.body(12, color: VlColors.muted, height: 1.5)),
+            Text(a.oneLine, style: VkText.body(12, color: VkColors.muted, height: 1.5)),
             const SizedBox(height: 2),
-            Text(a.phone, style: VlText.mono(10, color: VlColors.muted)),
+            Text(a.phone, style: VkText.mono(10, color: VkColors.muted)),
             const SizedBox(height: 6),
-            Divider(color: VlColors.rule, height: 12),
+            Divider(color: VkColors.rule, height: 12),
             Row(children: [
               if (onEdit != null) _action(Icons.edit_outlined, 'EDIT', busy ? null : onEdit),
               if (onMakeDefault != null && !a.isDefault) _action(Icons.star_border, 'SET DEFAULT', busy ? null : onMakeDefault),
               const Spacer(),
-              if (onDelete != null) _action(Icons.delete_outline, 'DELETE', busy ? null : onDelete, color: VlColors.red),
+              if (onDelete != null) _action(Icons.delete_outline, 'DELETE', busy ? null : onDelete, color: VkColors.primary),
             ]),
           ]),
         ),
@@ -398,9 +398,9 @@ class AddressCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.only(right: 18, top: 6, bottom: 8),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(ic, size: 13, color: color ?? VlColors.ink),
+            Icon(ic, size: 13, color: color ?? VkColors.ink),
             const SizedBox(width: 5),
-            Text(label, style: VlText.upper(9, color: color ?? VlColors.ink, letter: 0.16)),
+            Text(label, style: VkText.upper(9, color: color ?? VkColors.ink, letter: 0.16)),
           ]),
         ),
       );
@@ -419,9 +419,9 @@ class AddressListSkeleton extends StatelessWidget {
         itemBuilder: (_, __) => Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: VlColors.paper,
-            borderRadius: BorderRadius.circular(VlRadii.md),
-            border: Border.all(color: VlColors.rule),
+            color: VkColors.paper,
+            borderRadius: BorderRadius.circular(VkRadii.md),
+            border: Border.all(color: VkColors.rule),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
             Skeleton(width: 130, height: 13),
@@ -530,8 +530,8 @@ class _AddressSheetState extends State<AddressSheet> {
     final picked = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: VlColors.canvas,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(VlRadii.xl))),
+      backgroundColor: VkColors.canvas,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(VkRadii.xl))),
       builder: (_) => _StatePicker(selected: _state.text.trim()),
     );
     if (picked == null || !mounted) return;
@@ -547,22 +547,22 @@ class _AddressSheetState extends State<AddressSheet> {
       padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: VlColors.rule2, borderRadius: BorderRadius.circular(2)))),
+          Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: VkColors.rule2, borderRadius: BorderRadius.circular(2)))),
           const SizedBox(height: 16),
-          Text(_isEdit ? 'Edit address' : 'New address', style: VlText.display(22)),
+          Text(_isEdit ? 'Edit address' : 'New address', style: VkText.display(22)),
           const SizedBox(height: 2),
-          Text('WHERE SHOULD WE DELIVER?', style: VlText.upper(9, color: VlColors.muted, letter: 0.2)),
+          Text('WHERE SHOULD WE DELIVER?', style: VkText.upper(9, color: VkColors.muted, letter: 0.2)),
           const SizedBox(height: 16),
           if (_formError != null) ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: VlColors.redTint,
-                border: Border.all(color: VlColors.red),
-                borderRadius: BorderRadius.circular(VlRadii.sm),
+                color: VkColors.primaryTint,
+                border: Border.all(color: VkColors.primary),
+                borderRadius: BorderRadius.circular(VkRadii.sm),
               ),
-              child: Text(_formError!, style: VlText.body(12, color: VlColors.red)),
+              child: Text(_formError!, style: VkText.body(12, color: VkColors.primary)),
             ),
             const SizedBox(height: 12),
           ],
@@ -589,11 +589,11 @@ class _AddressSheetState extends State<AddressSheet> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 15),
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: VlColors.red, borderRadius: BorderRadius.circular(VlRadii.md)),
+              decoration: BoxDecoration(color: VkColors.primary, borderRadius: BorderRadius.circular(VkRadii.md)),
               child: _saving
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : Text(_isEdit ? 'UPDATE ADDRESS' : 'SAVE ADDRESS',
-                      style: VlText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
+                      style: VkText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
             ),
           ),
           const SizedBox(height: 6),
@@ -616,8 +616,8 @@ class _AddressSheetState extends State<AddressSheet> {
             width: 18,
             height: 18,
             decoration: BoxDecoration(
-              color: (locked || _makeDefault) ? VlColors.red : Colors.transparent,
-              border: Border.all(color: (locked || _makeDefault) ? VlColors.red : VlColors.rule2),
+              color: (locked || _makeDefault) ? VkColors.primary : Colors.transparent,
+              border: Border.all(color: (locked || _makeDefault) ? VkColors.primary : VkColors.rule2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: (locked || _makeDefault) ? const Icon(Icons.check, size: 12, color: Colors.white) : null,
@@ -625,7 +625,7 @@ class _AddressSheetState extends State<AddressSheet> {
           const SizedBox(width: 10),
           Text(
             locked ? 'This is your default address' : 'Make this my default address',
-            style: VlText.body(12, color: locked ? VlColors.muted : VlColors.ink),
+            style: VkText.body(12, color: locked ? VkColors.muted : VkColors.ink),
           ),
         ]),
       ),
@@ -637,7 +637,7 @@ class _AddressSheetState extends State<AddressSheet> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('State *', style: VlText.ui(11, weight: FontWeight.w500, color: VlColors.muted)),
+        Text('State *', style: VkText.ui(11, weight: FontWeight.w500, color: VkColors.muted)),
         const SizedBox(height: 6),
         GestureDetector(
           onTap: _pickState,
@@ -645,9 +645,9 @@ class _AddressSheetState extends State<AddressSheet> {
             height: 46,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: VlColors.paper,
-              borderRadius: BorderRadius.circular(VlRadii.md),
-              border: Border.all(color: err != null ? VlColors.red : VlColors.rule),
+              color: VkColors.paper,
+              borderRadius: BorderRadius.circular(VkRadii.md),
+              border: Border.all(color: err != null ? VkColors.primary : VkColors.rule),
             ),
             child: Row(children: [
               Expanded(
@@ -655,16 +655,16 @@ class _AddressSheetState extends State<AddressSheet> {
                   _state.text.isEmpty ? 'Select state' : _state.text,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: _state.text.isEmpty ? VlText.body(13, color: VlColors.muted2) : VlText.ui(14),
+                  style: _state.text.isEmpty ? VkText.body(13, color: VkColors.muted2) : VkText.ui(14),
                 ),
               ),
-              Icon(Icons.expand_more, size: 16, color: VlColors.muted),
+              Icon(Icons.expand_more, size: 16, color: VkColors.muted),
             ]),
           ),
         ),
         if (err != null) ...[
           const SizedBox(height: 4),
-          Text(err, style: VlText.body(11, color: VlColors.red)),
+          Text(err, style: VkText.body(11, color: VkColors.primary)),
         ],
       ]),
     );
@@ -682,7 +682,7 @@ class _AddressSheetState extends State<AddressSheet> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: VlText.ui(11, weight: FontWeight.w500, color: VlColors.muted)),
+        Text(label, style: VkText.ui(11, weight: FontWeight.w500, color: VkColors.muted)),
         const SizedBox(height: 6),
         TextField(
           controller: c,
@@ -692,27 +692,27 @@ class _AddressSheetState extends State<AddressSheet> {
               type == TextInputType.name || type == TextInputType.text || type == TextInputType.streetAddress
                   ? TextCapitalization.words
                   : TextCapitalization.none,
-          style: VlText.ui(14),
+          style: VkText.ui(14),
           onChanged: err == null
               ? null
               : (_) => setState(() => _errors = {..._errors}..remove(key)),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: VlText.body(13, color: VlColors.muted2),
+            hintStyle: VkText.body(13, color: VkColors.muted2),
             filled: true,
-            fillColor: VlColors.paper,
+            fillColor: VkColors.paper,
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(VlRadii.md),
-                borderSide: BorderSide(color: err != null ? VlColors.red : VlColors.rule)),
+                borderRadius: BorderRadius.circular(VkRadii.md),
+                borderSide: BorderSide(color: err != null ? VkColors.primary : VkColors.rule)),
             focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(VlRadii.md), borderSide: BorderSide(color: VlColors.red)),
+                borderRadius: BorderRadius.circular(VkRadii.md), borderSide: BorderSide(color: VkColors.primary)),
           ),
         ),
         if (err != null) ...[
           const SizedBox(height: 4),
-          Text(err, style: VlText.body(11, color: VlColors.red)),
+          Text(err, style: VkText.body(11, color: VkColors.primary)),
         ],
       ]),
     );
@@ -739,31 +739,31 @@ class _StatePickerState extends State<_StatePicker> {
         height: MediaQuery.of(context).size.height * 0.7,
         child: Column(children: [
           const SizedBox(height: 12),
-          Container(width: 36, height: 4, decoration: BoxDecoration(color: VlColors.rule2, borderRadius: BorderRadius.circular(2))),
+          Container(width: 36, height: 4, decoration: BoxDecoration(color: VkColors.rule2, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 14),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: TextField(
               autofocus: true,
-              style: VlText.ui(14),
+              style: VkText.ui(14),
               onChanged: (v) => setState(() => _q = v),
               decoration: InputDecoration(
                 hintText: 'Search state',
-                hintStyle: VlText.body(13, color: VlColors.muted2),
-                prefixIcon: Icon(Icons.search, size: 16, color: VlColors.muted),
+                hintStyle: VkText.body(13, color: VkColors.muted2),
+                prefixIcon: Icon(Icons.search, size: 16, color: VkColors.muted),
                 filled: true,
-                fillColor: VlColors.paper,
+                fillColor: VkColors.paper,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VlRadii.md), borderSide: BorderSide(color: VlColors.rule)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VlRadii.md), borderSide: BorderSide(color: VlColors.red)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VkRadii.md), borderSide: BorderSide(color: VkColors.rule)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VkRadii.md), borderSide: BorderSide(color: VkColors.primary)),
               ),
             ),
           ),
           const SizedBox(height: 6),
           Expanded(
             child: matches.isEmpty
-                ? Center(child: Text('No match', style: VlText.body(13, color: VlColors.muted)))
+                ? Center(child: Text('No match', style: VkText.body(13, color: VkColors.muted)))
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     itemCount: matches.length,
@@ -775,10 +775,10 @@ class _StatePickerState extends State<_StatePicker> {
                         behavior: HitTestBehavior.opaque,
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: VlColors.rule))),
+                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: VkColors.rule))),
                           child: Row(children: [
-                            Expanded(child: Text(s, style: VlText.ui(13, weight: active ? FontWeight.w600 : FontWeight.w400))),
-                            if (active) Icon(Icons.check, size: 15, color: VlColors.red),
+                            Expanded(child: Text(s, style: VkText.ui(13, weight: active ? FontWeight.w600 : FontWeight.w400))),
+                            if (active) Icon(Icons.check, size: 15, color: VkColors.primary),
                           ]),
                         ),
                       );

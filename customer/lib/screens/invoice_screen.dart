@@ -75,7 +75,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VlColors.canvas,
+      backgroundColor: VkColors.canvas,
       body: SafeArea(
         child: Column(children: [
           TopBar(
@@ -88,7 +88,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                     Clipboard.setData(ClipboardData(text: _plainText(_o!)));
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invoice copied')));
                   },
-                  child: SizedBox(width: 36, height: 36, child: Icon(Icons.copy_all_outlined, size: 17, color: VlColors.muted)),
+                  child: SizedBox(width: 36, height: 36, child: Icon(Icons.copy_all_outlined, size: 17, color: VkColors.muted)),
                 ),
             ],
           ),
@@ -103,11 +103,11 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     if (_error != null || _o == null) {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.receipt_long_outlined, size: 34, color: VlColors.red),
+          Icon(Icons.receipt_long_outlined, size: 34, color: VkColors.primary),
           const SizedBox(height: 12),
-          Text(_error ?? 'Not found', style: VlText.body(13, color: VlColors.muted)),
+          Text(_error ?? 'Not found', style: VkText.body(13, color: VkColors.muted)),
           const SizedBox(height: 12),
-          TextButton(onPressed: _load, child: Text('Retry', style: VlText.ui(13, color: VlColors.red))),
+          TextButton(onPressed: _load, child: Text('Retry', style: VkText.ui(13, color: VkColors.primary))),
         ]),
       );
     }
@@ -119,10 +119,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: VlColors.paper,
-            border: Border.all(color: VlColors.rule),
+            color: VkColors.paper,
+            border: Border.all(color: VkColors.rule),
             borderRadius: BorderRadius.circular(18),
-            boxShadow: [BoxShadow(color: VlColors.ink.withValues(alpha: 0.06), blurRadius: 18, offset: const Offset(0, 8))],
+            boxShadow: [BoxShadow(color: VkColors.ink.withValues(alpha: 0.06), blurRadius: 18, offset: const Offset(0, 8))],
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(children: [
@@ -135,25 +135,25 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [VlColors.redInk, VlColors.redDeep],
+                  colors: [VkColors.primaryInk, VkColors.primaryDeep],
                 ),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
-                  Container(width: 18, height: 1, color: VlColors.goldSoft),
+                  Container(width: 18, height: 1, color: VkColors.goldSoft),
                   const SizedBox(width: 8),
-                  Text('TAX INVOICE', style: VlText.upper(9, color: VlColors.goldSoft, letter: 0.3)),
+                  Text('TAX INVOICE', style: VkText.upper(9, color: VkColors.goldSoft, letter: 0.3)),
                 ]),
                 const SizedBox(height: 10),
-                Text(cfg.storeName, style: VlText.display(23, color: Colors.white)),
+                Text(cfg.storeName, style: VkText.display(23, color: Colors.white)),
                 if (cfg.storeAddress.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text(cfg.storeAddress, style: VlText.body(10.5, color: Colors.white70, height: 1.55)),
+                  Text(cfg.storeAddress, style: VkText.body(10.5, color: Colors.white70, height: 1.55)),
                 ],
                 if (cfg.phone.isNotEmpty || cfg.email.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Text([cfg.phone, cfg.email].where((s) => s.isNotEmpty).join('  ·  '),
-                      style: VlText.mono(9, color: VlColors.goldSoft, letter: 0.06)),
+                      style: VkText.mono(9, color: VkColors.goldSoft, letter: 0.06)),
                 ],
               ]),
             ),
@@ -163,8 +163,8 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               decoration: BoxDecoration(
-                color: VlColors.cream,
-                border: Border(bottom: BorderSide(color: VlColors.rule)),
+                color: VkColors.cream,
+                border: Border(bottom: BorderSide(color: VkColors.rule)),
               ),
               child: Column(children: [
                 Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -176,7 +176,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   Expanded(child: _kv('PAYMENT', (o.paymentMethod ?? '—').toUpperCase())),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('STATUS', style: VlText.upper(8, color: VlColors.muted, letter: 0.2)),
+                      Text('STATUS', style: VkText.upper(8, color: VkColors.muted, letter: 0.2)),
                       const SizedBox(height: 5),
                       _statusPill(o.paymentStatus),
                     ]),
@@ -188,15 +188,15 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 if (addr != null) ...[
-                  Text('BILL TO', style: VlText.upper(8, color: VlColors.muted, letter: 0.2)),
+                  Text('BILL TO', style: VkText.upper(8, color: VkColors.muted, letter: 0.2)),
                   const SizedBox(height: 8),
                   // Gold rule down the side, the way a letterhead sets an
                   // address block apart without boxing it in.
                   Container(
                     padding: const EdgeInsets.only(left: 12),
-                    decoration: BoxDecoration(border: Border(left: BorderSide(color: VlColors.goldSoft, width: 2))),
+                    decoration: BoxDecoration(border: Border(left: BorderSide(color: VkColors.goldSoft, width: 2))),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('${addr['fullName'] ?? ''}', style: VlText.ui(12.5, weight: FontWeight.w600)),
+                      Text('${addr['fullName'] ?? ''}', style: VkText.ui(12.5, weight: FontWeight.w600)),
                       const SizedBox(height: 3),
                       Text(
                         [
@@ -205,7 +205,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                           '${addr['city'] ?? ''}, ${addr['state'] ?? ''} — ${addr['pincode'] ?? ''}',
                           '${addr['phone'] ?? ''}',
                         ].where((s) => s.trim().isNotEmpty).join('\n'),
-                        style: VlText.body(11, color: VlColors.muted, height: 1.6),
+                        style: VkText.body(11, color: VkColors.muted, height: 1.6),
                       ),
                     ]),
                   ),
@@ -214,29 +214,29 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 // Items
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(color: VlColors.cream, borderRadius: BorderRadius.circular(6)),
+                  decoration: BoxDecoration(color: VkColors.cream, borderRadius: BorderRadius.circular(6)),
                   child: Row(children: [
-                    Expanded(flex: 5, child: Text('ITEM', style: VlText.upper(8, color: VlColors.muted, letter: 0.2))),
-                    Expanded(flex: 1, child: Text('QTY', textAlign: TextAlign.center, style: VlText.upper(8, color: VlColors.muted, letter: 0.2))),
-                    Expanded(flex: 2, child: Text('AMOUNT', textAlign: TextAlign.right, style: VlText.upper(8, color: VlColors.muted, letter: 0.2))),
+                    Expanded(flex: 5, child: Text('ITEM', style: VkText.upper(8, color: VkColors.muted, letter: 0.2))),
+                    Expanded(flex: 1, child: Text('QTY', textAlign: TextAlign.center, style: VkText.upper(8, color: VkColors.muted, letter: 0.2))),
+                    Expanded(flex: 2, child: Text('AMOUNT', textAlign: TextAlign.right, style: VkText.upper(8, color: VkColors.muted, letter: 0.2))),
                   ]),
                 ),
                 ...o.items.map((it) => Container(
                       padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: VlColors.rule))),
+                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: VkColors.rule))),
                       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Expanded(
                           flex: 5,
                           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(it.productName, style: VlText.ui(12, weight: FontWeight.w500)),
+                            Text(it.productName, style: VkText.ui(12, weight: FontWeight.w500)),
                             const SizedBox(height: 3),
                             Text([it.variantColor, it.sareeCode].where((s) => (s ?? '').isNotEmpty).join(' · '),
-                                style: VlText.mono(9, color: VlColors.muted)),
-                            Text('₹${orderMoney(it.unitPrice)} each', style: VlText.mono(9, color: VlColors.muted2)),
+                                style: VkText.mono(9, color: VkColors.muted)),
+                            Text('₹${orderMoney(it.unitPrice)} each', style: VkText.mono(9, color: VkColors.muted2)),
                           ]),
                         ),
-                        Expanded(flex: 1, child: Text('${it.quantity}', textAlign: TextAlign.center, style: VlText.ui(12, weight: FontWeight.w500))),
-                        Expanded(flex: 2, child: Text('₹${orderMoney(it.totalPrice)}', textAlign: TextAlign.right, style: VlText.ui(12, weight: FontWeight.w600))),
+                        Expanded(flex: 1, child: Text('${it.quantity}', textAlign: TextAlign.center, style: VkText.ui(12, weight: FontWeight.w500))),
+                        Expanded(flex: 2, child: Text('₹${orderMoney(it.totalPrice)}', textAlign: TextAlign.right, style: VkText.ui(12, weight: FontWeight.w600))),
                       ]),
                     )),
                 const SizedBox(height: 14),
@@ -256,13 +256,13 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
-                          color: VlColors.cream,
+                          color: VkColors.cream,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: VlColors.goldSoft),
+                          border: Border.all(color: VkColors.goldSoft),
                         ),
                         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                          Text('TOTAL', style: VlText.upper(9.5, letter: 0.22)),
-                          Text('₹${orderMoney(o.totalAmount)}', style: VlText.ui(19, weight: FontWeight.w700)),
+                          Text('TOTAL', style: VkText.upper(9.5, letter: 0.22)),
+                          Text('₹${orderMoney(o.totalAmount)}', style: VkText.ui(19, weight: FontWeight.w700)),
                         ]),
                       ),
                     ]),
@@ -271,12 +271,12 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 const SizedBox(height: 20),
                 Center(
                   child: Column(children: [
-                    Lozenge(color: VlColors.goldSoft),
+                    Container(width: 6, height: 6, decoration: const BoxDecoration(color: VkColors.goldSoft, shape: BoxShape.circle)),
                     const SizedBox(height: 10),
-                    Text('Prices are inclusive of GST.', style: VlText.mono(9, color: VlColors.muted2, letter: 0.1)),
+                    Text('Prices are inclusive of GST.', style: VkText.mono(9, color: VkColors.muted2, letter: 0.1)),
                     const SizedBox(height: 4),
                     Text('Thank you for shopping with ${cfg.storeName}.',
-                        textAlign: TextAlign.center, style: VlText.body(11, color: VlColors.muted)),
+                        textAlign: TextAlign.center, style: VkText.body(11, color: VkColors.muted)),
                   ]),
                 ),
               ]),
@@ -294,8 +294,8 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 alignment: Alignment.center,
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(VlRadii.md), border: Border.all(color: VlColors.rule2)),
-                child: Text('COPY', style: VlText.ui(12, weight: FontWeight.w600, letter: 0.1)),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(VkRadii.md), border: Border.all(color: VkColors.rule2)),
+                child: Text('COPY', style: VkText.ui(12, weight: FontWeight.w600, letter: 0.1)),
               ),
             ),
           ),
@@ -306,8 +306,8 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: VlColors.red, borderRadius: BorderRadius.circular(VlRadii.md)),
-                child: Text('SEND ON WHATSAPP', style: VlText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
+                decoration: BoxDecoration(color: VkColors.primary, borderRadius: BorderRadius.circular(VkRadii.md)),
+                child: Text('SEND ON WHATSAPP', style: VkText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
               ),
             ),
           ),
@@ -324,12 +324,12 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   }
 
   Widget _kv(String k, String v, {bool mono = false}) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(k, style: VlText.upper(8, color: VlColors.muted, letter: 0.2)),
+        Text(k, style: VkText.upper(8, color: VkColors.muted, letter: 0.2)),
         const SizedBox(height: 5),
         Text(v,
             style: mono
-                ? VlText.mono(12, color: VlColors.ink, letter: 0.08)
-                : VlText.ui(12.5, weight: FontWeight.w600)),
+                ? VkText.mono(12, color: VkColors.ink, letter: 0.08)
+                : VkText.ui(12.5, weight: FontWeight.w600)),
       ]);
 
   /// Payment status as a tinted pill — the one place on the sheet where colour
@@ -337,12 +337,12 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   Widget _statusPill(String status) {
     final s = status.toUpperCase();
     final color = s == 'PAID'
-        ? VlColors.green
+        ? VkColors.green
         : s == 'FAILED'
-            ? VlColors.red
+            ? VkColors.primary
             : s.contains('REFUND')
-                ? VlColors.gold
-                : VlColors.amber;
+                ? VkColors.gold
+                : VkColors.warning;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
@@ -350,15 +350,15 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         borderRadius: BorderRadius.circular(5),
         border: Border.all(color: color.withValues(alpha: 0.45)),
       ),
-      child: Text(s.replaceAll('_', ' '), style: VlText.upper(9, color: color, letter: 0.14)),
+      child: Text(s.replaceAll('_', ' '), style: VkText.upper(9, color: color, letter: 0.14)),
     );
   }
 
   Widget _total(String k, String v, {bool good = false}) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(k, style: VlText.body(12, color: VlColors.muted)),
-          Text(v, style: VlText.ui(12, weight: FontWeight.w600, color: good ? VlColors.green : VlColors.ink)),
+          Text(k, style: VkText.body(12, color: VkColors.muted)),
+          Text(v, style: VkText.ui(12, weight: FontWeight.w600, color: good ? VkColors.green : VkColors.ink)),
         ]),
       );
 }

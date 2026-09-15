@@ -12,25 +12,25 @@ String orderWhen(DateTime? d) => d == null ? '' : DateFormat('d MMM, h:mm a').fo
 ({String label, Color color, IconData icon}) orderStatusLook(String status) {
   switch (status) {
     case 'DELIVERED':
-      return (label: 'Delivered', color: VlColors.green, icon: Icons.check_circle);
+      return (label: 'Delivered', color: VkColors.green, icon: Icons.check_circle);
     case 'OUT_FOR_DELIVERY':
-      return (label: 'Out for delivery', color: VlColors.red, icon: Icons.local_shipping);
+      return (label: 'Out for delivery', color: VkColors.primary, icon: Icons.local_shipping);
     case 'SHIPPED':
-      return (label: 'Shipped', color: VlColors.red, icon: Icons.local_shipping_outlined);
+      return (label: 'Shipped', color: VkColors.primary, icon: Icons.local_shipping_outlined);
     case 'PROCESSING':
-      return (label: 'Packed', color: VlColors.gold, icon: Icons.inventory_2_outlined);
+      return (label: 'Packed', color: VkColors.gold, icon: Icons.inventory_2_outlined);
     case 'CONFIRMED':
-      return (label: 'Confirmed', color: VlColors.gold, icon: Icons.task_alt);
+      return (label: 'Confirmed', color: VkColors.gold, icon: Icons.task_alt);
     case 'CANCELLED':
-      return (label: 'Cancelled', color: VlColors.red, icon: Icons.cancel_outlined);
+      return (label: 'Cancelled', color: VkColors.primary, icon: Icons.cancel_outlined);
     case 'RETURNED':
-      return (label: 'Returned', color: VlColors.muted, icon: Icons.assignment_return_outlined);
+      return (label: 'Returned', color: VkColors.muted, icon: Icons.assignment_return_outlined);
     case 'RETURN_REQUESTED':
-      return (label: 'Return requested', color: VlColors.amber, icon: Icons.assignment_return_outlined);
+      return (label: 'Return requested', color: VkColors.warning, icon: Icons.assignment_return_outlined);
     case 'REFUNDED':
-      return (label: 'Refunded', color: VlColors.green, icon: Icons.currency_rupee);
+      return (label: 'Refunded', color: VkColors.green, icon: Icons.currency_rupee);
     default:
-      return (label: 'Order placed', color: VlColors.gold, icon: Icons.receipt_long_outlined);
+      return (label: 'Order placed', color: VkColors.gold, icon: Icons.receipt_long_outlined);
   }
 }
 
@@ -79,13 +79,13 @@ class OrderTimelineView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: VlText.upper(9, letter: 0.22)),
+        Text(title, style: VkText.upper(9, letter: 0.22)),
         const SizedBox(height: 14),
         ...List.generate(steps.length, (i) {
           final t = steps[i];
           final last = i == steps.length - 1;
-          final dot = t.done ? (t.active ? VlColors.red : VlColors.green) : VlColors.paper;
-          final border = t.done ? (t.active ? VlColors.red : VlColors.green) : VlColors.rule2;
+          final dot = t.done ? (t.active ? VkColors.primary : VkColors.green) : VkColors.paper;
+          final border = t.done ? (t.active ? VkColors.primary : VkColors.green) : VkColors.rule2;
           return IntrinsicHeight(
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Column(children: [
@@ -94,16 +94,16 @@ class OrderTimelineView extends StatelessWidget {
                     height: 16,
                     margin: const EdgeInsets.only(top: 3),
                     decoration: BoxDecoration(color: dot, shape: BoxShape.circle, border: Border.all(color: border, width: 2))),
-                if (!last) Expanded(child: Container(width: 2, color: VlColors.rule)),
+                if (!last) Expanded(child: Container(width: 2, color: VkColors.rule)),
               ]),
               const SizedBox(width: 14),
               Padding(
                 padding: EdgeInsets.only(bottom: last ? 0 : 18),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(t.label,
-                      style: VlText.ui(13,
-                          weight: t.active ? FontWeight.w600 : FontWeight.w500, color: t.done ? VlColors.ink : VlColors.muted)),
-                  if (t.when.isNotEmpty) ...[const SizedBox(height: 2), Text(t.when, style: VlText.mono(10, color: VlColors.muted))],
+                      style: VkText.ui(13,
+                          weight: t.active ? FontWeight.w600 : FontWeight.w500, color: t.done ? VkColors.ink : VkColors.muted)),
+                  if (t.when.isNotEmpty) ...[const SizedBox(height: 2), Text(t.when, style: VkText.mono(10, color: VkColors.muted))],
                 ]),
               ),
             ]),

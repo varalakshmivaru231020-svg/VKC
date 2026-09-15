@@ -66,7 +66,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VlColors.canvas,
+      backgroundColor: VkColors.canvas,
       body: SafeArea(
         child: Column(children: [
           TopBar(title: 'Track Order', onBack: () => context.canPop() ? context.pop() : context.go('/orders')),
@@ -74,22 +74,22 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               children: [
-                Text('Where is my order?', style: VlText.display(24)),
+                Text('Where is my order?', style: VkText.display(24)),
                 const SizedBox(height: 6),
                 Text('Enter the order number from your confirmation message.',
-                    style: VlText.body(13, color: VlColors.muted, height: 1.6)),
+                    style: VkText.body(13, color: VkColors.muted, height: 1.6)),
                 const SizedBox(height: 16),
                 _input(),
                 if (_error != null) ...[
                   const SizedBox(height: 10),
                   Row(children: [
-                    Icon(Icons.error_outline, size: 14, color: VlColors.red),
+                    Icon(Icons.error_outline, size: 14, color: VkColors.primary),
                     const SizedBox(width: 6),
-                    Expanded(child: Text(_error!, style: VlText.body(12, color: VlColors.red))),
+                    Expanded(child: Text(_error!, style: VkText.body(12, color: VkColors.primary))),
                   ]),
                 ],
                 const SizedBox(height: 18),
-                if (_loading) Center(child: CircularProgressIndicator(color: VlColors.red)),
+                if (_loading) Center(child: CircularProgressIndicator(color: VkColors.primary)),
                 if (_order != null) ..._result(_order!),
               ],
             ),
@@ -107,18 +107,18 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => _track(),
             inputFormatters: [LengthLimitingTextInputFormatter(40)],
-            style: VlText.ui(14),
+            style: VkText.ui(14),
             decoration: InputDecoration(
               hintText: 'Your order number',
-              hintStyle: VlText.body(13, color: VlColors.muted2),
+              hintStyle: VkText.body(13, color: VkColors.muted2),
               filled: true,
-              fillColor: VlColors.paper,
+              fillColor: VkColors.paper,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
               enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(VlRadii.md),
-                  borderSide: BorderSide(color: _error != null ? VlColors.red : VlColors.rule)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VlRadii.md), borderSide: BorderSide(color: VlColors.red)),
+                  borderRadius: BorderRadius.circular(VkRadii.md),
+                  borderSide: BorderSide(color: _error != null ? VkColors.primary : VkColors.rule)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(VkRadii.md), borderSide: BorderSide(color: VkColors.primary)),
             ),
           ),
         ),
@@ -127,8 +127,8 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
           onTap: _loading ? null : _track,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            decoration: BoxDecoration(color: VlColors.red, borderRadius: BorderRadius.circular(VlRadii.md)),
-            child: Text('TRACK', style: VlText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
+            decoration: BoxDecoration(color: VkColors.primary, borderRadius: BorderRadius.circular(VkRadii.md)),
+            child: Text('TRACK', style: VkText.ui(12, weight: FontWeight.w600, color: Colors.white, letter: 0.1)),
           ),
         ),
       ]);
@@ -140,9 +140,9 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: VlColors.paper,
-          border: Border.all(color: VlColors.rule),
-          borderRadius: BorderRadius.circular(VlRadii.md),
+          color: VkColors.paper,
+          border: Border.all(color: VkColors.rule),
+          borderRadius: BorderRadius.circular(VkRadii.md),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
@@ -155,25 +155,25 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(look.label, style: VlText.ui(14, weight: FontWeight.w600)),
+                Text(look.label, style: VkText.ui(14, weight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text('${o.orderNumber} · placed ${orderWhen(o.createdAt)}', style: VlText.mono(9, color: VlColors.muted, letter: 0.1)),
+                Text('${o.orderNumber} · placed ${orderWhen(o.createdAt)}', style: VkText.mono(9, color: VkColors.muted, letter: 0.1)),
               ]),
             ),
           ]),
           if ((o.trackingNumber ?? '').isNotEmpty) ...[
             const SizedBox(height: 12),
-            Divider(color: VlColors.rule, height: 1),
+            Divider(color: VkColors.rule, height: 1),
             const SizedBox(height: 12),
             Row(children: [
               Expanded(
                 child: Text('${o.courierPartner ?? 'Courier'} · AWB ${o.trackingNumber}',
-                    style: VlText.mono(10, color: VlColors.muted)),
+                    style: VkText.mono(10, color: VkColors.muted)),
               ),
               if ((o.trackingUrl ?? '').isNotEmpty)
                 GestureDetector(
                   onTap: () => launchUrl(Uri.parse(o.trackingUrl!), mode: LaunchMode.externalApplication),
-                  child: Text('COURIER SITE', style: VlText.upper(9, color: VlColors.red, letter: 0.18)),
+                  child: Text('COURIER SITE', style: VkText.upper(9, color: VkColors.primary, letter: 0.18)),
                 ),
             ]),
           ],
@@ -185,25 +185,25 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
       else
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: VlColors.redSoft, borderRadius: BorderRadius.circular(VlRadii.md)),
-          child: Text('This order is ${look.label.toLowerCase()}.', style: VlText.body(13, color: VlColors.redDeep)),
+          decoration: BoxDecoration(color: VkColors.primarySoft, borderRadius: BorderRadius.circular(VkRadii.md)),
+          child: Text('This order is ${look.label.toLowerCase()}.', style: VkText.body(13, color: VkColors.primaryDeep)),
         ),
       const SizedBox(height: 18),
-      Text('ITEMS', style: VlText.upper(9, letter: 0.22)),
+      Text('ITEMS', style: VkText.upper(9, letter: 0.22)),
       const SizedBox(height: 10),
       ...o.items.map((it) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Row(children: [
-              SizedBox(width: 50, height: 62, child: NetImage(url: it.imageUrl, radius: VlRadii.sm)),
+              SizedBox(width: 50, height: 62, child: NetImage(url: it.imageUrl, radius: VkRadii.sm)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(it.productName, maxLines: 2, overflow: TextOverflow.ellipsis, style: VlText.ui(12, weight: FontWeight.w500)),
+                  Text(it.productName, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.ui(12, weight: FontWeight.w500)),
                   const SizedBox(height: 2),
-                  Text('Qty ${it.quantity} · ${it.variantColor}', style: VlText.mono(9, color: VlColors.muted)),
+                  Text('Qty ${it.quantity} · ${it.variantColor}', style: VkText.mono(9, color: VkColors.muted)),
                 ]),
               ),
-              Text('₹${orderMoney(it.totalPrice)}', style: VlText.ui(12, weight: FontWeight.w600)),
+              Text('₹${orderMoney(it.totalPrice)}', style: VkText.ui(12, weight: FontWeight.w600)),
             ]),
           )),
       const SizedBox(height: 8),
@@ -211,7 +211,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
         Center(
           child: TextButton(
             onPressed: () => context.go('/orders'),
-            child: Text('See all my orders', style: VlText.ui(12, color: VlColors.red)),
+            child: Text('See all my orders', style: VkText.ui(12, color: VkColors.primary)),
           ),
         ),
     ];
