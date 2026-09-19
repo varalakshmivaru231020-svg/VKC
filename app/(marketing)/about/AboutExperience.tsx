@@ -23,6 +23,14 @@ const STAND_FOR = [
 
 const VISION = "To make VKC Gold Ikshu a trusted global brand representing Mandya’s heritage of purity, health, and sweetness.";
 
+const CORE_VALUES = [
+  "Purity and Quality First",
+  "Support to Local Farmers",
+  "Sustainable Manufacturing",
+  "Innovation with Tradition",
+  "Customer Trust and Satisfaction",
+];
+
 const MISSION = [
   { t: "Farmer Empowerment", d: "Fair prices and direct partnerships that strengthen rural communities around Mandya." },
   { t: "Chemical-Free Production", d: "100% natural processing with nothing artificial added, ever." },
@@ -164,33 +172,51 @@ export default function AboutExperience({
         <div className="mt-14"><NumberGrid items={STAND_FOR} cols={3} /></div>
       </Section>
 
-      {/* ── 5 · VISION & MISSION — the one dark movement ─────────────────── */}
-      <Section bg="dark" ariaLabelledby="vision-heading">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
-          <div className="lg:col-span-5">
-            <Label light>Our vision</Label>
-            <h2 id="vision-heading" className="mt-5" style={{ ...T.h2, color: C.onDark }}>
-              <Words text={VISION} />
-            </h2>
-          </div>
-          <div className="lg:col-span-7 lg:pt-1">
-            <Label light>Our mission</Label>
-            <ol className="list-none m-0 p-0 mt-5">
-              {MISSION.map((m, i) => (
-                <Reveal key={m.t} delay={i * 0.05}>
-                  <li className="grid grid-cols-[36px_1fr] gap-4 py-5" style={{ borderTop: `1px solid ${C.onDarkLine}` }}>
-                    <span className="font-body tabular-nums pt-1" style={{ ...T.label, color: C.jaggery }}>0{i + 1}</span>
-                    <div>
-                      <h3 style={{ ...T.h3, color: C.onDark }}>{m.t}</h3>
-                      <p className="font-body mt-1.5" style={{ ...T.small, color: C.onDarkMuted, maxWidth: 520 }}>{m.d}</p>
-                    </div>
-                  </li>
-                </Reveal>
-              ))}
-            </ol>
-          </div>
+      {/* ── 5 · VISION & MISSION ─────────────────────────────────────────── */}
+      {/* The warm two-column panel from the family's earlier site: burnt orange
+          running to jaggery amber, pale-gold headings, white reading text. The
+          colour itself is the backdrop — no photograph sits behind the words. */}
+      <section aria-labelledby="vision-heading" style={{ background: C.ivory }}>
+        <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-16 sm:py-24">
+          <Reveal>
+            <div
+              className="relative overflow-hidden rounded-md px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16"
+              style={{ background: "linear-gradient(100deg, #8F3404 0%, #AE4A08 36%, #CB6A0C 70%, #E08E14 100%)", color: "#FFFFFF", textShadow: "0 1px 2px rgba(80,32,0,0.28)" }}
+            >
+              <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 90% at 100% 0%, rgba(255,214,92,0.22) 0%, rgba(255,214,92,0) 60%)" }} />
+              <div className="relative grid lg:grid-cols-2 gap-x-14 gap-y-12">
+                <div>
+                  <h2 id="vision-heading" style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(2rem,3.4vw,2.8rem)", lineHeight: 1.05, color: "#FFE27A", margin: 0 }}>Our Vision</h2>
+                  <p className="font-body mt-5" style={{ fontSize: 17.5, lineHeight: 1.75, color: "#FFFFFF", maxWidth: 520 }}>{VISION}</p>
+
+                  <h3 className="mt-9" style={{ fontFamily: "var(--font-body)", fontSize: 17.5, fontWeight: 600, letterSpacing: 0, color: "#FFFFFF", margin: "2.25rem 0 0" }}>Core Values</h3>
+                  <ul className="m-0 mt-3 p-0 list-none space-y-2.5">
+                    {CORE_VALUES.map((v) => (
+                      <li key={v} className="font-body flex gap-3" style={{ fontSize: 17, lineHeight: 1.6, color: "#FFFFFF" }}>
+                        <span aria-hidden className="mt-[0.62em] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFE27A" }} />
+                        {v}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(2rem,3.4vw,2.8rem)", lineHeight: 1.05, color: "#FFE27A", margin: 0 }}>Our Mission</h2>
+                  <p className="font-body mt-5" style={{ fontSize: 17.5, lineHeight: 1.75, color: "#FFFFFF" }}>We are committed to:</p>
+                  <ul className="m-0 mt-3 p-0 list-none space-y-3">
+                    {MISSION.map((m) => (
+                      <li key={m.t} className="font-body flex gap-3" style={{ fontSize: 17, lineHeight: 1.65, color: "#FFFFFF" }}>
+                        <span aria-hidden className="mt-[0.62em] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFE27A" }} />
+                        <span><strong style={{ fontWeight: 700 }}>{m.t}:</strong> {m.d}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </Reveal>
         </div>
-      </Section>
+      </section>
 
       {/* ── 6 · A FORMAL FOUNDATION ──────────────────────────────────────── */}
       <Section ariaLabelledby="formal-heading">
