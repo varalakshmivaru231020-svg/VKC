@@ -117,11 +117,11 @@ function LoginForm() {
           <ShieldCheck className="h-7 w-7 text-white" />
         </div>
         <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", color: "var(--color-text-primary)" }}>
-          {step === "phone" ? "Welcome Back" : "Verify Mobile"}
+          {step === "phone" ? "Customer Login" : "Verify Mobile"}
         </h1>
         <p className="mt-2 text-sm font-body" style={{ color: "var(--color-text-muted)" }}>
           {step === "phone"
-            ? "Enter your mobile number to continue"
+            ? "Enter your mobile number — we will send a one-time password (OTP) by SMS to verify it"
             : `OTP sent to ${dialCode} ${phone}`}
         </p>
       </div>
