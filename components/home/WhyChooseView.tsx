@@ -63,7 +63,7 @@ function Sprig({ className = "", style }: { className?: string; style?: React.CS
 /* Tall cane leaves in line art, tucked into the section's bottom-right corner. */
 function CornerBotanical() {
   return (
-    <svg viewBox="0 0 260 360" className="pointer-events-none absolute bottom-0 right-0 hidden h-[340px] w-auto lg:block" fill="none" stroke={C.goldLite} strokeWidth={1.3} strokeLinecap="round" opacity={0.7} aria-hidden>
+    <svg viewBox="0 0 260 360" className="pointer-events-none absolute bottom-0 right-0 hidden h-[260px] w-auto lg:block" fill="none" stroke={C.goldLite} strokeWidth={1.3} strokeLinecap="round" opacity={0.7} aria-hidden>
       <path d="M250 360 C 236 270, 214 180, 150 60 C 196 150, 232 250, 250 360 Z" />
       <path d="M232 360 C 214 290, 176 220, 96 150 C 160 210, 206 280, 232 360 Z" />
       <path d="M214 360 C 190 310, 140 274, 40 250 C 124 276, 180 312, 214 360 Z" />
@@ -91,16 +91,17 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
     <section aria-labelledby="why-heading" className="relative overflow-hidden" style={{ background: `linear-gradient(180deg, ${C.paper} 0%, ${C.ivory} 100%)` }}>
       <CornerBotanical />
 
-      <div className="relative max-w-[1560px] mx-auto px-5 sm:px-8 lg:px-10 xl:px-14 py-14 sm:py-16 lg:py-20">
-        <div className="grid items-center gap-x-8 gap-y-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.86fr)] lg:grid-rows-[auto_auto] xl:gap-x-12">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-14">
+        <div className="grid items-center gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.82fr)_minmax(0,0.9fr)] lg:grid-rows-[auto_auto] xl:gap-x-10">
           {/* heading */}
           <div className="lg:col-start-1 lg:row-start-1 lg:self-end">
-            <motion.div {...rise()} className="flex items-center gap-4 font-body font-medium uppercase" style={{ fontSize: 14, letterSpacing: "0.26em", color: C.gold }}>
-              <span className="h-px w-9" style={{ background: C.gold }} /> Why VKC <span className="h-px w-9" style={{ background: `linear-gradient(90deg, ${C.gold}, transparent)` }} />
-            </motion.div>
-            <motion.h2 {...rise(0.08)} id="why-heading" className="mt-3" style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(2.7rem,5.1vw,4.6rem)", lineHeight: 0.98, letterSpacing: "-0.02em", color: C.greenDeep, fontWeight: 700 }}>
-              <span className="block">Why choose</span>
-              <span className="block pl-[0.18em] pb-[0.08em]" style={{ fontStyle: "italic", fontWeight: 600, backgroundImage: "linear-gradient(180deg, #D9A63A 0%, #B9872A 55%, #9A6C16 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>vkcgoldikshu</span>
+            {/* Same type as the home page's other section heads ("From the Blog"):
+                the gold eyebrow and the theme's h2 size, weight and text colour. */}
+            <motion.span {...rise()} className="block text-xs font-semibold tracking-[0.18em] uppercase" style={{ fontFamily: "var(--font-body)", color: "var(--color-gold)" }}>
+              Why VKC
+            </motion.span>
+            <motion.h2 {...rise(0.08)} id="why-heading" className="mt-2" style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)" }}>
+              Why choose <span style={{ fontStyle: "italic" }}>vkcgoldikshu</span>
             </motion.h2>
           </div>
 
@@ -109,7 +110,7 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
               on white, multiplied into the page so no rectangle shows. An image
               uploaded in Admin → Banners ("home_why_image") replaces it and is set
               over the drawn circle, stroke and sprigs instead. */}
-          <motion.div {...rise(0.15)} className="relative mx-auto w-full max-w-[400px] lg:max-w-none lg:col-start-2 lg:row-span-2 lg:row-start-1" style={{ aspectRatio: image ? "10 / 13" : "584 / 804" }}>
+          <motion.div {...rise(0.15)} className="relative mx-auto w-full max-w-[300px] sm:max-w-[340px] lg:max-w-none lg:col-start-2 lg:row-span-2 lg:row-start-1" style={{ aspectRatio: image ? "10 / 13" : "584 / 804" }}>
             {image ? (
               <>
                 <svg viewBox="0 0 500 650" className="absolute inset-0 h-full w-full" aria-hidden>
@@ -150,7 +151,7 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
                 alt="A Mandya sugarcane farmer holding freshly cut cane"
                 fill
                 sizes="(max-width: 1023px) 400px, 34vw"
-                quality={82}
+                quality={92}
                 className="object-contain"
                 style={{ mixBlendMode: "multiply" }}
               />
@@ -159,7 +160,7 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
 
           {/* benefits */}
           <div className="lg:col-start-1 lg:row-start-2 lg:self-start">
-            <ul className="m-0 list-none space-y-4 p-0">
+            <ul className="m-0 list-none space-y-2.5 p-0">
               {REASONS.map((r, i) => {
                 const on = i === active;
                 return (
@@ -168,7 +169,7 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
                       href="/about"
                       onMouseEnter={() => setActive(i)}
                       onFocus={() => setActive(i)}
-                      className="group flex items-center gap-3 sm:gap-4 rounded-[999px] py-3 pl-5 pr-4 sm:py-3.5 sm:pl-7 sm:pr-5 outline-none transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 focus-visible:-translate-y-1"
+                      className="group flex items-center gap-3 sm:gap-4 rounded-[999px] py-2 pl-4 pr-3 sm:py-2.5 sm:pl-6 sm:pr-4 outline-none transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 focus-visible:-translate-y-1"
                       style={{
                         background: on ? `linear-gradient(100deg, ${C.green} 0%, ${C.greenDeep} 100%)` : "rgba(255,253,248,0.9)",
                         border: `1px solid ${on ? C.green : C.line}`,
@@ -176,13 +177,13 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
                       }}
                     >
                       <span className="font-body tabular-nums shrink-0" style={{ fontSize: 15, width: 24, color: on ? C.goldLite : C.gold }}>0{i + 1}</span>
-                      <span className="grid h-12 w-12 sm:h-14 sm:w-14 shrink-0 place-items-center rounded-full transition-transform duration-500 ease-out group-hover:scale-110 group-hover:-rotate-6" style={{ background: on ? "rgba(255,255,255,0.13)" : "#EFEBDD", color: on ? "#F4F7EE" : C.green }}>
-                        <r.icon className="h-6 w-6" strokeWidth={1.6} />
+                      <span className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full transition-transform duration-500 ease-out group-hover:scale-110 group-hover:-rotate-6" style={{ background: on ? "rgba(255,255,255,0.13)" : "#EFEBDD", color: on ? "#F4F7EE" : C.green }}>
+                        <r.icon className="h-5 w-5" strokeWidth={1.6} />
                       </span>
-                      <span aria-hidden className="h-11 w-px shrink-0" style={{ background: on ? "rgba(255,255,255,0.28)" : C.line }} />
+                      <span aria-hidden className="h-9 w-px shrink-0" style={{ background: on ? "rgba(255,255,255,0.28)" : C.line }} />
                       <span className="min-w-0 flex-1 pl-1">
-                        <span className="block font-body" style={{ fontSize: "clamp(0.98rem,1.18vw,1.12rem)", lineHeight: 1.22, fontWeight: 600, color: on ? "#FFFFFF" : C.ink }}>{r.t}</span>
-                        <span className="mt-1 block font-body" style={{ fontSize: 12.5, lineHeight: 1.5, color: on ? "rgba(255,255,255,0.82)" : C.ink2 }}>{r.d}</span>
+                        <span className="block font-body" style={{ fontSize: "clamp(0.92rem,1.05vw,1rem)", lineHeight: 1.22, fontWeight: 600, color: on ? "#FFFFFF" : C.ink }}>{r.t}</span>
+                        <span className="mt-0.5 block font-body" style={{ fontSize: 12, lineHeight: 1.45, color: on ? "rgba(255,255,255,0.82)" : C.ink2 }}>{r.d}</span>
                       </span>
                       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform duration-500 ease-out group-hover:translate-x-1" style={{ border: `1.5px solid ${on ? C.goldLite : C.gold}`, color: on ? "#FFFFFF" : C.gold }}>
                         <ArrowRight className="h-4 w-4" />
@@ -194,7 +195,7 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
             </ul>
 
             <motion.div {...rise(0.4)}>
-              <Link href="/about" className="group mt-8 inline-flex items-center gap-3 font-body text-[15px]" style={{ color: C.gold }}>
+              <Link href="/about" className="group mt-5 inline-flex items-center gap-3 font-body text-sm" style={{ color: C.gold }}>
                 <span className="underline underline-offset-4 decoration-1">Read our story</span>
                 <span className="grid h-9 w-9 place-items-center rounded-full transition-transform duration-300 group-hover:translate-x-1" style={{ border: `1.5px solid ${C.gold}` }}>
                   <ArrowRight className="h-4 w-4" />
@@ -206,16 +207,16 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
           {/* right: from the cane fields to your family, and the year it began */}
           <motion.div {...rise(0.25)} className="relative lg:col-start-3 lg:row-span-2 lg:row-start-1">
             <LeafRule />
-            <h3 className="mt-6" style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.9rem,2.9vw,2.7rem)", lineHeight: 1.12, letterSpacing: "-0.01em", color: C.greenDeep, fontWeight: 700 }}>
+            <h3 className="mt-4" style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.5rem,2.1vw,1.95rem)", lineHeight: 1.15, fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)" }}>
               From the Cane Fields to Your Family.
             </h3>
-            <p className="font-body mt-5" style={{ fontSize: 15.5, lineHeight: 1.75, color: C.ink2, textAlign: "left", hyphens: "none", maxWidth: 380 }}>
+            <p className="font-body mt-3" style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-text-muted)", textAlign: "left", hyphens: "none", maxWidth: 380 }}>
               At VKC Gold Ikshu, we preserve the goodness of naturally grown sugarcane through careful processing and time-honoured craftsmanship. From our roots in Mandya to your home, every product is created with purity, care and consistency.
             </p>
 
-            <div className="relative mt-10 lg:mt-14" style={{ maxWidth: 340 }}>
-              <div aria-hidden className="select-none text-center" style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(6rem,9.6vw,9.2rem)", lineHeight: 0.9, letterSpacing: "-0.03em", color: C.goldLite, opacity: 0.4 }}>1988</div>
-              <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center justify-center gap-4 font-body uppercase" style={{ fontSize: 17, letterSpacing: "0.3em", color: C.greenDeep }}>
+            <div className="relative mt-6 lg:mt-8" style={{ maxWidth: 300 }}>
+              <div aria-hidden className="select-none text-center" style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(4.4rem,6.6vw,6.2rem)", lineHeight: 0.9, letterSpacing: "-0.03em", color: C.goldLite, opacity: 0.4 }}>1988</div>
+              <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center justify-center gap-3 font-body uppercase" style={{ fontSize: 13, letterSpacing: "0.28em", color: "var(--color-text-primary)" }}>
                 <span className="h-px w-5" style={{ background: C.gold }} /> Trusted since <span className="h-px w-5" style={{ background: C.gold }} />
               </div>
               <div className="mx-auto mt-2 w-[58%]"><LeafRule width={200} /></div>
