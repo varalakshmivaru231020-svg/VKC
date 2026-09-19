@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Factory, Leaf, ShieldCheck, Tractor } from "lucide-react";
@@ -59,43 +60,6 @@ function Sprig({ className = "", style }: { className?: string; style?: React.CS
   );
 }
 
-/* Sugarcane, drawn: stands where the farmer photograph goes until one is
-   uploaded, so the centre is never an empty shape and never a stand-in person. */
-function CaneArt() {
-  const stalks = [
-    { x: 150, top: 150, lean: -10, w: 17 },
-    { x: 186, top: 96, lean: -5, w: 19 },
-    { x: 222, top: 60, lean: 0, w: 20 },
-    { x: 258, top: 104, lean: 5, w: 19 },
-    { x: 294, top: 160, lean: 10, w: 17 },
-  ];
-  return (
-    <svg viewBox="0 0 440 620" className="absolute inset-0 h-full w-full" role="img" aria-label="Sugarcane stalks" preserveAspectRatio="xMidYMax meet">
-      <defs>
-        <linearGradient id="why-cane" x1="0" x2="1">
-          <stop offset="0" stopColor="#AFC486" /><stop offset="0.5" stopColor="#E6DCA3" /><stop offset="1" stopColor="#9DB070" />
-        </linearGradient>
-      </defs>
-      {stalks.map((s, i) => (
-        <g key={`l${i}`} transform={`rotate(${s.lean} ${s.x} 600)`} fill={C.leaf}>
-          <path d={`M${s.x} ${s.top + 22} C ${s.x - 30} ${s.top - 56}, ${s.x - 74} ${s.top - 78}, ${s.x - 116} ${s.top - 48} C ${s.x - 78} ${s.top - 58}, ${s.x - 38} ${s.top - 32}, ${s.x} ${s.top + 22} Z`} opacity={0.85} />
-          <path d={`M${s.x} ${s.top + 22} C ${s.x + 30} ${s.top - 62}, ${s.x + 76} ${s.top - 86}, ${s.x + 118} ${s.top - 56} C ${s.x + 80} ${s.top - 66}, ${s.x + 38} ${s.top - 38}, ${s.x} ${s.top + 22} Z`} opacity={0.75} />
-          <path d={`M${s.x} ${s.top + 28} C ${s.x - 10} ${s.top - 50}, ${s.x + 2} ${s.top - 40}, ${s.x + 18} ${s.top - 56} C ${s.x + 14} ${s.top - 30}, ${s.x + 10} ${s.top - 10}, ${s.x} ${s.top + 28} Z`} fill={C.greenSoft} />
-        </g>
-      ))}
-      {stalks.map((s, i) => (
-        <g key={`s${i}`} transform={`rotate(${s.lean} ${s.x} 600)`}>
-          <rect x={s.x - s.w / 2} y={s.top} width={s.w} height={600 - s.top} rx={s.w / 2} fill="url(#why-cane)" stroke={C.green} strokeWidth={1.3} />
-          {Array.from({ length: 11 }).map((_, n) => {
-            const y = s.top + 36 + n * 46;
-            return y < 590 ? <path key={n} d={`M${s.x - s.w / 2} ${y} q ${s.w / 2} 5 ${s.w} 0`} fill="none" stroke={C.gold} strokeWidth={2} strokeLinecap="round" /> : null;
-          })}
-        </g>
-      ))}
-    </svg>
-  );
-}
-
 /* Tall cane leaves in line art, tucked into the section's bottom-right corner. */
 function CornerBotanical() {
   return (
@@ -140,44 +104,56 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
             </motion.h2>
           </div>
 
-          {/* centre: the farmer over a watercolour circle, a gold brush stroke and leaves */}
-          <motion.div {...rise(0.15)} className="relative mx-auto w-full max-w-[400px] lg:max-w-none lg:col-start-2 lg:row-span-2 lg:row-start-1" style={{ aspectRatio: "10 / 13" }}>
-            <svg viewBox="0 0 500 650" className="absolute inset-0 h-full w-full" aria-hidden>
-              <defs>
-                <filter id="why-rough" x="-10%" y="-10%" width="120%" height="120%">
-                  <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7" />
-                  <feDisplacementMap in="SourceGraphic" scale="26" />
-                </filter>
-                <radialGradient id="why-wash" cx="50%" cy="42%" r="60%">
-                  <stop offset="0" stopColor="#EEF4E2" /><stop offset="0.65" stopColor="#D6E5C6" /><stop offset="1" stopColor="#BDD3A6" />
-                </radialGradient>
-              </defs>
-              <g filter="url(#why-rough)">
-                <circle cx="250" cy="350" r="246" fill="none" stroke="#C3D8AE" strokeWidth="9" opacity="0.75" />
-                <circle cx="250" cy="350" r="226" fill="url(#why-wash)" />
-                {/* the gold brush stroke, low on the right */}
-                <path d="M300 590 C 360 560, 420 500, 462 420" fill="none" stroke={C.goldBright} strokeWidth="46" strokeLinecap="round" />
-                <path d="M120 600 C 150 590, 180 575, 205 556" fill="none" stroke={C.goldBright} strokeWidth="14" strokeLinecap="round" opacity="0.9" />
-              </g>
-            </svg>
-            <Sprig className="absolute left-[-3%] top-[24%] h-[34%] w-auto" />
-            <Sprig className="absolute left-[-1%] bottom-[8%] h-[30%] w-auto" style={{ transform: "rotate(-18deg) scaleY(-1)" }} />
-
+          {/* centre. By default this is the composition supplied with the design —
+              farmer, watercolour circle, leaves and brush stroke in one picture,
+              on white, multiplied into the page so no rectangle shows. An image
+              uploaded in Admin → Banners ("home_why_image") replaces it and is set
+              over the drawn circle, stroke and sprigs instead. */}
+          <motion.div {...rise(0.15)} className="relative mx-auto w-full max-w-[400px] lg:max-w-none lg:col-start-2 lg:row-span-2 lg:row-start-1" style={{ aspectRatio: image ? "10 / 13" : "584 / 804" }}>
             {image ? (
-              <picture>
-                {mobileImage && mobileImage !== image && <source media="(max-width: 767px)" srcSet={mobileImage} />}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={image}
-                  alt={imageAlt}
-                  loading="lazy"
-                  decoding="async"
-                  className={cutOut ? "absolute inset-0 h-full w-full object-contain object-bottom" : "absolute object-cover"}
-                  style={cutOut ? { filter: "drop-shadow(0 18px 26px rgba(20,67,47,0.22))" } : { left: "8%", top: "20%", width: "84%", height: "66%", borderRadius: "50%", objectPosition: "center top" }}
-                />
-              </picture>
+              <>
+                <svg viewBox="0 0 500 650" className="absolute inset-0 h-full w-full" aria-hidden>
+                  <defs>
+                    <filter id="why-rough" x="-10%" y="-10%" width="120%" height="120%">
+                      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7" />
+                      <feDisplacementMap in="SourceGraphic" scale="26" />
+                    </filter>
+                    <radialGradient id="why-wash" cx="50%" cy="42%" r="60%">
+                      <stop offset="0" stopColor="#EEF4E2" /><stop offset="0.65" stopColor="#D6E5C6" /><stop offset="1" stopColor="#BDD3A6" />
+                    </radialGradient>
+                  </defs>
+                  <g filter="url(#why-rough)">
+                    <circle cx="250" cy="350" r="246" fill="none" stroke="#C3D8AE" strokeWidth="9" opacity="0.75" />
+                    <circle cx="250" cy="350" r="226" fill="url(#why-wash)" />
+                    <path d="M300 590 C 360 560, 420 500, 462 420" fill="none" stroke={C.goldBright} strokeWidth="46" strokeLinecap="round" />
+                    <path d="M120 600 C 150 590, 180 575, 205 556" fill="none" stroke={C.goldBright} strokeWidth="14" strokeLinecap="round" opacity="0.9" />
+                  </g>
+                </svg>
+                <Sprig className="absolute left-[-3%] top-[24%] h-[34%] w-auto" />
+                <Sprig className="absolute left-[-1%] bottom-[8%] h-[30%] w-auto" style={{ transform: "rotate(-18deg) scaleY(-1)" }} />
+                <picture>
+                  {mobileImage && mobileImage !== image && <source media="(max-width: 767px)" srcSet={mobileImage} />}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image}
+                    alt={imageAlt}
+                    loading="lazy"
+                    decoding="async"
+                    className={cutOut ? "absolute inset-0 h-full w-full object-contain object-bottom" : "absolute object-cover"}
+                    style={cutOut ? { filter: "drop-shadow(0 18px 26px rgba(20,67,47,0.22))" } : { left: "8%", top: "20%", width: "84%", height: "66%", borderRadius: "50%", objectPosition: "center top" }}
+                  />
+                </picture>
+              </>
             ) : (
-              <CaneArt />
+              <Image
+                src="/images/home/why-farmer.webp"
+                alt="A Mandya sugarcane farmer holding freshly cut cane"
+                fill
+                sizes="(max-width: 1023px) 400px, 34vw"
+                quality={82}
+                className="object-contain"
+                style={{ mixBlendMode: "multiply" }}
+              />
             )}
           </motion.div>
 
