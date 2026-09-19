@@ -27,20 +27,23 @@ export default async function AboutPage() {
       .findMany({
         where: {
           isActive: true,
-          position: "about_banner",
+          position: { in: ["about_banner", "about_intro"] },
           OR: [{ startsAt: null }, { startsAt: { lte: now } }],
           AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
         },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-        select: { imageUrl: true, mobileImageUrl: true, title: true },
+        select: { position: true, imageUrl: true, mobileImageUrl: true, title: true },
       })
       .catch(() => []),
     getCtaBackground(),
   ]);
   const get = (k: string) => rows.find((r) => r.key === k)?.value || undefined;
-  const banner = aboutBanners.find((item) => (
-    normalizeBannerImageUrl(item.imageUrl) || normalizeBannerImageUrl(item.mobileImageUrl)
+  const pick = (position: string) => aboutBanners.find((item) => (
+    item.position === position && (normalizeBannerImageUrl(item.imageUrl) || normalizeBannerImageUrl(item.mobileImageUrl))
   )) ?? null;
+  const banner = pick("about_banner");
+  // The photograph beside the introduction, below the banner ("about_intro").
+  const intro = pick("about_intro");
   const bannerImage = normalizeBannerImageUrl(banner?.imageUrl) ?? null;
   const bannerImageMobile = normalizeBannerImageUrl(banner?.mobileImageUrl) ?? null;
 
@@ -52,6 +55,9 @@ export default async function AboutPage() {
       bannerImage={bannerImage}
       bannerImageMobile={bannerImageMobile}
       bannerAlt={banner?.title ?? ""}
+      introImage={normalizeBannerImageUrl(intro?.imageUrl) ?? normalizeBannerImageUrl(intro?.mobileImageUrl) ?? null}
+      introImageMobile={normalizeBannerImageUrl(intro?.mobileImageUrl) ?? null}
+      introAlt={intro?.title ?? ""}
       ctaImage={cta.image}
       ctaImageMobile={cta.mobileImage}
     />

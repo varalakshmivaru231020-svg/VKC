@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Mail, MessageCircle, Phone } from "lucide-react";
-import { Button, C, Cta, Facts, Label, MILESTONES, NumberGrid, Photo, Reveal, Section, SectionHead, T, Timeline, Words } from "@/components/about/heritage";
+import { Button, C, Cta, WARM_GRADIENT, Facts, Label, MILESTONES, NumberGrid, Photo, Reveal, Section, SectionHead, T, Timeline, Words } from "@/components/about/heritage";
 
 /**
  * About Us — who we are, in seven movements: hero, the story with its
@@ -48,6 +48,9 @@ export default function AboutExperience({
   bannerAlt = "",
   ctaImage = null,
   ctaImageMobile = null,
+  introImage = null,
+  introImageMobile = null,
+  introAlt = "",
 }: {
   phone?: string;
   whatsapp?: string;
@@ -59,6 +62,10 @@ export default function AboutExperience({
   /** Admin → Banners, position "cta_background" — shared by every closing CTA. */
   ctaImage?: string | null;
   ctaImageMobile?: string | null;
+  /** Admin → Banners, position "about_intro" — the photograph beside the introduction. */
+  introImage?: string | null;
+  introImageMobile?: string | null;
+  introAlt?: string;
 }) {
   const desktopBanner = bannerImage?.trim() || bannerImageMobile?.trim() || null;
   const mobileBanner = bannerImageMobile?.trim() || desktopBanner;
@@ -105,16 +112,58 @@ export default function AboutExperience({
         )}
         <div className="w-full max-w-[1200px] mx-auto px-5 sm:px-8 py-7 md:py-10">
           <div className="max-w-[680px]">
-            <Label light={Boolean(desktopBanner)}>About VKC Gold Ikshu</Label>
-            <h1 id="about-heading" className="mt-3 md:mt-4" style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "clamp(1.75rem, 3.7vw, 3.1rem)", lineHeight: 1.06, letterSpacing: "-0.02em", color: desktopBanner ? C.onDark : C.ink, margin: undefined }}>
-              <span className="block"><Words text="Rooted in Legacy." /></span>
-              <span className="block"><Words text="Guided by Purpose." /></span>
+            <nav aria-label="Breadcrumb" className="font-body" style={{ ...T.label, fontSize: 10.5, color: desktopBanner ? C.onDarkMuted : C.muted }}>
+              <Link href="/" className="hover:underline">Home</Link>
+              <span aria-hidden className="mx-2.5" style={{ color: desktopBanner ? C.jaggery : C.gold }}>/</span>
+              <span style={{ color: desktopBanner ? C.jaggery : C.gold }}>About Us</span>
+            </nav>
+            <h1 id="about-heading" className="mt-3 md:mt-4" style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "clamp(2.1rem, 4.4vw, 3.6rem)", lineHeight: 1.04, letterSpacing: "-0.02em", color: desktopBanner ? C.onDark : C.ink }}>
+              <Words text="About Us" />
             </h1>
             <Reveal delay={0.2}>
               <p className="font-body mt-3 md:mt-4" style={{ fontSize: "clamp(0.86rem, 1.15vw, 1.02rem)", lineHeight: 1.6, color: desktopBanner ? C.onDarkMuted : C.ink2, maxWidth: 540 }}>
-                A family journey shaped by discipline, sincerity, purity, and a lasting connection with agriculture.
+                The family, the values and the place behind VKC Gold Ikshu.
               </p>
             </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 1b · INTRODUCTION, WITH ITS PHOTOGRAPH ───────────────────────── */}
+      {/* The opening statement beside a photograph from Admin → Banners
+          ("about_intro"). The picture is shown whole at its own proportions —
+          never cropped — so a portrait, a landscape or a finished poster all
+          sit correctly. Until one is uploaded the words take the full width. */}
+      <section aria-labelledby="intro-heading" style={{ background: C.ivory }}>
+        <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-14 sm:py-20">
+          <div className={`grid gap-10 lg:gap-16 items-center ${introImage ? "lg:grid-cols-12" : ""}`}>
+            <div className={introImage ? "lg:col-span-6" : "max-w-3xl"}>
+              <Label>About VKC Gold Ikshu</Label>
+              <h2 id="intro-heading" className="mt-5" style={{ ...T.display, fontSize: "clamp(2.3rem,4.6vw,3.9rem)", color: C.ink }}>
+                <span className="block"><Words text="Rooted in Legacy." /></span>
+                <span className="block"><Words text="Guided by Purpose." /></span>
+              </h2>
+              <Reveal delay={0.2}>
+                <p className="font-body mt-6" style={{ ...T.lede, color: C.ink2, maxWidth: 520 }}>
+                  A family journey shaped by discipline, sincerity, purity, and a lasting connection with agriculture.
+                </p>
+                <div className="mt-7 flex flex-wrap gap-x-3 gap-y-1 font-body" style={{ ...T.label, color: C.muted, letterSpacing: "0.16em", fontSize: 10.5 }}>
+                  {["Legacy", "Integrity", "Natural Sweeteners", "Future-Ready Growth"].map((t, i) => (
+                    <span key={t} className="inline-flex items-center gap-3">{i > 0 && <span aria-hidden style={{ color: C.gold }}>·</span>}{t}</span>
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+            {introImage && (
+              <Reveal delay={0.15} className="lg:col-span-6">
+                <figure className="m-0 overflow-hidden" style={{ borderRadius: 6, background: C.cream, boxShadow: "0 18px 50px -24px rgba(43,23,8,0.35)" }}>
+                  <picture>
+                    {introImageMobile && introImageMobile !== introImage && <source media="(max-width: 767px)" srcSet={introImageMobile} />}
+                    <img src={introImage} alt={introAlt || "VKC Gold Ikshu"} loading="lazy" decoding="async" className="block w-full h-auto" style={{ maxHeight: 620, objectFit: "contain" }} />
+                  </picture>
+                </figure>
+              </Reveal>
+            )}
           </div>
         </div>
       </section>
@@ -191,7 +240,7 @@ export default function AboutExperience({
           <Reveal>
             <div
               className="relative overflow-hidden rounded-md px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16"
-              style={{ background: "linear-gradient(100deg, #8F3404 0%, #AE4A08 36%, #CB6A0C 70%, #E08E14 100%)", color: "#FFFFFF", textShadow: "0 1px 2px rgba(80,32,0,0.28)" }}
+              style={{ background: WARM_GRADIENT, color: "#FFFFFF", textShadow: "0 1px 2px rgba(80,32,0,0.28)" }}
             >
               <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 90% at 100% 0%, rgba(255,214,92,0.22) 0%, rgba(255,214,92,0) 60%)" }} />
               <div className="relative grid lg:grid-cols-2 gap-x-14 gap-y-12">
@@ -259,11 +308,12 @@ export default function AboutExperience({
         secondary={{ href: "/contact", label: "Contact us" }}
         image={ctaImage}
         mobileImage={ctaImageMobile}
+        tone="warm"
       >
-        <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3 font-body" style={{ fontSize: 14, color: C.onDarkMuted }}>
-          <a href={phoneHref} className="inline-flex items-center gap-2 hover:text-white"><Phone className="h-4 w-4" style={{ color: C.jaggery }} />{phone}</a>
-          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-white"><MessageCircle className="h-4 w-4" style={{ color: C.jaggery }} />WhatsApp</a>
-          <a href={`mailto:${email}`} className="inline-flex items-center gap-2 hover:text-white"><Mail className="h-4 w-4" style={{ color: C.jaggery }} />{email}</a>
+        <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3 font-body" style={{ fontSize: 14, color: "rgba(255,255,255,0.92)" }}>
+          <a href={phoneHref} className="inline-flex items-center gap-2 hover:text-white"><Phone className="h-4 w-4" style={{ color: "#FFE27A" }} />{phone}</a>
+          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-white"><MessageCircle className="h-4 w-4" style={{ color: "#FFE27A" }} />WhatsApp</a>
+          <a href={`mailto:${email}`} className="inline-flex items-center gap-2 hover:text-white"><Mail className="h-4 w-4" style={{ color: "#FFE27A" }} />{email}</a>
         </div>
       </Cta>
     </div>

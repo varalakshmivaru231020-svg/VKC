@@ -86,10 +86,11 @@ export function Words({ text, className = "", style }: { text: string; className
 }
 
 /* Small-caps label with a short gold rule — the one gold moment per section. */
-export function Label({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
+export function Label({ children, light = false, color }: { children: React.ReactNode; light?: boolean; color?: string }) {
+  const tone = color ?? (light ? C.jaggery : C.gold);
   return (
-    <span className="inline-flex items-center gap-3 font-body" style={{ ...T.label, color: light ? C.jaggery : C.gold }}>
-      <span aria-hidden style={{ width: 24, height: 1, background: light ? C.jaggery : C.gold }} />
+    <span className="inline-flex items-center gap-3 font-body" style={{ ...T.label, color: tone }}>
+      <span aria-hidden style={{ width: 24, height: 1, background: tone }} />
       {children}
     </span>
   );
@@ -201,9 +202,11 @@ export function Facts({ rows, light = false }: { rows: [string, string][]; light
 }
 
 /* Pill buttons. */
-export function Button({ href, children, variant = "primary" }: { href: string; children: React.ReactNode; variant?: "primary" | "outline" | "outlineLight" }) {
+export function Button({ href, children, variant = "primary" }: { href: string; children: React.ReactNode; variant?: "primary" | "outline" | "outlineLight" | "onWarm" }) {
   const styles: React.CSSProperties =
-    variant === "primary"
+    variant === "onWarm"
+      ? { background: C.ivory, color: C.ink }
+      : variant === "primary"
       ? { background: C.jaggery, color: C.ink }
       : variant === "outline"
         ? { border: `1px solid ${C.ink}`, color: C.ink }
@@ -219,32 +222,39 @@ export function Button({ href, children, variant = "primary" }: { href: string; 
 /* Closing call to action: dark, centred. With a photograph from Admin →
    Banners ("cta_background") it sits behind the words under a dark wash, so
    the type stays readable over any picture; without one the panel is flat. */
-export function Cta({ label, title, lede, primary, secondary, children, image, mobileImage }: {
+/* The burnt-orange to amber run used by the Vision and Mission panel. */
+export const WARM_GRADIENT = "linear-gradient(100deg, #8F3404 0%, #AE4A08 36%, #CB6A0C 70%, #E08E14 100%)";
+
+export function Cta({ label, title, lede, primary, secondary, children, image, mobileImage, tone = "dark" }: {
   label?: string; title: string; lede?: string; primary: { href: string; label: string }; secondary?: { href: string; label: string }; children?: React.ReactNode;
   image?: string | null; mobileImage?: string | null;
+  /** "warm" sets the block on the Vision and Mission gradient instead of flat dark. */
+  tone?: "dark" | "warm";
 }) {
   const desktop = image?.trim() || mobileImage?.trim() || null;
   const mobile = mobileImage?.trim() || null;
+  const warm = tone === "warm";
   return (
-    <Section bg="dark" className={desktop ? "relative isolate overflow-hidden" : ""}>
+    <Section bg="dark" className={desktop || warm ? "relative isolate overflow-hidden" : ""}>
+      {warm && !desktop && <div aria-hidden className="absolute inset-0 -z-10" style={{ background: WARM_GRADIENT }} />}
       {desktop && (
         <div aria-hidden className="absolute inset-0 -z-10">
           <picture>
             {mobile && mobile !== desktop && <source media="(max-width: 767px)" srcSet={mobile} />}
             <img src={desktop} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
           </picture>
-          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(43,23,8,0.82) 0%, rgba(43,23,8,0.68) 50%, rgba(43,23,8,0.86) 100%)" }} />
+          <div className="absolute inset-0" style={{ background: warm ? WARM_GRADIENT : "linear-gradient(180deg, rgba(43,23,8,0.82) 0%, rgba(43,23,8,0.68) 50%, rgba(43,23,8,0.86) 100%)", opacity: warm ? 0.88 : 1 }} />
         </div>
       )}
       <div className="text-center max-w-3xl mx-auto">
-        {label && <Label light>{label}</Label>}
+        {label && <Label light color={warm ? "#FFE27A" : undefined}>{label}</Label>}
         <h2 className={label ? "mt-5" : ""} style={{ ...T.h2, color: C.onDark }}>
           <Words text={title} />
         </h2>
-        {lede && <p className="font-body mt-5 mx-auto" style={{ ...T.lede, color: C.onDarkMuted, maxWidth: 560, textAlign: "center" }}>{lede}</p>}
+        {lede && <p className="font-body mt-5 mx-auto" style={{ ...T.lede, color: warm ? "rgba(255,255,255,0.92)" : C.onDarkMuted, maxWidth: 560, textAlign: "center" }}>{lede}</p>}
         <Reveal delay={0.2}>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Button href={primary.href}>{primary.label}</Button>
+            <Button href={primary.href} variant={warm ? "onWarm" : "primary"}>{primary.label}</Button>
             {secondary && <Button href={secondary.href} variant="outlineLight">{secondary.label}</Button>}
           </div>
           {children}
