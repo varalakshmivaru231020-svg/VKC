@@ -89,6 +89,9 @@ export function Header({ siteName = "vkcgoldikshu", logoUrl, instagram, facebook
   useEffect(() => {
     setMounted(true);
     const onScroll = () => setScrolled(window.scrollY > 8);
+    // A reload part-way down the page restores the scroll position without
+    // firing a scroll event, so read it once here as well.
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -98,6 +101,20 @@ export function Header({ siteName = "vkcgoldikshu", logoUrl, instagram, facebook
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : (pathname === href || pathname.startsWith(href + "?") || pathname.startsWith(href + "/"));
+
+  // Film pages open on a full-screen photograph: the bar floats over it,
+  // clear with light type, then turns to dark glass once the page scrolls.
+  // The look comes from re-pointing the theme tokens on the <header> alone,
+  // so every link, icon and hover below follows without its own branch.
+  const cinematic = pathname === "/about";
+  const cinematicTokens = {
+    "--color-text-primary": "#F7F4EC",
+    "--color-text-secondary": "rgba(247,244,236,0.78)",
+    "--color-text-muted": "rgba(247,244,236,0.78)",
+    "--color-primary": "#C39A50",
+    "--color-primary-50": "rgba(247,244,236,0.10)",
+    "--color-parchment": scrolled ? "rgba(247,244,236,0.12)" : "transparent",
+  } as React.CSSProperties;
 
   const iconBtnCls   = "relative h-10 w-10 flex items-center justify-center rounded-lg transition-all duration-150";
   const iconBtnStyle = { color: "var(--color-text-muted)" };
@@ -117,7 +134,7 @@ export function Header({ siteName = "vkcgoldikshu", logoUrl, instagram, facebook
         <img
           src={logoUrl}
           alt=""
-          className="transition-opacity duration-200 group-hover:opacity-80 object-contain h-[60px] lg:h-[94px] w-auto mix-blend-multiply shrink-0"
+          className={cn("transition-opacity duration-200 group-hover:opacity-80 object-contain h-[60px] lg:h-[94px] w-auto shrink-0", !cinematic && "mix-blend-multiply")}
           style={{ maxWidth: 200 }}
         />
       )}
@@ -131,8 +148,10 @@ export function Header({ siteName = "vkcgoldikshu", logoUrl, instagram, facebook
   return (
     <>
       <header
-        className={cn("sticky top-0 z-50 w-full transition-all duration-300", scrolled ? "shadow-[0_2px_24px_rgba(0,0,0,0.08)]" : "")}
-        style={{ background: scrolled ? "rgba(251,248,243,0.96)" : "var(--color-ivory)", backdropFilter: scrolled ? "blur(12px)" : "none" }}
+        className={cn(cinematic ? "fixed" : "sticky", "top-0 z-50 w-full transition-all duration-500", scrolled && !cinematic ? "shadow-[0_2px_24px_rgba(0,0,0,0.08)]" : "")}
+        style={cinematic
+          ? { ...cinematicTokens, background: scrolled ? "rgba(8,17,12,0.88)" : "transparent", backdropFilter: scrolled ? "blur(16px) saturate(1.2)" : "none", WebkitBackdropFilter: scrolled ? "blur(16px) saturate(1.2)" : "none" }
+          : { background: scrolled ? "rgba(251,248,243,0.96)" : "var(--color-ivory)", backdropFilter: scrolled ? "blur(12px)" : "none" }}
       >
         {/* ── Single-row bar: logo · nav · actions ── */}
         <div className="border-b" style={{ borderColor: "var(--color-parchment)" }}>
@@ -166,7 +185,7 @@ export function Header({ siteName = "vkcgoldikshu", logoUrl, instagram, facebook
                       </Link>
                       {cat.children.length > 0 && (
                         <div className="absolute left-0 top-full pt-2 hidden group-hover:block min-w-[140px] w-max z-10">
-                          <div className="rounded-lg overflow-hidden py-1" style={{ background: "white", boxShadow: "0 10px 30px rgba(0,0,0,0.12)" }}>
+                          <div className="rounded-lg overflow-hidden py-1" style={{ background: "white", boxShadow: "0 10px 30px rgba(0,0,0,0.12)", ...(cinematic ? { "--color-text-secondary": "#5C3A1E", "--color-primary": "#A8520A" } as React.CSSProperties : null) }}>
                             {cat.children.map((child) => (
                               <Link
                                 key={child.id}

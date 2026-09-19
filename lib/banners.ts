@@ -1,3 +1,5 @@
+import { ABOUT_BANNER_POSITIONS } from "./about-media";
+
 export const BANNER_POSITIONS: Record<string, string> = {
   home_hero: "Home — Hero",
   home_mid: "Home — Mid Section",
@@ -6,7 +8,8 @@ export const BANNER_POSITIONS: Record<string, string> = {
   category_banner: "Category — Banner",
   shop_top: "Shop — Top",
   shop_banner: "Shop — Banner",
-  about_banner: "About Us — Hero Banner",
+  about_banner: "About Us — Hero Banner (legacy; the About film uses the slots below)",
+  ...ABOUT_BANNER_POSITIONS,
   leadership_banner: "Leadership — Header Banner",
   leadership_heritage: "Leadership — Heritage image (where we began)",
   leadership_future: "Leadership — Future image (where we are going)",
