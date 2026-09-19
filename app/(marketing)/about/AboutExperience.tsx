@@ -72,38 +72,48 @@ export default function AboutExperience({
     <div className="vkc-about" style={{ background: C.ivory }}>
       <style dangerouslySetInnerHTML={{ __html:
         ".marketing-layout .vkc-about p{text-align:left;hyphens:none;text-justify:auto}" +
-        ".marketing-layout .vkc-about .text-center p{text-align:center}"
+        ".marketing-layout .vkc-about .text-center p{text-align:center}" +
+        // Banner wash. The words own the left two-thirds, so the wash is all but
+        // solid there — uploaded artwork often carries its own lettering, which
+        // must not ghost through under the page's headline — and opens over the
+        // right quarter to let the picture read. Phones have no room for that
+        // split, so only a trace of the picture shows at the right edge.
+        ".vkc-about .about-banner-wash{background:linear-gradient(90deg,#2B1708 0%,#2B1708 58%,rgba(43,23,8,0.9) 100%)}" +
+        "@media (min-width:768px){.vkc-about .about-banner-wash{background:linear-gradient(90deg,#2B1708 0%,#2B1708 69%,rgba(43,23,8,0.7) 77%,rgba(43,23,8,0.3) 88%,rgba(43,23,8,0.18) 100%)}}"
       }} />
 
-      {/* ── 1 · HERO ─────────────────────────────────────────────────────── */}
-      {/* One hero. With an uploaded banner the artwork leads, shown whole at its
-          own aspect ratio, and the title band sits beneath it. Without one, the
-          title band carries the page on its own with more room to breathe. */}
-      {desktopBanner && (
-        <div style={{ background: C.cream }} aria-label={bannerAlt || undefined}>
-          <img src={desktopBanner} alt={bannerAlt} className={`block w-full h-auto ${separateMobile ? "hidden md:block" : ""}`} />
-          {separateMobile && mobileBanner && <img src={mobileBanner} alt={bannerAlt} className="block w-full h-auto md:hidden" />}
-        </div>
-      )}
-      <section aria-labelledby="about-heading" style={{ background: C.ivory }}>
-        <div className={`max-w-[1200px] mx-auto px-5 sm:px-8 ${desktopBanner ? "py-16 sm:py-20" : "pt-24 pb-20 sm:pt-32 sm:pb-28"}`}>
-          <div className="grid lg:grid-cols-12 gap-10 items-end">
-            <div className="lg:col-span-8">
-              <Label>About VKC Gold Ikshu</Label>
-              <h1 id="about-heading" className="mt-5" style={{ ...T.display, color: C.ink }}>
-                <span className="block"><Words text="Rooted in Legacy." /></span>
-                <span className="block"><Words text="Guided by Purpose." /></span>
-              </h1>
-            </div>
-            <Reveal delay={0.25} className="lg:col-span-4 lg:pb-2">
-              <p className="font-body" style={{ ...T.lede, color: C.ink2 }}>
+      {/* ── 1 · BANNER ───────────────────────────────────────────────────── */}
+      {/* A compact inner-page banner, not a hero: about 340px tall on desktop
+          and 240px on phones, so Our Story starts on the first screen. The
+          uploaded artwork (Admin → Banners, "about_banner") fills it as a cover
+          crop under a dark wash, heavier on the left where the words sit; with
+          nothing uploaded the same band is plain cream. The height is a minimum,
+          so a large system font grows the band instead of clipping the text. */}
+      <section
+        aria-labelledby="about-heading"
+        className="relative isolate flex items-center overflow-hidden min-h-[240px] md:min-h-[340px]"
+        style={{ background: desktopBanner ? C.dark : C.cream, borderBottom: desktopBanner ? undefined : `1px solid ${C.line}` }}
+      >
+        {desktopBanner && (
+          <>
+            <picture>
+              {separateMobile && mobileBanner && <source media="(max-width: 767px)" srcSet={mobileBanner} />}
+              <img src={desktopBanner} alt={bannerAlt} fetchPriority="high" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover" style={{ objectPosition: "center 62%" }} />
+            </picture>
+            <div aria-hidden className="about-banner-wash absolute inset-0 -z-10" />
+          </>
+        )}
+        <div className="w-full max-w-[1200px] mx-auto px-5 sm:px-8 py-7 md:py-10">
+          <div className="max-w-[680px]">
+            <Label light={Boolean(desktopBanner)}>About VKC Gold Ikshu</Label>
+            <h1 id="about-heading" className="mt-3 md:mt-4" style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "clamp(1.75rem, 3.7vw, 3.1rem)", lineHeight: 1.06, letterSpacing: "-0.02em", color: desktopBanner ? C.onDark : C.ink, margin: undefined }}>
+              <span className="block"><Words text="Rooted in Legacy." /></span>
+              <span className="block"><Words text="Guided by Purpose." /></span>
+            </h1>
+            <Reveal delay={0.2}>
+              <p className="font-body mt-3 md:mt-4" style={{ fontSize: "clamp(0.86rem, 1.15vw, 1.02rem)", lineHeight: 1.6, color: desktopBanner ? C.onDarkMuted : C.ink2, maxWidth: 540 }}>
                 A family journey shaped by discipline, sincerity, purity, and a lasting connection with agriculture.
               </p>
-              <div className="mt-6 flex flex-wrap gap-x-3 gap-y-1 font-body" style={{ ...T.label, color: C.muted, letterSpacing: "0.16em", fontSize: 10.5 }}>
-                {["Legacy", "Integrity", "Natural Sweeteners", "Future-Ready Growth"].map((t, i) => (
-                  <span key={t} className="inline-flex items-center gap-3">{i > 0 && <span aria-hidden style={{ color: C.gold }}>·</span>}{t}</span>
-                ))}
-              </div>
             </Reveal>
           </div>
         </div>
