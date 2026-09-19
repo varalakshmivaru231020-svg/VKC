@@ -78,8 +78,6 @@ export default function AboutExperience({ media, products, phone, whatsapp, emai
         ".marketing-layout:has(.vkc-film)>footer>div:first-child{--color-primary:#08110C;border-bottom:1px solid rgba(247,244,236,.12)}" +
         ".marketing-layout:has(.vkc-film)>footer [style*='background: white'],.marketing-layout:has(.vkc-film)>footer [style*='background:white']{background:transparent!important}" +
         ".marketing-layout:has(.vkc-film)>footer button[type=submit]{color:#0D1B14!important}" +
-        // The footer logo multiplies into its usual cream ground; on the dark one that would turn it black.
-        ".marketing-layout:has(.vkc-film)>footer img{mix-blend-mode:normal}" +
         // The header floats over the hero here, so the announcement strip would sit under it.
         "body:has(.vkc-film) .announcement-bar{display:none}" +
         // The seal on the Tradition × Technology seam is split the way the panels meet.
