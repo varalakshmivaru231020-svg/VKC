@@ -359,7 +359,7 @@ export function QuickViewModal() {
                   color: outOfStock ? "var(--color-text-muted)" : "white",
                 }}
               >
-                {added ? <><Check className="h-4 w-4 shrink-0" /> Added!</> : outOfStock ? "Out of Stock" : <><ShoppingBag className="h-4 w-4 shrink-0" /> Add to Cart</>}
+                {added ? <><Check className="h-4 w-4 shrink-0" /> Added!</> : outOfStock ? "Coming Soon" : <><ShoppingBag className="h-4 w-4 shrink-0" /> Add to Cart</>}
               </button>
 
               <button

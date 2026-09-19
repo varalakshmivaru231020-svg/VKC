@@ -415,7 +415,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                       {v.colorName?.trim() || v.sareeCode || "Standard"}
                     </span>
                     <span className="block text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>
-                      {outOfStock ? "Out of stock" : `₹${Number(v.salePrice).toLocaleString("en-IN")}`}
+                      {outOfStock ? "Coming soon" : `₹${Number(v.salePrice).toLocaleString("en-IN")}`}
                     </span>
                   </button>
                 );
@@ -482,7 +482,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
           {/* Stock */}
           <div>
             {available <= 0 ? (
-              <p className="text-sm font-body font-semibold" style={{ color: "var(--color-error)" }}>Out of Stock</p>
+              <p className="text-sm font-body font-semibold" style={{ color: "var(--color-primary)" }}>Coming Soon</p>
             ) : available <= 3 ? (
               <p className="text-sm font-body font-semibold" style={{ color: "var(--color-warning)" }}>
                 Only {available} left{productUsesPackSizes(product.variants) ? " in this size" : productHasChosenColours(product.variants) ? " in this colour" : " in stock"}!
@@ -545,7 +545,36 @@ export default function ProductDetailClient({ product, careInstructions, deliver
                 Buy Now
               </Button>
             </div>
-          ) : null}
+          ) : (
+            /* Zero stock reads as "Coming Soon", not as a dead end: the buy
+               buttons give way to a held state and a way to save the product. */
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <div
+                  className="flex-1 h-12 flex items-center justify-center rounded-md text-sm font-body font-semibold uppercase tracking-[0.12em]"
+                  style={{ background: "var(--color-cream)", border: "1px dashed var(--color-primary)", color: "var(--color-primary)" }}
+                  role="status"
+                >
+                  Coming Soon
+                </div>
+                <button
+                  onClick={() => toggle(selectedVariant.id)}
+                  aria-label={isWishlisted(selectedVariant.id) ? "Remove from wishlist" : "Save to wishlist"}
+                  className={cn(
+                    "h-12 px-4 shrink-0 inline-flex items-center justify-center gap-2 rounded-md border text-sm font-body font-medium transition-colors",
+                    isWishlisted(selectedVariant.id) ? "bg-primary border-primary text-white" : "border-parchment"
+                  )}
+                  style={isWishlisted(selectedVariant.id) ? undefined : { color: "var(--color-text-secondary)" }}
+                >
+                  <Heart className={cn("h-4 w-4", isWishlisted(selectedVariant.id) && "fill-white")} />
+                  {isWishlisted(selectedVariant.id) ? "Saved" : "Save"}
+                </button>
+              </div>
+              <p className="text-xs font-body" style={{ color: "var(--color-text-muted)" }}>
+                This product will be available to order soon. Save it to your wishlist to find it again.
+              </p>
+            </div>
+          )}
 
           {/* Delivery check */}
           <div className="p-4 rounded-sm space-y-2" style={{ background: "var(--color-cream)", border: "1px solid var(--color-parchment)" }}>

@@ -137,8 +137,8 @@ export function ProductCard({ product, className, index = 0 }: Props) {
             )}
             {soldOut && (
               <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm"
-                style={{ background: "rgba(0,0,0,0.6)", color: "white" }}>
-                Sold Out
+                style={{ background: "var(--color-primary)", color: "white" }}>
+                Coming Soon
               </span>
             )}
           </div>

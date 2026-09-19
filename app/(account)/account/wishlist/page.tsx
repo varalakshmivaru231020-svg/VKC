@@ -148,7 +148,7 @@ export default function WishlistPage() {
                   }}
                 >
                   <ShoppingCart className="h-3.5 w-3.5" />
-                  {inStock ? "Move to Cart" : "Out of Stock"}
+                  {inStock ? "Move to Cart" : "Coming Soon"}
                 </button>
               </div>
             );
