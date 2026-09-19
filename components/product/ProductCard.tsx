@@ -10,6 +10,7 @@ import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import { useUIStore } from "@/lib/store/ui";
 import { SmartImage } from "@/components/ui/SmartImage";
 import type { ProductData } from "@/lib/types/product";
+import { productUsesPackSizes } from "@/lib/utils/variantColour";
 
 interface Props {
   product: ProductData;
@@ -236,8 +237,28 @@ export function ProductCard({ product, className, index = 0 }: Props) {
 
       {/* Info */}
       <div className="flex flex-col flex-1 pt-3 px-0.5 space-y-1.5">
+        {/* Pack sizes as small text chips; colours stay as swatches below. */}
+        {product.variants.length > 1 && productUsesPackSizes(product.variants) && (
+          <div className="flex flex-wrap items-center gap-1">
+            {product.variants.slice(0, 4).map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => openQuickView(product)}
+                className="px-1.5 py-0.5 rounded border text-[10px] font-body font-medium"
+                style={{ borderColor: "var(--color-parchment)", color: "var(--color-text-secondary)", background: "white" }}
+              >
+                {v.colorName?.trim() || v.sareeCode}
+              </button>
+            ))}
+            {product.variants.length > 4 && (
+              <span className="text-[10px] font-body" style={{ color: "var(--color-text-muted)" }}>+{product.variants.length - 4}</span>
+            )}
+          </div>
+        )}
+
         {/* Color swatches */}
-        {product.variants.length > 1 && (
+        {product.variants.length > 1 && !productUsesPackSizes(product.variants) && (
           <div className="flex items-center gap-1.5">
             {product.variants.slice(0, 7).map((v) => (
               <div

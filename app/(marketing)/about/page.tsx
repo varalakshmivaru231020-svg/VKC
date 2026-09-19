@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { normalizeBannerImageUrl } from "@/lib/banners";
+import { getCtaBackground } from "@/lib/cta";
 import AboutExperience from "./AboutExperience";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export default async function AboutPage() {
   // real business details as fallbacks so the page is never blank. The hero
   // banner comes from Admin → Banners, position "about_banner" — the same
   // active/date-window rules the Shop and Category pages use.
-  const [rows, aboutBanners] = await Promise.all([
+  const [rows, aboutBanners, cta] = await Promise.all([
     db.siteSetting
       .findMany({ where: { key: { in: ["store_phone", "whatsapp_number", "store_email"] } } })
       .catch(() => [] as { key: string; value: string }[]),
@@ -34,6 +35,7 @@ export default async function AboutPage() {
         select: { imageUrl: true, mobileImageUrl: true, title: true },
       })
       .catch(() => []),
+    getCtaBackground(),
   ]);
   const get = (k: string) => rows.find((r) => r.key === k)?.value || undefined;
   const banner = aboutBanners.find((item) => (
@@ -50,6 +52,8 @@ export default async function AboutPage() {
       bannerImage={bannerImage}
       bannerImageMobile={bannerImageMobile}
       bannerAlt={banner?.title ?? ""}
+      ctaImage={cta.image}
+      ctaImageMobile={cta.mobileImage}
     />
   );
 }

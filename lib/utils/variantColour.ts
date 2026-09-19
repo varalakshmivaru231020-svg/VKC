@@ -26,3 +26,23 @@ export function variantHasChosenColour(v: ColourLike): boolean {
 export function productHasChosenColours(variants: ColourLike[]): boolean {
   return variants.some(variantHasChosenColour);
 }
+
+/**
+ * Whether a product's variants are pack sizes ("500 g", "1 kg") rather than
+ * colours. The variant label lives in the legacy `colorName` field; when it is
+ * filled in but no swatch was ever picked, it is a size — so the storefront
+ * shows text buttons under "Pack Size" instead of colour circles under
+ * "Colour".
+ */
+export function variantHasChosenSwatch(v: ColourLike): boolean {
+  if (v.colorHex2 && v.colorHex2.trim()) return true;
+  const hex = (v.colorHex ?? "").trim().toUpperCase();
+  return Boolean(hex) && hex !== PLACEHOLDER_COLOUR_HEX;
+}
+
+export function productUsesPackSizes(variants: ColourLike[]): boolean {
+  return variants.some((v) => v.colorName && v.colorName.trim()) && !variants.some(variantHasChosenSwatch);
+}
+
+/** Quick picks offered in the admin form; any other text is accepted too. */
+export const PACK_SIZE_PRESETS = ["100 g", "250 g", "500 g", "1 kg", "2 kg", "5 kg", "250 ml", "500 ml", "1 L"];

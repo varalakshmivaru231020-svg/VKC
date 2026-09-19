@@ -38,6 +38,8 @@ export default function AboutExperience({
   bannerImage = null,
   bannerImageMobile = null,
   bannerAlt = "",
+  ctaImage = null,
+  ctaImageMobile = null,
 }: {
   phone?: string;
   whatsapp?: string;
@@ -46,6 +48,9 @@ export default function AboutExperience({
   bannerImage?: string | null;
   bannerImageMobile?: string | null;
   bannerAlt?: string;
+  /** Admin → Banners, position "cta_background" — shared by every closing CTA. */
+  ctaImage?: string | null;
+  ctaImageMobile?: string | null;
 }) {
   const desktopBanner = bannerImage?.trim() || bannerImageMobile?.trim() || null;
   const mobileBanner = bannerImageMobile?.trim() || desktopBanner;
@@ -216,6 +221,8 @@ export default function AboutExperience({
         lede="Pure, chemical-free jaggery and cane products from Mandya — made the way the family always has."
         primary={{ href: "/shop", label: "Shop the range" }}
         secondary={{ href: "/contact", label: "Contact us" }}
+        image={ctaImage}
+        mobileImage={ctaImageMobile}
       >
         <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3 font-body" style={{ fontSize: 14, color: C.onDarkMuted }}>
           <a href={phoneHref} className="inline-flex items-center gap-2 hover:text-white"><Phone className="h-4 w-4" style={{ color: C.jaggery }} />{phone}</a>

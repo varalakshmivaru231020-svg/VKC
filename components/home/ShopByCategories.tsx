@@ -77,11 +77,6 @@ export function ShopByCategories({ categories, eyebrow = "Collections", heading 
                   style={{ lineHeight: 1.3, color: C.ink }}>
                   <span className="transition-colors duration-300 group-hover:text-[#9A5B0B]">{cat.name}</span>
                 </div>
-
-                {/* Arrow row. */}
-                <span className="mt-4 inline-flex items-center gap-1.5 font-body font-semibold uppercase" style={{ fontSize: 11, letterSpacing: "0.16em", color: C.jaggeryDark }}>
-                  Shop <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-                </span>
               </Link>
             </li>
           ))}

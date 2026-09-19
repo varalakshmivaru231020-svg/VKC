@@ -11,6 +11,7 @@ export const BANNER_POSITIONS: Record<string, string> = {
   leadership_heritage: "Leadership — Heritage image (where we began)",
   leadership_future: "Leadership — Future image (where we are going)",
   credentials_banner: "Credentials — Header Banner",
+  cta_background: "Closing CTA — background image (shared by About and Leadership)",
 };
 
 export const BANNER_TYPES: Record<string, { label: string; color: string; bg: string }> = {

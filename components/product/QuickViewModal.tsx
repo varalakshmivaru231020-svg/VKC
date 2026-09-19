@@ -9,7 +9,7 @@ import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import { formatINR, discountPercent } from "@/lib/utils/format";
 import { SmartImage } from "@/components/ui/SmartImage";
 import type { ProductVariantData } from "@/lib/types/product";
-import { productHasChosenColours } from "@/lib/utils/variantColour";
+import { productHasChosenColours, productUsesPackSizes } from "@/lib/utils/variantColour";
 
 export function QuickViewModal() {
   const { quickViewProduct, closeQuickView } = useUIStore();
@@ -78,7 +78,10 @@ export function QuickViewModal() {
 
   const p = quickViewProduct;
   // Colour swatches only when the admin chose a colour; placeholder hexes stay hidden.
-  const hasColours = productHasChosenColours(p.variants);
+  // Pack sizes ("500 g", "1 kg") are labelled variants with no swatch picked:
+  // they read as text buttons, never as colour circles.
+  const packSizes = productUsesPackSizes(p.variants);
+  const hasColours = productHasChosenColours(p.variants) && !packSizes;
   const v = selectedVariant;
   const primaryImage = v.images.find((i) => i.isPrimary) ?? v.images[0];
   const hasDiscount = v.originalPrice > v.salePrice;
@@ -243,6 +246,38 @@ export function QuickViewModal() {
                 <span className="text-xs font-mono px-2 py-0.5 rounded-xs" style={{ background: "var(--color-cream)", color: "var(--color-text-secondary)", border: "1px solid var(--color-parchment)" }}>
                   {v.sareeCode}
                 </span>
+              </div>
+            )}
+
+            {/* Pack size selector */}
+            {packSizes && p.variants.length > 1 && (
+              <div>
+                <p className="text-xs font-body font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--color-text-muted)" }}>
+                  Pack Size: <span style={{ color: "var(--color-text-primary)" }}>{v.colorName}</span>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {p.variants.map((variant) => {
+                    const selected = selectedVariant.id === variant.id;
+                    const oos = variant.stockQty <= 0;
+                    return (
+                      <button
+                        key={variant.id}
+                        onClick={() => { if (!oos) { setSelectedVariant(variant); setQty(1); setAdded(false); } }}
+                        disabled={oos}
+                        aria-pressed={selected}
+                        className="px-3.5 py-2 rounded-lg border text-sm font-body font-semibold transition-all disabled:opacity-45 disabled:cursor-not-allowed"
+                        style={{
+                          borderColor: selected ? "var(--color-primary)" : "var(--color-parchment)",
+                          background: selected ? "var(--color-primary-50)" : "white",
+                          color: selected ? "var(--color-primary)" : "var(--color-text-primary)",
+                          textDecoration: oos ? "line-through" : undefined,
+                        }}
+                      >
+                        {variant.colorName?.trim() || variant.sareeCode || "Standard"}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 

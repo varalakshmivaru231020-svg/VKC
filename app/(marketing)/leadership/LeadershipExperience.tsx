@@ -66,8 +66,10 @@ function Panel({ image, year, label, title, facts, tint, link }: { image: string
   );
 }
 
-export default function LeadershipExperience({ bannerImage = null, bannerAlt = "", heritageImage = null, futureImage = null }: {
+export default function LeadershipExperience({ bannerImage = null, bannerAlt = "", heritageImage = null, futureImage = null, ctaImage = null, ctaImageMobile = null }: {
   bannerImage?: string | null; bannerAlt?: string; heritageImage?: string | null; futureImage?: string | null;
+  /** Admin → Banners, position "cta_background" — shared by every closing CTA. */
+  ctaImage?: string | null; ctaImageMobile?: string | null;
 }) {
   return (
     <div className="vkc-about" style={{ background: C.ivory }}>
@@ -165,6 +167,8 @@ export default function LeadershipExperience({ bannerImage = null, bannerAlt = "
         lede="Built on values. Guided by experience. Focused on the future."
         primary={{ href: "/about", label: "Explore our story" }}
         secondary={{ href: "/shop", label: "Discover our products" }}
+        image={ctaImage}
+        mobileImage={ctaImageMobile}
       />
     </div>
   );

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { formatINR, discountPercent, savedAmount } from "@/lib/utils/format";
 import { useCartStore, useWishlistStore } from "@/lib/store/cart";
 import type { ProductData, ProductVariantData } from "@/lib/types/product";
-import { productHasChosenColours } from "@/lib/utils/variantColour";
+import { productHasChosenColours, productUsesPackSizes } from "@/lib/utils/variantColour";
 import { Button } from "@/components/ui/button";
 import ProductReviews from "./ProductReviews";
 
@@ -387,7 +387,44 @@ export default function ProductDetailClient({ product, careInstructions, deliver
           {/* Colour selection — only when the admin actually chose a colour
               (name or code). Variants left on the placeholder swatch hide this
               block entirely rather than showing a meaningless default. */}
-          {productHasChosenColours(product.variants) && (
+          {/* Pack sizes ("500 g", "1 kg"): the variant has a label but no swatch
+              was picked, so it reads as text buttons, not colour circles. */}
+          {productUsesPackSizes(product.variants) && product.variants.length > 1 && (
+          <div className="space-y-3">
+            <p className="text-sm font-body font-semibold" style={{ color: "var(--color-text-primary)" }}>
+              Pack Size{selectedVariant.colorName ? <> — <span style={{ color: "var(--color-primary)", fontWeight: 400 }}>{selectedVariant.colorName}</span></> : null}
+            </p>
+            <div className="flex flex-wrap gap-2.5">
+              {product.variants.map((v) => {
+                const isSelected = v.id === selectedVariant.id;
+                const outOfStock = v.stockQty - v.reservedQty <= 0;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => handleVariantChange(v)}
+                    disabled={outOfStock}
+                    aria-pressed={isSelected}
+                    className={cn("min-w-[84px] px-4 py-2.5 rounded-lg border text-left transition-all", outOfStock && "opacity-45 cursor-not-allowed")}
+                    style={{
+                      borderColor: isSelected ? "var(--color-primary)" : "var(--color-parchment)",
+                      background: isSelected ? "var(--color-primary-50)" : "white",
+                      boxShadow: isSelected ? "0 0 0 1px var(--color-primary)" : "none",
+                    }}
+                  >
+                    <span className="block text-sm font-body font-semibold" style={{ color: isSelected ? "var(--color-primary)" : "var(--color-text-primary)", textDecoration: outOfStock ? "line-through" : undefined }}>
+                      {v.colorName?.trim() || v.sareeCode || "Standard"}
+                    </span>
+                    <span className="block text-xs font-body mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+                      {outOfStock ? "Out of stock" : `₹${Number(v.salePrice).toLocaleString("en-IN")}`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          )}
+
+          {productHasChosenColours(product.variants) && !productUsesPackSizes(product.variants) && (
           <div className="space-y-3">
             <p className="text-sm font-body font-semibold" style={{ color: "var(--color-text-primary)" }}>
               Colour{selectedVariant.colorName ? <> — <span style={{ color: "var(--color-primary)", fontWeight: 400 }}>{selectedVariant.colorName}</span></> : null}
@@ -448,7 +485,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
               <p className="text-sm font-body font-semibold" style={{ color: "var(--color-error)" }}>Out of Stock</p>
             ) : available <= 3 ? (
               <p className="text-sm font-body font-semibold" style={{ color: "var(--color-warning)" }}>
-                Only {available} left{productHasChosenColours(product.variants) ? " in this colour" : " in stock"}!
+                Only {available} left{productUsesPackSizes(product.variants) ? " in this size" : productHasChosenColours(product.variants) ? " in this colour" : " in stock"}!
               </p>
             ) : (
               <p className="text-sm font-body" style={{ color: "var(--color-success)" }}>

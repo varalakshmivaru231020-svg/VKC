@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { normalizeBannerImageUrl } from "@/lib/banners";
+import { getCtaBackground } from "@/lib/cta";
 import LeadershipExperience from "./LeadershipExperience";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ const POSITIONS = ["leadership_banner", "leadership_heritage", "leadership_futur
 
 export default async function LeadershipPage() {
   const now = new Date();
+  const ctaPromise = getCtaBackground();
   const banners = await db.banner
     .findMany({
       where: {
@@ -43,6 +45,8 @@ export default async function LeadershipPage() {
       bannerAlt={hero?.title ?? ""}
       heritageImage={normalizeBannerImageUrl(heritage?.imageUrl)}
       futureImage={normalizeBannerImageUrl(future?.imageUrl)}
+      ctaImage={(await ctaPromise).image}
+      ctaImageMobile={(await ctaPromise).mobileImage}
     />
   );
 }

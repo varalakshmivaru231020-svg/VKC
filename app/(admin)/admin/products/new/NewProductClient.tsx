@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Trash2, Save, Upload, X, Loader2, Video } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { uploadImageFile, MAX_VIDEO_UPLOAD_BYTES, MAX_VIDEO_UPLOAD_LABEL } from "@/lib/utils/upload";
+import { PACK_SIZE_PRESETS } from "@/lib/utils/variantColour";
 
 interface VariantImage {
   url: string;
@@ -567,7 +568,7 @@ export default function NewProductClient() {
       </SectionCard>
 
       {/* Variants */}
-      <SectionCard title={`Colour Variants (${variants.length})`}>
+      <SectionCard title={`Pack Sizes & Variants (${variants.length})`}>
         <div className="space-y-5">
           {variants.map((v, i) => (
             <div key={i} className="rounded-xl border overflow-hidden" style={{ borderColor: "#E5E7EB" }}>
@@ -592,15 +593,33 @@ export default function NewProductClient() {
               <div className="p-5 space-y-5">
                 {/* Fields grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Colour Name</label>
-                    <input value={v.colorName} onChange={(e) => updateVariant(i, "colorName", e.target.value)}
-                      placeholder="e.g. Ruby Red"
-                      className="w-full h-9 px-3 border rounded-lg text-sm font-body focus:outline-none transition-all"
-                      style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} />
+                  {/* Pack size: tap a common size or type any other ("750 g", "Pack of 6").
+                      Stored in the variant's label field, which the storefront shows as
+                      "Pack Size" buttons, each with this variant's own price and stock. */}
+                  <div className="space-y-1.5 col-span-full">
+                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Pack Size / Weight</label>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <input value={v.colorName} onChange={(e) => updateVariant(i, "colorName", e.target.value)}
+                        placeholder="e.g. 500 g"
+                        className="w-40 h-9 px-3 border rounded-lg text-sm font-body focus:outline-none transition-all"
+                        style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} />
+                      {PACK_SIZE_PRESETS.map((size) => {
+                        const on = v.colorName.trim().toLowerCase() === size.toLowerCase();
+                        return (
+                          <button key={size} type="button" onClick={() => updateVariant(i, "colorName", on ? "" : size)}
+                            className="h-9 px-3 rounded-lg border text-xs font-semibold font-body transition-colors"
+                            style={{ borderColor: on ? "#B45309" : "#E5E7EB", background: on ? "#FEF3C7" : "white", color: on ? "#92400E" : "#4B5563" }}>
+                            {size}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs font-body" style={{ color: "#9CA3AF" }}>
+                      Leave blank when the product comes in one size only. For several sizes, add one variant per size below — each has its own price, MRP, stock and photos.
+                    </p>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Colour</label>
+                    <label className="block text-xs font-semibold font-body" style={{ color: "#374151" }}>Swatch Colour <span style={{ fontWeight: 400, color: "#9CA3AF" }}>(optional — leave as is for pack sizes)</span></label>
                     <div className="flex items-center gap-2 h-9">
                       <input type="color" value={v.colorHex}
                         onChange={(e) => updateVariant(i, "colorHex", e.target.value)}
@@ -664,7 +683,7 @@ export default function NewProductClient() {
             onClick={() => setVariants((p) => [...p, emptyVariant()])}
             className="w-full py-3.5 rounded-xl border-2 border-dashed text-sm font-semibold font-body flex items-center justify-center gap-2 transition-colors hover:bg-gray-50"
             style={{ borderColor: "#D1D5DB", color: "#6B7280" }}>
-            <Plus className="h-4 w-4" /> Add Another Colour Variant
+            <Plus className="h-4 w-4" /> Add Another Pack Size / Variant
           </button>
         </div>
       </SectionCard>

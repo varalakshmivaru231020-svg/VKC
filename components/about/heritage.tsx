@@ -216,12 +216,26 @@ export function Button({ href, children, variant = "primary" }: { href: string; 
   );
 }
 
-/* Closing call to action: flat dark, centred. */
-export function Cta({ label, title, lede, primary, secondary, children }: {
+/* Closing call to action: dark, centred. With a photograph from Admin →
+   Banners ("cta_background") it sits behind the words under a dark wash, so
+   the type stays readable over any picture; without one the panel is flat. */
+export function Cta({ label, title, lede, primary, secondary, children, image, mobileImage }: {
   label?: string; title: string; lede?: string; primary: { href: string; label: string }; secondary?: { href: string; label: string }; children?: React.ReactNode;
+  image?: string | null; mobileImage?: string | null;
 }) {
+  const desktop = image?.trim() || mobileImage?.trim() || null;
+  const mobile = mobileImage?.trim() || null;
   return (
-    <Section bg="dark">
+    <Section bg="dark" className={desktop ? "relative isolate overflow-hidden" : ""}>
+      {desktop && (
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <picture>
+            {mobile && mobile !== desktop && <source media="(max-width: 767px)" srcSet={mobile} />}
+            <img src={desktop} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          </picture>
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(43,23,8,0.82) 0%, rgba(43,23,8,0.68) 50%, rgba(43,23,8,0.86) 100%)" }} />
+        </div>
+      )}
       <div className="text-center max-w-3xl mx-auto">
         {label && <Label light>{label}</Label>}
         <h2 className={label ? "mt-5" : ""} style={{ ...T.h2, color: C.onDark }}>
