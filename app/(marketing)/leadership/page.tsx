@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { normalizeBannerImageUrl } from "@/lib/banners";
 import { getCtaBackground } from "@/lib/cta";
+import { getPageBanner } from "@/lib/page-banners";
 import LeadershipExperience from "./LeadershipExperience";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +18,12 @@ export const metadata: Metadata = {
    ("leadership_heritage", "leadership_future"). Each falls back to a
    typographic panel until a real photograph is uploaded — nothing is
    invented. */
-const POSITIONS = ["leadership_banner", "leadership_heritage", "leadership_future"] as const;
+const POSITIONS = ["leadership_heritage", "leadership_future"] as const;
 
 export default async function LeadershipPage() {
   const now = new Date();
   const ctaPromise = getCtaBackground();
+  const bannerPromise = getPageBanner("leadership");
   const banners = await db.banner
     .findMany({
       where: {
@@ -35,14 +37,12 @@ export default async function LeadershipPage() {
     })
     .catch(() => []);
   const pick = (position: (typeof POSITIONS)[number]) => banners.find((b) => b.position === position && normalizeBannerImageUrl(b.imageUrl)) ?? null;
-  const hero = pick("leadership_banner");
   const heritage = pick("leadership_heritage");
   const future = pick("leadership_future");
 
   return (
     <LeadershipExperience
-      bannerImage={normalizeBannerImageUrl(hero?.imageUrl)}
-      bannerAlt={hero?.title ?? ""}
+      banner={await bannerPromise}
       heritageImage={normalizeBannerImageUrl(heritage?.imageUrl)}
       futureImage={normalizeBannerImageUrl(future?.imageUrl)}
       ctaImage={(await ctaPromise).image}

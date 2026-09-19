@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Mail, MessageCircle, Phone } from "lucide-react";
 import { Button, C, Cta, WARM_GRADIENT, Facts, Label, MILESTONES, NumberGrid, Photo, Reveal, Section, SectionHead, T, Timeline, Words } from "@/components/about/heritage";
+import { PageBanner, type PageBannerProps } from "@/components/layout/PageBanner";
 
 /**
  * About Us — who we are, in seven movements: hero, the story with its
@@ -43,9 +44,7 @@ export default function AboutExperience({
   phone = "+91 95916 08382",
   whatsapp = "919591608382",
   email = "info@vkccanegold.co.in",
-  bannerImage = null,
-  bannerImageMobile = null,
-  bannerAlt = "",
+  banner,
   ctaImage = null,
   ctaImageMobile = null,
   introImage = null,
@@ -57,10 +56,8 @@ export default function AboutExperience({
   phone?: string;
   whatsapp?: string;
   email?: string;
-  /** Admin → Banners, position "about_banner". Shown whole, above the title. */
-  bannerImage?: string | null;
-  bannerImageMobile?: string | null;
-  bannerAlt?: string;
+  /** The standard inner-page banner: words from lib/page-banners.ts, photograph from Admin → Banners ("about_banner"). */
+  banner: PageBannerProps;
   /** Admin → Banners, position "cta_background" — shared by every closing CTA. */
   ctaImage?: string | null;
   ctaImageMobile?: string | null;
@@ -72,9 +69,6 @@ export default function AboutExperience({
   visionImage?: string | null;
   visionImageMobile?: string | null;
 }) {
-  const desktopBanner = bannerImage?.trim() || bannerImageMobile?.trim() || null;
-  const mobileBanner = bannerImageMobile?.trim() || desktopBanner;
-  const separateMobile = Boolean(desktopBanner && mobileBanner && mobileBanner !== desktopBanner);
 
   const phoneHref = `tel:${phone.replace(/[^\d+]/g, "")}`;
   const whatsappDigits = whatsapp.replace(/\D/g, "");
@@ -94,45 +88,8 @@ export default function AboutExperience({
         "@media (min-width:768px){.vkc-about .about-banner-wash{background:linear-gradient(90deg,#2B1708 0%,#2B1708 69%,rgba(43,23,8,0.7) 77%,rgba(43,23,8,0.3) 88%,rgba(43,23,8,0.18) 100%)}}"
       }} />
 
-      {/* ── 1 · BANNER ───────────────────────────────────────────────────── */}
-      {/* A compact inner-page banner, not a hero: about 340px tall on desktop
-          and 240px on phones, so Our Story starts on the first screen. The
-          uploaded artwork (Admin → Banners, "about_banner") fills it as a cover
-          crop under a dark wash, heavier on the left where the words sit; with
-          nothing uploaded the same band is plain cream. The height is a minimum,
-          so a large system font grows the band instead of clipping the text. */}
-      <section
-        aria-labelledby="about-heading"
-        className="relative isolate flex items-center overflow-hidden min-h-[240px] md:min-h-[340px]"
-        style={{ background: desktopBanner ? C.dark : C.cream, borderBottom: desktopBanner ? undefined : `1px solid ${C.line}` }}
-      >
-        {desktopBanner && (
-          <>
-            <picture>
-              {separateMobile && mobileBanner && <source media="(max-width: 767px)" srcSet={mobileBanner} />}
-              <img src={desktopBanner} alt={bannerAlt} fetchPriority="high" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover" style={{ objectPosition: "center 62%" }} />
-            </picture>
-            <div aria-hidden className="about-banner-wash absolute inset-0 -z-10" />
-          </>
-        )}
-        <div className="w-full max-w-[1200px] mx-auto px-5 sm:px-8 py-7 md:py-10">
-          <div className="max-w-[680px]">
-            <nav aria-label="Breadcrumb" className="font-body" style={{ ...T.label, fontSize: 10.5, color: desktopBanner ? C.onDarkMuted : C.muted }}>
-              <Link href="/" className="hover:underline">Home</Link>
-              <span aria-hidden className="mx-2.5" style={{ color: desktopBanner ? C.jaggery : C.gold }}>/</span>
-              <span style={{ color: desktopBanner ? C.jaggery : C.gold }}>About Us</span>
-            </nav>
-            <h1 id="about-heading" className="mt-3 md:mt-4" style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "clamp(2.1rem, 4.4vw, 3.6rem)", lineHeight: 1.04, letterSpacing: "-0.02em", color: desktopBanner ? C.onDark : C.ink }}>
-              <Words text="About Us" />
-            </h1>
-            <Reveal delay={0.2}>
-              <p className="font-body mt-3 md:mt-4" style={{ fontSize: "clamp(0.86rem, 1.15vw, 1.02rem)", lineHeight: 1.6, color: desktopBanner ? C.onDarkMuted : C.ink2, maxWidth: 540 }}>
-                The family, the values and the place behind VKC Gold Ikshu.
-              </p>
-            </Reveal>
-          </div>
-        </div>
-      </section>
+      {/* ── 1 · BANNER — the standard inner-page banner (components/layout/PageBanner) ── */}
+      <PageBanner {...banner} />
 
       {/* ── 1b · INTRODUCTION, WITH ITS PHOTOGRAPH ───────────────────────── */}
       {/* The opening statement beside a photograph from Admin → Banners

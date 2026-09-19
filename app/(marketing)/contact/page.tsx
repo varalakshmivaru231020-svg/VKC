@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import ContactClient from "./ContactClient";
+import { getPageBanner } from "@/lib/page-banners";
 
 export const metadata: Metadata = {
   title: "Contact Us — vkcgoldikshu",
@@ -26,6 +27,7 @@ export default async function ContactPage() {
       },
     },
   });
+  const pageBanner = await getPageBanner("contact");
   const s: Record<string, string> = {};
   rows.forEach((r) => { s[r.key] = r.value; });
 
@@ -35,6 +37,7 @@ export default async function ContactPage() {
     // visitors were shown contact details that would never reach the store.
     // Anything not set in Admin → Settings is simply not displayed.
     <ContactClient
+      banner={pageBanner}
       phone={s.store_phone ?? ""}
       email={s.store_email ?? ""}
       address={s.store_address ?? ""}

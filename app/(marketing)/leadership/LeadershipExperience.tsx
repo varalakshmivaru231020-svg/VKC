@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { C, Cta, Label, NumberGrid, Photo, Reveal, Section, SectionHead, T, Words } from "@/components/about/heritage";
+import { PageBanner, type PageBannerProps } from "@/components/layout/PageBanner";
 
 /**
  * Leadership — who is carrying the legacy forward. Six movements, light and
@@ -66,8 +67,8 @@ function Panel({ image, year, label, title, facts, tint, link }: { image: string
   );
 }
 
-export default function LeadershipExperience({ bannerImage = null, bannerAlt = "", heritageImage = null, futureImage = null, ctaImage = null, ctaImageMobile = null }: {
-  bannerImage?: string | null; bannerAlt?: string; heritageImage?: string | null; futureImage?: string | null;
+export default function LeadershipExperience({ banner, heritageImage = null, futureImage = null, ctaImage = null, ctaImageMobile = null }: {
+  banner: PageBannerProps; heritageImage?: string | null; futureImage?: string | null;
   /** Admin → Banners, position "cta_background" — shared by every closing CTA. */
   ctaImage?: string | null; ctaImageMobile?: string | null;
 }) {
@@ -78,20 +79,16 @@ export default function LeadershipExperience({ bannerImage = null, bannerAlt = "
         ".marketing-layout .vkc-about .text-center p{text-align:center}"
       }} />
 
-      {/* ── 1 · HERO ─────────────────────────────────────────────────────── */}
-      {bannerImage && (
-        <div style={{ background: C.cream }} aria-label={bannerAlt || undefined}>
-          <img src={bannerImage} alt={bannerAlt} className="block w-full h-auto" />
-        </div>
-      )}
+      {/* ── 1 · BANNER, then the page's opening statement ────────────────── */}
+      <PageBanner {...banner} />
       <section aria-labelledby="leadership-heading" style={{ background: C.ivory }}>
-        <div className={`max-w-[1200px] mx-auto px-5 sm:px-8 ${bannerImage ? "py-16 sm:py-20" : "pt-24 pb-20 sm:pt-32 sm:pb-28"}`}>
-          <div className="grid lg:grid-cols-12 gap-10 items-end">
+        <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-14 sm:py-20">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-end">
             <div className="lg:col-span-8">
               <Label>The people behind the legacy</Label>
-              <h1 id="leadership-heading" className="mt-5" style={{ ...T.display, color: C.ink }}>
+              <h2 id="leadership-heading" className="mt-5" style={{ ...T.display, fontSize: "clamp(2.3rem,4.6vw,3.9rem)", color: C.ink }}>
                 <Words text="Carrying a legacy forward." />
-              </h1>
+              </h2>
             </div>
             <Reveal delay={0.25} className="lg:col-span-4 lg:pb-2">
               <p className="font-body" style={{ ...T.lede, color: C.ink2 }}>

@@ -8,6 +8,8 @@ import ShopFilters from "./ShopFilters";
 import ShopHeader from "./ShopHeader";
 import { attrKey } from "./attrKey";
 import { PromoBanner } from "@/components/home/PromoBanner";
+import { PageBanner } from "@/components/layout/PageBanner";
+import { getPageBanner } from "@/lib/page-banners";
 import type { ProductData } from "@/lib/types/product";
 
 export const metadata: Metadata = { title: "Shop All Products" };
@@ -25,7 +27,7 @@ interface Props {
 
 export default async function ShopPage({ searchParams }: Props) {
   const now = new Date();
-  const [settings, attributes, colors, shopBanners, shopMidBanners] = await Promise.all([
+  const [settings, attributes, colors, shopBanners, pageBanner] = await Promise.all([
     getThemeSettings(),
     db.attribute.findMany({
       where: { isActive: true },
@@ -42,15 +44,8 @@ export default async function ShopPage({ searchParams }: Props) {
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }).catch(() => []),
-    db.banner.findMany({
-      where: {
-        isActive: true,
-        position: "shop_banner",
-        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
-        AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
-      },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-    }).catch(() => []),
+    // The page banner's photograph: Admin → Banners, position "shop_banner".
+    getPageBanner("shop"),
   ]);
 
   // Build attribute filters from URL params
@@ -107,31 +102,13 @@ export default async function ShopPage({ searchParams }: Props) {
         </section>
       )}
 
-      {/* Page header — uses shop_banner image as background if uploaded */}
-      {(() => {
-        const bannerImg = shopMidBanners[0]?.imageUrl ?? null;
-        return (
-          <div
-            className="relative py-16 text-center border-b overflow-hidden"
-            style={
-              bannerImg
-                ? { backgroundImage: `url(${bannerImg})`, backgroundSize: "cover", backgroundPosition: "center", borderColor: "transparent" }
-                : { background: "var(--color-cream)", borderColor: "var(--color-parchment)" }
-            }
-          >
-            {bannerImg && <div className="absolute inset-0 bg-black/45 pointer-events-none" />}
-            <div className="relative z-10">
-              <p className="text-label mb-2" style={{ color: bannerImg ? "var(--color-gold)" : "var(--color-gold)" }}>Crafted with purpose. Rooted in purity.</p>
-              <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h1)", fontWeight: "var(--weight-heading)", color: bannerImg ? "white" : "var(--color-text-primary)" }}>
-                Our Products
-              </h1>
-              <p className="text-body-sm mt-4 font-body max-w-3xl mx-auto px-4" style={{ color: bannerImg ? "rgba(255,255,255,0.8)" : "var(--color-text-muted)", textAlign: "justify", textAlignLast: "center", hyphens: "none", lineHeight: 1.7 }}>
-                Our product direction is inspired by natural sweetness, rooted values, and a growing commitment to quality-led development — a dependable identity in jaggery and value-added natural sweeteners, built on trust, authenticity and customer confidence.
-              </p>
-            </div>
-          </div>
-        );
-      })()}
+      {/* The standard inner-page banner (components/layout/PageBanner). */}
+      <PageBanner {...pageBanner} />
+      <div className="border-b" style={{ background: "var(--color-cream)", borderColor: "var(--color-parchment)" }}>
+        <p className="max-w-3xl mx-auto px-5 py-5 text-sm font-body text-center" style={{ color: "var(--color-text-muted)", textAlign: "center", hyphens: "none" }}>
+          Our product direction is inspired by natural sweetness, rooted values, and a growing commitment to quality-led development — a dependable identity in jaggery and value-added natural sweetener products.
+        </p>
+      </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex gap-8">

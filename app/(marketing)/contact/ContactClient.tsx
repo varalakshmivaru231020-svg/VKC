@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Mail, Phone, MapPin, Clock, Send, Check, MessageSquare } from "lucide-react";
+import { PageBanner, type PageBannerProps } from "@/components/layout/PageBanner";
 
 interface Props {
+  banner: PageBannerProps;
   phone: string;
   email: string;
   address: string;
@@ -20,6 +22,7 @@ const topics = ["Order Query", "Product Question", "Bulk / Wholesale", "Corporat
 type Status = "idle" | "sending" | "sent" | "error";
 
 export default function ContactClient({
+  banner,
   phone,
   email,
   address,
@@ -69,34 +72,15 @@ export default function ContactClient({
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
 
-      {/* ── HEADER ── */}
-      <div
-        className="py-16 text-center border-b"
-        style={{ background: "var(--color-cream)", borderColor: "var(--color-parchment)" }}
-      >
-        <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "var(--color-gold)" }}>
-          We'd Love to Hear From You
-        </span>
-        <h1
-          className="mt-3"
-          style={{
-            fontFamily: "var(--font-heading)",
-            fontSize: "var(--text-h1)",
-            fontWeight: "var(--weight-heading)",
-            color: "var(--color-text-primary)",
-          }}
-        >
-          Contact Us
-        </h1>
-        <p
-          className="mt-3 text-base font-body max-w-2xl mx-auto"
-          style={{ color: "var(--color-text-muted)", textAlign: "center", hyphens: "none" }}
-        >
+      {/* ── BANNER — the standard inner-page banner, then the welcome note ── */}
+      <PageBanner {...banner} />
+      <div className="border-b text-center px-5 py-8" style={{ background: "var(--color-cream)", borderColor: "var(--color-parchment)" }}>
+        <p className="text-sm sm:text-base font-body max-w-2xl mx-auto" style={{ color: "var(--color-text-muted)", textAlign: "center", hyphens: "none" }}>
           We welcome enquiries from customers, retailers, distributors and business partners who value
           authenticity, quality and long-term trust. Whether you are looking for product information,
           supply partnerships or business discussions, our team will be happy to connect with you.
         </p>
-        <p className="mt-5 italic" style={{ fontFamily: "var(--font-heading)", fontSize: "1.35rem", color: "var(--color-primary)", textAlign: "center" }}>
+        <p className="mt-4 italic" style={{ fontFamily: "var(--font-heading)", fontSize: "1.25rem", color: "var(--color-primary)", textAlign: "center" }}>
           Let’s build trusted relationships, one honest conversation at a time.
         </p>
       </div>

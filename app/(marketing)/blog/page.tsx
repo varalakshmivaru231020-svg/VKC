@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { ArrowRight, BookOpen, Clock3 } from "lucide-react";
 import { FramedImage } from "@/components/ui/FramedImage";
 import type { Metadata } from "next";
+import { PageBanner } from "@/components/layout/PageBanner";
+import { getPageBanner } from "@/lib/page-banners";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -16,6 +18,7 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-IN", { day: "numeric", mon
 const readMins = (html: string) => Math.max(2, Math.round(html.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length / 200));
 
 export default async function BlogListPage() {
+  const pageBanner = await getPageBanner("blog");
   const blogs = await db.blog.findMany({
     where: { isPublished: true },
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
@@ -24,16 +27,8 @@ export default async function BlogListPage() {
 
   return (
     <div style={{ background: C.ivory }}>
-      {/* Header band — centred, matching the Contact page */}
-      <section className="py-16 sm:py-20 text-center border-b" style={{ background: C.cream, borderColor: C.parchment }}>
-        <div className="max-w-2xl mx-auto px-5">
-          <span className="font-body font-semibold uppercase" style={{ fontSize: 11.5, letterSpacing: "0.26em", color: C.jaggeryDark }}>From the cane fields</span>
-          <h1 className="mt-4" style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(2.4rem,5vw,4rem)", lineHeight: 1.04, letterSpacing: "-0.02em", color: C.ink, fontWeight: 500 }}>Blogs</h1>
-          <p className="font-body mt-4" style={{ fontSize: 16.5, lineHeight: 1.7, color: C.ink2, textAlign: "center", hyphens: "none" }}>
-            How our jaggery is made, honest notes on natural sweeteners, and ideas for gifting and everyday cooking.
-          </p>
-        </div>
-      </section>
+      {/* The standard inner-page banner (components/layout/PageBanner). */}
+      <PageBanner {...pageBanner} />
 
       <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-20">
         {blogs.length === 0 ? (

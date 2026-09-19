@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
+import { PageBanner, type PageBannerProps } from "@/components/layout/PageBanner";
 import {
   ArrowRight, Award, BadgeCheck, Building2, Clock3, Factory, FileCheck2, GraduationCap,
   Landmark, ScrollText, ShieldCheck, Sprout, Tag, Globe2,
@@ -109,29 +110,26 @@ function DrawnCheck({ delay = 0 }: { delay?: number }) {
 }
 
 /* ── Page ────────────────────────────────────────────────────────────────── */
-export default function CredentialsExperience() {
+export default function CredentialsExperience({ banner }: { banner: PageBannerProps }) {
   const reduced = useReducedMotion();
   return (
     <div className="vkc-about" style={{ background: C.ivory }}>
       <style dangerouslySetInnerHTML={{ __html: ".marketing-layout .vkc-about p{text-align:left;hyphens:none;text-justify:auto}" }} />
 
-      {/* Header band — light, centred, single-line title (matches Gallery / Contact) */}
-      <section className="relative overflow-hidden border-b" style={{ background: C.cream, borderColor: C.parchment }}>
-        <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-20 text-center">
+      {/* The standard inner-page banner, then the page's own opening line and counts. */}
+      <PageBanner {...banner} />
+      <section className="border-b" style={{ background: C.cream, borderColor: C.parchment }}>
+        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-9 sm:py-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-7">
           <Reveal>
-            <span className="font-body font-semibold uppercase" style={{ fontSize: 12, letterSpacing: "0.18em", color: C.jaggery }}>Credentials</span>
-            <h1 className="font-heading mt-3 mx-auto lg:whitespace-nowrap" style={{ fontSize: "clamp(1.9rem,3.4vw,3.2rem)", lineHeight: 1.1, letterSpacing: "-0.015em", color: C.ink }}>
-              Registrations, compliance and continuous learning
-            </h1>
-            <p className="font-body mt-3 mx-auto" style={{ fontSize: 16.5, lineHeight: 1.7, color: C.muted, maxWidth: 680, textAlign: "center" }}>
+            <p className="font-body" style={{ fontSize: 16, lineHeight: 1.7, color: C.muted, maxWidth: 640 }}>
               We believe trust grows stronger when business values are supported by proper structure and compliance. Here is exactly where we stand.
             </p>
           </Reveal>
-          <Reveal delay={0.15}>
-            <div className="mt-8 inline-flex items-center gap-8 sm:gap-12">
+          <Reveal delay={0.1}>
+            <div className="inline-flex items-center gap-8 sm:gap-12">
               {[["2", "Entities"], ["5", "Registrations"], ["6", "Courses"]].map(([n, l]) => (
                 <div key={l} className="text-center">
-                  <div className="font-heading" style={{ fontSize: "clamp(1.8rem,3vw,2.6rem)", lineHeight: 1, color: C.jaggeryDark }}>{n}</div>
+                  <div className="font-heading" style={{ fontSize: "clamp(1.7rem,2.6vw,2.3rem)", lineHeight: 1, color: C.jaggeryDark }}>{n}</div>
                   <div className="font-body mt-1.5 uppercase" style={{ fontSize: 10.5, letterSpacing: "0.18em", color: C.muted }}>{l}</div>
                 </div>
               ))}
