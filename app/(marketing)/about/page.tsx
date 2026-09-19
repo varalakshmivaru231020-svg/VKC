@@ -27,7 +27,7 @@ export default async function AboutPage() {
       .findMany({
         where: {
           isActive: true,
-          position: { in: ["about_banner", "about_intro"] },
+          position: { in: ["about_banner", "about_intro", "about_vision_bg"] },
           OR: [{ startsAt: null }, { startsAt: { lte: now } }],
           AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
         },
@@ -44,6 +44,8 @@ export default async function AboutPage() {
   const banner = pick("about_banner");
   // The photograph beside the introduction, below the banner ("about_intro").
   const intro = pick("about_intro");
+  // The picture behind the Vision and Mission panel ("about_vision_bg").
+  const vision = pick("about_vision_bg");
   const bannerImage = normalizeBannerImageUrl(banner?.imageUrl) ?? null;
   const bannerImageMobile = normalizeBannerImageUrl(banner?.mobileImageUrl) ?? null;
 
@@ -58,6 +60,8 @@ export default async function AboutPage() {
       introImage={normalizeBannerImageUrl(intro?.imageUrl) ?? normalizeBannerImageUrl(intro?.mobileImageUrl) ?? null}
       introImageMobile={normalizeBannerImageUrl(intro?.mobileImageUrl) ?? null}
       introAlt={intro?.title ?? ""}
+      visionImage={normalizeBannerImageUrl(vision?.imageUrl) ?? normalizeBannerImageUrl(vision?.mobileImageUrl) ?? null}
+      visionImageMobile={normalizeBannerImageUrl(vision?.mobileImageUrl) ?? null}
       ctaImage={cta.image}
       ctaImageMobile={cta.mobileImage}
     />

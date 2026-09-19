@@ -8,6 +8,7 @@ export const BANNER_POSITIONS: Record<string, string> = {
   shop_banner: "Shop — Banner",
   about_banner: "About Us — Top banner (compact strip)",
   about_intro: "About Us — Intro image (beside \"Rooted in Legacy\", below the banner)",
+  about_vision_bg: "About Us — Vision & Mission background image",
   leadership_banner: "Leadership — Header Banner",
   leadership_heritage: "Leadership — Heritage image (where we began)",
   leadership_future: "Leadership — Future image (where we are going)",

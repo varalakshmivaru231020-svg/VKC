@@ -51,6 +51,8 @@ export default function AboutExperience({
   introImage = null,
   introImageMobile = null,
   introAlt = "",
+  visionImage = null,
+  visionImageMobile = null,
 }: {
   phone?: string;
   whatsapp?: string;
@@ -66,6 +68,9 @@ export default function AboutExperience({
   introImage?: string | null;
   introImageMobile?: string | null;
   introAlt?: string;
+  /** Admin → Banners, position "about_vision_bg" — the picture behind Vision and Mission. */
+  visionImage?: string | null;
+  visionImageMobile?: string | null;
 }) {
   const desktopBanner = bannerImage?.trim() || bannerImageMobile?.trim() || null;
   const mobileBanner = bannerImageMobile?.trim() || desktopBanner;
@@ -242,6 +247,18 @@ export default function AboutExperience({
               className="relative overflow-hidden rounded-md px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16"
               style={{ background: WARM_GRADIENT, color: "#FFFFFF", textShadow: "0 1px 2px rgba(80,32,0,0.28)" }}
             >
+              {/* An uploaded photograph sits under the same warm run of colour,
+                  thinned just enough for the picture to read while the white
+                  text stays legible over any image. */}
+              {visionImage && (
+                <div aria-hidden className="absolute inset-0">
+                  <picture>
+                    {visionImageMobile && visionImageMobile !== visionImage && <source media="(max-width: 767px)" srcSet={visionImageMobile} />}
+                    <img src={visionImage} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                  </picture>
+                  <div className="absolute inset-0" style={{ background: WARM_GRADIENT, opacity: 0.84 }} />
+                </div>
+              )}
               <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 90% at 100% 0%, rgba(255,214,92,0.22) 0%, rgba(255,214,92,0) 60%)" }} />
               <div className="relative grid lg:grid-cols-2 gap-x-14 gap-y-12">
                 <div>
@@ -308,12 +325,11 @@ export default function AboutExperience({
         secondary={{ href: "/contact", label: "Contact us" }}
         image={ctaImage}
         mobileImage={ctaImageMobile}
-        tone="warm"
       >
-        <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3 font-body" style={{ fontSize: 14, color: "rgba(255,255,255,0.92)" }}>
-          <a href={phoneHref} className="inline-flex items-center gap-2 hover:text-white"><Phone className="h-4 w-4" style={{ color: "#FFE27A" }} />{phone}</a>
-          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-white"><MessageCircle className="h-4 w-4" style={{ color: "#FFE27A" }} />WhatsApp</a>
-          <a href={`mailto:${email}`} className="inline-flex items-center gap-2 hover:text-white"><Mail className="h-4 w-4" style={{ color: "#FFE27A" }} />{email}</a>
+        <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3 font-body" style={{ fontSize: 14, color: C.onDarkMuted }}>
+          <a href={phoneHref} className="inline-flex items-center gap-2 hover:text-white"><Phone className="h-4 w-4" style={{ color: C.jaggery }} />{phone}</a>
+          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-white"><MessageCircle className="h-4 w-4" style={{ color: C.jaggery }} />WhatsApp</a>
+          <a href={`mailto:${email}`} className="inline-flex items-center gap-2 hover:text-white"><Mail className="h-4 w-4" style={{ color: C.jaggery }} />{email}</a>
         </div>
       </Cta>
     </div>
