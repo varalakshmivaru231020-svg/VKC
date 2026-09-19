@@ -300,13 +300,15 @@ export default function AboutExperience({
           <div className="lg:col-span-6">
             <SectionHead id="formal-heading" label="Formal foundation" title="A legacy with a formal foundation" />
             <Reveal delay={0.1}>
+              {/* Names exactly as on the Udyam Registration Certificate and the GST
+                  certificate — reviewers (SMS/DLT, payments) compare them with the site. */}
               <p className="font-body mt-7" style={{ ...T.body, color: C.ink2, maxWidth: 520 }}>
-                The business is also supported by formal Udyam registration under <strong style={{ color: C.ink, fontWeight: 600 }}>VKC JAGGERY &amp; BEVERAGES PRIVATE LIMITED</strong>, with the unit name recorded as <strong style={{ color: C.ink, fontWeight: 600 }}>VKC CANE Gold Foods – Jaggery Manufacturing Unit</strong>.
+                The business is formally registered under Udyam as <strong style={{ color: C.ink, fontWeight: 600 }}>VKC CANEGOLD IKSHU ZUCKER PURE</strong> — a proprietorship of Naveenchandra B R, classified as a micro manufacturing enterprise. For the next phase of structured growth, <strong style={{ color: C.ink, fontWeight: 600 }}>VKC JAGGERY &amp; BEVERAGES PRIVATE LIMITED</strong> was incorporated in December 2025.
               </p>
             </Reveal>
           </div>
           <Reveal delay={0.15} className="lg:col-span-6 lg:pt-14">
-            <Facts rows={[["Company", "VKC JAGGERY & BEVERAGES PRIVATE LIMITED"], ["Unit", "VKC CANE Gold Foods – Jaggery Manufacturing Unit"], ["Status", "Udyam Registered"]]} />
+            <Facts rows={[["Enterprise", "VKC CANEGOLD IKSHU ZUCKER PURE"], ["Constitution", "Proprietorship — Naveenchandra B R"], ["Udyam No.", "UDYAM-KR-21-0019065 · Micro · Manufacturing"], ["GST trade name", "Vairamudi Krupa Crusher"]]} />
             <div className="pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
               <Link href="/credentials" className="group inline-flex items-center gap-2 font-body font-semibold" style={{ fontSize: 14.5, color: C.gold }}>
                 View credentials <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />

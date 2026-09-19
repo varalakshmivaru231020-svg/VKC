@@ -35,6 +35,9 @@ const DEFAULT_ACCOUNT_LINKS: FooterLink[] = [
 // Hardcoded badges — keep this list honest about what checkout actually
 // accepts. COD was removed because cod_enabled is off in Settings, so the
 // footer was advertising a method customers could not choose.
+/* As recorded on the Udyam Registration Certificate (UDYAM-KR-21-0019065). */
+export const DEFAULT_LEGAL_ENTITY = "VKC CANEGOLD IKSHU ZUCKER PURE";
+
 const paymentMethods = ["Visa", "Mastercard", "UPI", "NetBanking", "EMI"];
 
 interface FooterProps {
@@ -48,6 +51,10 @@ interface FooterProps {
   instagram?: string;
   facebook?: string;
   youtube?: string;
+  /** Registered business name (Admin → Settings). Printed as the site's operator. */
+  legalEntityName?: string;
+  /** Optional paragraph under the logo (Admin → Settings). */
+  footerAbout?: string;
   shopLinks?: FooterLink[];
   helpLinks?: FooterLink[];
   accountLinks?: FooterLink[];
@@ -70,6 +77,8 @@ export function Footer({
   instagram,
   facebook,
   youtube,
+  legalEntityName,
+  footerAbout,
   shopLinks    = DEFAULT_SHOP_LINKS,
   helpLinks    = DEFAULT_HELP_LINKS,
   accountLinks = DEFAULT_ACCOUNT_LINKS,
@@ -125,9 +134,12 @@ export function Footer({
             <p className="text-[15px] leading-relaxed max-w-[340px]" style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--color-text-primary)", textAlign: "left", hyphens: "none" }}>
               {tagline}
             </p>
-            <p className="text-[13px] leading-relaxed max-w-[340px] font-body" style={{ color: "var(--color-text-muted)", textAlign: "left", hyphens: "none" }}>
-              VKC Gold Ikshu is a legacy-inspired brand shaped by the values of Late Shri B Ramachandra and led today by Naveenchandra B R. We stand for purity, trust and responsible growth. Our present business growth is carried forward through VKC JAGGERY &amp; BEVERAGES PRIVATE LIMITED.
-            </p>
+            {/* Optional, from Admin → Settings ("footer_about"). Nothing is shown when it is blank. */}
+            {footerAbout?.trim() && (
+              <p className="text-[13px] leading-relaxed max-w-[340px] font-body" style={{ color: "var(--color-text-muted)", textAlign: "left", hyphens: "none" }}>
+                {footerAbout.trim()}
+              </p>
+            )}
           </div>
 
           {/* 2 · Shop */}
@@ -212,6 +224,11 @@ export function Footer({
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[11px] font-body" style={{ color: "var(--color-text-muted)" }}>
             © {new Date().getFullYear()} {siteName}. All rights reserved. Handcrafted with ♥ in India.
+            {/* The registered entity behind the site — the name SMS (DLT) and
+                payment reviewers look for when they open a link to it. */}
+            <span className="block mt-1">
+              {siteName} is owned and operated by <strong style={{ fontWeight: 600, color: "var(--color-text-secondary)" }}>{legalEntityName?.trim() || DEFAULT_LEGAL_ENTITY}</strong>
+            </span>
           </p>
           <div className="flex items-center gap-1.5 flex-wrap justify-center">
             {paymentMethods.map((m) => (

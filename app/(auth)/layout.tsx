@@ -6,12 +6,12 @@ export const dynamic = "force-dynamic";
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   // Logo and name from Admin → Settings, as the storefront header uses them.
   const rows = await db.siteSetting
-    .findMany({ where: { key: { in: ["store_logo", "store_name", "site.name"] } } })
+    .findMany({ where: { key: { in: ["store_logo", "store_name", "site.name", "legal_entity_name"] } } })
     .catch(() => [] as { key: string; value: string }[]);
   const get = (k: string) => rows.find((r) => r.key === k)?.value?.trim() || undefined;
 
   return (
-    <AuthModalShell siteName={get("site.name") ?? get("store_name") ?? "vkcgoldikshu"} logoUrl={get("store_logo") ?? null}>
+    <AuthModalShell siteName={get("site.name") ?? get("store_name") ?? "vkcgoldikshu"} logoUrl={get("store_logo") ?? null} legalEntityName={get("legal_entity_name")}>
       {children}
     </AuthModalShell>
   );

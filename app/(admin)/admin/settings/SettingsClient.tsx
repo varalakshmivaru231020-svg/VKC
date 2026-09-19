@@ -128,6 +128,8 @@ function GeneralTab() {
     store_name: "", tagline: "", support_email: "", support_phone: "",
     store_address: "", store_city: "", store_gst: "", currency_symbol: "₹", currency_code: "INR",
     return_address: "",
+    legal_entity_name: "",
+    footer_about: "",
     whatsapp_number: "",
     store_hours_weekday: "Mon–Sat: 10 AM – 7 PM",
     store_hours_weekend: "Sun: Closed",
@@ -147,6 +149,8 @@ function GeneralTab() {
         store_address:       settings.store_address       ?? f.store_address,
         store_city:          settings.store_city          ?? f.store_city,
         store_gst:           settings.store_gst           ?? f.store_gst,
+        legal_entity_name:   settings.legal_entity_name   ?? f.legal_entity_name,
+        footer_about:        settings.footer_about        ?? f.footer_about,
         currency_symbol:     settings.currency_symbol     ?? f.currency_symbol,
         currency_code:       settings.currency_code       ?? f.currency_code,
         return_address:      settings.return_address      ?? f.return_address,
@@ -184,6 +188,8 @@ function GeneralTab() {
         store_address:       form.store_address,
         store_city:          form.store_city,
         store_gst:           form.store_gst,
+        legal_entity_name:   form.legal_entity_name,
+        footer_about:        form.footer_about,
         currency_symbol:     form.currency_symbol,
         currency_code:       form.currency_code,
         return_address:      form.return_address,
@@ -264,6 +270,25 @@ function GeneralTab() {
         <p className="text-[11px] font-body mt-3" style={{ color: "#9CA3AF" }}>
           WhatsApp number appears in the footer, header, and contact page. Use international format (e.g. +919876543210).
         </p>
+      </SectionCard>
+
+      <SectionCard title="Registered Business Name & Footer Text" icon={MapPin}>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Registered business name</label>
+            <input value={form.legal_entity_name} onChange={u("legal_entity_name")} placeholder="VKC CANEGOLD IKSHU ZUCKER PURE" className={inputCls} style={inputStyle} {...focusProps} />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>
+              Shown as "Owned and operated by …" at the foot of every page and on the customer login page. Keep it exactly as on your Udyam / DLT registration — SMS (DLT) reviewers check that this name matches.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Footer "about" text <span style={{ fontWeight: 400, color: "#9CA3AF" }}>(optional)</span></label>
+            <textarea value={form.footer_about} onChange={u("footer_about")} rows={3}
+              placeholder="A short paragraph under the logo in the footer. Leave blank to show none."
+              className="w-full px-4 py-2.5 border rounded-lg text-sm font-body focus:outline-none resize-none"
+              style={{ borderColor: "#E5E7EB", background: "white", color: "#111827" }} {...focusProps} />
+          </div>
+        </div>
       </SectionCard>
 
       <SectionCard title="Store Address & Hours" icon={MapPin}>

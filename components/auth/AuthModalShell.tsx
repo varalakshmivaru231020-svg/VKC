@@ -10,10 +10,12 @@ import { ArrowLeft } from "lucide-react";
  * used to be a dark modal overlay with no page behind it, which left the
  * heading and hint as dark text on a dark wash.)
  */
-export function AuthModalShell({ children, siteName = "vkcgoldikshu", logoUrl = null }: {
+export function AuthModalShell({ children, siteName = "vkcgoldikshu", logoUrl = null, legalEntityName = "VKC CANEGOLD IKSHU ZUCKER PURE" }: {
   children: React.ReactNode;
   siteName?: string;
   logoUrl?: string | null;
+  /** Registered business name — the entity the OTP SMS is sent on behalf of. */
+  legalEntityName?: string;
 }) {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--color-ivory)" }}>
@@ -41,6 +43,9 @@ export function AuthModalShell({ children, siteName = "vkcgoldikshu", logoUrl = 
       </main>
 
       <footer className="px-4 py-6 text-center text-xs font-body" style={{ color: "var(--color-text-muted)", borderTop: "1px solid var(--color-parchment)" }}>
+        <span className="block mb-1.5" style={{ color: "var(--color-text-secondary)" }}>
+          {siteName} is owned and operated by <strong style={{ fontWeight: 600 }}>{legalEntityName}</strong>
+        </span>
         <span>© {new Date().getFullYear()} {siteName}</span>
         <span aria-hidden className="mx-2">·</span>
         <Link href="/privacy" className="hover:underline">Privacy</Link>

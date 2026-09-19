@@ -103,6 +103,8 @@ export default async function MarketingLayout({ children }: { children: React.Re
         instagram={siteSettings["social_instagram"]}
         facebook={siteSettings["social_facebook"]}
         youtube={siteSettings["social_youtube"]}
+        legalEntityName={siteSettings["legal_entity_name"]}
+        footerAbout={siteSettings["footer_about"]}
         shopLinks={parseFooterLinks(siteSettings["footer_shop_links"])}
         helpLinks={parseFooterLinks(siteSettings["footer_help_links"])}
         accountLinks={parseFooterLinks(siteSettings["footer_account_links"])}
