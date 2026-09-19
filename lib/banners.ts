@@ -2,6 +2,7 @@ export const BANNER_POSITIONS: Record<string, string> = {
   home_hero: "Home — Hero",
   home_mid: "Home — Mid Section",
   home_bottom: "Home — Bottom",
+  home_why_image: "Home — Why VKC centre image (farmer holding sugarcane, portrait)",
   category_top: "Category — Top",
   category_banner: "Category — Banner",
   shop_top: "Shop — Top",
