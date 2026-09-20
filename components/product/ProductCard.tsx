@@ -122,7 +122,9 @@ export function ProductCard({ product, className, index = 0 }: Props) {
       >
         <div className="absolute inset-0 overflow-hidden rounded-2xl">
           {/* Top badges */}
-          <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+          {/* items-start: a column stretches its children by default, which made
+              "New" as wide as "Coming Soon" whenever a card carried both. */}
+          <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
             {product.isFeatured && !hasDiscount && (
               <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm"
                 style={{ background: "#1B4B6B", color: "white" }}>

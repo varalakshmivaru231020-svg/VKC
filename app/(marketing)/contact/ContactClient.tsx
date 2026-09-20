@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Mail, Phone, MapPin, Clock, Send, Check, MessageSquare } from "lucide-react";
 import { PageBanner, type PageBannerProps } from "@/components/layout/PageBanner";
+import { PAGE_CONTAINER } from "@/lib/layout";
 
 interface Props {
   banner: PageBannerProps;
@@ -72,29 +73,29 @@ export default function ContactClient({
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
 
-      {/* ── BANNER — the standard inner-page banner, then the welcome note ── */}
+      {/* ── BANNER — the standard inner-page banner; the page body follows directly ── */}
       <PageBanner {...banner} />
-      <div className="border-b text-center px-5 py-8" style={{ background: "var(--color-cream)", borderColor: "var(--color-parchment)" }}>
-        <p className="text-sm sm:text-base font-body max-w-2xl mx-auto" style={{ color: "var(--color-text-muted)", textAlign: "center", hyphens: "none" }}>
-          We welcome enquiries from customers, retailers, distributors and business partners who value
-          authenticity, quality and long-term trust. Whether you are looking for product information,
-          supply partnerships or business discussions, our team will be happy to connect with you.
-        </p>
-        <p className="mt-4 italic" style={{ fontFamily: "var(--font-heading)", fontSize: "1.25rem", color: "var(--color-primary)", textAlign: "center" }}>
-          Let’s build trusted relationships, one honest conversation at a time.
-        </p>
-      </div>
 
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className={`${PAGE_CONTAINER} py-14 sm:py-20`}>
+        {/* The welcome note: body copy on the banner's left edge, not a band of its own. */}
+        <div className="max-w-2xl mb-12">
+          <p className="text-base font-body" style={{ color: "var(--color-text-muted)", textAlign: "left", hyphens: "none", lineHeight: 1.75 }}>
+            We welcome enquiries from customers, retailers, distributors and business partners who value
+            authenticity, quality and long-term trust. Whether you are looking for product information,
+            supply partnerships or business discussions, our team will be happy to connect with you.
+          </p>
+          <p className="mt-4 italic" style={{ fontFamily: "var(--font-heading)", fontSize: "1.25rem", lineHeight: 1.4, color: "var(--color-primary)", textAlign: "left", hyphens: "none" }}>
+            Let’s build trusted relationships, one honest conversation at a time.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
 
           {/* ── Contact Info ── */}
           <div className="lg:col-span-2 space-y-6">
             <div>
-              <h2
-                className="text-lg font-semibold font-body mb-1"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              {/* Sized inline: the global ".marketing-layout h2" rule out-ranks utility classes. */}
+              <h2 className="mb-2" style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.6rem,3vw,2.3rem)", lineHeight: 1.1, fontWeight: 500, color: "var(--color-text-primary)" }}>
                 Contact Information
               </h2>
               <p className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>
@@ -184,7 +185,7 @@ export default function ContactClient({
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <h2 className="text-lg font-semibold font-body mb-1" style={{ color: "var(--color-text-primary)" }}>
+                    <h2 className="mb-2" style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.6rem,3vw,2.3rem)", lineHeight: 1.1, fontWeight: 500, color: "var(--color-text-primary)" }}>
                       Send a Message
                     </h2>
                     <p className="text-sm font-body" style={{ color: "var(--color-text-muted)" }}>
@@ -300,7 +301,7 @@ export default function ContactClient({
       </div>
       {/* ── MAP ── */}
       {mapEmbedUrl && (
-        <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-20" aria-label="Our location on the map">
+        <section className={`${PAGE_CONTAINER} pb-20`} aria-label="Our location on the map">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
             <div>
               <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "var(--color-gold-dark)" }}>Find us</span>

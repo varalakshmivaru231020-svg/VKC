@@ -5,12 +5,15 @@ import type { ProductData } from "@/lib/types/product";
 interface Props {
   products: ProductData[];
   loading?: boolean;
+  /** Columns from 1024px up. Listings beside a filter sidebar use 3; the default is 4. */
+  columns?: 3 | 4;
 }
 
-export function ProductGrid({ products, loading }: Props) {
+export function ProductGrid({ products, loading, columns = 4 }: Props) {
+  const cols = columns === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4";
   if (loading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
+      <div className={`grid grid-cols-2 sm:grid-cols-3 ${cols} gap-5 lg:gap-6`}>
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="space-y-3">
             <Skeleton className="product-card-ratio rounded-sm" />
@@ -39,7 +42,7 @@ export function ProductGrid({ products, loading }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
+    <div className={`grid grid-cols-2 sm:grid-cols-3 ${cols} gap-5 lg:gap-6`}>
       {products.map((product, index) => (
         <ProductCard key={product.id} product={product} index={index} />
       ))}

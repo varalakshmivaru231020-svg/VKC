@@ -153,8 +153,11 @@ export default function ShopHeader({
         </button>
       </div>
 
-      {/* Spacer so page content isn't hidden behind the bottom bar on mobile */}
-      <div className="lg:hidden h-14" aria-hidden />
+      {/* Clearance for the fixed SORT / FILTER bar. It used to be a 56px spacer
+          here, above the products — a dead gap under the banner that cleared
+          nothing. The bar covers the END of the page, so the room is added after
+          the footer instead, only while a listing page is mounted. */}
+      <style dangerouslySetInnerHTML={{ __html: "@media (max-width:1023px){.marketing-layout>footer{padding-bottom:56px}}" }} />
 
       {/* ── Mobile SORT bottom sheet ── */}
       {mobileSortOpen && (

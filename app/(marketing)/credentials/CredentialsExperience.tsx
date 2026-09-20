@@ -116,32 +116,26 @@ export default function CredentialsExperience({ banner }: { banner: PageBannerPr
     <div className="vkc-about" style={{ background: C.ivory }}>
       <style dangerouslySetInnerHTML={{ __html: ".marketing-layout .vkc-about p{text-align:left;hyphens:none;text-justify:auto}" }} />
 
-      {/* The standard inner-page banner, then the page's own opening line and counts. */}
+      {/* The standard inner-page banner. Nothing cream sits under it: the page
+          goes straight to its first section, like every other inner page. */}
       <PageBanner {...banner} />
-      <section className="border-b" style={{ background: C.cream, borderColor: C.parchment }}>
-        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-9 sm:py-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-7">
-          <Reveal>
-            <p className="font-body" style={{ fontSize: 16, lineHeight: 1.7, color: C.muted, maxWidth: 640 }}>
-              We believe trust grows stronger when business values are supported by proper structure and compliance. Here is exactly where we stand.
-            </p>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div className="inline-flex items-center gap-8 sm:gap-12">
-              {[["2", "Entities"], ["5", "Registrations"], ["6", "Courses"]].map(([n, l]) => (
-                <div key={l} className="text-center">
-                  <div className="font-heading" style={{ fontSize: "clamp(1.7rem,2.6vw,2.3rem)", lineHeight: 1, color: C.jaggeryDark }}>{n}</div>
-                  <div className="font-body mt-1.5 uppercase" style={{ fontSize: 10.5, letterSpacing: "0.18em", color: C.muted }}>{l}</div>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
 
       {/* Entities */}
-      <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-24">
+      <section className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-20 sm:pb-24">
         <SectionHeading eyebrow="Business entities" title="Two entities, one family, one standard"
           sub="The proprietorship is where we come from and where we still operate. The private limited company is how we grow." />
+        <Reveal delay={0.1}>
+          <dl className="m-0 mt-8 flex flex-wrap gap-x-10 gap-y-4">
+            {[["2", "Entities"], ["5", "Registrations"], ["6", "Courses"]].map(([n, l]) => (
+              // A <dl> group must be term then value in the markup; row-reverse
+              // shows the number first without breaking that order.
+              <div key={l} className="flex flex-row-reverse justify-end items-baseline gap-2.5">
+                <dt className="font-body uppercase" style={{ fontSize: 10.5, letterSpacing: "0.18em", color: C.muted }}>{l}</dt>
+                <dd className="m-0 font-heading" style={{ fontSize: "clamp(1.7rem,2.6vw,2.3rem)", lineHeight: 1, color: C.jaggeryDark }}>{n}</dd>
+              </div>
+            ))}
+          </dl>
+        </Reveal>
         <div className="mt-12 grid gap-6 lg:grid-cols-2">
           {ENTITIES.map((e, i) => (
             <Reveal key={e.name} delay={i * 0.1}>
@@ -173,7 +167,7 @@ export default function CredentialsExperience({ banner }: { banner: PageBannerPr
 
       {/* Registrations */}
       <section id="registrations" style={{ background: C.cream }}>
-        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-24">
+        <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-20 sm:py-24">
           <SectionHeading eyebrow="Registrations & compliance" title="What is in place, and what is under way"
             sub="Completed registrations on the left, applications in progress on the right — stated plainly." />
           <div className="mt-12 grid gap-8 lg:grid-cols-12">
@@ -231,7 +225,7 @@ export default function CredentialsExperience({ banner }: { banner: PageBannerPr
       {/* Learning */}
       <section id="learning" className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.bark}, ${C.barkSoft})` }}>
         <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: 0.1, mixBlendMode: "overlay" }} />
-        <div className="relative max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-24 grid lg:grid-cols-12 gap-12">
+        <div className="relative max-w-[1200px] mx-auto px-5 sm:px-8 py-20 sm:py-24 grid lg:grid-cols-12 gap-12">
           <div className="lg:col-span-5">
             <SectionHeading light eyebrow="Quality, learning & compliance" title="Quality is a continuous responsibility, not a checklist"
               sub="To support this mindset, our leadership remains actively engaged in learning related to food safety, food business compliance, product systems and industry-specific development." />
@@ -272,7 +266,7 @@ export default function CredentialsExperience({ banner }: { banner: PageBannerPr
       </section>
 
       {/* Growth note + CTA */}
-      <section className="max-w-[1240px] mx-auto px-5 sm:px-8 py-20 sm:py-24">
+      <section className="max-w-[1200px] mx-auto px-5 sm:px-8 py-20 sm:py-24">
         <Reveal>
           <div className="rounded-lg p-8 sm:p-12" style={{ background: C.cream, border: `1px solid ${C.parchment}` }}>
             <Eyebrow>Next phase</Eyebrow>

@@ -8,6 +8,9 @@ import ShopHeader from "../../shop/ShopHeader";
 import { attrKey } from "../../shop/attrKey";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import type { ProductData } from "@/lib/types/product";
+import { PageBanner } from "@/components/layout/PageBanner";
+import { getCustomPageBanner } from "@/lib/page-banners";
+import { PAGE_CONTAINER } from "@/lib/layout";
 
 export const dynamic = "force-dynamic";
 
@@ -38,10 +41,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const now = new Date();
   let categoryBanners: Awaited<ReturnType<typeof db.banner.findMany>> = [];
 
-  let categoryMidBanners: Awaited<ReturnType<typeof db.banner.findMany>> = [];
-
   try {
-    [category, attributes, colors, categoryBanners, categoryMidBanners] = await Promise.all([
+    [category, attributes, colors, categoryBanners] = await Promise.all([
       db.category.findUnique({ where: { slug: params.slug } }),
       db.attribute.findMany({
         where: { isActive: true },
@@ -58,21 +59,24 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       }),
-      db.banner.findMany({
-        where: {
-          isActive: true,
-          position: "category_banner",
-          OR: [{ startsAt: null }, { startsAt: { lte: now } }],
-          AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
-        },
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      }),
     ]);
   } catch (e) {
     console.error("[CategoryPage] DB error loading category/attributes:", e);
   }
 
   if (!category) notFound();
+
+  // The standard inner-page banner. Photograph: Admin → Banners, "category_banner"
+  // (shared by all categories), else the site default. A category without a
+  // description of its own gets a neutral line, so the heading sits exactly
+  // where it does on Shop.
+  const pageBanner = await getCustomPageBanner({
+    position: "category_banner",
+    crumb: category.name,
+    title: category.name,
+    description: category.description?.trim() || "Pure, chemical-free jaggery and cane products from Mandya — browse the collection.",
+    headingId: "category-banner-heading",
+  });
 
   // Build attribute filters from URL params
   const attributeFilters: { attributeId: string; value: string }[] = [];
@@ -119,7 +123,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
-      {/* Category top banners */}
+      {/* The standard inner-page banner, as on Shop. */}
+      <PageBanner {...pageBanner} />
+
+      {/* Promotional strips (Admin → Banners, "category_top") follow the page banner. */}
       {categoryBanners.length > 0 && (
         <section className="flex flex-col">
           {categoryBanners.map(banner => (
@@ -128,39 +135,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         </section>
       )}
 
-      {/* Category hero — uses category_banner image as background if uploaded */}
-      {(() => {
-        const bannerImg = categoryMidBanners[0]?.imageUrl ?? null;
-        return (
-          <div
-            className="relative py-14 text-center overflow-hidden"
-            style={
-              bannerImg
-                ? { backgroundImage: `url(${bannerImg})`, backgroundSize: "cover", backgroundPosition: "center", borderBottom: "none" }
-                : { background: "var(--color-cream)", borderBottom: "1px solid var(--color-parchment)" }
-            }
-          >
-            {bannerImg && <div className="absolute inset-0 bg-black/45 pointer-events-none" />}
-            <div className="relative z-10">
-              <div className="gold-divider mb-6 mx-auto w-32" />
-              <p className="text-label mb-3" style={{ color: "var(--color-gold)" }}>Collection</p>
-              <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h1)", fontWeight: "var(--weight-heading)", color: bannerImg ? "white" : "var(--color-text-primary)" }}>
-                {category.name}
-              </h1>
-              {category.description && (
-                <p className="mt-3 max-w-xl mx-auto text-sm font-body" style={{ color: bannerImg ? "rgba(255,255,255,0.8)" : "var(--color-text-muted)" }}>
-                  {category.description}
-                </p>
-              )}
-              <p className="mt-4 text-xs font-body" style={{ color: bannerImg ? "rgba(255,255,255,0.6)" : "var(--color-text-disabled)" }}>
-                {result.total} products
-              </p>
-            </div>
-          </div>
-        );
-      })()}
-
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={`${PAGE_CONTAINER} py-6 sm:py-10`}>
         <div className="flex gap-8">
           <aside className="hidden lg:block w-64 shrink-0">
             <ShopFilters attributes={attributes} colors={colors} current={searchParams} />
@@ -176,7 +151,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               current={searchParams}
             />
             <div className="mt-6">
-              <ProductGrid products={result.products} />
+              <ProductGrid products={result.products} columns={3} />
             </div>
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-12">

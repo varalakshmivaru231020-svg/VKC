@@ -412,3 +412,14 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .marketing-layout p[class*="text-right"]  { text-align: right; }
 .marketing-layout [class*="text-left"] p,
 .marketing-layout p[class*="text-left"]   { text-align: left; }
+
+/* ── Inner-page banner (components/layout/PageBanner.tsx) ───────────────────
+   The wash over an uploaded photograph: solid under the words, open over the
+   right quarter. Phones have no room for that split, so only a trace shows.
+   The paragraph rule sits after the global justify / text-center rules above
+   and out-ranks them, whatever wrapper the page puts around the banner. */
+.page-banner-wash { background: linear-gradient(90deg, #2B1708 0%, #2B1708 58%, rgba(43,23,8,0.9) 100%); }
+@media (min-width: 768px) {
+  .page-banner-wash { background: linear-gradient(90deg, #2B1708 0%, #2B1708 69%, rgba(43,23,8,0.7) 77%, rgba(43,23,8,0.3) 88%, rgba(43,23,8,0.18) 100%); }
+}
+.marketing-layout section.page-banner p { text-align: left; hyphens: none; text-justify: auto; }

@@ -66,7 +66,9 @@ export function CartSidebar() {
 
       {/* Drawer */}
       <div
-        className="fixed inset-y-0 right-0 z-[90] flex flex-col w-full max-w-[420px] shadow-2xl transition-transform duration-300"
+        // The shadow only while open: parked off-screen it still bled ~40px of
+        // grey back over the right edge of every page.
+        className={`fixed inset-y-0 right-0 z-[90] flex flex-col w-full max-w-[420px] transition-transform duration-300 ${cartOpen ? "shadow-2xl" : ""}`}
         style={{
           background: "var(--color-ivory)",
           transform: cartOpen ? "translateX(0)" : "translateX(100%)",

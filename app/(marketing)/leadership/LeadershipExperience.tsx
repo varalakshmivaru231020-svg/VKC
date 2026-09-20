@@ -83,15 +83,14 @@ export default function LeadershipExperience({ banner, heritageImage = null, fut
       <PageBanner {...banner} />
       <section aria-labelledby="leadership-heading" style={{ background: C.ivory }}>
         <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-14 sm:py-20">
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-end">
-            <div className="lg:col-span-8">
-              <Label>The people behind the legacy</Label>
-              <h2 id="leadership-heading" className="mt-5" style={{ ...T.display, fontSize: "clamp(2.3rem,4.6vw,3.9rem)", color: C.ink }}>
-                <Words text="Carrying a legacy forward." />
-              </h2>
-            </div>
-            <Reveal delay={0.25} className="lg:col-span-4 lg:pb-2">
-              <p className="font-body" style={{ ...T.lede, color: C.ink2 }}>
+          {/* One column under the banner's own left edge, as About opens. */}
+          <div className="max-w-3xl">
+            <Label>The people behind the legacy</Label>
+            <h2 id="leadership-heading" className="mt-5" style={{ ...T.display, fontSize: "clamp(2.3rem,4.6vw,3.9rem)", color: C.ink }}>
+              <Words text="Carrying a legacy forward." />
+            </h2>
+            <Reveal delay={0.2}>
+              <p className="font-body mt-6" style={{ ...T.lede, color: C.ink2, maxWidth: 600 }}>
                 From the values established by Late Shri B Ramachandra to the vision shaping VKC Gold Ikshu today, our leadership combines heritage, discipline and a forward-looking approach.
               </p>
             </Reveal>
@@ -103,7 +102,11 @@ export default function LeadershipExperience({ banner, heritageImage = null, fut
       <Section bg="white" ariaLabelledby="md-heading">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           <Reveal className="lg:col-span-5">
-            <Photo src={PEOPLE.md.photo} alt={PEOPLE.md.name} priority />
+            {/* The shared 4:5 crop (for the director/promoter cards below) cut off
+                his feet on desktop and, once the tall text column scrolled past,
+                made it look like his head was cropped too. His own ratio (the
+                image is 935x1400) shows the photo whole, head to shoes. */}
+            <Photo src={PEOPLE.md.photo} alt={PEOPLE.md.name} ratio="935 / 1400" priority />
           </Reveal>
           <div className="lg:col-span-7 lg:pt-4">
             <Label>Managing Director</Label>

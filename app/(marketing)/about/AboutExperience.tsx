@@ -78,14 +78,7 @@ export default function AboutExperience({
     <div className="vkc-about" style={{ background: C.ivory }}>
       <style dangerouslySetInnerHTML={{ __html:
         ".marketing-layout .vkc-about p{text-align:left;hyphens:none;text-justify:auto}" +
-        ".marketing-layout .vkc-about .text-center p{text-align:center}" +
-        // Banner wash. The words own the left two-thirds, so the wash is all but
-        // solid there — uploaded artwork often carries its own lettering, which
-        // must not ghost through under the page's headline — and opens over the
-        // right quarter to let the picture read. Phones have no room for that
-        // split, so only a trace of the picture shows at the right edge.
-        ".vkc-about .about-banner-wash{background:linear-gradient(90deg,#2B1708 0%,#2B1708 58%,rgba(43,23,8,0.9) 100%)}" +
-        "@media (min-width:768px){.vkc-about .about-banner-wash{background:linear-gradient(90deg,#2B1708 0%,#2B1708 69%,rgba(43,23,8,0.7) 77%,rgba(43,23,8,0.3) 88%,rgba(43,23,8,0.18) 100%)}}"
+        ".marketing-layout .vkc-about .text-center p{text-align:center}"
       }} />
 
       {/* ── 1 · BANNER — the standard inner-page banner (components/layout/PageBanner) ── */}

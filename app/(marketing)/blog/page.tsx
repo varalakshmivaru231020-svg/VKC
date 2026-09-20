@@ -30,7 +30,7 @@ export default async function BlogListPage() {
       {/* The standard inner-page banner (components/layout/PageBanner). */}
       <PageBanner {...pageBanner} />
 
-      <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-20">
+      <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-14 sm:py-20">
         {blogs.length === 0 ? (
           <div className="text-center py-20">
             <BookOpen className="h-14 w-14 mx-auto mb-4" style={{ color: C.parchment }} />

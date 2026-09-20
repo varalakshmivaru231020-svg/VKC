@@ -17,13 +17,13 @@ export const PAGE_BANNERS = {
     position: "about_banner",
     crumb: "About Us",
     title: "About Us",
-    description: "The family, the values and the place behind VKC Gold Ikshu.",
+    description: "The family, the values and the place behind VKC Gold Ikshu — pure cane jaggery from Mandya since 1988.",
   },
   leadership: {
     position: "leadership_banner",
     crumb: "Leadership",
     title: "Leadership",
-    description: "The people carrying a legacy forward — heritage, discipline and a forward-looking approach.",
+    description: "Founded in legacy by Late Shri B Ramachandra, led today by Managing Director Naveenchandra B R.",
   },
   credentials: {
     position: "credentials_banner",
@@ -35,7 +35,7 @@ export const PAGE_BANNERS = {
     position: "shop_banner",
     crumb: "Shop",
     title: "Our Products",
-    description: "Crafted with purpose. Rooted in purity.",
+    description: "Crafted with purpose, rooted in purity — jaggery and value-added natural sweetener products from Mandya.",
   },
   blog: {
     position: "blog_banner",
@@ -47,7 +47,13 @@ export const PAGE_BANNERS = {
     position: "gallery_banner",
     crumb: "Gallery",
     title: "Gallery",
-    description: "Photos from our unit, our cane fields, and the farmers we work with.",
+    description: "Photos from our unit, our cane fields and the farmers we work with — behind the scenes at VKC.",
+  },
+  newArrivals: {
+    position: "new_arrivals_banner",
+    crumb: "New Arrivals",
+    title: "New Arrivals",
+    description: "Fresh batches, straight from the press — new jaggery products and seasonal combos.",
   },
   contact: {
     position: "contact_banner",
@@ -70,8 +76,17 @@ export const DEFAULT_BANNER_POSITION = "inner_banner_default";
  */
 export async function getPageBanner(key: PageBannerKey): Promise<PageBannerProps> {
   const cfg = PAGE_BANNERS[key];
+  return getCustomPageBanner({ ...cfg, headingId: `${key}-banner-heading` });
+}
+
+/**
+ * The same banner for pages whose words come from data rather than the table
+ * above — a category, a CMS page. `position` is optional: without it the
+ * photograph is the shared default.
+ */
+export async function getCustomPageBanner(cfg: { position?: string; crumb: string; title: string; description?: string | null; headingId?: string }): Promise<PageBannerProps> {
   const now = new Date();
-  const order = [cfg.position, DEFAULT_BANNER_POSITION, PAGE_BANNERS.about.position];
+  const order = [cfg.position, DEFAULT_BANNER_POSITION, PAGE_BANNERS.about.position].filter((x): x is string => Boolean(x));
   const banners = await db.banner
     .findMany({
       where: {
@@ -89,11 +104,12 @@ export async function getPageBanner(key: PageBannerKey): Promise<PageBannerProps
   return {
     crumb: cfg.crumb,
     title: cfg.title,
-    description: cfg.description,
+    // Whitespace-only descriptions (a CMS field holding a bare newline) count as none.
+    description: cfg.description?.trim() || undefined,
     image: normalizeBannerImageUrl(banner?.imageUrl),
     mobileImage: normalizeBannerImageUrl(banner?.mobileImageUrl),
     // A shared photograph is decoration on a page it was not made for.
     imageAlt: banner && banner.position === cfg.position ? banner.title : "",
-    headingId: `${key}-banner-heading`,
+    headingId: cfg.headingId ?? "page-banner-heading",
   };
 }

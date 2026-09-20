@@ -10,6 +10,7 @@ import { attrKey } from "./attrKey";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import { PageBanner } from "@/components/layout/PageBanner";
 import { getPageBanner } from "@/lib/page-banners";
+import { PAGE_CONTAINER } from "@/lib/layout";
 import type { ProductData } from "@/lib/types/product";
 
 export const metadata: Metadata = { title: "Shop All Products" };
@@ -93,7 +94,12 @@ export default async function ShopPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ivory)" }}>
-      {/* Shop top banners */}
+      {/* The standard inner-page banner (components/layout/PageBanner), directly
+          under the header as on every inner page. */}
+      <PageBanner {...pageBanner} />
+
+      {/* Promotional strips (Admin → Banners, "shop_top") follow the page banner,
+          so an upload there can never stack a second banner above it. */}
       {shopBanners.length > 0 && (
         <section className="flex flex-col">
           {shopBanners.map(banner => (
@@ -102,15 +108,7 @@ export default async function ShopPage({ searchParams }: Props) {
         </section>
       )}
 
-      {/* The standard inner-page banner (components/layout/PageBanner). */}
-      <PageBanner {...pageBanner} />
-      <div className="border-b" style={{ background: "var(--color-cream)", borderColor: "var(--color-parchment)" }}>
-        <p className="max-w-3xl mx-auto px-5 py-5 text-sm font-body text-center" style={{ color: "var(--color-text-muted)", textAlign: "center", hyphens: "none" }}>
-          Our product direction is inspired by natural sweetness, rooted values, and a growing commitment to quality-led development — a dependable identity in jaggery and value-added natural sweetener products.
-        </p>
-      </div>
-
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className={`${PAGE_CONTAINER} py-6 sm:py-10`}>
         <div className="flex gap-8">
           {/* Sidebar filters */}
           <aside className="hidden lg:block w-64 shrink-0">
@@ -131,7 +129,7 @@ export default async function ShopPage({ searchParams }: Props) {
               current={searchParams}
             />
             <div className="mt-0 sm:mt-6">
-              <ProductGrid products={result.products} />
+              <ProductGrid products={result.products} columns={3} />
             </div>
 
             {/* Pagination */}
