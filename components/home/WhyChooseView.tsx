@@ -169,23 +169,24 @@ export function WhyChooseView({ image = null, mobileImage = null, imageAlt = "" 
                       href="/about"
                       onMouseEnter={() => setActive(i)}
                       onFocus={() => setActive(i)}
-                      className="group flex items-center gap-3 sm:gap-4 rounded-[999px] py-2 pl-4 pr-3 sm:py-2.5 sm:pl-6 sm:pr-4 outline-none transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 focus-visible:-translate-y-1"
+                      className="group flex items-start sm:items-center gap-3 sm:gap-4 rounded-2xl sm:rounded-[999px] p-3.5 sm:py-2.5 sm:pl-6 sm:pr-4 outline-none transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 focus-visible:-translate-y-1"
                       style={{
                         background: on ? `linear-gradient(100deg, ${C.green} 0%, ${C.greenDeep} 100%)` : "rgba(255,253,248,0.9)",
                         border: `1px solid ${on ? C.green : C.line}`,
                         boxShadow: on ? "0 22px 40px -22px rgba(14,51,36,0.75)" : "0 10px 26px -22px rgba(20,67,47,0.45)",
                       }}
                     >
-                      <span className="font-body tabular-nums shrink-0" style={{ fontSize: 15, width: 24, color: on ? C.goldLite : C.gold }}>0{i + 1}</span>
+                      <span className="hidden sm:block font-body tabular-nums shrink-0" style={{ fontSize: 15, width: 24, color: on ? C.goldLite : C.gold }}>0{i + 1}</span>
                       <span className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full transition-transform duration-500 ease-out group-hover:scale-110 group-hover:-rotate-6" style={{ background: on ? "rgba(255,255,255,0.13)" : "#EFEBDD", color: on ? "#F4F7EE" : C.green }}>
                         <r.icon className="h-5 w-5" strokeWidth={1.6} />
                       </span>
-                      <span aria-hidden className="h-9 w-px shrink-0" style={{ background: on ? "rgba(255,255,255,0.28)" : C.line }} />
-                      <span className="min-w-0 flex-1 pl-1">
-                        <span className="block font-body" style={{ fontSize: "clamp(0.92rem,1.05vw,1rem)", lineHeight: 1.22, fontWeight: 600, color: on ? "#FFFFFF" : C.ink }}>{r.t}</span>
+                      <span aria-hidden className="hidden sm:block h-9 w-px shrink-0" style={{ background: on ? "rgba(255,255,255,0.28)" : C.line }} />
+                      <span className="min-w-0 flex-1 sm:pl-1">
+                        <span className="sm:hidden block font-body tabular-nums" style={{ fontSize: 11, letterSpacing: "0.14em", lineHeight: 1, marginBottom: 5, color: on ? C.goldLite : C.gold }}>0{i + 1}</span>
+                        <span className="block font-body" style={{ fontSize: "clamp(0.92rem,1.05vw,1rem)", lineHeight: 1.25, fontWeight: 600, color: on ? "#FFFFFF" : C.ink }}>{r.t}</span>
                         <span className="mt-0.5 block font-body" style={{ fontSize: 12, lineHeight: 1.45, color: on ? "rgba(255,255,255,0.82)" : C.ink2 }}>{r.d}</span>
                       </span>
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform duration-500 ease-out group-hover:translate-x-1" style={{ border: `1.5px solid ${on ? C.goldLite : C.gold}`, color: on ? "#FFFFFF" : C.gold }}>
+                      <span className="hidden sm:grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform duration-500 ease-out group-hover:translate-x-1" style={{ border: `1.5px solid ${on ? C.goldLite : C.gold}`, color: on ? "#FFFFFF" : C.gold }}>
                         <ArrowRight className="h-4 w-4" />
                       </span>
                     </Link>
