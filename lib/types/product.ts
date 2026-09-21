@@ -52,6 +52,9 @@ export interface ProductData {
   category?: { id: string; name: string; slug: string } | null;
   variants: ProductVariantData[];
   productAttributes?: ProductAttributeData[];
+  /** Approved-review summary; only set on listings. */
+  ratingAverage?: number;
+  ratingCount?: number;
 }
 
 export interface CartItem {

@@ -9,9 +9,12 @@ export const dynamic = "force-dynamic";
  * Query params:
  *   page          (1-based, default 1)
  *   limit         (default 20, max 50)
- *   sort          newest | price-asc | price-desc | popular
+ *   sort          newest | price-asc | price-desc | popular | discount | rating
  *   q             search term
  *   categorySlug  filter by category
+ *   categorySlugs comma-separated, several categories at once
+ *   minDiscount   percent off, e.g. 20
+ *   minRating     average review rating, e.g. 4
  *   minPrice / maxPrice
  *   inStock       "true"
  *   isFeatured    "true"
@@ -37,6 +40,9 @@ export async function GET(req: Request) {
       page, limit,
       sort:           (sp.get("sort") as any) ?? "newest",
       categorySlug:   sp.get("categorySlug") ?? undefined,
+      categorySlugs:  sp.get("categorySlugs")?.split(",").map((s) => s.trim()).filter(Boolean),
+      minDiscount:    sp.get("minDiscount") ? parseInt(sp.get("minDiscount")!) : undefined,
+      minRating:      sp.get("minRating") ? parseFloat(sp.get("minRating")!) : undefined,
       minPrice:       sp.get("minPrice") ? parseInt(sp.get("minPrice")!) : undefined,
       maxPrice:       sp.get("maxPrice") ? parseInt(sp.get("maxPrice")!) : undefined,
       inStock:        sp.get("inStock") === "true",
