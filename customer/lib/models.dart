@@ -31,6 +31,13 @@ class Product {
   final String? badge;
   final int palette;
 
+  /// Average of approved reviews and how many there are; zero when unrated.
+  final double rating;
+  final int ratingCount;
+
+  /// Labels of every pack size ("250 g", "500 g"), the shown one first.
+  final List<String> packs;
+
   /// The full record, when the card came from the catalogue, so "add to cart"
   /// on the card can build the same cart line the detail screen would.
   final EcomProduct? source;
@@ -48,6 +55,9 @@ class Product {
     this.isNew = false,
     this.badge,
     this.palette = 0,
+    this.rating = 0,
+    this.ratingCount = 0,
+    this.packs = const [],
     this.source,
   });
 

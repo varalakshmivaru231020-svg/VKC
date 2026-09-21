@@ -144,6 +144,10 @@ class EcomProduct {
   final List<ProductAttribute> attributes;
   final DateTime? createdAt;
 
+  /// Approved-review summary. Listings carry it; zero when nobody has reviewed.
+  final double ratingAverage;
+  final int ratingCount;
+
   const EcomProduct({
     required this.id,
     required this.name,
@@ -164,6 +168,8 @@ class EcomProduct {
     this.tags = const [],
     this.videoUrl,
     this.createdAt,
+    this.ratingAverage = 0,
+    this.ratingCount = 0,
   });
 
   ProductVariant get primaryVariant => variants.isNotEmpty
@@ -226,6 +232,8 @@ class EcomProduct {
         isFeatured: j["isFeatured"] == true,
         videoUrl: j["videoUrl"] as String?,
         createdAt: DateTime.tryParse("${j["createdAt"] ?? ''}"),
+        ratingAverage: ((j["ratingAverage"] as num?) ?? 0).toDouble(),
+        ratingCount: (j["ratingCount"] as num?)?.toInt() ?? 0,
         variants: (j["variants"] as List? ?? const [])
             .map((v) => ProductVariant.fromJson((v as Map).cast<String, dynamic>()))
             .toList(),

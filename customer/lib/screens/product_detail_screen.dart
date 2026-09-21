@@ -225,8 +225,8 @@ class _ProductScreenState extends State<ProductScreen> {
     final String stockText;
     final Color stockColor;
     if (left <= 0) {
-      stockText = 'Out of stock';
-      stockColor = VkColors.error;
+      stockText = 'Coming soon';
+      stockColor = VkColors.primary;
     } else if (left <= 5) {
       stockText = 'Only $left left';
       stockColor = VkColors.warning;
@@ -318,7 +318,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 style: VkText.ui(12.5, weight: FontWeight.w600, color: on ? Colors.white : VkColors.ink)
                     .copyWith(decoration: out ? TextDecoration.lineThrough : null)),
             Text(
-              out ? 'Sold out' : '₹${inr(vr.salePrice)}',
+              out ? 'Coming soon' : '₹${inr(vr.salePrice)}',
               style: VkText.body(11, color: on ? Colors.white70 : (out ? VkColors.error : VkColors.muted)),
             ),
           ]),
@@ -501,7 +501,7 @@ class _ProductScreenState extends State<ProductScreen> {
           Expanded(
             flex: 6,
             child: PrimaryButton(
-              label: canBuy ? 'Buy now' : 'Sold out',
+              label: canBuy ? 'Buy now' : 'Coming soon',
               onTap: canBuy
                   ? () {
                       _addToCart(p, v);

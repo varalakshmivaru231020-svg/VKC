@@ -35,10 +35,11 @@ class _Sort {
 }
 
 const _sorts = [
-  _Sort('newest', 'Newest first'),
-  _Sort('popular', 'Popular'),
+  _Sort('newest', 'New arrivals'),
   _Sort('price-asc', 'Price: low to high'),
   _Sort('price-desc', 'Price: high to low'),
+  _Sort('discount', 'Discount: high to low'),
+  _Sort('rating', 'Customer rating'),
 ];
 
 const _priceCap = 5000.0;
@@ -75,7 +76,9 @@ class _ProductListingState extends State<ProductListing> {
   String _sort = 'newest';
   bool _inStock = false;
   RangeValues _price = const RangeValues(0, _priceCap);
-  String? _catSlug;
+  Set<String> _catSlugs = const {};
+  int? _minDiscount;
+  int? _minRating;
   List<EcomCategory> _cats = const [];
 
   List<Product> _items = const [];
@@ -88,13 +91,13 @@ class _ProductListingState extends State<ProductListing> {
   int _request = 0;
 
   bool get _priceActive => _price.start > 0 || _price.end < _priceCap;
-  int get _filterCount => (_inStock ? 1 : 0) + (_priceActive ? 1 : 0) + (_sort != 'newest' ? 1 : 0) + (_catSlug != null && !_fixedCategory ? 1 : 0);
+  int get _filterCount =>
+      (_inStock ? 1 : 0) + (_priceActive ? 1 : 0) + (_catSlugs.isNotEmpty ? 1 : 0) + (_minDiscount != null ? 1 : 0) + (_minRating != null ? 1 : 0);
   bool get _fixedCategory => widget.cat != null;
 
   @override
   void initState() {
     super.initState();
-    _catSlug = widget.cat;
     _scroll.addListener(_onScroll);
     _load();
     if (!_fixedCategory) _loadCats();
@@ -104,7 +107,7 @@ class _ProductListingState extends State<ProductListing> {
   void didUpdateWidget(covariant ProductListing old) {
     super.didUpdateWidget(old);
     if (old.q != widget.q || old.cat != widget.cat || old.featured != widget.featured) {
-      _catSlug = widget.cat;
+      _catSlugs = const {};
       _load();
     }
   }
@@ -118,7 +121,11 @@ class _ProductListingState extends State<ProductListing> {
   Future<void> _loadCats() async {
     try {
       final cats = await EcomApi.I.categories();
-      if (mounted) setState(() => _cats = cats);
+      // Parents and their children in one flat list for the check boxes.
+      final flat = [
+        for (final c in cats) ...[c, ...c.children],
+      ];
+      if (mounted) setState(() => _cats = flat);
     } catch (_) {
       // Chips are a convenience; the grid still works without them.
     }
@@ -129,7 +136,11 @@ class _ProductListingState extends State<ProductListing> {
   }
 
   Future<ProductPage> _fetch(int page) => EcomApi.I.products(
-        categorySlug: _catSlug,
+        // One category goes as `categorySlug`, which every server version reads.
+        categorySlug: widget.cat ?? (_catSlugs.length == 1 ? _catSlugs.first : null),
+        categorySlugs: widget.cat == null && _catSlugs.length > 1 ? _catSlugs.toList() : const [],
+        minDiscount: _minDiscount,
+        minRating: _minRating,
         q: (widget.q ?? '').trim().isEmpty ? null : widget.q!.trim(),
         sort: _sort,
         inStock: _inStock,
@@ -196,8 +207,9 @@ class _ProductListingState extends State<ProductListing> {
     setState(() {
       _inStock = false;
       _price = const RangeValues(0, _priceCap);
-      _sort = 'newest';
-      if (!_fixedCategory) _catSlug = null;
+      _catSlugs = const {};
+      _minDiscount = null;
+      _minRating = null;
     });
     _load();
   }
@@ -272,74 +284,76 @@ class _ProductListingState extends State<ProductListing> {
     );
   }
 
-  /// Quick pills, Flipkart style: Sort & Filter opens everything (sort,
-  /// category, availability, price); Price and In stock change one thing on
-  /// the spot; Clear all appears once anything is applied.
+  /// Marketplace toolbar: Sort, Category, Price and Filter as equal cells
+  /// split by hairlines. Category and Price open the filter sheet on their
+  /// own section.
   Widget _toolbar() {
-    return Container(
-      decoration: const BoxDecoration(color: VkColors.canvas, border: Border(bottom: BorderSide(color: VkColors.rule))),
-      padding: const EdgeInsets.only(top: 4, bottom: 10),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(children: [
-          _Pill(icon: Icons.tune_rounded, label: _filterCount == 0 ? 'Sort & Filter' : 'Sort & Filter · $_filterCount', active: _filterCount > 0, onTap: _openFilters),
-          const SizedBox(width: 8),
-          _Pill(label: _priceActive ? _priceLabel : 'Price', chevron: true, active: _priceActive, onTap: _openPrice),
-          const SizedBox(width: 8),
-          _Pill(label: 'In stock', active: _inStock, onTap: () {
-            setState(() => _inStock = !_inStock);
-            _load();
-          }),
-          if (_filterCount > 0) ...[
-            const SizedBox(width: 8),
-            _Pill(icon: Icons.close_rounded, label: 'Clear all', onTap: _clearFilters),
-          ],
-        ]),
+    final cells = <Widget>[
+      _BarCell(label: 'Sort', active: _sort != 'newest', onTap: _openSort),
+      if (!_fixedCategory) _BarCell(label: 'Category', active: _catSlugs.isNotEmpty, onTap: () => _openFilters(_Section.category)),
+      _BarCell(label: 'Price', active: _priceActive, onTap: () => _openFilters(_Section.price)),
+      _BarCell(
+        label: _filterCount == 0 ? 'Filter' : 'Filter ($_filterCount)',
+        icon: Icons.tune_rounded,
+        active: _filterCount > 0,
+        onTap: () => _openFilters(_fixedCategory ? _Section.price : _Section.category),
       ),
+    ];
+    return Container(
+      decoration: const BoxDecoration(
+        color: VkColors.cream,
+        border: Border(top: BorderSide(color: VkColors.rule), bottom: BorderSide(color: VkColors.rule)),
+      ),
+      child: Row(children: [
+        for (var i = 0; i < cells.length; i++) ...[
+          if (i > 0) Container(width: 1, height: 46, color: VkColors.rule2),
+          Expanded(child: cells[i]),
+        ],
+      ]),
     );
   }
 
-  String get _priceLabel {
-    final lo = _price.start.round();
-    final hi = _price.end.round();
-    if (lo == 0) return 'Under ₹${inr(hi)}';
-    if (hi >= _priceCap) return '₹${inr(lo)}+';
-    return '₹${inr(lo)} – ₹${inr(hi)}';
+  Future<void> _openSort() async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: VkColors.paper,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => _SortSheet(sort: _sort),
+    );
+    if (result == null || result == _sort || !mounted) return;
+    setState(() => _sort = result);
+    _load();
   }
 
-  Future<void> _openFilters() async {
-    final result = await showModalBottomSheet<_FilterResult>(
+  Future<void> _openFilters(_Section section) async {
+    final result = await showModalBottomSheet<_Filters>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: VkColors.canvas,
+      backgroundColor: VkColors.paper,
+      clipBehavior: Clip.antiAlias,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _FilterSheet(sort: _sort, inStock: _inStock, price: _price, cats: _fixedCategory ? const [] : _cats, catSlug: _catSlug),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+        child: _FilterSheet(
+          initial: _Filters(inStock: _inStock, price: _price, cats: _catSlugs, minDiscount: _minDiscount, minRating: _minRating),
+          section: section,
+          cats: _fixedCategory ? const [] : _cats,
+        ),
+      ),
     );
     if (result == null || !mounted) return;
     setState(() {
-      _sort = result.sort;
       _inStock = result.inStock;
       _price = result.price;
-      if (!_fixedCategory) _catSlug = result.catSlug;
+      _catSlugs = result.cats;
+      _minDiscount = result.minDiscount;
+      _minRating = result.minRating;
     });
     _load();
   }
 
-  Future<void> _openPrice() async {
-    final result = await showModalBottomSheet<RangeValues>(
-      context: context,
-      backgroundColor: VkColors.canvas,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _PriceSheet(price: _price),
-    );
-    if (result == null || !mounted) return;
-    setState(() => _price = result);
-    _load();
-  }
-
   Widget _body() {
-    if (_loading && _items.isEmpty) return const ProductGridSkeleton(count: 6);
+    if (_loading && _items.isEmpty) return const ShopGridSkeleton();
     if (_error != null && _items.isEmpty) return StateView.error(_error, onRetry: _load);
     if (_items.isEmpty) {
       final q = (widget.q ?? '').trim();
@@ -347,8 +361,8 @@ class _ProductListingState extends State<ProductListing> {
         icon: Icons.search_off_rounded,
         title: 'No products found',
         body: q.isNotEmpty ? 'Nothing matches “$q”. Try a different word or browse a category.' : 'Try clearing the filters to see more.',
-        cta: _filterCount > 0 || (_catSlug != null && !_fixedCategory) ? 'Clear filters' : (widget.asTab ? null : 'Browse all'),
-        onCta: _filterCount > 0 || (_catSlug != null && !_fixedCategory) ? _clearFilters : () => context.go('/shop'),
+        cta: _filterCount > 0 ? 'Clear filters' : (widget.asTab ? null : 'Browse all'),
+        onCta: _filterCount > 0 ? _clearFilters : () => context.go('/shop'),
       );
     }
     return RefreshIndicator(
@@ -359,19 +373,19 @@ class _ProductListingState extends State<ProductListing> {
         slivers: [
           SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                 child: Text('${_total > 0 ? _total : _items.length} PRODUCTS', style: VkText.upper(9, color: VkColors.muted, letter: 0.16)),
               ),
             ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+            padding: EdgeInsets.zero,
             sliver: SliverLayoutBuilder(
               builder: (context, c) => SliverGrid.builder(
-                gridDelegate: productGridDelegate(context, c.crossAxisExtent),
+                gridDelegate: shopGridDelegate(context, c.crossAxisExtent),
                 itemCount: _items.length,
                 itemBuilder: (context, i) {
                   final p = _items[i];
-                  return ProductCard(
+                  return ShopProductCard(
                     key: ValueKey(p.variantId ?? p.id),
                     p: p,
                     onFav: () => toggleWishlist(context, p),
@@ -398,67 +412,35 @@ class _ProductListingState extends State<ProductListing> {
   }
 }
 
-/// Bottom-sheet chrome: grabber, title, content.
-class _SheetFrame extends StatelessWidget {
-  final String title;
-  final Widget child;
-  final Widget? footer;
-  const _SheetFrame({required this.title, required this.child, this.footer});
-  @override
-  Widget build(BuildContext context) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const SizedBox(height: 12),
-            Container(width: 36, height: 4, decoration: BoxDecoration(color: VkColors.rule2, borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 14),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(children: [
-                Expanded(child: Text(title, style: VkText.display(22))),
-                InkResponse(onTap: () => Navigator.pop(context), radius: 20, child: const Icon(Icons.close_rounded, size: 20, color: VkColors.muted)),
-              ]),
-            ),
-            const SizedBox(height: 6),
-            Flexible(child: SingleChildScrollView(child: child)),
-            if (footer != null) Padding(padding: const EdgeInsets.fromLTRB(20, 8, 20, 16), child: footer),
-            if (footer == null) const SizedBox(height: 12),
-          ]),
-        ),
-      );
-}
-
-/// A toolbar pill: optional leading icon, label, optional chevron; filled
-/// dark when active.
-class _Pill extends StatelessWidget {
-  final IconData? icon;
+/// One cell of the toolbar: label, chevron or icon, and a dot when it holds
+/// an applied value.
+class _BarCell extends StatelessWidget {
   final String label;
-  final bool chevron;
+  final IconData? icon;
   final bool active;
   final VoidCallback onTap;
-  const _Pill({this.icon, required this.label, this.chevron = false, this.active = false, required this.onTap});
+  const _BarCell({required this.label, this.icon, this.active = false, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    final fg = active ? Colors.white : VkColors.ink;
+    final fg = active ? VkColors.primary : VkColors.ink;
     return Semantics(
       button: true,
       selected: active,
       label: label,
-      child: PressScale(
+      child: InkWell(
         onTap: onTap,
-        child: Container(
-          height: 38,
-          padding: EdgeInsets.only(left: icon != null ? 12 : 14, right: chevron ? 10 : 14),
-          decoration: BoxDecoration(
-            color: active ? VkColors.primaryInk : VkColors.paper,
-            borderRadius: BorderRadius.circular(VkRadii.md),
-            border: Border.all(color: active ? VkColors.primaryInk : VkColors.rule),
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            if (icon != null) ...[Icon(icon, size: 17, color: fg), const SizedBox(width: 7)],
-            Text(label, style: VkText.ui(13, weight: FontWeight.w600, color: fg)),
-            if (chevron) ...[const SizedBox(width: 4), Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: fg)],
+        child: SizedBox(
+          height: 46,
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            if (icon != null) ...[Icon(icon, size: 17, color: fg), const SizedBox(width: 6)],
+            Flexible(
+              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.ui(13, weight: active ? FontWeight.w600 : FontWeight.w500, color: fg)),
+            ),
+            if (icon == null) Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: fg),
+            if (active && icon != null) ...[
+              const SizedBox(width: 5),
+              Container(width: 6, height: 6, decoration: const BoxDecoration(color: VkColors.primary, shape: BoxShape.circle)),
+            ],
           ]),
         ),
       ),
@@ -466,148 +448,377 @@ class _Pill extends StatelessWidget {
   }
 }
 
-/// Just the price range, applied on its own.
-class _PriceSheet extends StatefulWidget {
-  final RangeValues price;
-  const _PriceSheet({required this.price});
+/// Sort options as a radio list; a tap applies and closes.
+class _SortSheet extends StatelessWidget {
+  final String sort;
+  const _SortSheet({required this.sort});
   @override
-  State<_PriceSheet> createState() => _PriceSheetState();
-}
-
-class _PriceSheetState extends State<_PriceSheet> {
-  late RangeValues _price = widget.price;
-  @override
-  Widget build(BuildContext context) {
-    final lo = _price.start.round();
-    final hi = _price.end.round();
-    return _SheetFrame(
-      title: 'Price',
-      footer: Row(children: [
-        Expanded(child: OutlineButton(label: 'Any price', height: 48, onTap: () => Navigator.pop(context, const RangeValues(0, _priceCap)))),
-        const SizedBox(width: 10),
-        Expanded(flex: 2, child: PrimaryButton(label: 'Apply', height: 48, onTap: () => Navigator.pop(context, _price))),
-      ]),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(lo == 0 ? 'Any' : '₹${inr(lo)}', style: VkText.ui(14, weight: FontWeight.w600)),
-            Text(hi >= _priceCap ? '₹${inr(_priceCap)}+' : '₹${inr(hi)}', style: VkText.ui(14, weight: FontWeight.w600)),
-          ]),
-          RangeSlider(
-            values: _price,
-            min: 0,
-            max: _priceCap,
-            divisions: 50,
-            activeColor: VkColors.primary,
-            inactiveColor: VkColors.rule2,
-            labels: RangeLabels('₹${inr(lo)}', hi >= _priceCap ? '₹${inr(_priceCap)}+' : '₹${inr(hi)}'),
-            onChanged: (v) => setState(() => _price = v),
+  Widget build(BuildContext context) => SafeArea(
+        top: false,
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _SheetHeader(title: 'Sort by', onClose: () => Navigator.pop(context)),
+          const Divider(height: 1, color: VkColors.rule),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+            child: Column(children: [
+              for (final s in _sorts)
+                _OptionRow(label: s.label, selected: s.id == sort, radio: true, onTap: () => Navigator.pop(context, s.id)),
+            ]),
           ),
-          const SizedBox(height: 6),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final cap in const [200, 500, 1000, 2000])
-              VkChip(label: 'Under ₹${inr(cap)}', selected: lo == 0 && hi == cap, onTap: () => setState(() => _price = RangeValues(0, cap.toDouble()))),
-          ]),
         ]),
-      ),
-    );
-  }
+      );
 }
 
-class _FilterResult {
-  final String sort;
+class _SheetHeader extends StatelessWidget {
+  final String title;
+  final VoidCallback onClose;
+  const _SheetHeader({required this.title, required this.onClose});
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 12, 14),
+        child: Row(children: [
+          Expanded(child: Text(title, style: VkText.ui(20, weight: FontWeight.w600))),
+          IconButton(onPressed: onClose, tooltip: 'Close', icon: const Icon(Icons.close_rounded, size: 24, color: VkColors.ink)),
+        ]),
+      );
+}
+
+/// A full-width option: a square check box (or a round radio) and its label,
+/// ruled off from the next one.
+class _OptionRow extends StatelessWidget {
+  final String label;
+  final String? trailing;
+  final bool selected;
+  final bool radio;
+  final VoidCallback onTap;
+  const _OptionRow({required this.label, this.trailing, required this.selected, this.radio = false, required this.onTap});
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        checked: selected,
+        label: label,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 54),
+            decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: VkColors.rule))),
+            child: Row(children: [
+              AnimatedContainer(
+                duration: VkMotion.fast,
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: selected ? VkColors.primary : VkColors.paper,
+                  borderRadius: BorderRadius.circular(radio ? 11 : 5),
+                  border: Border.all(color: selected ? VkColors.primary : VkColors.muted, width: 1.6),
+                ),
+                child: selected ? Icon(radio ? Icons.circle : Icons.check_rounded, size: radio ? 9 : 16, color: Colors.white) : null,
+              ),
+              const SizedBox(width: 14),
+              Expanded(child: Text(label, style: VkText.ui(14.5, weight: selected ? FontWeight.w600 : FontWeight.w400))),
+              if (trailing != null) Text(trailing!, style: VkText.ui(12, weight: FontWeight.w400, color: VkColors.muted2)),
+            ]),
+          ),
+        ),
+      );
+}
+
+/// Clear All (outlined) and Apply (filled) under the filter sheet.
+class _FooterButton extends StatelessWidget {
+  final String label;
+  final bool filled;
+  final VoidCallback onTap;
+  const _FooterButton({required this.label, this.filled = false, required this.onTap});
+  @override
+  Widget build(BuildContext context) => Material(
+        color: filled ? VkColors.primary : VkColors.paper,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(VkRadii.sm),
+          side: BorderSide(color: filled ? VkColors.primary : VkColors.muted2),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            alignment: Alignment.center,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label, maxLines: 1, style: VkText.ui(15, weight: FontWeight.w600, color: filled ? Colors.white : VkColors.muted)),
+            ),
+          ),
+        ),
+      );
+}
+
+enum _Section { category, price, discount, rating, availability }
+
+extension on _Section {
+  String get rail => switch (this) {
+        _Section.category => 'Category',
+        _Section.price => 'Price',
+        _Section.discount => 'Discount',
+        _Section.rating => 'Rating',
+        _Section.availability => 'Availability',
+      };
+  String get heading => switch (this) {
+        _Section.category => 'Select Category',
+        _Section.price => 'Select Price',
+        _Section.discount => 'Select Discount',
+        _Section.rating => 'Select Rating',
+        _Section.availability => 'Availability',
+      };
+}
+
+class _Filters {
   final bool inStock;
   final RangeValues price;
-  final String? catSlug;
-  const _FilterResult(this.sort, this.inStock, this.price, this.catSlug);
+  final Set<String> cats;
+  final int? minDiscount;
+  final int? minRating;
+  const _Filters({required this.inStock, required this.price, required this.cats, this.minDiscount, this.minRating});
 }
 
-/// Sort, category, availability and price in one sheet, applied together.
+const _pricePresets = <(String, double, double)>[
+  ('Under ₹200', 0, 200),
+  ('₹200 – ₹500', 200, 500),
+  ('₹500 – ₹1,000', 500, 1000),
+  ('₹1,000 – ₹2,000', 1000, 2000),
+  ('₹2,000 and above', 2000, _priceCap),
+];
+
+/// The filter sheet: sections down a left rail, the chosen section's options
+/// on the right, Clear All and Apply pinned beneath.
 class _FilterSheet extends StatefulWidget {
-  final String sort;
-  final bool inStock;
-  final RangeValues price;
+  final _Filters initial;
+  final _Section section;
   final List<EcomCategory> cats;
-  final String? catSlug;
-  const _FilterSheet({required this.sort, required this.inStock, required this.price, this.cats = const [], this.catSlug});
+  const _FilterSheet({required this.initial, required this.section, this.cats = const []});
   @override
   State<_FilterSheet> createState() => _FilterSheetState();
 }
 
 class _FilterSheetState extends State<_FilterSheet> {
-  late String _sort = widget.sort;
-  late bool _inStock = widget.inStock;
-  late RangeValues _price = widget.price;
-  late String? _catSlug = widget.catSlug;
+  late _Section _section = widget.section;
+  late bool _inStock = widget.initial.inStock;
+  late RangeValues _price = widget.initial.price;
+  late final Set<String> _cats = {...widget.initial.cats};
+  late int? _minDiscount = widget.initial.minDiscount;
+  late int? _minRating = widget.initial.minRating;
+  String _catQuery = '';
+
+  List<_Section> get _sections => [
+        if (widget.cats.isNotEmpty) _Section.category,
+        _Section.price,
+        _Section.discount,
+        _Section.rating,
+        _Section.availability,
+      ];
+
+  bool _has(_Section s) => switch (s) {
+        _Section.category => _cats.isNotEmpty,
+        _Section.price => _price.start > 0 || _price.end < _priceCap,
+        _Section.discount => _minDiscount != null,
+        _Section.rating => _minRating != null,
+        _Section.availability => _inStock,
+      };
+
+  void _clear(_Section s) => setState(() {
+        switch (s) {
+          case _Section.category:
+            _cats.clear();
+          case _Section.price:
+            _price = const RangeValues(0, _priceCap);
+          case _Section.discount:
+            _minDiscount = null;
+          case _Section.rating:
+            _minRating = null;
+          case _Section.availability:
+            _inStock = false;
+        }
+      });
 
   @override
   Widget build(BuildContext context) {
-    final lo = _price.start.round();
-    final hi = _price.end.round();
-    return _SheetFrame(
-      title: 'Sort & Filter',
-      footer: Row(children: [
-        Expanded(
-          child: OutlineButton(
-            label: 'Reset',
-            height: 48,
-            onTap: () => setState(() {
-              _sort = 'newest';
-              _inStock = false;
-              _price = const RangeValues(0, _priceCap);
-              _catSlug = null;
-            }),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(flex: 2, child: PrimaryButton(label: 'Show products', height: 48, onTap: () => Navigator.pop(context, _FilterResult(_sort, _inStock, _price, _catSlug)))),
-      ]),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('SORT BY', style: VkText.upper(9, letter: 0.18)),
-          const SizedBox(height: 8),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final s in _sorts) VkChip(label: s.label, selected: s.id == _sort, onTap: () => setState(() => _sort = s.id)),
-          ]),
-          if (widget.cats.isNotEmpty) ...[
-            const SizedBox(height: 18),
-            Text('CATEGORY', style: VkText.upper(9, letter: 0.18)),
-            const SizedBox(height: 8),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              VkChip(label: 'All', selected: _catSlug == null, onTap: () => setState(() => _catSlug = null)),
-              for (final c in widget.cats) VkChip(label: c.name, selected: _catSlug == c.slug, onTap: () => setState(() => _catSlug = c.slug)),
+    final sections = _sections;
+    if (!sections.contains(_section)) _section = sections.first;
+    return SafeArea(
+      top: false,
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.78,
+        child: Column(children: [
+          _SheetHeader(title: 'Filter', onClose: () => Navigator.pop(context)),
+          const Divider(height: 1, color: VkColors.rule),
+          Expanded(
+            child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Container(
+                width: 124,
+                color: VkColors.cream,
+                child: ListView(padding: EdgeInsets.zero, children: [for (final s in sections) _railItem(s)]),
+              ),
+              Expanded(child: ColoredBox(color: VkColors.paper, child: _pane())),
             ]),
-          ],
-          const SizedBox(height: 18),
-          Text('AVAILABILITY', style: VkText.upper(9, letter: 0.18)),
-          SwitchListTile.adaptive(
-            value: _inStock,
-            onChanged: (v) => setState(() => _inStock = v),
-            title: Text('In stock only', style: VkText.ui(14)),
-            contentPadding: EdgeInsets.zero,
-            activeTrackColor: VkColors.primary,
           ),
-          const SizedBox(height: 8),
-          Text('PRICE', style: VkText.upper(9, letter: 0.18)),
-          const SizedBox(height: 6),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(lo == 0 ? 'Any' : '₹${inr(lo)}', style: VkText.ui(14, weight: FontWeight.w600)),
-            Text(hi >= _priceCap ? '₹${inr(_priceCap)}+' : '₹${inr(hi)}', style: VkText.ui(14, weight: FontWeight.w600)),
-          ]),
-          RangeSlider(
-            values: _price,
-            min: 0,
-            max: _priceCap,
-            divisions: 50,
-            activeColor: VkColors.primary,
-            inactiveColor: VkColors.rule2,
-            labels: RangeLabels('₹${inr(lo)}', hi >= _priceCap ? '₹${inr(_priceCap)}+' : '₹${inr(hi)}'),
-            onChanged: (v) => setState(() => _price = v),
+          Container(
+            decoration: const BoxDecoration(color: VkColors.paper, border: Border(top: BorderSide(color: VkColors.rule))),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(children: [
+              Expanded(
+                flex: 3,
+                child: _FooterButton(
+                  label: 'Clear All',
+                  onTap: () => setState(() {
+                    _cats.clear();
+                    _price = const RangeValues(0, _priceCap);
+                    _minDiscount = null;
+                    _minRating = null;
+                    _inStock = false;
+                  }),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 5,
+                child: _FooterButton(
+                  label: 'Apply',
+                  filled: true,
+                  onTap: () => Navigator.pop(
+                    context,
+                    _Filters(inStock: _inStock, price: _price, cats: _cats, minDiscount: _minDiscount, minRating: _minRating),
+                  ),
+                ),
+              ),
+            ]),
           ),
         ]),
       ),
     );
+  }
+
+  Widget _railItem(_Section s) {
+    final on = s == _section;
+    return Semantics(
+      button: true,
+      selected: on,
+      child: InkWell(
+        onTap: () => setState(() => _section = s),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
+          decoration: BoxDecoration(color: on ? VkColors.paper : null),
+          child: Row(children: [
+            Container(width: 4, height: 24, decoration: BoxDecoration(color: on ? VkColors.primary : Colors.transparent, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(width: 14),
+            Expanded(child: Text(s.rail, style: VkText.ui(13.5, weight: on ? FontWeight.w600 : FontWeight.w400, color: on ? VkColors.ink : VkColors.ink2))),
+            if (_has(s)) Container(width: 6, height: 6, decoration: const BoxDecoration(color: VkColors.primary, shape: BoxShape.circle)),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _pane() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 18, 12, 6),
+        child: Row(children: [
+          Expanded(child: Text(_section.heading, style: VkText.ui(17, weight: FontWeight.w600))),
+          TextButton(
+            onPressed: _has(_section) ? () => _clear(_section) : null,
+            child: Text('Clear', style: VkText.ui(13.5, weight: FontWeight.w600, color: _has(_section) ? VkColors.primary : VkColors.muted2)),
+          ),
+        ]),
+      ),
+      Expanded(
+        child: switch (_section) {
+          _Section.category => _categoryPane(),
+          _Section.price => _pricePane(),
+          _Section.discount => _list([
+              for (final d in const [10, 20, 30, 40, 50])
+                _OptionRow(label: '$d% and above', radio: true, selected: _minDiscount == d, onTap: () => setState(() => _minDiscount = _minDiscount == d ? null : d)),
+            ]),
+          _Section.rating => _list([
+              for (final r in const [4, 3, 2])
+                _OptionRow(label: '$r ★ and above', radio: true, selected: _minRating == r, onTap: () => setState(() => _minRating = _minRating == r ? null : r)),
+            ]),
+          _Section.availability => _list([
+              _OptionRow(label: 'In stock only', selected: _inStock, onTap: () => setState(() => _inStock = !_inStock)),
+            ]),
+        },
+      ),
+    ]);
+  }
+
+  Widget _list(List<Widget> rows) => ListView(padding: const EdgeInsets.fromLTRB(20, 0, 20, 16), children: rows);
+
+  Widget _categoryPane() {
+    final q = _catQuery.trim().toLowerCase();
+    final shown = widget.cats.where((c) => q.isEmpty || c.name.toLowerCase().contains(q)).toList();
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+        child: SizedBox(
+          height: 44,
+          child: TextField(
+            onChanged: (v) => setState(() => _catQuery = v),
+            textInputAction: TextInputAction.search,
+            style: VkText.ui(13.5, weight: FontWeight.w400),
+            decoration: InputDecoration(
+              hintText: 'Search Category',
+              hintStyle: VkText.ui(13.5, weight: FontWeight.w400, color: VkColors.muted),
+              prefixIcon: const Icon(Icons.search_rounded, size: 20, color: VkColors.ink),
+              contentPadding: EdgeInsets.zero,
+              filled: true,
+              fillColor: VkColors.paper,
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: VkColors.rule)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: VkColors.primary, width: 1.4)),
+            ),
+          ),
+        ),
+      ),
+      Expanded(
+        child: shown.isEmpty
+            ? Center(child: Text('No category matches', style: VkText.ui(13, weight: FontWeight.w400, color: VkColors.muted)))
+            : _list([
+                for (final c in shown)
+                  _OptionRow(
+                    label: c.name,
+                    trailing: c.productCount != null ? '${c.productCount}' : null,
+                    selected: _cats.contains(c.slug),
+                    onTap: () => setState(() => _cats.contains(c.slug) ? _cats.remove(c.slug) : _cats.add(c.slug)),
+                  ),
+              ]),
+      ),
+    ]);
+  }
+
+  Widget _pricePane() {
+    final lo = _price.start.round();
+    final hi = _price.end.round();
+    return ListView(padding: const EdgeInsets.fromLTRB(20, 0, 20, 16), children: [
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Flexible(child: Text(lo == 0 ? 'Any' : '₹${inr(lo)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.ui(14, weight: FontWeight.w600))),
+        const SizedBox(width: 8),
+        Flexible(child: Text(hi >= _priceCap ? '₹${inr(_priceCap)}+' : '₹${inr(hi)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.ui(14, weight: FontWeight.w600))),
+      ]),
+      RangeSlider(
+        values: _price,
+        min: 0,
+        max: _priceCap,
+        divisions: 50,
+        activeColor: VkColors.primary,
+        inactiveColor: VkColors.rule2,
+        labels: RangeLabels('₹${inr(lo)}', hi >= _priceCap ? '₹${inr(_priceCap)}+' : '₹${inr(hi)}'),
+        onChanged: (v) => setState(() => _price = v),
+      ),
+      for (final (label, from, to) in _pricePresets)
+        _OptionRow(
+          label: label,
+          radio: true,
+          selected: _price.start == from && _price.end == to,
+          onTap: () => setState(() => _price = _price.start == from && _price.end == to ? const RangeValues(0, _priceCap) : RangeValues(from, to)),
+        ),
+    ]);
   }
 }

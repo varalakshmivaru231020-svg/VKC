@@ -24,6 +24,13 @@ Product productFromEcom(EcomProduct e, {String? variantId}) {
     isNew: e.isNew,
     badge: e.isFeatured ? 'Featured' : null,
     palette: paletteFor(e.id),
+    rating: e.ratingAverage,
+    ratingCount: e.ratingCount,
+    packs: [
+      if (v.label.isNotEmpty) v.label,
+      for (final x in e.variants)
+        if (x.id != v.id && x.label.isNotEmpty) x.label,
+    ],
     source: e,
   );
 }

@@ -6,6 +6,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'ecom/ecom_api.dart';
 import 'ecom/ecom_cart.dart';
+import 'ecom/ecom_config.dart';
+import 'ecom/ecom_env.dart';
 import 'ecom/ecom_models.dart';
 import 'ecom/ecom_wishlist.dart';
 import 'models.dart';
@@ -170,8 +172,8 @@ class _ToastBarState extends State<_ToastBar> with SingleTickerProviderStateMixi
 
 // ── Brand ────────────────────────────────────────────────────────────────────
 
-/// The static VKC Gold Ikshu emblem (bundled, never the admin upload) with an
-/// optional wordmark. [animate] plays a soft fade-and-settle on first build —
+/// The store's logo — the one uploaded in the admin panel, falling back to
+/// the bundled VKC Gold Ikshu emblem — with an optional wordmark. [animate] plays a soft fade-and-settle on first build —
 /// used once, on the Home header.
 class BrandLogo extends StatefulWidget {
   final double height;
@@ -202,9 +204,27 @@ class _BrandLogoState extends State<BrandLogo> {
   @override
   Widget build(BuildContext context) {
     final c = widget.color ?? VkColors.ink;
+    final bundled = Image.asset('assets/brand/logo.png', height: widget.height, width: widget.height, fit: BoxFit.contain,
+        semanticLabel: 'VKC Gold Ikshu');
     final row = Row(mainAxisSize: MainAxisSize.min, children: [
-      Image.asset('assets/brand/logo.png', height: widget.height, width: widget.height, fit: BoxFit.contain,
-          semanticLabel: 'VKC Gold Ikshu'),
+      // Admin → Settings logo once /app-config lands; the bundled emblem
+      // stands in while it loads, offline, or when none has been uploaded.
+      ValueListenableBuilder<StoreConfig>(
+        valueListenable: storeConfig,
+        builder: (context, cfg, _) {
+          final url = mediaUrl(cfg.logoUrl);
+          if (url == null) return bundled;
+          return CachedNetworkImage(
+            imageUrl: url,
+            height: widget.height,
+            width: widget.height,
+            fit: BoxFit.contain,
+            fadeInDuration: VkMotion.fast,
+            placeholder: (_, __) => bundled,
+            errorWidget: (_, __, ___) => bundled,
+          );
+        },
+      ),
       if (widget.wordmark) ...[
         const SizedBox(width: 10),
         Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
@@ -496,7 +516,7 @@ class DashedRule extends StatelessWidget {
       });
 }
 
-/// Small tracked pill label — "NEW", "SOLD OUT", "FEATURED".
+/// Small tracked pill label — "NEW", "COMING SOON", "FEATURED".
 class VkBadge extends StatelessWidget {
   final String text;
   final Color color;
@@ -992,7 +1012,7 @@ bool quickAddToCart(BuildContext context, Product product) {
   final v = src.variants.where((x) => x.id == product.variantId).firstOrNull ?? src.displayVariant;
   if (v.id.isEmpty) return false;
   if (v.availableQty <= 0) {
-    toast(context, 'Out of stock right now');
+    toast(context, 'Coming soon — not available to order yet');
     return false;
   }
   final ok = EcomCart.I.add(CartItem.of(src, v));
@@ -1210,7 +1230,7 @@ class ProductCard extends StatelessWidget {
                 left: 0,
                 right: 0,
                 bottom: 8,
-                child: Center(child: VkBadge('Sold out', color: VkColors.soldOut)),
+                child: Center(child: VkBadge('Coming soon', color: VkColors.primary)),
               ),
             if (onFav != null)
               Positioned(
@@ -1306,6 +1326,300 @@ class _AddButtonState extends State<_AddButton> {
               transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
               child: Icon(_added ? Icons.check_rounded : Icons.add_shopping_cart_rounded, key: ValueKey(_added), size: 20, color: Colors.white),
             ),
+          ),
+        ),
+      );
+}
+
+// ── Marketplace card (Shop, category and search listings) ────────────────────
+// Edge-to-edge tiles: a tall photo with the heart and pack sizes on it, then a
+// saving ribbon, one-line name, a large price with the MRP and % off, and the
+// rating. Every block is a fixed height so neighbours always line up.
+
+const double _kShopNameSize = 13.5;
+const double _kShopPriceSize = 17;
+const double _kShopRibbonHeight = 22;
+const double _kShopMetaHeight = 28;
+
+/// Photo width ÷ height on a marketplace card.
+const double kShopImageAspect = 0.8;
+
+double shopCardTextHeight(BuildContext context) {
+  final s = MediaQuery.textScalerOf(context);
+  return _kShopRibbonHeight + 8 + s.scale(_kShopNameSize) * 1.35 + 4 + s.scale(_kShopPriceSize) * 1.4 + 4 + _kShopMetaHeight + 10 + 4;
+}
+
+/// Two tiles across with a hairline gap, the way marketplace apps lay out.
+SliverGridDelegateWithFixedCrossAxisCount shopGridDelegate(BuildContext context, double gridWidth, {double spacing = 3}) {
+  final tile = (gridWidth - spacing) / 2;
+  return SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 2,
+    mainAxisSpacing: spacing,
+    crossAxisSpacing: spacing,
+    mainAxisExtent: tile / kShopImageAspect + shopCardTextHeight(context),
+  );
+}
+
+class ShopProductCard extends StatelessWidget {
+  final Product p;
+  final VoidCallback? onTap;
+  final VoidCallback? onFav;
+  final VoidCallback? onAdd;
+  const ShopProductCard({super.key, required this.p, this.onTap, this.onFav, this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    final off = discountPercent(p.price, p.mrp);
+    final save = off != null ? (p.mrp! - p.price).round() : 0;
+    final scaler = MediaQuery.textScalerOf(context);
+    return PressScale(
+      onTap: onTap,
+      scale: 0.985,
+      child: ColoredBox(
+        color: VkColors.paper,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          AspectRatio(
+            aspectRatio: kShopImageAspect,
+            child: Stack(fit: StackFit.expand, children: [
+              ProductImage(p: p, radius: 0),
+              if (p.soldOut) ColoredBox(color: VkColors.canvas.withValues(alpha: 0.5)),
+              if (p.soldOut) Center(child: VkBadge('Coming soon', color: VkColors.primary)),
+              if (onFav != null)
+                Positioned(
+                  left: 8,
+                  top: 8,
+                  child: ValueListenableBuilder<Set<String>>(
+                    valueListenable: Wishlist.I.variantIds,
+                    builder: (_, ids, __) => WishHeart(on: ids.contains(p.variantId), onTap: onFav, size: 34),
+                  ),
+                ),
+              if (p.packs.isNotEmpty) Positioned(right: 8, bottom: 8, child: _PackPill(packs: p.packs)),
+            ]),
+          ),
+          SizedBox(
+            height: _kShopRibbonHeight,
+            child: save > 0
+                ? _Ribbon(text: 'SAVE ₹${inr(save)}', color: VkColors.leaf)
+                : p.isNew
+                    ? const _Ribbon(text: 'NEW ARRIVAL', color: VkColors.primary)
+                    : Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 6, 10, 0),
+                        child: Text(p.category.toUpperCase(),
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.upper(8.5, color: VkColors.muted2, letter: 0.12)),
+                      ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              SizedBox(
+                height: scaler.scale(_kShopNameSize) * 1.35,
+                child: Text(p.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: VkText.ui(_kShopNameSize, weight: FontWeight.w400, color: VkColors.ink2).copyWith(height: 1.35)),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                height: scaler.scale(_kShopPriceSize) * 1.4,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+                    Text('₹${inr(p.price)}', style: VkText.ui(_kShopPriceSize, weight: FontWeight.w700, letter: 0)),
+                    if (off != null) ...[
+                      const SizedBox(width: 6),
+                      Text('₹${inr(p.mrp!)}',
+                          style: VkText.ui(12, weight: FontWeight.w400, color: VkColors.muted2).copyWith(decoration: TextDecoration.lineThrough)),
+                      const SizedBox(width: 6),
+                      Text('$off% OFF', style: VkText.ui(12, weight: FontWeight.w700, color: VkColors.warning)),
+                    ],
+                  ]),
+                ),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                height: _kShopMetaHeight,
+                child: Row(children: [
+                  Expanded(child: _meta()),
+                  if (onAdd != null && !p.soldOut) ...[const SizedBox(width: 6), _AddPill(onTap: onAdd!)],
+                ]),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  /// Rating when the product has reviews; otherwise the most useful fact left.
+  Widget _meta() {
+    final lowStock = p.inStock && p.qty <= 5;
+    final note = lowStock
+        ? 'Only ${p.qty} left'
+        : (p.price >= storeConfig.value.freeShippingThreshold ? 'Free delivery' : null);
+    // Shrinks rather than overflows on a narrow tile or a large system font.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (p.ratingCount > 0) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+            decoration: BoxDecoration(color: VkColors.leaf, borderRadius: BorderRadius.circular(5)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.star_rounded, size: 12, color: Colors.white),
+              const SizedBox(width: 2),
+              Text(p.rating.toStringAsFixed(1), style: VkText.ui(10.5, weight: FontWeight.w700, color: Colors.white, letter: 0)),
+            ]),
+          ),
+          const SizedBox(width: 5),
+          Text('(${inr(p.ratingCount)})', style: VkText.ui(11, weight: FontWeight.w400, color: VkColors.muted)),
+          const SizedBox(width: 6),
+        ],
+        if (note != null)
+          Text(note, maxLines: 1, style: VkText.ui(11, weight: FontWeight.w500, color: VkColors.sale))
+        else if (p.ratingCount == 0)
+          Text(p.soldOut ? 'Coming soon' : 'In stock',
+              maxLines: 1, style: VkText.ui(11, weight: FontWeight.w500, color: p.soldOut ? VkColors.primary : VkColors.leaf)),
+      ]),
+    );
+  }
+}
+
+/// Pack sizes on the photo: the shown one, then how many more there are.
+class _PackPill extends StatelessWidget {
+  final List<String> packs;
+  const _PackPill({required this.packs});
+  @override
+  Widget build(BuildContext context) => Container(
+        constraints: const BoxConstraints(maxWidth: 120),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        decoration: BoxDecoration(
+          color: VkColors.paper.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(VkRadii.pill),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 6, offset: const Offset(0, 2))],
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Flexible(child: Text(packs.first, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.ui(10.5, weight: FontWeight.w600, letter: 0))),
+          if (packs.length > 1) ...[
+            const SizedBox(width: 5),
+            Text('+${packs.length - 1}', style: VkText.ui(10.5, weight: FontWeight.w600, color: VkColors.muted, letter: 0)),
+          ],
+        ]),
+      );
+}
+
+/// Flag hanging off the photo's left edge, cut to a point on the right.
+class _Ribbon extends StatelessWidget {
+  final String text;
+  final Color color;
+  const _Ribbon({required this.text, required this.color});
+  @override
+  Widget build(BuildContext context) => Align(
+        alignment: Alignment.centerLeft,
+        child: ClipPath(
+          clipper: const _RibbonClipper(),
+          child: Container(
+            height: _kShopRibbonHeight,
+            color: color,
+            padding: const EdgeInsets.only(left: 10, right: 18),
+            alignment: Alignment.center,
+            child: Text(text, maxLines: 1, style: VkText.ui(10.5, weight: FontWeight.w600, color: Colors.white, letter: 0.03)),
+          ),
+        ),
+      );
+}
+
+class _RibbonClipper extends CustomClipper<Path> {
+  const _RibbonClipper();
+  @override
+  Path getClip(Size s) => Path()
+    ..lineTo(s.width - 10, 0)
+    ..lineTo(s.width, s.height / 2)
+    ..lineTo(s.width - 10, s.height)
+    ..lineTo(0, s.height)
+    ..close();
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+/// Compact quick-add on the card's last line; shows a tick for a moment.
+class _AddPill extends StatefulWidget {
+  final VoidCallback onTap;
+  const _AddPill({required this.onTap});
+  @override
+  State<_AddPill> createState() => _AddPillState();
+}
+
+class _AddPillState extends State<_AddPill> {
+  bool _added = false;
+  Timer? _reset;
+
+  @override
+  void dispose() {
+    _reset?.cancel();
+    super.dispose();
+  }
+
+  void _tap() {
+    widget.onTap();
+    _reset?.cancel();
+    setState(() => _added = true);
+    _reset = Timer(const Duration(milliseconds: 1400), () {
+      if (mounted) setState(() => _added = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: 'Add to cart',
+        child: GestureDetector(
+          onTap: _tap,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: VkMotion.base,
+            height: _kShopMetaHeight,
+            width: 58,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _added ? VkColors.primary : VkColors.paper,
+              borderRadius: BorderRadius.circular(VkRadii.xs),
+              border: Border.all(color: VkColors.primary, width: 1.2),
+            ),
+            child: _added
+                ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+                : Text('ADD', style: VkText.ui(11.5, weight: FontWeight.w700, color: VkColors.primary, letter: 0.06)),
+          ),
+        ),
+      );
+}
+
+/// Loading placeholder with the marketplace grid's geometry.
+class ShopGridSkeleton extends StatelessWidget {
+  final int count;
+  const ShopGridSkeleton({super.key, this.count = 6});
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, box) => GridView.builder(
+          gridDelegate: shopGridDelegate(context, box.maxWidth),
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: count,
+          itemBuilder: (_, __) => ColoredBox(
+            color: VkColors.paper,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+              AspectRatio(aspectRatio: kShopImageAspect, child: Skeleton(radius: 0)),
+              Padding(
+                padding: EdgeInsets.fromLTRB(10, 14, 10, 0),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Skeleton(height: 11),
+                  SizedBox(height: 9),
+                  Skeleton(width: 110, height: 15),
+                  SizedBox(height: 9),
+                  Skeleton(width: 70, height: 11),
+                ]),
+              ),
+            ]),
           ),
         ),
       );
