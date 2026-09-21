@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { issueTokenPair } from "@/lib/api/jwt";
-
-function normalisePhone(raw: string): string {
-  const clean = raw.trim();
-  if (clean.startsWith("+")) return "+" + clean.replace(/\D/g, "");
-  const digits = clean.replace(/\D/g, "");
-  if (digits.length === 10) return "+91" + digits;
-  if (digits.startsWith("91") && digits.length === 12) return "+" + digits;
-  return "+" + digits;
-}
+import {
+  clearReviewFailures,
+  getReviewLogin,
+  isReviewPhone,
+  normalisePhone,
+  recordReviewFailure,
+  reviewAttemptKey,
+  reviewAttemptsExhausted,
+} from "@/lib/api/review-login";
 
 export async function POST(req: Request) {
   try {
@@ -24,19 +24,40 @@ export async function POST(req: Request) {
 
     const phone = normalisePhone(rawPhone);
 
-    const record = await db.otpCode.findFirst({
-      where: { phone, code: otp, used: false, expiresAt: { gt: new Date() } },
-      orderBy: { createdAt: "desc" },
-    });
-
-    if (!record) {
-      return NextResponse.json({ error: "Invalid or expired OTP" }, { status: 401 });
+    // The store-review number accepts the fixed review OTP instead of an SMS
+    // code (see lib/api/review-login.ts). Every other number, and every wrong
+    // code, goes through the normal OTP check below.
+    const review = await getReviewLogin();
+    const reviewNumber = isReviewPhone(review, phone);
+    const attemptKey = reviewAttemptKey(req, phone);
+    if (reviewNumber && reviewAttemptsExhausted(attemptKey)) {
+      return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
     }
+    const viaReviewOtp = reviewNumber && otp === review.otp;
 
-    await db.otpCode.update({ where: { id: record.id }, data: { used: true } });
+    if (!viaReviewOtp) {
+      const record = await db.otpCode.findFirst({
+        where: { phone, code: otp, used: false, expiresAt: { gt: new Date() } },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (!record) {
+        if (reviewNumber) recordReviewFailure(attemptKey);
+        return NextResponse.json({ error: "Invalid or expired OTP" }, { status: 401 });
+      }
+
+      await db.otpCode.update({ where: { id: record.id }, data: { used: true } });
+    }
 
     let user = await db.user.findUnique({ where: { phone } });
     let isNew = false;
+
+    // The fixed review OTP opens a customer account only, never staff or admin.
+    if (viaReviewOtp && user && user.role !== "CUSTOMER") {
+      recordReviewFailure(attemptKey);
+      return NextResponse.json({ error: "Invalid or expired OTP" }, { status: 401 });
+    }
+    if (viaReviewOtp) clearReviewFailures(attemptKey);
 
     if (!user) {
       isNew = true;

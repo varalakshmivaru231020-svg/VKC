@@ -1,15 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendOtpViaMSG91 } from "@/lib/api/msg91";
-
-function normalisePhone(raw: string): string {
-  const clean = raw.trim();
-  if (clean.startsWith("+")) return "+" + clean.replace(/\D/g, "");
-  const digits = clean.replace(/\D/g, "");
-  if (digits.length === 10) return "+91" + digits;
-  if (digits.startsWith("91") && digits.length === 12) return "+" + digits;
-  return "+" + digits;
-}
+import { getReviewLogin, isReviewPhone, normalisePhone } from "@/lib/api/review-login";
 
 /**
  * Fixed-OTP is a LOCAL DEVELOPMENT convenience only.
@@ -33,6 +25,17 @@ export async function POST(req: Request) {
     }
 
     const normalised = normalisePhone(String(phone));
+
+    // The store-review number signs in with the fixed review OTP (see
+    // lib/api/review-login.ts): no code is stored and no SMS is sent. A staff or
+    // admin number is never treated this way, even if it is entered there.
+    const review = await getReviewLogin();
+    if (isReviewPhone(review, normalised)) {
+      const account = await db.user.findUnique({ where: { phone: normalised }, select: { id: true, role: true } });
+      if (!account || account.role === "CUSTOMER") {
+        return NextResponse.json({ success: true, isNew: !account });
+      }
+    }
 
     await db.otpCode.updateMany({ where: { phone: normalised, used: false }, data: { used: true } });
 

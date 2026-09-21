@@ -1770,6 +1770,8 @@ function SmsTab() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     msg91_auth_key: "", msg91_sender_id: "", msg91_template_id: "",
+    // Store-review login: one test number that signs in with a fixed OTP
+    review_login_enabled: "false", review_login_phone: "", review_login_otp: "1995",
     whatsapp_api_url: "", whatsapp_token: "", whatsapp_phone_id: "",
     whatsapp_number: "",
     shiprocket_enabled: "false",
@@ -1796,6 +1798,9 @@ function SmsTab() {
         msg91_auth_key:        settings.msg91_auth_key        ?? "",
         msg91_sender_id:       settings.msg91_sender_id       ?? "",
         msg91_template_id:     settings.msg91_template_id     ?? "",
+        review_login_enabled:  settings.review_login_enabled  ?? "false",
+        review_login_phone:    settings.review_login_phone    ?? "",
+        review_login_otp:      settings.review_login_otp      || "1995",
         whatsapp_api_url:      settings.whatsapp_api_url      ?? "",
         whatsapp_token:        settings.whatsapp_token        ?? "",
         whatsapp_phone_id:     settings.whatsapp_phone_id     ?? "",
@@ -1834,6 +1839,8 @@ function SmsTab() {
   const u = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }));
 
+  const reviewEnabled = form.review_login_enabled === "true";
+  const reviewPhoneValid = form.review_login_phone.replace(/\D/g, "").length >= 10;
   const srEnabled = form.shiprocket_enabled === "true";
   const dtdcEnabled = form.dtdc_enabled === "true";
   const delhiveryEnabled = form.delhivery_enabled === "true";
@@ -1860,6 +1867,55 @@ function SmsTab() {
             <input value={form.msg91_template_id} onChange={u("msg91_template_id")} placeholder="Template ID for OTP messages" className={inputCls} style={inputStyle} {...focusProps} />
           </div>
         </div>
+      </SectionCard>
+
+      {/* ── Store review login (Google Play / App Store reviewers) ── */}
+      <SectionCard
+        title="Store review login (Play Store)"
+        icon={Shield}
+        action={
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div
+              onClick={() => setForm(f => ({ ...f, review_login_enabled: reviewEnabled ? "false" : "true" }))}
+              className="relative w-9 h-5 rounded-full transition-all cursor-pointer"
+              style={{ background: reviewEnabled ? "var(--color-primary)" : "#D1D5DB" }}
+            >
+              <div className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all" style={{ left: reviewEnabled ? "18px" : "2px" }} />
+            </div>
+            <span className="text-xs font-medium font-body" style={{ color: "#6B7280" }}>{reviewEnabled ? "Enabled" : "Disabled"}</span>
+          </label>
+        }
+      >
+        <p className="text-xs font-body mb-4" style={{ color: "#6B7280" }}>
+          Lets Google Play reviewers sign in to the mobile app without an SMS. While this is on, the test number below signs in with the fixed OTP
+          — nobody receives a message. Give the reviewers this number and OTP in Play Console → App content → App access.
+          Takes effect as soon as you save; no new app build is needed.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Test phone number</label>
+            <input value={form.review_login_phone} onChange={u("review_login_phone")} placeholder="10-digit number, e.g. 9000000001" inputMode="numeric" className={inputCls} style={inputStyle} {...focusProps} />
+            <p className="text-[11px] font-body" style={{ color: reviewEnabled && !reviewPhoneValid ? "#B45309" : "#9CA3AF" }}>
+              {reviewEnabled && !reviewPhoneValid
+                ? "Enter a 10-digit number — until then the review login stays off."
+                : "Use a dedicated test number, never a real customer's: anyone who knows the number and OTP can sign in as it."}
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium font-body" style={{ color: "#374151" }}>Fixed OTP (4 digits)</label>
+            <input
+              value={form.review_login_otp}
+              onChange={e => setForm(f => ({ ...f, review_login_otp: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+              placeholder="1995" inputMode="numeric" maxLength={4} className={inputCls} style={inputStyle} {...focusProps}
+            />
+            <p className="text-[11px] font-body" style={{ color: "#9CA3AF" }}>Only this number accepts it. Staff and admin accounts never do.</p>
+          </div>
+        </div>
+        {reviewEnabled && (
+          <p className="text-xs font-body mt-4 rounded-lg px-3 py-2" style={{ background: "#FFFBEB", color: "#92400E" }}>
+            Live now (after you save): {form.review_login_phone || "no number yet"} signs in with OTP {form.review_login_otp || "1995"}. Turn this off once Google has approved the app.
+          </p>
+        )}
       </SectionCard>
 
       {/* ── WhatsApp Business API ── */}
