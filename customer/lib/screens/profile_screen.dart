@@ -37,13 +37,13 @@ class ProfileScreen extends StatelessWidget {
                 ]),
                 _Group(title: 'Explore VKC Gold Ikshu', rows: [
                   _RowSpec(Icons.photo_library_outlined, 'Gallery', 'Our unit, fields and farmers', () => context.push('/gallery')),
-                  _RowSpec(Icons.auto_stories_outlined, 'About Us', 'Our story, on vkcgoldikshu.com', () => openExternal(context, '$kSiteBase/about')),
-                  _RowSpec(Icons.groups_outlined, 'Leadership', 'The people behind VKC', () => openExternal(context, '$kSiteBase/leadership')),
-                  _RowSpec(Icons.verified_outlined, 'Credentials', 'Registrations and certifications', () => openExternal(context, '$kSiteBase/credentials')),
+                  _RowSpec(Icons.auto_stories_outlined, 'About Us', 'Our story, family and values', () => openSitePage(context, '/about')),
+                  _RowSpec(Icons.groups_outlined, 'Leadership', 'The people behind VKC', () => openSitePage(context, '/leadership')),
+                  _RowSpec(Icons.verified_outlined, 'Credentials', 'Registrations and certifications', () => openSitePage(context, '/credentials')),
                   _RowSpec(Icons.menu_book_outlined, 'Blog', 'Stories from the cane fields', () => context.push('/journal')),
                 ]),
                 _Group(title: 'Help', rows: [
-                  _RowSpec(Icons.chat_bubble_outline_rounded, 'Contact Us', 'Call, WhatsApp or email', () => context.push('/contact')),
+                  _RowSpec(Icons.chat_bubble_outline_rounded, 'Contact Us', 'Call, WhatsApp or email', () => openSitePage(context, '/contact')),
                   ..._policyRows(context),
                 ]),
                 _Group(title: 'Account', rows: [
@@ -54,7 +54,7 @@ class ProfileScreen extends StatelessWidget {
                     _RowSpec(Icons.login_rounded, 'Sign in', 'Orders, wishlist & faster checkout', () => context.push('/login')),
                 ]),
                 const SizedBox(height: 20),
-                Center(child: Text('VKC GOLD IKSHU · v1.6.0', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
+                Center(child: Text('VKC GOLD IKSHU · v1.7.0', style: VkText.upper(8, color: VkColors.muted2, letter: 0.24))),
               ],
             ),
           ),
@@ -69,10 +69,10 @@ class ProfileScreen extends StatelessWidget {
   List<_RowSpec> _policyRows(BuildContext context) {
     final cfg = storeConfig.value;
     return [
-      _RowSpec(Icons.local_shipping_outlined, 'Shipping Policy', 'Dispatch times and delivery', () => openExternal(context, '$kSiteBase/shipping')),
-      _RowSpec(Icons.assignment_return_outlined, 'Return & Exchange', 'How returns work', () => openExternal(context, '$kSiteBase/returns')),
-      _RowSpec(Icons.shield_outlined, 'Privacy Policy', 'How we handle your data', () => openExternal(context, cfg.privacyUrl.isNotEmpty ? cfg.privacyUrl : '$kSiteBase/privacy')),
-      _RowSpec(Icons.gavel_outlined, 'Terms & Conditions', 'The terms of buying from us', () => openExternal(context, cfg.termsUrl.isNotEmpty ? cfg.termsUrl : '$kSiteBase/terms')),
+      _RowSpec(Icons.local_shipping_outlined, 'Shipping Policy', 'Dispatch times and delivery', () => openSitePage(context, '/shipping')),
+      _RowSpec(Icons.assignment_return_outlined, 'Return & Exchange', 'How returns work', () => openSitePage(context, '/returns')),
+      _RowSpec(Icons.shield_outlined, 'Privacy Policy', 'How we handle your data', () => openSitePage(context, cfg.privacyUrl.isNotEmpty ? cfg.privacyUrl : '/privacy', title: 'Privacy Policy')),
+      _RowSpec(Icons.gavel_outlined, 'Terms & Conditions', 'The terms of buying from us', () => openSitePage(context, cfg.termsUrl.isNotEmpty ? cfg.termsUrl : '/terms', title: 'Terms & Conditions')),
     ];
   }
 

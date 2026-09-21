@@ -8,6 +8,7 @@ import '../ecom/ecom_api.dart';
 import '../ecom/ecom_config.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'content_screens.dart';
 
 // ── Login / OTP ──────────────────────────────────────────────────────────────
 /// The phone normalisation the login screen applies before it calls
@@ -305,22 +306,23 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ];
 
-  /// "By continuing you agree to our Terms and Privacy Policy" — each becomes
-  /// a link as soon as the store fills its legal URLs in /v1/app-config.
+  /// "By continuing you agree to our Terms and Privacy Policy" — each opens the
+  /// live page in the app: the store's own legal URL from /v1/app-config when
+  /// it has set one, otherwise the website's /terms and /privacy.
   Widget _legalLine() => ValueListenableBuilder<StoreConfig>(
         valueListenable: storeConfig,
         builder: (context, cfg, _) {
-          TextSpan policy(String label, String url) => TextSpan(
+          TextSpan policy(String label, String title, String url, String fallbackPath) => TextSpan(
                 text: label,
-                style: VkText.body(11, color: url.isEmpty ? VkColors.ink : VkColors.primary),
-                recognizer: url.isEmpty ? null : (TapGestureRecognizer()..onTap = () => openExternal(context, url)),
+                style: VkText.body(11, color: VkColors.primary),
+                recognizer: TapGestureRecognizer()..onTap = () => openSitePage(context, url.isEmpty ? fallbackPath : url, title: title),
               );
           return Text.rich(
             TextSpan(style: VkText.body(11, color: VkColors.muted2, height: 1.5), children: [
               const TextSpan(text: 'By continuing you agree to our '),
-              policy('Terms', cfg.termsUrl),
+              policy('Terms', 'Terms & Conditions', cfg.termsUrl, '/terms'),
               const TextSpan(text: ' and '),
-              policy('Privacy Policy', cfg.privacyUrl),
+              policy('Privacy Policy', 'Privacy Policy', cfg.privacyUrl, '/privacy'),
               const TextSpan(text: '.'),
             ]),
             textAlign: TextAlign.center,

@@ -26,6 +26,7 @@ import 'screens/search_screen.dart';
 import 'screens/shop_screen.dart';
 import 'screens/track_order_screen.dart';
 import 'screens/wishlist_screen.dart';
+import 'site_links.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -47,15 +48,22 @@ void main() {
 }
 
 void _openPushRoute(String route) {
+  var target = route;
   if (route.startsWith('http')) {
-    launchUrl(Uri.parse(route), mode: LaunchMode.externalApplication);
-    return;
+    // The store's own pages open in the app (content pages in the WebView);
+    // any other address goes to the browser.
+    final inApp = appRouteForSiteUrl(route);
+    if (inApp == null) {
+      launchUrl(Uri.parse(route), mode: LaunchMode.externalApplication);
+      return;
+    }
+    target = inApp;
   }
-  final path = Uri.tryParse(route)?.path ?? route;
+  final path = Uri.tryParse(target)?.path ?? target;
   if (shellRoutes.contains(path)) {
-    _router.go(route);
+    _router.go(target);
   } else {
-    _router.push(route);
+    _router.push(target);
   }
 }
 
@@ -153,17 +161,33 @@ final _router = GoRouter(
     GoRoute(path: '/journal', parentNavigatorKey: _rootKey, builder: (_, __) => const BlogListScreen()),
     GoRoute(path: '/journal/:slug', parentNavigatorKey: _rootKey, builder: (_, s) => BlogDetailScreen(slug: s.pathParameters['slug']!)),
     GoRoute(path: '/gallery', parentNavigatorKey: _rootKey, builder: (_, __) => const GalleryScreen()),
-    // About Us and Leadership are the website's own pages, shown in-app so the
-    // story reads exactly as it does on vkcgoldikshu.com and is edited once.
-    GoRoute(path: '/about', parentNavigatorKey: _rootKey, builder: (_, __) => const WebPageScreen(title: 'About Us', path: '/about')),
-    GoRoute(path: '/leadership', parentNavigatorKey: _rootKey, builder: (_, __) => const WebPageScreen(title: 'Leadership', path: '/leadership')),
-    GoRoute(path: '/contact', parentNavigatorKey: _rootKey, builder: (_, __) => const ContactScreen()),
+    // The website's own pages - About Us, Leadership, Credentials, Contact Us,
+    // Shipping, Returns, Privacy, Terms - load LIVE in an in-app WebView, so
+    // they are edited once, on the website, and never bundled into the app.
+    for (final page in kSitePages)
+      GoRoute(
+        path: page.path,
+        parentNavigatorKey: _rootKey,
+        builder: (_, __) => WebPageScreen(title: page.title, url: page.path),
+      ),
+    // Any other website page (or a legal page hosted elsewhere): /web?url=...&title=...
+    GoRoute(
+      path: '/web',
+      parentNavigatorKey: _rootKey,
+      builder: (_, s) {
+        final url = s.uri.queryParameters['url'] ?? '/';
+        return WebPageScreen(
+          title: s.uri.queryParameters['title'] ?? sitePageFor(Uri.tryParse(url)?.path ?? url)?.title ?? 'VKC Gold Ikshu',
+          url: url,
+        );
+      },
+    ),
     GoRoute(
       path: '/pages/:page',
       parentNavigatorKey: _rootKey,
       builder: (_, s) => WebPageScreen(
         title: s.uri.queryParameters['title'] ?? 'VKC Gold Ikshu',
-        path: '/${s.pathParameters['page']}',
+        url: '/${s.pathParameters['page']}',
       ),
     ),
     // Checkout flow

@@ -4,58 +4,27 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../ecom/ecom_api.dart';
-import '../ecom/ecom_config.dart';
-import '../ecom/ecom_env.dart';
 import '../ecom/ecom_models.dart' hide Banner;
+import '../site_links.dart';
 import '../theme.dart';
 import '../widgets.dart';
-
-const kSiteBase = ecomHost;
 
 /// Tab roots live inside the bottom-nav shell and are navigated with go().
 const _tabRoutes = {'/home', '/categories', '/shop', '/cart', '/profile'};
 
-/// Website path → app route, for the links the store attaches to hero
-/// slides, banners and popups. Null means the app has no screen for it.
-String? _appRoute(String path) {
-  final uri = Uri.tryParse(path);
-  if (uri == null) return null;
-  final p = uri.path;
-  final segs = uri.pathSegments;
-  final query = uri.query.isEmpty ? '' : '?${uri.query}';
-  if (p == '/' || p == '') return '/home';
-  if (p == '/shop' || p == '/new-arrivals') return '/shop';
-  if (p == '/search') return '/search$query';
-  if (segs.length == 2 && segs.first == 'category') return '/listing?cat=${segs[1]}';
-  if (segs.length == 2 && (segs.first == 'shop' || segs.first == 'product')) return '/product/${segs[1]}';
-  if (p == '/blog') return '/journal';
-  if (segs.length == 2 && segs.first == 'blog') return '/journal/${segs[1]}';
-  // About and Leadership are read on the website itself, so they fall through
-  // to the browser below.
-  if (p == '/contact' || p == '/track-order' || p == '/gallery') return p;
-  if (p == '/cart' || p == '/wishlist') return p;
-  if (p == '/account/orders') return '/orders';
-  if (p == '/account/addresses') return '/addresses';
-  return null;
-}
-
-/// Follows a store link: a page the app has opens in the app, anything else
-/// opens in the browser. [fallback] covers links the store left empty.
+/// Follows a store link: a page the app has opens in the app (the website's
+/// content pages in the in-app WebView), anything else opens in the browser.
+/// [fallback] covers links the store left empty.
 void openLink(BuildContext context, String? href, {String? fallback}) {
   final raw = (href ?? '').trim();
   if (raw.isEmpty) {
     if (fallback != null) _go(context, fallback);
     return;
   }
-  var path = raw;
-  if (path.startsWith(kSiteBase)) path = path.substring(kSiteBase.length);
-  if (!path.startsWith('/')) {
-    openExternal(context, raw);
-    return;
-  }
-  final route = _appRoute(path);
+  final isPath = raw.startsWith('/');
+  final route = isPath ? appRouteForSitePath(raw) : appRouteForSiteUrl(raw);
   if (route == null) {
-    openExternal(context, '$kSiteBase$path');
+    openExternal(context, isPath ? '$kSiteBase$raw' : raw);
     return;
   }
   _go(context, route);
@@ -441,29 +410,60 @@ class _PopupDialog extends StatelessWidget {
   }
 }
 
-// ── Website pages in-app (about, leadership, policies) ───────────────────────
+// ── Website pages in-app (about, contact, policies…) ─────────────────────────
+/// Opens one of the website's pages — About Us, Leadership, Credentials,
+/// Contact Us, Shipping, Returns, Privacy, Terms — inside the app, in a
+/// WebView on the LIVE page. [pathOrUrl] is a website path ('/privacy') or a
+/// full https URL (a legal page the store hosts elsewhere).
+void openSitePage(BuildContext context, String pathOrUrl, {String? title}) {
+  context.push(webRoute(pathOrUrl, title: title));
+}
+
 /// A page of vkcgoldikshu.com shown inside the app, with the site's own
 /// header, footer and floating buttons hidden so it reads as part of the app.
-/// Used for About Us and Leadership, whose content is edited once on the site.
+///
+/// Nothing is bundled: every open loads the live URL, so a change made in the
+/// website or its admin shows up here without a new APK. Back walks the page's
+/// own history first; Refresh drops the WebView cache and reloads. Links stay
+/// in the app when they are the site's own pages, go to the native screen when
+/// the app has one (products, cart…), and go to the phone for everything else
+/// (tel:, mailto:, WhatsApp, maps, other sites, PDFs).
 class WebPageScreen extends StatefulWidget {
   final String title;
-  final String path;
-  const WebPageScreen({super.key, required this.title, required this.path});
+
+  /// A website path ('/about') or a full https URL.
+  final String url;
+  const WebPageScreen({super.key, required this.title, required this.url});
   @override
   State<WebPageScreen> createState() => _WebPageScreenState();
 }
 
+/// Why the page couldn't be shown; drives the message and the retry.
+class _PageProblem {
+  final IconData icon;
+  final String title;
+  final String body;
+  final String url;
+  const _PageProblem(this.icon, this.title, this.body, this.url);
+}
+
 class _WebPageScreenState extends State<WebPageScreen> {
   late final WebViewController _controller;
-  bool _loading = true;
-  bool _failed = false;
-  bool _loaded = false;
+  late final String _startUrl;
+  late final Set<String> _pageHosts;
+  String _current = '';
+  late String _title = widget.title;
+  int _progress = 0;
+  bool _shown = false; // the first page has finished loading
+  bool _canGoBack = false;
+  _PageProblem? _problem;
 
-  String get _url => '$kSiteBase${widget.path}';
-
+  /// Hides the site's own chrome (the app has its own bar) once per document.
   static const _hideChrome = r"""
 (function(){
+  if (!document.head || document.getElementById('vkc-app-chrome')) return;
   var s = document.createElement('style');
+  s.id = 'vkc-app-chrome';
   s.innerHTML = 'header, footer, nav.fixed, a[href*="wa.me"].fixed, [class*="WhatsAppFloat"] { display:none !important } main { padding-top:0 !important }';
   document.head.appendChild(s);
 })();""";
@@ -471,192 +471,224 @@ class _WebPageScreenState extends State<WebPageScreen> {
   @override
   void initState() {
     super.initState();
-    final host = Uri.parse(kSiteBase).host;
+    _startUrl = resolveSiteUrl(widget.url) ?? kSiteBase;
+    _current = _startUrl;
+    _pageHosts = {Uri.parse(_startUrl).host.toLowerCase()};
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(VkColors.canvas)
       ..setNavigationDelegate(NavigationDelegate(
-        onNavigationRequest: (req) {
-          final uri = Uri.tryParse(req.url);
-          // Keep the site's own pages in the app; hand anything else
-          // (maps, socials, WhatsApp, mail) to the phone.
-          if (uri != null && uri.host.isNotEmpty && uri.host != host && !uri.host.endsWith('.$host')) {
-            openExternal(context, req.url);
-            return NavigationDecision.prevent;
+        onNavigationRequest: _onNavigation,
+        onPageStarted: _onPageStarted,
+        onProgress: _onProgress,
+        onPageFinished: _onPageFinished,
+        onUrlChange: (change) {
+          if (change.url != null) {
+            _current = change.url!;
+            _syncTitle(_current);
           }
-          return NavigationDecision.navigate;
+          _syncBack();
         },
-        onPageStarted: (_) => _controller.runJavaScript(_hideChrome).catchError((_) {}),
-        onPageFinished: (_) {
-          _controller.runJavaScript(_hideChrome).catchError((_) {});
-          if (mounted) {
-            setState(() {
-              _loading = false;
-              _loaded = true;
-            });
-          }
-        },
-        onWebResourceError: (error) {
-          // Only a main-frame failure before the page has finished is a real
-          // failure; a blocked tracker or font is not.
-          if (!mounted || _loaded || error.isForMainFrame == false) return;
-          setState(() {
-            _loading = false;
-            _failed = true;
-          });
-        },
+        onHttpError: _onHttpError,
+        onWebResourceError: _onResourceError,
       ))
-      ..loadRequest(Uri.parse(_url));
+      ..loadRequest(Uri.parse(_startUrl));
   }
 
-  void _retry() {
+  bool get _ownSite => isSiteHost(Uri.tryParse(_current)?.host ?? '');
+
+  void _inject() {
+    if (_ownSite) _controller.runJavaScript(_hideChrome).catchError((_) {});
+  }
+
+  NavigationDecision _onNavigation(NavigationRequest req) {
+    final decision = decideLink(req.url, pageHosts: _pageHosts, isMainFrame: req.isMainFrame);
+    switch (decision.action) {
+      case LinkAction.stay:
+        return NavigationDecision.navigate;
+      case LinkAction.app:
+        if (mounted) _go(context, decision.route!);
+        return NavigationDecision.prevent;
+      case LinkAction.external:
+        if (mounted) openExternal(context, req.url);
+        return NavigationDecision.prevent;
+    }
+  }
+
+  void _onPageStarted(String url) {
+    // The WebView's own error page reports itself as a page; keep our message.
+    if (url.startsWith('chrome-error:')) return;
+    _current = url;
+    _syncTitle(url);
+    _inject();
+    if (!mounted) return;
     setState(() {
-      _failed = false;
-      _loading = true;
-      _loaded = false;
+      _problem = null;
+      _progress = 0;
     });
-    _controller.loadRequest(Uri.parse(_url));
+    _syncBack();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: VkColors.canvas,
-      body: SafeArea(
-        child: Column(children: [
-          TopBar(
-            title: widget.title,
-            onBack: () => context.canPop() ? context.pop() : context.go('/profile'),
-            actions: [TopBar.action(Icons.open_in_browser_rounded, () => openExternal(context, _url), tooltip: 'Open in browser')],
-          ),
-          Expanded(
-            child: _failed
-                ? StateView(
-                    icon: Icons.wifi_off_rounded,
-                    title: "Couldn't load ${widget.title.toLowerCase()}",
-                    body: 'Check your connection, or open it in your browser.',
-                    cta: 'Try again',
-                    onCta: _retry,
-                    secondary: 'Open in browser',
-                    onSecondary: () => openExternal(context, _url),
-                  )
-                : Stack(children: [
-                    WebViewWidget(controller: _controller),
-                    if (_loading) const Positioned.fill(child: ColoredBox(color: VkColors.canvas, child: DetailSkeleton(heroHeight: 200))),
-                  ]),
-          ),
-        ]),
-      ),
-    );
-  }
-}
-
-// ── Contact ──────────────────────────────────────────────────────────────────
-/// Every way to reach the store — call, WhatsApp, mail, maps, socials — all
-/// from /v1/app-config.
-class ContactScreen extends StatelessWidget {
-  const ContactScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: VkColors.canvas,
-      body: SafeArea(
-        child: ValueListenableBuilder<StoreConfig>(
-          valueListenable: storeConfig,
-          builder: (context, cfg, _) {
-            final phoneDigits = cfg.phone.replaceAll(RegExp(r'\D'), '');
-            // WhatsApp falls back to the store phone when no separate number is set.
-            var waDigits = cfg.whatsapp.replaceAll(RegExp(r'\D'), '');
-            if (waDigits.isEmpty) waDigits = phoneDigits;
-            if (waDigits.length == 10) waDigits = '91$waDigits';
-            final email = cfg.email.trim();
-            return Column(children: [
-              TopBar(title: 'Contact Us', onBack: () => context.canPop() ? context.pop() : context.go('/profile')),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-                  children: [
-                    Text('We’d love to hear from you', style: VkText.display(26, height: 1.2)),
-                    const SizedBox(height: 6),
-                    Text('Questions about an order, our jaggery, or bulk and gift enquiries — we’re here for you.',
-                        style: VkText.body(13, color: VkColors.muted, height: 1.6)),
-                    const SizedBox(height: 20),
-                    if (waDigits.isNotEmpty)
-                      _tile(context, Icons.chat_rounded, 'Chat on WhatsApp', 'Fastest way to reach us', 'https://wa.me/$waDigits', primary: true),
-                    if (phoneDigits.isNotEmpty) _tile(context, Icons.call_outlined, 'Call the store', cfg.phone, 'tel:$phoneDigits'),
-                    if (email.isNotEmpty) _tile(context, Icons.mail_outline_rounded, 'Email', email, 'mailto:$email'),
-                    if (cfg.storeAddress.isNotEmpty)
-                      _tile(context, Icons.location_on_outlined, 'Visit us', cfg.storeAddress,
-                          'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(cfg.storeAddress)}'),
-                    _tile(context, Icons.language_rounded, 'vkcgoldikshu.com', 'Our website', kSiteBase),
-                    if (cfg.instagram.isNotEmpty || cfg.facebook.isNotEmpty || cfg.youtube.isNotEmpty) ...[
-                      const DoubleRule(margin: EdgeInsets.symmetric(vertical: 20)),
-                      Text('FOLLOW US', style: VkText.upper(9, letter: 0.18)),
-                      const SizedBox(height: 12),
-                      Wrap(spacing: 10, runSpacing: 10, children: [
-                        if (cfg.instagram.isNotEmpty) VkChip(label: 'Instagram', icon: Icons.camera_alt_outlined, onTap: () => openExternal(context, cfg.instagram)),
-                        if (cfg.facebook.isNotEmpty) VkChip(label: 'Facebook', icon: Icons.facebook, onTap: () => openExternal(context, cfg.facebook)),
-                        if (cfg.youtube.isNotEmpty) VkChip(label: 'YouTube', icon: Icons.play_circle_outline, onTap: () => openExternal(context, cfg.youtube)),
-                      ]),
-                    ],
-                    const SizedBox(height: 22),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(color: VkColors.cream, borderRadius: BorderRadius.circular(VkRadii.md)),
-                      child: Row(children: [
-                        const Icon(Icons.pin_drop_outlined, size: 18, color: VkColors.primary),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('Where is my order?', style: VkText.ui(13, weight: FontWeight.w600)),
-                            const SizedBox(height: 2),
-                            Text('Track it with your order number.', style: VkText.body(11, color: VkColors.muted)),
-                          ]),
-                        ),
-                        TextButton(onPressed: () => context.push('/track-order'), child: Text('Track', style: VkText.ui(12.5, weight: FontWeight.w600, color: VkColors.primary))),
-                      ]),
-                    ),
-                  ],
-                ),
-              ),
-            ]);
-          },
-        ),
-      ),
-    );
+  /// The bar names the page on screen: following a link from Credentials to
+  /// Leadership retitles it, and going back retitles it again.
+  void _syncTitle(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !isSiteHost(uri.host)) return;
+    final page = sitePageFor(uri.path);
+    if (page != null && page.title != _title && mounted) setState(() => _title = page.title);
   }
 
-  Widget _tile(BuildContext context, IconData ic, String label, String value, String url, {bool primary = false}) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: PressScale(
-          onTap: () => openExternal(context, url),
-          scale: 0.985,
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: primary ? VkColors.leafSoft : VkColors.paper,
-              borderRadius: BorderRadius.circular(VkRadii.md),
-              border: Border.all(color: primary ? VkColors.leaf : VkColors.rule),
-            ),
-            child: Row(children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(color: primary ? VkColors.leaf : VkColors.cream, shape: BoxShape.circle),
-                child: Icon(ic, size: 19, color: primary ? Colors.white : VkColors.primaryDeep),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(label, style: VkText.ui(13, weight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text(value, style: VkText.body(11.5, color: VkColors.muted, height: 1.45)),
-                ]),
-              ),
-              const Icon(Icons.arrow_outward_rounded, size: 16, color: VkColors.muted2),
-            ]),
-          ),
-        ),
+  void _onProgress(int p) {
+    if (p > 20) _inject();
+    if (mounted) setState(() => _progress = p);
+  }
+
+  void _onPageFinished(String url) {
+    if (!url.startsWith('chrome-error:')) _current = url;
+    _inject();
+    if (mounted) {
+      setState(() {
+        _shown = true;
+        _progress = 100;
+      });
+    }
+    _syncBack();
+    _checkStatus(url);
+  }
+
+  /// The site's own 404 and 500 pages load as ordinary pages, so ask the
+  /// browser what status the page came back with. A policy the store hasn't
+  /// published yet is a 404 — say so instead of showing the site's error page.
+  Future<void> _checkStatus(String url) async {
+    if (url.startsWith('chrome-error:') || !url.startsWith('http')) return;
+    try {
+      final result = await _controller.runJavaScriptReturningResult(
+        "(performance.getEntriesByType('navigation')[0] || {}).responseStatus || 0",
       );
+      final status = int.tryParse(result.toString().replaceAll('"', '').trim()) ?? 0;
+      // Ignore a result that arrives after the customer has moved on.
+      if (status >= 400 && mounted && url == _current) _showHttpProblem(status, url);
+    } catch (_) {
+      // An older WebView without responseStatus: the HTTP error callback covers it.
+    }
+  }
+
+  void _onHttpError(HttpResponseError e) {
+    final status = e.response?.statusCode ?? 0;
+    final uri = e.request?.uri ?? e.response?.uri;
+    if (status < 400 || uri == null || !mounted) return;
+    // Only the page itself: a missing font, image or a prefetch is not a failure.
+    if (uri.queryParameters.containsKey('_rsc') || !_isCurrentPage(uri)) return;
+    _showHttpProblem(status, uri.toString());
+  }
+
+  void _showHttpProblem(int status, String url) {
+    final missing = status == 404 || status == 410;
+    setState(() {
+      _shown = true;
+      _problem = _PageProblem(
+        missing ? Icons.hourglass_empty_rounded : Icons.cloud_off_rounded,
+        missing ? 'This page isn’t available yet' : 'The website is having trouble',
+        missing ? '$_title isn’t published on the website right now. Please check back soon.' : 'Please try again in a moment.',
+        url,
+      );
+    });
+  }
+
+  void _onResourceError(WebResourceError error) {
+    // A blocked tracker or font is not a failure, and iOS reports its own
+    // cancelled navigations (-999) too. Only the page itself counts.
+    if (!mounted || error.isForMainFrame == false || error.errorCode == -999) return;
+    setState(() {
+      _shown = true;
+      _problem = _PageProblem(
+        Icons.wifi_off_rounded,
+        'Couldn’t open this page',
+        'Check your internet connection and try again.',
+        error.url ?? _current,
+      );
+    });
+  }
+
+  bool _isCurrentPage(Uri u) {
+    String key(Uri x) => '${x.host.toLowerCase()}${x.path.length > 1 && x.path.endsWith('/') ? x.path.substring(0, x.path.length - 1) : x.path}';
+    final now = Uri.tryParse(_current);
+    return (now != null && key(now) == key(u)) || key(Uri.parse(_startUrl)) == key(u);
+  }
+
+  Future<void> _syncBack() async {
+    final can = await _controller.canGoBack();
+    if (mounted && can != _canGoBack) setState(() => _canGoBack = can);
+  }
+
+  /// Back walks the page's own history first, then leaves the screen.
+  Future<void> _back() async {
+    if (await _controller.canGoBack()) {
+      await _controller.goBack();
+    } else if (mounted) {
+      context.canPop() ? context.pop() : context.go('/home');
+    }
+  }
+
+  /// Refresh: drop the WebView's cache so the newest content is fetched.
+  Future<void> _refresh() async {
+    final retry = _problem?.url;
+    if (mounted) {
+      setState(() {
+        _problem = null;
+        _progress = 0;
+      });
+    }
+    try {
+      await _controller.clearCache();
+    } catch (_) {}
+    if (retry != null && retry.isNotEmpty) {
+      await _controller.loadRequest(Uri.parse(retry));
+    } else {
+      await _controller.reload();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final problem = _problem;
+    return PopScope(
+      canPop: !_canGoBack,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _controller.goBack();
+      },
+      child: Scaffold(
+        backgroundColor: VkColors.canvas,
+        body: SafeArea(
+          child: Column(children: [
+            TopBar(
+              title: _title,
+              onBack: _back,
+              actions: [TopBar.action(Icons.refresh_rounded, _refresh, tooltip: 'Refresh')],
+            ),
+            Expanded(
+              child: Stack(children: [
+                WebViewWidget(controller: _controller),
+                if (!_shown && problem == null) const Positioned.fill(child: ColoredBox(color: VkColors.canvas, child: DetailSkeleton(heroHeight: 200))),
+                if (_shown && _progress < 100 && problem == null)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: LinearProgressIndicator(value: _progress / 100, minHeight: 2, color: VkColors.primary, backgroundColor: Colors.transparent),
+                  ),
+                if (problem != null)
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: VkColors.canvas,
+                      child: StateView(icon: problem.icon, title: problem.title, body: problem.body, cta: 'Try again', onCta: _refresh),
+                    ),
+                  ),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
 }

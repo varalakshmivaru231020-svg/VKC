@@ -14,6 +14,7 @@ import '../models.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'content_screens.dart';
+import 'why_vkc.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Home data
@@ -28,6 +29,9 @@ class HomeData {
   final List<Testimonial> testimonials;
   final List<GalleryItem> gallery;
   final AboutContent? about;
+
+  /// Admin → Banners "home_why_image": replaces the bundled farmer in Why VKC.
+  final String? whyImage;
   const HomeData({
     required this.arrivals,
     required this.categories,
@@ -39,6 +43,7 @@ class HomeData {
     required this.testimonials,
     required this.gallery,
     required this.about,
+    this.whyImage,
   });
 }
 
@@ -110,6 +115,7 @@ class HomeRepo {
       testimonials: (results[6] as List<Testimonial>?) ?? const [],
       gallery: ((results[7] as List<GalleryItem>?) ?? const []).where((g) => !g.isVideo).take(10).toList(),
       about: results[8] as AboutContent?,
+      whyImage: banners.where((b) => b.position == 'home_why_image' && (b.image ?? '').isNotEmpty).map((b) => b.image).firstOrNull,
     );
     data = result;
     at = DateTime.now();
@@ -237,7 +243,7 @@ class _HomeBody extends StatelessWidget {
         ],
         for (final b in d.midBanners) _PromoBanner(banner: b),
         _HeritageCard(about: about),
-        const _WhyVkc(),
+        WhyVkcSection(imageUrl: d.whyImage, onReadStory: () => openSitePage(context, '/about')),
         if (d.blogs.isNotEmpty) ...[
           SectionHead(kicker: 'From the blog', title: 'Stories from the cane fields', action: 'View all', onAction: () => context.push('/journal')),
           _BlogPager(posts: d.blogs),
@@ -561,7 +567,7 @@ class _HeritageCard extends StatelessWidget {
                 expanded: false,
                 height: 44,
                 color: VkColors.leaf,
-                onTap: () => openExternal(context, '$kSiteBase/about'),
+                onTap: () => openSitePage(context, '/about'),
               ),
             ]),
           ),
@@ -637,50 +643,6 @@ class _PagerState extends State<_Pager> {
               ),
           ]),
         ],
-      ]);
-}
-
-/// The five reasons the website gives, one at a time.
-class _WhyVkc extends StatelessWidget {
-  const _WhyVkc();
-  static const _reasons = [
-    (Icons.eco_outlined, '100% Natural', 'No chemicals, preservatives or artificial colours — just cane, heat and time.'),
-    (Icons.handshake_outlined, 'Direct from farmers', 'We buy straight from Mandya growers at fair prices.'),
-    (Icons.precision_manufacturing_outlined, 'Modern, clean processing', 'Energy-efficient machinery paired with time-honoured know-how.'),
-    (Icons.verified_outlined, 'Certified & MSME registered', 'A registered, GST-compliant enterprise.'),
-    (Icons.workspace_premium_outlined, 'Trusted since 1988', 'Three decades of purity, one batch at a time.'),
-  ];
-  @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const SectionHead(kicker: 'Why VKC', title: 'Why choose VKC Gold Ikshu'),
-        _Pager(
-          count: _reasons.length,
-          height: 168,
-          auto: true,
-          itemBuilder: (_, i) {
-            final r = _reasons[i];
-            return Container(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-              decoration: BoxDecoration(color: VkColors.primaryInk, borderRadius: BorderRadius.circular(VkRadii.lg)),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(color: VkColors.amber, shape: BoxShape.circle),
-                    child: Icon(r.$1, size: 20, color: VkColors.primaryInk),
-                  ),
-                  const Spacer(),
-                  Text('0${i + 1} / 0${_reasons.length}', style: VkText.mono(10, color: Colors.white.withValues(alpha: 0.55))),
-                ]),
-                const Spacer(),
-                Text(r.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: VkText.display(20, color: Colors.white, height: 1.1)),
-                const SizedBox(height: 6),
-                Text(r.$3, maxLines: 2, overflow: TextOverflow.ellipsis, style: VkText.body(12.5, color: Colors.white.withValues(alpha: 0.78), height: 1.45)),
-              ]),
-            );
-          },
-        ),
       ]);
 }
 
