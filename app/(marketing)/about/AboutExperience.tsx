@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Mail, MessageCircle, Phone } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button, C, Cta, Facts, Label, MILESTONES, NumberGrid, Photo, Reveal, Section, SectionHead, T, Timeline, Words } from "@/components/about/heritage";
 import { PageBanner, type PageBannerProps } from "@/components/layout/PageBanner";
 
@@ -69,10 +69,6 @@ export default function AboutExperience({
   visionImage?: string | null;
   visionImageMobile?: string | null;
 }) {
-
-  const phoneHref = `tel:${phone.replace(/[^\d+]/g, "")}`;
-  const whatsappDigits = whatsapp.replace(/\D/g, "");
-  const whatsappHref = whatsappDigits ? `https://wa.me/${whatsappDigits}` : "/contact";
 
   return (
     <div className="vkc-about" style={{ background: C.ivory }}>
@@ -275,13 +271,7 @@ export default function AboutExperience({
         secondary={{ href: "/contact", label: "Contact us" }}
         image={ctaImage}
         mobileImage={ctaImageMobile}
-      >
-        <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3 font-body" style={{ fontSize: 14, color: C.onDarkMuted }}>
-          <a href={phoneHref} className="inline-flex items-center gap-2 hover:text-white"><Phone className="h-4 w-4" style={{ color: C.jaggery }} />{phone}</a>
-          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-white"><MessageCircle className="h-4 w-4" style={{ color: C.jaggery }} />WhatsApp</a>
-          <a href={`mailto:${email}`} className="inline-flex items-center gap-2 hover:text-white"><Mail className="h-4 w-4" style={{ color: C.jaggery }} />{email}</a>
-        </div>
-      </Cta>
+      />
     </div>
   );
 }
