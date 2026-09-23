@@ -228,38 +228,45 @@ export const WARM_GRADIENT = "linear-gradient(100deg, #8F3404 0%, #AE4A08 36%, #
 export function Cta({ label, title, lede, primary, secondary, children, image, mobileImage, tone = "dark" }: {
   label?: string; title: string; lede?: string; primary: { href: string; label: string }; secondary?: { href: string; label: string }; children?: React.ReactNode;
   image?: string | null; mobileImage?: string | null;
-  /** "warm" sets the block on the Vision and Mission gradient instead of flat dark. */
+  /** "warm" sets the block on a deep-brown fill instead of the flat dark tone. */
   tone?: "dark" | "warm";
 }) {
   const desktop = image?.trim() || mobileImage?.trim() || null;
   const mobile = mobileImage?.trim() || null;
   const warm = tone === "warm";
+  const fill = warm ? "var(--color-text-primary)" : C.dark;
   return (
-    <Section bg="dark" className={desktop || warm ? "relative isolate overflow-hidden" : ""}>
-      {warm && !desktop && <div aria-hidden className="absolute inset-0 -z-10" style={{ background: WARM_GRADIENT }} />}
-      {desktop && (
-        <div aria-hidden className="absolute inset-0 -z-10">
-          <picture>
-            {mobile && mobile !== desktop && <source media="(max-width: 767px)" srcSet={mobile} />}
-            <img src={desktop} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-          </picture>
-          <div className="absolute inset-0" style={{ background: warm ? WARM_GRADIENT : "linear-gradient(180deg, rgba(43,23,8,0.82) 0%, rgba(43,23,8,0.68) 50%, rgba(43,23,8,0.86) 100%)", opacity: warm ? 0.88 : 1 }} />
-        </div>
-      )}
-      <div className="text-center max-w-3xl mx-auto">
-        {label && <Label light color={warm ? "#FFE27A" : undefined}>{label}</Label>}
-        <h2 className={label ? "mt-5" : ""} style={{ ...T.h2, color: C.onDark }}>
-          <Words text={title} />
-        </h2>
-        {lede && <p className="font-body mt-5 mx-auto" style={{ ...T.lede, color: warm ? "rgba(255,255,255,0.92)" : C.onDarkMuted, maxWidth: 560, textAlign: "center" }}>{lede}</p>}
-        <Reveal delay={0.2}>
-          <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Button href={primary.href} variant={warm ? "onWarm" : "primary"}>{primary.label}</Button>
-            {secondary && <Button href={secondary.href} variant="outlineLight">{secondary.label}</Button>}
+    <section style={{ background: C.ivory }}>
+      <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-16 sm:py-24">
+        {/* Inset, rounded on all four corners — a floating card rather than an
+            edge-to-edge band. */}
+        <div className="relative isolate overflow-hidden rounded-[32px] px-6 py-16 sm:px-12 sm:py-20">
+          <div aria-hidden className="absolute inset-0 -z-10" style={{ background: fill }} />
+          {desktop && (
+            <div aria-hidden className="absolute inset-0 -z-10">
+              <picture>
+                {mobile && mobile !== desktop && <source media="(max-width: 767px)" srcSet={mobile} />}
+                <img src={desktop} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              </picture>
+              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(36,26,18,0.82) 0%, rgba(36,26,18,0.68) 50%, rgba(36,26,18,0.86) 100%)" }} />
+            </div>
+          )}
+          <div className="text-center max-w-3xl mx-auto">
+            {label && <Label light color={warm ? "var(--color-gold-light)" : undefined}>{label}</Label>}
+            <h2 className={label ? "mt-5" : ""} style={{ ...T.h2, color: C.onDark }}>
+              <Words text={title} />
+            </h2>
+            {lede && <p className="font-body mt-5 mx-auto" style={{ ...T.lede, color: C.onDarkMuted, maxWidth: 560, textAlign: "center" }}>{lede}</p>}
+            <Reveal delay={0.2}>
+              <div className="mt-9 flex flex-wrap justify-center gap-3">
+                <Button href={primary.href} variant={warm ? "onWarm" : "primary"}>{primary.label}</Button>
+                {secondary && <Button href={secondary.href} variant="outlineLight">{secondary.label}</Button>}
+              </div>
+              {children}
+            </Reveal>
           </div>
-          {children}
-        </Reveal>
+        </div>
       </div>
-    </Section>
+    </section>
   );
 }
