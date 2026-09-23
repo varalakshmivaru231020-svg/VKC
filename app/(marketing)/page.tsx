@@ -518,7 +518,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── BOTTOM BANNERS (just above the closing CTA) ───────────────────────── */}
+      {/* ── BOTTOM BANNERS ────────────────────────────────────────────────────── */}
       {bottomBanners.length > 0 && (
         <section className="flex flex-col">
           {bottomBanners.map(banner => (
@@ -526,24 +526,6 @@ export default async function HomePage() {
           ))}
         </section>
       )}
-
-      {/* ── CLOSING CTA ───────────────────────────────────────────────────────── */}
-      <section className="py-20 sm:py-24 text-center" style={{ background: "var(--color-text-primary)" }}>
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", fontWeight: "var(--weight-heading)", color: "#FFFFFF" }}>
-            Taste the Tradition of Mandya
-          </h2>
-          <div className="mt-8">
-            <Link
-              href="/shop"
-              className="inline-flex items-center gap-2.5 px-10 py-3.5 rounded-full text-sm font-semibold font-body transition-all duration-normal hover:gap-3.5"
-              style={{ background: "var(--color-primary)", color: "var(--color-text-primary)" }}
-            >
-              Shop Now <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
     </>
   );
 }
