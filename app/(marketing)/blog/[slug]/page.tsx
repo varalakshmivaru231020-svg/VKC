@@ -3,7 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { ArrowLeft, ArrowRight, Clock3 } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
-import { FramedImage } from "@/components/ui/FramedImage";
+import { BlogCard } from "@/components/blog/BlogCard";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -114,16 +114,17 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((b) => (
-                <Link key={b.id} href={`/blog/${b.slug}`} className="group flex flex-col rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ background: "white", border: `1px solid ${C.parchment}` }}>
-                  <div className="relative overflow-hidden" style={{ aspectRatio: "4 / 3", background: C.ivory }}>
-                    {b.imageUrl && <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04]"><FramedImage src={b.imageUrl} alt={b.title} feather="sides" /></div>}
-                  </div>
-                  <div className="p-6">
-                    <div className="font-body" style={{ fontSize: 12.5, color: C.muted }}>{fmtDate(b.publishedAt ?? b.createdAt)}</div>
-                    <h3 className="mt-2" style={{ fontFamily: "var(--font-heading)", fontSize: 21, lineHeight: 1.15, color: C.ink, fontWeight: 500 }}>{b.title}</h3>
-                    {b.excerpt && <p className="font-body mt-2 line-clamp-2" style={{ fontSize: 14, lineHeight: 1.6, color: C.ink2, textAlign: "left", hyphens: "none" }}>{b.excerpt}</p>}
-                  </div>
-                </Link>
+                <BlogCard
+                  key={b.id}
+                  id={b.id}
+                  title={b.title}
+                  slug={b.slug}
+                  excerpt={b.excerpt}
+                  imageUrl={b.imageUrl}
+                  publishedAt={b.publishedAt}
+                  createdAt={b.createdAt}
+                  tags={b.tags}
+                />
               ))}
             </div>
           </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Shield, RefreshCw, Truck, Sparkles, Facebook } from "lucide-react";
+import { ArrowRight, Shield, RefreshCw, Truck, Sparkles, Facebook, CheckCircle2 } from "lucide-react";
 import { getThemeSettings } from "@/lib/theme/server";
 import { getReturnsDays } from "@/lib/settings/returns";
 import { getAboutContent } from "@/lib/settings/about";
@@ -9,13 +9,13 @@ import { ProductCard } from "@/components/product/ProductCard";
 import HeroSlider from "@/components/home/HeroSlider";
 import { PopupBanner } from "@/components/home/PopupBanner";
 import { SmartImage } from "@/components/ui/SmartImage";
-import { FramedImage } from "@/components/ui/FramedImage";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import { WhyChoose } from "@/components/home/WhyChoose";
 import { Testimonials, type TestimonialItem } from "@/components/home/Testimonials";
 import { ShopByCategories } from "@/components/home/ShopByCategories";
 import { getActiveGalleryItems } from "@/lib/db/gallery";
 import { EventGallery } from "@/components/events/EventGallery";
+import { BlogCard } from "@/components/blog/BlogCard";
 
 export const dynamic = "force-dynamic";
 
@@ -247,77 +247,93 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── EDITORIAL BANNER ─────────────────────────────────────────────────── */}
+      {/* ── EDITORIAL BANNER (OUR HERITAGE) ─────────────────────────────────── */}
       <section className="py-16 lg:py-24" style={{ background: "var(--color-ivory)" }}>
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Image */}
-            <div
-              className="aspect-square w-full max-w-[460px] mx-auto lg:mx-0 lg:ml-auto rounded-md overflow-hidden relative"
-              style={{ background: "linear-gradient(135deg, var(--color-cream), var(--color-parchment))" }}
-            >
-              {/* Same image as the About page's story portrait — one setting
-                  drives both, so updating it in admin changes them together.
-                  "contain" so the whole picture shows, whatever its shape. */}
-              <SmartImage
-                src={about.storyImage}
-                alt={about.homeEyebrow}
-                fill
-                objectFit="contain"
-                objectPosition="center"
-              />
-            </div>
-            {/* Text */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Content */}
             <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="h-px w-10" style={{ background: "var(--color-gold)" }} />
-                <span
-                  className="text-xs font-semibold tracking-[0.18em] uppercase"
-                  style={{ fontFamily: "var(--font-body)", color: "var(--color-gold)" }}
-                >
-                  {about.homeEyebrow}
-                </span>
+              {/* Green Pill Badge */}
+              <div className="inline-block px-4 py-1.5 rounded-full bg-[#EBF5E9] text-[#487A38] text-xs font-bold tracking-wider uppercase font-body">
+                {about.homeEyebrow || "OUR HERITAGE"}
               </div>
+
+              {/* Heading */}
               <h2
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontSize: "var(--text-h1)",
-                  fontWeight: "var(--weight-heading)",
-                  lineHeight: "var(--leading-heading)",
-                  color: "var(--color-text-primary)",
-                }}
+                className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight font-body"
+                style={{ fontFamily: "var(--font-heading)" }}
               >
-                {/* Newlines in the setting control where the headline wraps. */}
                 <span className="whitespace-pre-line">{about.homeHeading}</span>
               </h2>
+
+              {/* Description Paragraph */}
               <p
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "var(--text-body-xl)",
-                  lineHeight: "var(--leading-body)",
-                  color: "var(--color-text-secondary)",
-                }}
+                className="text-gray-600 text-sm sm:text-base leading-relaxed font-body"
+                style={{ color: "var(--color-text-secondary)" }}
               >
                 {about.homeBody}
               </p>
-              <div className="gold-divider" />
-              <p
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "var(--text-sm)",
-                  color: "var(--color-text-muted)",
-                  lineHeight: "var(--leading-body)",
-                }}
-              >
-                {about.homeQuote}
-              </p>
-              <Link
-                href="/about"
-                className="inline-flex items-center gap-2 text-sm font-semibold font-body transition-all hover:gap-3"
-                style={{ color: "var(--color-primary)" }}
-              >
-                {about.homeCtaLabel} <ArrowRight className="h-4 w-4" />
-              </Link>
+
+              {/* 4 Feature Bullets (2x2 Grid) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2 font-body">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-[#487A38] shrink-0 mt-0.5" />
+                  <span className="text-xs sm:text-sm text-gray-700 font-medium leading-snug">
+                    Directly supporting Mandya sugarcane farmers with fair pay.
+                  </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-[#487A38] shrink-0 mt-0.5" />
+                  <span className="text-xs sm:text-sm text-gray-700 font-medium leading-snug">
+                    100% chemical-free natural process with zero preservatives.
+                  </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-[#487A38] shrink-0 mt-0.5" />
+                  <span className="text-xs sm:text-sm text-gray-700 font-medium leading-snug">
+                    Generational purity & authentic local sugarcane heritage.
+                  </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-[#487A38] shrink-0 mt-0.5" />
+                  <span className="text-xs sm:text-sm text-gray-700 font-medium leading-snug">
+                    Dedicated team committed to sustainability & quality.
+                  </span>
+                </div>
+              </div>
+
+              {/* Quote / Subtext */}
+              {about.homeQuote && (
+                <p className="text-xs sm:text-sm italic text-gray-500 font-body border-l-2 border-[#487A38] pl-3 py-0.5">
+                  {about.homeQuote}
+                </p>
+              )}
+
+              {/* Green Pill Button */}
+              <div className="pt-2">
+                <Link
+                  href="/about"
+                  className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full bg-[#487A38] text-white text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-300 hover:bg-[#3B652E] hover:shadow-lg group"
+                >
+                  {about.homeCtaLabel || "READ OUR STORY"}
+                  <span className="w-7 h-7 rounded-full bg-white text-[#487A38] flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Image Frame (Soft backdrop container) */}
+            <div className="relative w-full max-w-[520px] mx-auto lg:mx-0 lg:ml-auto p-5 sm:p-7 rounded-3xl bg-[#F0F7EF]">
+              <div className="relative w-full aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden shadow-md bg-white">
+                <SmartImage
+                  src={about.storyImage}
+                  alt={about.homeEyebrow}
+                  fill
+                  objectFit="cover"
+                  objectPosition="center"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -349,31 +365,17 @@ export default async function HomePage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {latestBlogs.map((blog) => (
-                <Link key={blog.id} href={`/blog/${blog.slug}`}
-                  className="group rounded-2xl border overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5"
-                  style={{ background: "white", borderColor: "var(--color-parchment)" }}>
-                  <div className="relative overflow-hidden" style={{ background: "var(--color-cream)", aspectRatio: "4 / 3" }}>
-                    {blog.imageUrl
-                      ? <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04]"><FramedImage src={blog.imageUrl} alt={blog.title} feather="sides" /></div>
-                      : <div className="w-full h-full flex items-center justify-center">
-                          <Sparkles className="h-12 w-12 opacity-20" style={{ color: "var(--color-primary)" }} />
-                        </div>}
-                  </div>
-                  <div className="p-5">
-                    {blog.tags.slice(0, 1).map(tag => (
-                      <span key={tag} className="px-2 py-0.5 text-[10px] font-body font-semibold rounded-full mb-3 inline-block"
-                        style={{ background: "var(--color-primary-50)", color: "var(--color-primary)" }}>{tag}</span>
-                    ))}
-                    <h3 className="text-sm font-semibold font-body line-clamp-2 mb-2" style={{ color: "var(--color-text-primary)" }}>{blog.title}</h3>
-                    {blog.excerpt && (
-                      <p className="text-xs font-body line-clamp-2 mb-3" style={{ color: "var(--color-text-muted)", textAlign: "left", hyphens: "none" }}>{blog.excerpt}</p>
-                    )}
-                    <span className="inline-flex items-center gap-1 text-xs font-body font-semibold group-hover:gap-1.5 transition-all"
-                      style={{ color: "var(--color-primary)" }}>
-                      Read More <ArrowRight className="h-3 w-3" />
-                    </span>
-                  </div>
-                </Link>
+                <BlogCard
+                  key={blog.id}
+                  id={blog.id}
+                  title={blog.title}
+                  slug={blog.slug}
+                  excerpt={blog.excerpt}
+                  imageUrl={blog.imageUrl}
+                  publishedAt={blog.publishedAt}
+                  createdAt={blog.createdAt}
+                  tags={blog.tags}
+                />
               ))}
             </div>
           </div>

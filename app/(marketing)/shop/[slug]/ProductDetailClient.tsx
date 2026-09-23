@@ -389,7 +389,7 @@ export default function ProductDetailClient({ product, careInstructions, deliver
               block entirely rather than showing a meaningless default. */}
           {/* Pack sizes ("500 g", "1 kg"): the variant has a label but no swatch
               was picked, so it reads as text buttons, not colour circles. */}
-          {productUsesPackSizes(product.variants) && product.variants.length > 1 && (
+          {productUsesPackSizes(product.variants) && (
           <div className="space-y-3">
             <p className="text-sm font-body font-semibold" style={{ color: "var(--color-text-primary)" }}>
               Pack Size{selectedVariant.colorName ? <> — <span style={{ color: "var(--color-primary)", fontWeight: 400 }}>{selectedVariant.colorName}</span></> : null}
