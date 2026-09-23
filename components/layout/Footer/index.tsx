@@ -107,8 +107,9 @@ export function Footer({
   return (
     <footer className="mt-auto" style={{ background: "var(--color-royal)" }}>
 
-      {/* ── Newsletter — folded into the same navy field, not a separate loud block ── */}
-      <div className="relative overflow-hidden py-14 px-4" style={{ borderBottom: `1px solid ${HAIRLINE}` }}>
+      {/* ── Newsletter — deep brown, distinct from the navy footer below it so
+          the two dark sections don't read as one undifferentiated blue mass ── */}
+      <div className="relative overflow-hidden py-14 px-4" style={{ background: "var(--color-text-primary)" }}>
         <div className="relative max-w-xl mx-auto text-center space-y-3">
           <span className="text-xs font-semibold tracking-[0.18em] uppercase font-body" style={{ color: "var(--color-gold-light)" }}>Stay in the Loop</span>
           <p className="text-3xl" style={{ fontFamily: "var(--font-heading)", fontWeight: "var(--weight-heading)", color: CREAM }}>Sweetness in Your Inbox</p>
