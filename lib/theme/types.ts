@@ -7,6 +7,9 @@ export interface ThemeSettings {
   "color.gold": string;
   "color.gold.light": string;
   "color.gold.dark": string;
+  "color.royal": string;
+  "color.royal.dark": string;
+  "color.royal.light": string;
   "color.ivory": string;
   "color.cream": string;
   "color.parchment": string;

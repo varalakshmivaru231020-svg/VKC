@@ -8,34 +8,37 @@
    ────────────────────────────────────────────────────────────────────────── */
 :root {
   /* Colors */
-  --color-primary:        #D9731A;
-  --color-primary-dark:   #A8520A;
-  --color-primary-light:  #EE8B2F;
-  --color-primary-50:     #FDF1E4;
-  --color-gold:           #F5B301;
-  --color-gold-light:     #FFD65C;
-  --color-gold-dark:      #A66A00;
-  --color-ivory:          #FFFBF4;
-  --color-cream:          #FBF1DE;
-  --color-parchment:      #F0DCB6;
-  --color-sand:           #D9B27A;
-  --color-text-primary:   #2B1708;
-  --color-text-secondary: #5C3A1E;
-  --color-text-muted:     #8A6A4E;
-  --color-text-disabled:  #C9B399;
-  --color-text-inverse:   #FFFBF4;
+  --color-primary:        #C99118;
+  --color-primary-dark:   #9C700F;
+  --color-primary-light:  #DDA83B;
+  --color-primary-50:     #FBF1DC;
+  --color-gold:           #C99118;
+  --color-gold-light:     #E4B958;
+  --color-gold-dark:      #8F6A10;
+  --color-royal:          #063B70;
+  --color-royal-dark:     #042A50;
+  --color-royal-light:    #E8EFF6;
+  --color-ivory:          #FCFAF5;
+  --color-cream:          #F7F0E3;
+  --color-parchment:      #E9DCC3;
+  --color-sand:           #D3BD98;
+  --color-text-primary:   #241A12;
+  --color-text-secondary: #6F6255;
+  --color-text-muted:     #8F8171;
+  --color-text-disabled:  #C7BBAA;
+  --color-text-inverse:   #FCFAF5;
   --color-success:        #2E6B47;
   --color-success-bg:     #EDF7F2;
   --color-error:          #C42B2B;
   --color-error-bg:       #FEF0F0;
   --color-warning:        #C47A2B;
   --color-warning-bg:     #FEF5E7;
-  --color-border:         #F0DCB6;
+  --color-border:         #E9DCC3;
 
   /* Typography */
-  --font-heading: 'Cormorant Garamond', Georgia, serif;
-  --font-body:    'Inter', system-ui, sans-serif;
-  --font-accent:  'Cormorant Garamond', Georgia, serif;
+  --font-heading: 'DM Serif Display', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-accent:  'DM Serif Display', Georgia, serif;
 
   /* Font Sizes */
   --text-display:  clamp(2.6rem, 9vw, 8rem);
@@ -243,15 +246,17 @@
 /* ── Component Classes ───────────────────────────────────────────────────── */
 @layer components {
 
-  /* Footer navigation links */
+  /* Footer navigation links — the footer sits on the deep royal-blue
+     background, so these need to read light-on-dark rather than the
+     site-wide muted brown. */
   .footer-link {
     display: inline-block;
     font-family: var(--font-body);
-    color: var(--color-text-muted);
+    color: rgba(252, 250, 245, 0.68);
     transition: color 0.15s ease, padding-left 0.15s ease;
   }
   .footer-link:hover {
-    color: var(--color-primary);
+    color: var(--color-gold-light);
     padding-left: 4px;
   }
 

@@ -10,6 +10,7 @@ interface Slide {
   tag: string;
   heading: string;
   subtext: string;
+  caption?: string | null;
   ctaLabel: string;
   ctaHref: string;
   ctaSecLabel?: string | null;
@@ -28,10 +29,10 @@ interface Props {
 const AUTOPLAY_MS = 6500;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-/* Brand jaggery-gold, literal on purpose: the admin theme tokens default to a
+/* Brand metallic-gold, literal on purpose: the admin theme tokens default to a
    monochrome palette, and a hero CTA must stay readable over any photo. */
-const GOLD = { base: "#E0961C", light: "#FFD65C", dark: "#9A5B0B" };
-const INK = "#2B1708";
+const GOLD = { base: "#C99118", light: "#E4B958", dark: "#8F6A10" };
+const INK = "#241A12";
 
 /* Paper-grain overlay, inline so it needs no asset. */
 const GRAIN =
@@ -155,6 +156,18 @@ function SlideCopy({ s, onDark, reduced, compact = false }: { s: Slide; onDark: 
             </Link>
           )}
         </motion.div>
+      )}
+
+      {s.caption && (
+        <motion.p
+          className="font-body font-semibold uppercase mt-6"
+          initial={reduced ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, ease: EASE, delay: 0.85 }}
+          style={{ fontSize: 11, letterSpacing: "0.22em", color: onDark ? "rgba(255,255,255,0.65)" : GOLD.dark }}
+        >
+          {s.caption}
+        </motion.p>
       )}
     </div>
   );

@@ -23,13 +23,13 @@ export interface HomeCategory {
 }
 
 const C = {
-  jaggery: "#E0961C",
-  jaggeryDark: "#9A5B0B",
-  ivory: "#FFFBF4",
-  cream: "#FBF1DE",
-  parchment: "#F0DCB6",
-  ink: "#2B1708",
-  muted: "#8A6A4E",
+  jaggery: "#C99118",
+  jaggeryDark: "#8F6A10",
+  ivory: "#FCFAF5",
+  cream: "#F7F0E3",
+  parchment: "#E9DCC3",
+  ink: "#241A12",
+  muted: "#8F8171",
 };
 
 export function ShopByCategories({ categories, eyebrow = "Collections", heading = "Shop by Categories" }: { categories: HomeCategory[]; eyebrow?: string; heading?: string }) {

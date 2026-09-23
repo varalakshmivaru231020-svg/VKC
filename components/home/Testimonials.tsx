@@ -15,15 +15,15 @@ export interface TestimonialItem {
 }
 
 const C = {
-  bark: "#3A1F0A",
-  jaggery: "#E0961C",
-  jaggeryDark: "#9A5B0B",
-  ivory: "#FFFBF4",
-  cream: "#FBF1DE",
-  parchment: "#F0DCB6",
-  ink: "#2B1708",
-  ink2: "#5C3A1E",
-  muted: "#8A6A4E",
+  bark: "#241A12",
+  jaggery: "#C99118",
+  jaggeryDark: "#8F6A10",
+  ivory: "#FCFAF5",
+  cream: "#F7F0E3",
+  parchment: "#E9DCC3",
+  ink: "#241A12",
+  ink2: "#6F6255",
+  muted: "#8F8171",
 };
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "V";

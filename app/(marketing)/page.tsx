@@ -30,41 +30,20 @@ const CAT_GRADIENTS = [
   "linear-gradient(135deg, #F0F4FF, #4B6FD4)",
 ];
 
+// A single, cinematic hero — not a carousel of competing products. Shown only
+// when Admin → Hero Slides has nothing active; real photography is set there.
 const FALLBACK_SLIDES = [
   {
-    tag: "100% Natural",
-    heading: "Pure Jaggery\nfrom Mandya",
-    subtext: "Chemical-free jaggery pressed from cane grown in Srirangapatna — no preservatives, no artificial colours.",
-    ctaLabel: "Explore Range",
-    ctaHref: "/category/jaggery",
-    ctaSecLabel: "Our Story",
+    tag: "VKC Gold Ikshu",
+    heading: "Rooted in Legacy.\nCrafted from Mandya.",
+    subtext: "Authentic jaggery, naturally made and rooted in generations of tradition.",
+    caption: "Pure  ·  Natural  ·  Traditional",
+    ctaLabel: "Shop Now",
+    ctaHref: "/shop",
+    ctaSecLabel: "Discover Our Story",
     ctaSecHref: "/about",
-    bgColor: "#F2EBE0",
-    imageBg: "linear-gradient(135deg, #D4A76A 0%, #8B4513 50%, #5C2E0A 100%)",
-    imageUrl: null,
-  },
-  {
-    tag: "Festive Edit",
-    heading: "Gift Boxes &\nFestive Combos",
-    subtext: "Premium jaggery hampers, laddus and coconut bars — made for celebrations and thoughtful gifting.",
-    ctaLabel: "Shop Gift Boxes",
-    ctaHref: "/category/gift-boxes",
-    ctaSecLabel: "See All Festive",
-    ctaSecHref: "/shop?occasion=festival",
-    bgColor: "#EDE3D5",
-    imageBg: "linear-gradient(135deg, #B8860B 0%, #6B3A2A 50%, #3D1C10 100%)",
-    imageUrl: null,
-  },
-  {
-    tag: "Everyday Goodness",
-    heading: "Bars, Bites\n& Syrups",
-    subtext: "Puffed rice bars, coconut bars, energy bites and jaggery syrups — wholesome snacking for every day.",
-    ctaLabel: "Shop Snacks",
-    ctaHref: "/category/bars-snacks",
-    ctaSecLabel: "Daily Range",
-    ctaSecHref: "/shop?occasion=daily",
-    bgColor: "#EAE8E2",
-    imageBg: "linear-gradient(135deg, #9DB5A0 0%, #5F7A65 50%, #3A5040 100%)",
+    bgColor: "#F7F0E3",
+    imageBg: "linear-gradient(135deg, #DDA83B 0%, #8F6A10 55%, #241A12 100%)",
     imageUrl: null,
   },
 ];
@@ -143,6 +122,9 @@ export default async function HomePage() {
   const facebookUrl = facebookSetting?.value || null;
   const galleryPhotos = galleryItems.filter((g) => g.type !== "VIDEO" && g.type !== "FACEBOOK").slice(0, 8);
   const galleryVideos = galleryItems.filter((g) => g.type === "VIDEO").slice(0, 8);
+  // "From Mandya to Your Home" borrows the first gallery photo (fields/farmers)
+  // rather than a separate upload slot — falls back to nothing if none is set.
+  const mandyaPhoto = galleryPhotos[0] ?? null;
 
   const heroSlides = dbSlides.length > 0 ? dbSlides : FALLBACK_SLIDES;
 
@@ -253,22 +235,23 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Content */}
             <div className="space-y-6">
-              {/* Green Pill Badge */}
-              <div className="inline-block px-4 py-1.5 rounded-full bg-[#EBF5E9] text-[#487A38] text-xs font-bold tracking-wider uppercase font-body">
+              {/* Eyebrow */}
+              <div className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-[0.2em] uppercase font-body"
+                style={{ background: "var(--color-primary-50)", color: "var(--color-gold-dark)" }}>
                 {about.homeEyebrow || "OUR HERITAGE"}
               </div>
 
               {/* Heading */}
               <h2
-                className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight font-body"
-                style={{ fontFamily: "var(--font-heading)" }}
+                className="text-3xl sm:text-4xl lg:text-5xl leading-tight"
+                style={{ fontFamily: "var(--font-heading)", fontWeight: "var(--weight-heading)", color: "var(--color-text-primary)" }}
               >
                 <span className="whitespace-pre-line">{about.homeHeading}</span>
               </h2>
 
               {/* Description Paragraph */}
               <p
-                className="text-gray-600 text-sm sm:text-base leading-relaxed font-body"
+                className="text-sm sm:text-base leading-relaxed font-body"
                 style={{ color: "var(--color-text-secondary)" }}
               >
                 {about.homeBody}
@@ -277,26 +260,26 @@ export default async function HomePage() {
               {/* 4 Feature Bullets (2x2 Grid) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2 font-body">
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#487A38] shrink-0 mt-0.5" />
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium leading-snug">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--color-gold-dark)" }} />
+                  <span className="text-xs sm:text-sm font-medium leading-snug" style={{ color: "var(--color-text-secondary)" }}>
                     Directly supporting Mandya sugarcane farmers with fair pay.
                   </span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#487A38] shrink-0 mt-0.5" />
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium leading-snug">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--color-gold-dark)" }} />
+                  <span className="text-xs sm:text-sm font-medium leading-snug" style={{ color: "var(--color-text-secondary)" }}>
                     100% chemical-free natural process with zero preservatives.
                   </span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#487A38] shrink-0 mt-0.5" />
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium leading-snug">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--color-gold-dark)" }} />
+                  <span className="text-xs sm:text-sm font-medium leading-snug" style={{ color: "var(--color-text-secondary)" }}>
                     Generational purity & authentic local sugarcane heritage.
                   </span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#487A38] shrink-0 mt-0.5" />
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium leading-snug">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--color-gold-dark)" }} />
+                  <span className="text-xs sm:text-sm font-medium leading-snug" style={{ color: "var(--color-text-secondary)" }}>
                     Dedicated team committed to sustainability & quality.
                   </span>
                 </div>
@@ -304,19 +287,22 @@ export default async function HomePage() {
 
               {/* Quote / Subtext */}
               {about.homeQuote && (
-                <p className="text-xs sm:text-sm italic text-gray-500 font-body border-l-2 border-[#487A38] pl-3 py-0.5">
+                <p className="text-xs sm:text-sm italic font-body pl-3 py-0.5"
+                  style={{ color: "var(--color-text-muted)", borderLeft: "2px solid var(--color-gold)" }}>
                   {about.homeQuote}
                 </p>
               )}
 
-              {/* Green Pill Button */}
+              {/* Gold Pill Button */}
               <div className="pt-2">
                 <Link
                   href="/about"
-                  className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full bg-[#487A38] text-white text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-300 hover:bg-[#3B652E] hover:shadow-lg group"
+                  className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-300 hover:shadow-lg group"
+                  style={{ background: "var(--color-primary)", color: "var(--color-text-primary)" }}
                 >
                   {about.homeCtaLabel || "READ OUR STORY"}
-                  <span className="w-7 h-7 rounded-full bg-white text-[#487A38] flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1"
+                    style={{ background: "var(--color-text-primary)", color: "var(--color-gold-light)" }}>
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 </Link>
@@ -324,7 +310,7 @@ export default async function HomePage() {
             </div>
 
             {/* Right Image Frame (Soft backdrop container) */}
-            <div className="relative w-full max-w-[520px] mx-auto lg:mx-0 lg:ml-auto p-5 sm:p-7 rounded-3xl bg-[#F0F7EF]">
+            <div className="relative w-full max-w-[520px] mx-auto lg:mx-0 lg:ml-auto p-5 sm:p-7 rounded-3xl" style={{ background: "var(--color-cream)" }}>
               <div className="relative w-full aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden shadow-md bg-white">
                 <SmartImage
                   src={about.storyImage}
@@ -338,6 +324,30 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── WHY CHOOSE VKC ───────────────────────────────────────────────────── */}
+      <WhyChoose />
+
+      {/* ── FROM MANDYA TO YOUR HOME ─────────────────────────────────────────── */}
+      {mandyaPhoto && (
+        <section className="relative" style={{ height: "clamp(360px, 52vw, 560px)" }}>
+          <SmartImage src={mandyaPhoto.url} alt={mandyaPhoto.caption || "A VKC farmer in the sugarcane fields of Mandya"} fill objectFit="cover" objectPosition="center" />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(36,26,18,0.05) 0%, rgba(36,26,18,0.55) 65%, rgba(36,26,18,0.78) 100%)" }} />
+          <div className="absolute inset-0 flex items-end">
+            <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16">
+              <span className="text-xs font-semibold tracking-[0.22em] uppercase font-body" style={{ color: "var(--color-gold-light)" }}>
+                Our Journey
+              </span>
+              <h2 className="mt-3 max-w-xl" style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", fontWeight: "var(--weight-heading)", color: "#FFFFFF" }}>
+                From Mandya to Your Home
+              </h2>
+              <p className="mt-3 max-w-lg text-sm sm:text-base font-body" style={{ color: "rgba(255,255,255,0.82)", textAlign: "left", hyphens: "none" }}>
+                Every batch begins in the sugarcane fields of Mandya and reaches your kitchen unchanged — the same purity, carried the whole way.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── BLOG PREVIEW ─────────────────────────────────────────────────────── */}
       {latestBlogs.length > 0 && (
@@ -433,9 +443,10 @@ export default async function HomePage() {
       {/* ── FOLLOW US ON FACEBOOK ────────────────────────────────────────────── */}
       {/* Videos added via Admin → Facebook Videos should still show even if the
           Facebook page URL (Admin → Settings → Social Links) hasn't been set yet —
-          only the "Follow Us" button itself needs that URL. */}
+          only the "Follow Us" button itself needs that URL. The one other spot
+          (besides the footer) where the logo's royal-blue half gets a moment. */}
       {(facebookUrl || facebookVideos.length > 0) && (
-        <section className="py-10" style={{ background: "var(--color-primary)" }}>
+        <section className="py-10" style={{ background: "var(--color-royal)" }}>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left">
             <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.12)" }}>
               <Facebook className="h-6 w-6" style={{ color: "white" }} />
@@ -450,7 +461,7 @@ export default async function HomePage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-body font-semibold transition-opacity hover:opacity-90"
-                style={{ background: "white", color: "var(--color-primary)" }}
+                style={{ background: "var(--color-gold)", color: "var(--color-text-primary)" }}
               >
                 Follow Us
               </a>
@@ -466,9 +477,6 @@ export default async function HomePage() {
           )}
         </section>
       )}
-
-      {/* ── WHY CHOOSE VKC ───────────────────────────────────────────────────── */}
-      <WhyChoose />
 
       {/* ── TESTIMONIALS (real approved reviews only; hidden when none) ─────── */}
       <Testimonials
@@ -510,7 +518,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── BOTTOM BANNERS (just above footer newsletter) ────────────────────── */}
+      {/* ── BOTTOM BANNERS (just above the closing CTA) ───────────────────────── */}
       {bottomBanners.length > 0 && (
         <section className="flex flex-col">
           {bottomBanners.map(banner => (
@@ -518,6 +526,24 @@ export default async function HomePage() {
           ))}
         </section>
       )}
+
+      {/* ── CLOSING CTA ───────────────────────────────────────────────────────── */}
+      <section className="py-20 sm:py-24 text-center" style={{ background: "var(--color-text-primary)" }}>
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-h2)", fontWeight: "var(--weight-heading)", color: "#FFFFFF" }}>
+            Taste the Tradition of Mandya
+          </h2>
+          <div className="mt-8">
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-2.5 px-10 py-3.5 rounded-full text-sm font-semibold font-body transition-all duration-normal hover:gap-3.5"
+              style={{ background: "var(--color-primary)", color: "var(--color-text-primary)" }}
+            >
+              Shop Now <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
