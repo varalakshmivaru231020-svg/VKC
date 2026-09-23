@@ -187,7 +187,7 @@ class _ProductScreenState extends State<ProductScreen> {
                     onPageChanged: (i) => setState(() => _img = i),
                     itemBuilder: (_, i) => Hero(
                       tag: i == 0 ? 'product-${_p!.slug}' : 'product-${_p!.slug}-$i',
-                      child: NetImage(url: images[i], radius: 0, fit: BoxFit.cover),
+                      child: NetImage(url: images[i], radius: 0, fit: BoxFit.contain),
                     ),
                   ),
           ),
