@@ -317,7 +317,7 @@ export default async function HomePage() {
                   alt={about.homeEyebrow}
                   fill
                   objectFit="cover"
-                  objectPosition="center"
+                  objectPosition="center top"
                 />
               </div>
             </div>

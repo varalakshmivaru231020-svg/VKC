@@ -58,7 +58,7 @@ export function BlogCard({
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <BookOpen className="h-10 w-10 opacity-30" style={{ color: "#487A38" }} />
+            <BookOpen className="h-10 w-10 opacity-30" style={{ color: "var(--color-gold-dark)" }} />
           </div>
         )}
       </div>
@@ -69,20 +69,20 @@ export function BlogCard({
         <div className="flex items-center flex-wrap gap-4 text-xs mb-3 font-body">
           {formattedDate && (
             <span className="inline-flex items-center gap-1.5 font-medium">
-              <Calendar className="h-3.5 w-3.5" style={{ color: "#487A38" }} />
-              <span style={{ color: "#888888" }}>{formattedDate}</span>
+              <Calendar className="h-3.5 w-3.5" style={{ color: "var(--color-gold-dark)" }} />
+              <span style={{ color: "var(--color-text-muted)" }}>{formattedDate}</span>
             </span>
           )}
           <span className="inline-flex items-center gap-1.5 font-medium">
-            <User className="h-3.5 w-3.5" style={{ color: "#487A38" }} />
-            <span style={{ color: "#888888" }}>{authorName}</span>
+            <User className="h-3.5 w-3.5" style={{ color: "var(--color-gold-dark)" }} />
+            <span style={{ color: "var(--color-text-muted)" }}>{authorName}</span>
           </span>
         </div>
 
         {/* Title */}
         <h3
           className="font-body font-bold text-base sm:text-lg leading-snug line-clamp-2 mb-2.5 transition-colors"
-          style={{ color: "#487A38" }}
+          style={{ color: "var(--color-text-primary)" }}
         >
           {title}
         </h3>
@@ -91,7 +91,7 @@ export function BlogCard({
         {excerpt && (
           <p
             className="font-body text-xs sm:text-sm line-clamp-3 mb-4 leading-relaxed"
-            style={{ color: "#555555", textAlign: "left", hyphens: "none" }}
+            style={{ color: "var(--color-text-secondary)", textAlign: "left", hyphens: "none" }}
           >
             {excerpt}
           </p>
@@ -101,7 +101,7 @@ export function BlogCard({
         <div className="mt-auto pt-2">
           <span
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold font-body group-hover:gap-2.5 transition-all"
-            style={{ color: "#487A38" }}
+            style={{ color: "var(--color-gold-dark)" }}
           >
             Read More <ArrowRight className="h-4 w-4" />
           </span>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Mail, MessageCircle, Phone } from "lucide-react";
-import { Button, C, Cta, WARM_GRADIENT, Facts, Label, MILESTONES, NumberGrid, Photo, Reveal, Section, SectionHead, T, Timeline, Words } from "@/components/about/heritage";
+import { Button, C, Cta, Facts, Label, MILESTONES, NumberGrid, Photo, Reveal, Section, SectionHead, T, Timeline, Words } from "@/components/about/heritage";
 import { PageBanner, type PageBannerProps } from "@/components/layout/PageBanner";
 
 /**
@@ -187,26 +187,24 @@ export default function AboutExperience({
       </Section>
 
       {/* ── 5 · VISION & MISSION ─────────────────────────────────────────── */}
-      {/* The warm two-column panel from the family's earlier site: burnt orange
-          running to jaggery amber, pale-gold headings, white reading text. The
-          colour itself is the backdrop — no photograph sits behind the words. */}
+      {/* Deep-brown two-column panel — pale-gold headings, white reading text.
+          The colour itself is the backdrop — no photograph sits behind the
+          words unless one is uploaded, in which case it sits under the same
+          brown tint so the white text stays legible over any image. */}
       <section aria-labelledby="vision-heading" style={{ background: C.ivory }}>
         <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-16 sm:py-24">
           <Reveal>
             <div
               className="relative overflow-hidden rounded-md px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16"
-              style={{ background: WARM_GRADIENT, color: "#FFFFFF", textShadow: "0 1px 2px rgba(80,32,0,0.28)" }}
+              style={{ background: "var(--color-text-primary)", color: "#FFFFFF" }}
             >
-              {/* An uploaded photograph sits under the same warm run of colour,
-                  thinned just enough for the picture to read while the white
-                  text stays legible over any image. */}
               {visionImage && (
                 <div aria-hidden className="absolute inset-0">
                   <picture>
                     {visionImageMobile && visionImageMobile !== visionImage && <source media="(max-width: 767px)" srcSet={visionImageMobile} />}
                     <img src={visionImage} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   </picture>
-                  <div className="absolute inset-0" style={{ background: WARM_GRADIENT, opacity: 0.84 }} />
+                  <div className="absolute inset-0" style={{ background: "var(--color-text-primary)", opacity: 0.84 }} />
                 </div>
               )}
               <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 90% at 100% 0%, rgba(255,214,92,0.22) 0%, rgba(255,214,92,0) 60%)" }} />
